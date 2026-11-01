@@ -99,3 +99,11 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   (`game/assets/emblems/`, gerados por `tools/make_emblems.py`) e **importação pelo jogador**:
   uma imagem em `user://import/emblems/<id_da_equipe>.png` substitui o emblema.
 - Escopo aplicado (padrão; pergunta sem resposta explícita): menu, corrida e resultado.
+
+## Marco 2 — corrida completa (2026-11-01)
+- Mockups aprovados como estão: `design/mockups/m2-a-chuva-radio.html` e `m2-b-safety-car-dados.html`
+  (rádio no canto inferior do mapa, radar no canto superior direito, ordens de equipe nos
+  painéis, menu DADOS cobrindo o mapa, faixa de status no topo da tabela).
+- Rádio com perguntas **só em momentos-chave** (~1 pergunta a cada 8–10 voltas por piloto).
+- Incidentes no padrão **realista**: na seca, safety car em ~metade das corridas e 1–3
+  abandonos; na chuva, bem mais.
