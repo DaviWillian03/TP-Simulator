@@ -1,6 +1,6 @@
 # Ideias do jogo (fase de coleta)
 
-Status: **coletando ideias — implementação NÃO autorizada** até o usuário dizer explicitamente
+Status: **implementação autorizada em #6** (2026-11-01). Dúvidas sendo respondidas em múltipla escolha.
 para começar o jogo.
 
 Como este arquivo funciona:
@@ -126,6 +126,21 @@ Como este arquivo funciona:
 >   motivos de o país estar em problemas, piloto sofrer acidente e ficar fora de corrida, piloto ter
 >   problemas emocionais e perder desempenho entre outras coisas que você pode inventar etc.
 >   dependendo do acontecimento, você pode tomar decisões para ajudar na gestão de pessoal.
+
+### #6 — Regulamento 2026, nome e início do projeto (2026-11-01)
+
+> Quero que os circuitos, as regras, os mapas da pista sejam todos baseados no regulamento oficial
+> da F1 2026. Agora pode começar o projeto do jogo que terá o nome de F1 Guidelines, faça uma logo
+> bonita para o jogo, e pode começar o projeto.
+>
+> Me pergunte caso sinta que faltou informação ou sobre as dúvidas que você teve anteriormente,
+> sempre em múltipla escolha para eu escolher.
+
+Consequências registradas:
+- **Implementação autorizada** a partir deste ponto.
+- Nome do jogo: **F1 Guidelines**. Logo a ser criada pelo Claude.
+- Circuitos, regras e traçados baseados na **F1 2026** (calendário e regulamento oficiais).
+  Grid de 2026 tem 11 equipes / 22 carros (resolve a dúvida 6).
 
 ---
 
