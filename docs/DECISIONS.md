@@ -133,3 +133,7 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   realista** (texturas, sombras, iluminação). Texturas geradas por código (ruído procedural), pois
   bibliotecas de assets estão bloqueadas na rede; protótipo em Interlagos para aprovação antes de
   estender aos 22 circuitos.
+- **Protótipo 3D** (design/mockups/png/3d/): usuário pediu **mais realismo antes** de seguir com o
+  resto do Marco 3 e vai **liberar kenney.nl e polyhaven.com** na rede para usar modelos e
+  texturas CC0 (registrar origem/licença em docs/THIRD_PARTY.md). Enquanto isso: detalhes de pista
+  independentes de assets (brita, barreiras, prédio dos boxes, grid).
