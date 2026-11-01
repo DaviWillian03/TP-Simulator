@@ -1,0 +1,28 @@
+# Godot 4 — cache e dados gerados pelo editor (inclui export_credentials.cfg)
+.godot/
+# Template de build Gradle instalado pelo editor (regenerável)
+/android/
+
+# Saídas de exportação
+build/
+*.apk
+*.aab
+*.apks
+*.idsig
+
+# Credenciais e assinatura — nunca versionar
+*.keystore
+*.jks
+.env
+.env.*
+
+# Configurações pessoais do Claude Code
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Referências baixadas e arquivos temporários
+/refs/
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
