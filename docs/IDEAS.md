@@ -1,7 +1,6 @@
 # Ideias do jogo (fase de coleta)
 
 Status: **implementação autorizada em #6** (2026-11-01). Dúvidas sendo respondidas em múltipla escolha.
-para começar o jogo.
 
 Como este arquivo funciona:
 - **Registro**: cada mensagem do usuário entra aqui, fiel ao que foi dito (sem acrescentar requisitos).
