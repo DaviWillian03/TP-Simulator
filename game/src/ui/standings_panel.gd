@@ -1,9 +1,14 @@
 class_name StandingsPanel
-extends VBoxContainer
-## Tabela de posições no estilo da transmissão: posição, emblema da equipe, SOBRENOME,
-## diferença para o líder, pneu atual e quanto ele está gasto.
+extends PanelContainer
+## Tabela de posições no estilo "folha de cronometragem" (escolhida pelo usuário):
+## grade completa com fio separando cada piloto, quadrado da posição na cor da equipe,
+## emblema, SOBRENOME, diferença para o líder, pneu (círculo) e desgaste.
 
 const ROW_H := 23
+const W_POS := 26.0
+const W_GAP := 56.0
+const W_TYRE := 27.0
+const W_WEAR := 40.0
 
 var sim: RaceSim
 var _rows: Array[Dictionary] = []
@@ -13,44 +18,79 @@ var _status: Label
 
 func setup(p_sim: RaceSim) -> void:
 	sim = p_sim
-	custom_minimum_size = Vector2(296, 0)
-	add_theme_constant_override("separation", 0)
+	custom_minimum_size = Vector2(300, 0)
+	size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	add_theme_stylebox_override("panel", UiStyle.sheet_box())
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 0)
+	add_child(v)
 	# faixa de status no topo, como "PIT EXIT CLOSED" na transmissão
 	_status_panel = PanelContainer.new()
 	_status = UiStyle.label("", 14, UiStyle.PAPER, true)
 	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_panel.add_child(_status)
-	add_child(_status_panel)
-	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 4)
-	add_child(gap)
+	v.add_child(_status_panel)
 	for i in sim.cars.size():
-		add_child(_make_row())
+		v.add_child(_make_row())
 
 
 func _make_row() -> PanelContainer:
 	var bg := PanelContainer.new()
+	bg.add_theme_stylebox_override("panel", UiStyle.row_box(UiStyle.PAPER))
 	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 6)
+	h.add_theme_constant_override("separation", 0)
 	h.custom_minimum_size = Vector2(0, ROW_H)
 	bg.add_child(h)
-	var row := {
-		"bg": bg,
-		"pos": _cell(UiStyle.label("", 15, UiStyle.INK, true), 26),
-		"emblem": TeamEmblems.make_rect("", 20),
-		"name": _cell(UiStyle.label("", 13, UiStyle.INK, true), 0),
-		"pen": _penalty_tag(),
-		"gap": _cell(UiStyle.label("", 13, UiStyle.INK), 50, true),
-		"tyre": _cell(UiStyle.label("", 14), 16, true),
-		"wear": _cell(UiStyle.label("", 11, UiStyle.MUTED), 34, true),
-		"team": "",
-	}
-	row["name"].size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row["name"].clip_text = true
-	for key: String in ["pos", "emblem", "name", "pen", "gap", "tyre", "wear"]:
-		h.add_child(row[key])
-	_rows.append(row)
+
+	var pos := UiStyle.pos_cell(W_POS)
+	h.add_child(pos)
+	h.add_child(UiStyle.vsep())
+	var name_box := HBoxContainer.new()
+	name_box.add_theme_constant_override("separation", 5)
+	name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var emblem := TeamEmblems.make_rect("", 18)
+	name_box.add_child(emblem)
+	var name := UiStyle.label("", 13, UiStyle.INK, true)
+	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name.clip_text = true
+	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_box.add_child(name)
+	var pen := _penalty_tag()
+	name_box.add_child(pen)
+	h.add_child(_pad(name_box, 0.0))
+	h.add_child(UiStyle.vsep())
+	var gap := UiStyle.label("", 13)
+	gap.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	gap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	h.add_child(_pad(gap, W_GAP))
+	h.add_child(UiStyle.vsep())
+	var tyre := TyreBadge.new()
+	var tyre_box := CenterContainer.new()
+	tyre_box.custom_minimum_size = Vector2(W_TYRE, 0)
+	tyre_box.add_child(tyre)
+	h.add_child(tyre_box)
+	h.add_child(UiStyle.vsep())
+	var wear := UiStyle.label("", 11, UiStyle.MUTED)
+	wear.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	wear.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	h.add_child(_pad(wear, W_WEAR))
+
+	_rows.append({"bg": bg, "pos": pos, "emblem": emblem, "name": name, "pen": pen,
+		"gap": gap, "tyre": tyre, "wear": wear, "team": ""})
 	return bg
+
+
+func _pad(node: Control, width: float) -> MarginContainer:
+	var m := MarginContainer.new()
+	m.add_theme_constant_override("margin_left", 5)
+	m.add_theme_constant_override("margin_right", 5)
+	if width > 0.0:
+		m.custom_minimum_size = Vector2(width, 0)
+	else:
+		m.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	m.add_child(node)
+	return m
 
 
 func _penalty_tag() -> Label:
@@ -60,21 +100,6 @@ func _penalty_tag() -> Label:
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	l.visible = false
 	return l
-
-
-func _cell(l: Label, width: float, right: bool = false) -> Label:
-	l.custom_minimum_size = Vector2(width, 0)
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	if right:
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	return l
-
-
-func _row_box(player: bool) -> StyleBoxFlat:
-	var b := UiStyle.box(UiStyle.INK if player else Color(0, 0, 0, 0), 4, 0)
-	b.border_color = UiStyle.RULE
-	b.border_width_bottom = 1
-	return b
 
 
 static func surname(full_name: String) -> String:
@@ -96,7 +121,10 @@ func _refresh_status() -> void:
 	_status_panel.visible = text != ""
 	_status.text = text
 	_status.add_theme_color_override("font_color", fg)
-	_status_panel.add_theme_stylebox_override("panel", UiStyle.box(bg, 6, 4))
+	var style := UiStyle.box(bg, 6, 4)
+	style.border_color = UiStyle.INK
+	style.border_width_bottom = 1
+	_status_panel.add_theme_stylebox_override("panel", style)
 
 
 func refresh() -> void:
@@ -106,27 +134,27 @@ func refresh() -> void:
 		var car := order[i]
 		var row := _rows[i]
 		var ink := UiStyle.PAPER if car.is_player else (UiStyle.MUTED if car.retired else UiStyle.INK)
-		row["bg"].add_theme_stylebox_override("panel", _row_box(car.is_player))
-		row["pos"].text = "–" if car.retired else str(i + 1)
-		row["emblem"].modulate.a = 0.35 if car.retired else 1.0
-		row["pen"].visible = car.penalty_pending_s > 0.0 or car.drive_through
-		row["pen"].text = "DT" if car.drive_through else "+%ds" % int(car.penalty_pending_s)
-		row["pos"].add_theme_color_override("font_color", UiStyle.RED if i == 0 and not car.is_player else ink)
+		row["bg"].add_theme_stylebox_override("panel", UiStyle.row_box(UiStyle.INK if car.is_player else UiStyle.PAPER))
+		# quadrado da posição na cor da equipe (abandono fica cinza)
+		UiStyle.set_pos_cell(row["pos"], "–" if car.retired else str(i + 1), UiStyle.BAR_BG if car.retired else car.team_color())
 		if row["team"] != car.team["id"]:
 			row["team"] = car.team["id"]
 			row["emblem"].texture = TeamEmblems.get_texture(car.team["id"])
+		row["emblem"].modulate.a = 0.35 if car.retired else 1.0
 		row["name"].text = surname(car.display_name())
 		row["name"].add_theme_color_override("font_color", ink)
+		row["pen"].visible = car.penalty_pending_s > 0.0 or car.drive_through
+		row["pen"].text = "DT" if car.drive_through else "+%ds" % int(car.penalty_pending_s)
 		row["gap"].text = "ABANDONO" if car.retired else _gap_text(car, i)
+		row["gap"].add_theme_font_size_override("font_size", 10 if car.retired else 13)
 		row["gap"].add_theme_color_override("font_color", ink)
 		var compound: Dictionary = sim.tyres.compounds[car.tyre]
-		row["tyre"].text = "" if car.retired else compound["letter"]
-		UiStyle.tyre_letter(row["tyre"], Color(compound["color"]))
+		row["tyre"].set_compound("" if car.retired else compound["letter"], Color(compound["color"]))
 		# a coluna de desgaste também mostra o estado especial do carro (no box, rodou, desclassificado)
 		var state := "DSQ" if car.disqualified else ("" if car.retired else ("BOX" if car.in_pit else ("RODOU" if car.stall_s > 0.0 else "")))
 		row["wear"].text = state if state != "" or car.retired else "%d%%" % roundi(clampf(car.tyre_wear, 0.0, 1.0) * 100.0)
 		var hot := state != "" or car.tyre_wear >= 0.7
-		row["wear"].add_theme_color_override("font_color", UiStyle.RED if hot else (ink if car.is_player else UiStyle.MUTED))
+		row["wear"].add_theme_color_override("font_color", UiStyle.RED if hot and not car.is_player else (ink if car.is_player else UiStyle.MUTED))
 
 
 func _gap_text(car: CarState, index: int) -> String:

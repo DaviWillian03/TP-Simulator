@@ -166,6 +166,57 @@ static func stamp(text: String, size: int = 15) -> PanelContainer:
 	return p
 
 
+## Cor do texto com bom contraste sobre um fundo (preto em cores claras, branco nas escuras).
+static func contrast_text(bg: Color) -> Color:
+	return INK if bg.get_luminance() > 0.5 else Color.WHITE
+
+
+# --- folha de cronometragem (tabelas) -------------------------------------------------
+
+## Fundo de uma linha da tabela, com fio de tinta embaixo separando cada piloto.
+static func row_box(bg: Color) -> StyleBoxFlat:
+	var b := box(bg, 0, 0)
+	b.border_color = INK
+	b.border_width_bottom = 1
+	return b
+
+
+## Separador vertical fino entre colunas.
+static func vsep(color: Color = RULE) -> ColorRect:
+	var r := ColorRect.new()
+	r.color = color
+	r.custom_minimum_size = Vector2(1, 0)
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return r
+
+
+## Quadrado da posição: fundo na cor da equipe, número com contraste.
+static func pos_cell(width: float) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.custom_minimum_size = Vector2(width, 0)
+	p.add_theme_stylebox_override("panel", box(PAPER_2, 0, 0))
+	var l := label("", 14, INK, true)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	p.add_child(l)
+	return p
+
+
+static func set_pos_cell(cell: PanelContainer, text: String, bg: Color) -> void:
+	cell.add_theme_stylebox_override("panel", box(bg, 0, 0))
+	var l: Label = cell.get_child(0)
+	l.text = text
+	l.add_theme_color_override("font_color", contrast_text(bg))
+
+
+## Contorno grosso da tabela inteira.
+static func sheet_box() -> StyleBoxFlat:
+	var b := box(PAPER, 0, 0)
+	b.border_color = INK
+	b.set_border_width_all(RULE_MID)
+	return b
+
+
 static func hspacer() -> Control:
 	var c := Control.new()
 	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL

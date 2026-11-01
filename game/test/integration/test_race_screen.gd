@@ -96,9 +96,9 @@ func test_menu_dados_abre_e_atualiza_as_tres_abas() -> void:
 		screen._drawer.refresh()
 	screen._drawer._select(0)
 	screen._drawer.refresh()
-	var first_row: Array = screen._drawer._cells[0]
-	assert_eq(first_row[0].text, "1")
-	assert_ne(first_row[1].text, "")
+	var cells: Array = screen._drawer._table._rows[0]["cells"]
+	assert_eq((cells[0].get_child(0) as Label).text, "1", "posição no quadrado da equipe")
+	assert_ne((cells[1] as Label).text, "", "nome do piloto")
 
 
 func test_faixa_de_status_mostra_safety_car() -> void:

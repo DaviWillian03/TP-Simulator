@@ -6,7 +6,7 @@ var sim: RaceSim
 var car: CarState
 
 var _pos_label: Label
-var _tyre_letter: Label
+var _tyre_badge: TyreBadge
 var _tyre_label: Label
 var _wear_bar: ProgressBar
 var _battery_bar: ProgressBar
@@ -38,8 +38,8 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	var info := HBoxContainer.new()
 	info.add_theme_constant_override("separation", 6)
 	info.add_child(UiStyle.caption("Pneu"))
-	_tyre_letter = UiStyle.label("", 14)
-	info.add_child(_tyre_letter)
+	_tyre_badge = TyreBadge.new()
+	info.add_child(_tyre_badge)
 	_tyre_label = UiStyle.label("", 13)
 	_tyre_label.custom_minimum_size = Vector2(150, 0)
 	info.add_child(_tyre_label)
@@ -155,8 +155,7 @@ func _on_box_toggled(on: bool) -> void:
 func refresh(race_position: int) -> void:
 	_pos_label.text = "P%d" % race_position
 	var c: Dictionary = sim.tyres.compounds[car.tyre]
-	_tyre_letter.text = c["letter"]
-	UiStyle.tyre_letter(_tyre_letter, Color(c["color"]))
+	_tyre_badge.set_compound(c["letter"], Color(c["color"]))
 	_tyre_label.text = "%s · %d volta%s · %d%%" % [c["name"], car.tyre_laps, "" if car.tyre_laps == 1 else "s", roundi(clampf(car.tyre_wear, 0.0, 1.0) * 100.0)]
 	_wear_bar.value = clampf(car.tyre_wear, 0.0, 1.0) * 100.0
 	_battery_bar.value = car.battery * 100.0

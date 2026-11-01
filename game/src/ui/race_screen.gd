@@ -327,16 +327,20 @@ func _build_results() -> Control:
 	v.add_child(UiStyle.rule(UiStyle.RULE_THICK))
 
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(780, 440)
+	scroll.custom_minimum_size = Vector2(860, 440)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	v.add_child(scroll)
-	var grid := GridContainer.new()
-	grid.columns = 6
-	grid.add_theme_constant_override("h_separation", 20)
-	grid.add_theme_constant_override("v_separation", 3)
-	scroll.add_child(grid)
-	for h: String in ["Pos", "Piloto", "Equipe", "Tempo / dif.", "Paradas", "Melhor volta"]:
-		grid.add_child(UiStyle.caption(h, UiStyle.MUTED))
+	var table := TimingTable.new()
+	table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(table)
+	table.setup([
+		{"title": "Pos", "width": 34, "kind": "pos"},
+		{"title": "Piloto", "width": 0, "heavy": true},
+		{"title": "Equipe", "width": 120},
+		{"title": "Tempo / dif.", "width": 210, "align": "right"},
+		{"title": "Paradas", "width": 62, "align": "right"},
+		{"title": "Melhor volta", "width": 104, "align": "right"},
+	], sim.cars.size())
 	var order := sim.standings()
 	for i in order.size():
 		var car := order[i]
@@ -354,14 +358,15 @@ func _build_results() -> Control:
 			gap += "  (inclui +%ds)" % int(car.penalty_pending_s)
 		var best := UiStyle.format_time(car.best_lap_time)
 		if car == sim.fastest_lap_car:
-			best += "  ★"
-		var color := UiStyle.RED if car.is_player else (UiStyle.MUTED if car.retired else UiStyle.INK)
-		grid.add_child(UiStyle.label(pos, 15, UiStyle.RED if i == 0 else color, true))
-		grid.add_child(UiStyle.label("%s  %s" % [car.code(), car.display_name()], 14, color, car.is_player))
-		grid.add_child(UiStyle.label(car.team["name"], 14, color))
-		grid.add_child(UiStyle.label(gap, 14, color))
-		grid.add_child(UiStyle.label(str(car.pit_stops), 14, color))
-		grid.add_child(UiStyle.label(best, 14, color))
+			best = "★ " + best
+		var out := car.retired or car.disqualified
+		table.set_row_style(i, "me" if car.is_player else ("out" if out else "normal"))
+		table.set_pos(i, 0, pos, UiStyle.BAR_BG if out else car.team_color())
+		table.set_text(i, 1, "%s  %s" % [car.code(), car.display_name()])
+		table.set_text(i, 2, car.team["name"])
+		table.set_text(i, 3, gap)
+		table.set_text(i, 4, str(car.pit_stops))
+		table.set_text(i, 5, best)
 
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END

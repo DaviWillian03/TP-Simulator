@@ -107,3 +107,11 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - Rádio com perguntas **só em momentos-chave** (~1 pergunta a cada 8–10 voltas por piloto).
 - Incidentes no padrão **realista**: na seca, safety car em ~metade das corridas e 1–3
   abandonos; na chuva, bem mais.
+
+## Estilo das tabelas (2026-11-01)
+- Pedido do usuário: linha separando cada piloto e tabelas mais bonitas. Mockups em
+  `design/mockups/t-*.html`; escolhida a **C · Folha de cronometragem** (grade completa, cabeçalho
+  em tinta), com o **quadrado da posição na cor da equipe** mantendo bom contraste (número
+  preto ou branco conforme a luminosidade da cor).
+- Pneu: **círculo colorido com a letra + porcentagem de desgaste**.
+- Vale para a tabela da corrida, o menu DADOS e o resultado final.
