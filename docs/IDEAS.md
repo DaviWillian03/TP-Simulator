@@ -80,6 +80,42 @@ Como este arquivo funciona:
 > jogo com essas informações genéricas que pedi antes, mas dar a opção de importar depois com dados
 > e imagens reais por cima como se fosse um option file.
 
+### #4 — Modo Campanha em detalhe (2026-11-01)
+
+> Agora detalhando melhor como será o modo campanha.
+> Quero que seja gerenciável as seguintes coisas:
+>
+> - edição total sobre o design do carro (dentro do regulamento atual), podendo ter várias formas
+>   de pintura diferentes, alocação de patrocínios, tipo de tinta etc. quero que essa parte seja bem
+>   elaborada, pode criar coisas que acredite que fique legal e não tenha dito. o mesmo vale para
+>   logo da equipe criada caso você opte por isso.
+> - Ao escolher uma equipe real, as informações sobre dirigentes técnicos, engenheiros, pilotos,
+>   história da equipe, nível da equipe etc também tem que ser as informações da vida real da
+>   temporada 2026.
+> - Ao criar uma equipe, as informações serão genéricas e terá esses cargos fictícios, menos
+>   pilotos, porque quero pegar pilotos de outras categorias na vida real.
+> - Também adicione elementos e escolhas para que ao criar sua equipe, possa ter caminhos e
+>   objetivos diferentes para seguir em termos de o quão complexa ou difícil será a sua campanha.
+>
+> Já com o modo campanha iniciado, quero que tenha as seguintes coisas como possível para gerenciar:
+> - árvore de pesquisa e desenvolvimento do carro atual e do carro do ano seguinte, quero que essa
+>   parte seja bem completa, sendo possível desenvolver motor (caso seja o caso da sua equipe ter
+>   motor próprio e não adquirido de outra), chassi, aerodinâmica, confiabilidade etc. quero que
+>   essa parte seja bem completa, para que o jogador indique em qual direção quer que o
+>   desenvolvimento aconteça, e quanto mais estruturada sua fábrica for, melhor serão seus
+>   upgrades, ou pelo menos terá uma porcentagem maior de que isso aconteça.
+> - desenvolvimento de fábrica, se inspire em jogos do mesmo estilo para dar opções de desenvolver
+>   a estrutura da sua equipe, o que afetará diretamente no avanço que sua equipe terá na mídia,
+>   marketing, influência, patrocínios, criação de peças etc.
+> - Aba de patrocínios, onde você poderá negociar para adquirir os melhores baseado na influência
+>   que sua equipe tem, se puder usar nomes e logos de marcas reais ótimo, se não puder, use nomes
+>   bem parecidos inspirados.
+> - gerenciamento de pessoal, onde você poderá negociar contratos dos cargos da sua equipe,
+>   negociar com agentes livres e de outras equipes, além de poder também negociar com novos
+>   pilotos para a sua equipe.
+> - Se quiser criar mais uma coisa legal que seja possível gerenciar pode, nada que seja tão
+>   complexo.
+
 ---
 
 ## Ideias por tema
@@ -120,6 +156,36 @@ Como este arquivo funciona:
   própria equipe** e desafiar as existentes. (#2)
 - **Corrida Caótica**: modo de diversão, livre para bizarrice e entretenimento; o usuário deu
   **liberdade criativa ao Claude** para surpreender (ver proposta P8). (#2)
+
+### Campanha — início (#4)
+- **Duas formas de começar**:
+  - **Equipe real**: dirigentes, engenheiros, pilotos, história e nível da equipe com dados
+    reais da **temporada 2026**.
+  - **Equipe criada**: cargos com pessoas **fictícias/genéricas**, **exceto os pilotos**, que o
+    usuário quer contratar de **outras categorias reais** (ver licenças em #3).
+- Ao criar uma equipe: **caminhos e objetivos diferentes** que definem quão **complexa ou
+  difícil** será a campanha (ver proposta P10).
+
+### Campanha — design do carro e identidade (#4)
+- **Edição total do design do carro**, dentro do **regulamento atual**.
+- **Várias pinturas diferentes**, **posição dos patrocinadores** no carro, **tipo de tinta** etc.
+- Deve ser **bem elaborado**; o Claude pode criar recursos extras (ver proposta P9).
+- **Logo da equipe criada**: mesma liberdade criativa (ver P9).
+
+### Campanha — gestão durante a temporada (#4)
+- **Pesquisa e desenvolvimento** em árvore, para o **carro atual e o do ano seguinte**; deve
+  ser **bem completa**:
+  - áreas: **motor** (só se a equipe fabrica o próprio motor, e não o compra), **chassi**,
+    **aerodinâmica**, **confiabilidade** etc.;
+  - o jogador **escolhe a direção** do desenvolvimento;
+  - **fábrica mais estruturada = upgrades melhores**, ou pelo menos **maior chance** de sucesso.
+- **Desenvolvimento da fábrica/estrutura** — inspirado em jogos do gênero — afetando **mídia,
+  marketing, influência, patrocínios e criação de peças**.
+- **Patrocínios**: negociar os melhores conforme a **influência** da equipe. Marcas reais se
+  possível; senão, nomes "bem parecidos inspirados" (ver licenças).
+- **Pessoal**: negociar contratos dos cargos; contratar **agentes livres** e profissionais de
+  **outras equipes**; negociar com **novos pilotos**.
+- O Claude pode propor **mais uma coisa gerenciável, sem ser complexa** (ver P11).
 
 ### Pilotos, equipes e dados (#3)
 - Desejo do usuário, em ordem de preferência:
@@ -190,8 +256,33 @@ Dados reais, edição e importação (#3) — absorve as dúvidas 5 e 11:
     atributos, equipes, cores, logos e nomes de circuitos?
 23. **Compartilhar o arquivo de importação**: deve ser um arquivo único fácil de passar entre
     jogadores (como os option files de PES)?
-24. **Temporada de referência** para os dados: grid de 2026 ou de 2027 (a próxima temporada,
-    já que o jogo ainda vai ser construído)?
+24. ~~Temporada de referência~~ → **respondida em #4: temporada 2026.** (Confirmar só se, ao
+    começar o projeto, a temporada 2027 já tiver começado.)
+
+Campanha (#4):
+25. **Nomes reais nas equipes reais** (dirigentes, engenheiros) e **pilotos reais de outras
+    categorias** na equipe criada: mesma questão de licença de #3. Proposta: no jogo base, todos
+    fictícios com perfis inspirados nos reais; nomes reais só via arquivo de importação. Confirmar.
+26. **Patrocinadores**: marcas fictícias **claramente diferentes** (recomendado) ou "bem
+    parecidas"? Marcas quase iguais às reais têm o mesmo problema de marca registrada de #3.
+    Logos de marcas reais só via importação pessoal.
+27. **Quais categorias** fornecem pilotos para a equipe criada: F2, F3, IndyCar, endurance
+    (WEC), Super Fórmula, kart? E essas categorias são simuladas (resultados ao fundo) ou só
+    funcionam como "mercado de pilotos"?
+28. **Tinta e acabamento**: afetam só o visual ou têm efeito de desempenho (ex.: tinta pesa;
+    carbono exposto é mais leve)? Ver P9.
+29. **Regras financeiras e técnicas reais**: incluir **teto de gastos** e **restrição de túnel
+    de vento** (quem termina melhor no campeonato tem menos tempo de túnel)? Ver P12.
+30. **Motor da equipe criada**: pode começar fabricando o próprio motor ou precisa comprar
+    de um fornecedor e só mais tarde virar fabricante?
+31. **Profundidade da P&D × jogo "simples e divertido"** (#1): o usuário quer a P&D "bem
+    completa". Proposta: modo **Essencial/Avançado** ou um diretor técnico que pode receber a
+    função de decidir sozinho. Confirmar.
+32. **Ritmo entre corridas**: a P&D e a fábrica avançam por **dias/semanas de calendário**
+    (tempo passa entre GPs) ou por "turnos" de uma corrida?
+33. **Negociação de contratos**: simples (oferta → aceita/recusa/contraproposta) ou com
+    cláusulas (duração, bônus por resultado, multa rescisória, papel de 1º/2º piloto)?
+34. Aprovar/ajustar as propostas **P9 a P12**.
 
 ---
 
@@ -290,6 +381,34 @@ Dados reais, edição e importação (#3) — absorve as dúvidas 5 e 11:
 
 ---
 
+### Campanha — implicações técnicas (#4)
+- **A Campanha é, de longe, o maior sistema do jogo.** Tem editor, P&D, fábrica, finanças,
+  patrocínio, mercado de pessoal e IA das equipes rivais. Vale construir em camadas, cada uma
+  jogável: base de finanças e temporada → pessoal/pilotos → P&D → fábrica → patrocínios →
+  editor completo.
+- **Editor de pintura em 2D, guardado como dados**: a pintura é salva como lista de camadas
+  (forma, cor, acabamento, posição), não como imagem. Ocupa pouco espaço no save, pode ser
+  redesenhada em qualquer tamanho e editada depois. Acabamentos (metálico, fosco, cromado) saem
+  com *shaders* simples do Godot. "Dentro do regulamento" vira peças pré-definidas (bicos,
+  laterais, asas compatíveis com as regras de 2026), não modelagem livre.
+  - Ponto de atenção: um editor rico em **tela de celular** (toque, zoom, camadas) é o trabalho
+    de interface mais pesado do jogo. Precisa de protótipo e teste com o usuário no aparelho.
+- **P&D orientada a dados**: cada nó da árvore (área, custo, tempo, pré-requisitos, faixa de
+  ganho) fica num arquivo. A chance de sucesso combina nível da fábrica e qualidade dos
+  engenheiros. O resultado varia, como na F1 real, onde upgrades às vezes decepcionam. Com
+  semente aleatória fixa, os testes GUT verificam as probabilidades.
+- **Carro atual × carro do ano seguinte**: recursos divididos entre os dois. É a decisão
+  clássica da F1 (abandonar a temporada para mirar a próxima) e combina com o pedido do usuário.
+- **As equipes da IA precisam jogar o mesmo jogo**: desenvolver o carro, contratar pessoal e
+  fechar patrocínios com as mesmas regras. Senão o jogador domina em poucas temporadas, ou nunca
+  alcança ninguém.
+- **Equilíbrio da economia**: é preciso simular várias temporadas automaticamente (headless,
+  sem gráficos) para conferir se o dinheiro não explode nem acaba. Isso usa o mesmo motor
+  separado da tela citado em #1 e #2.
+- **Regulamento de 2026**: o design "dentro do regulamento atual" e as áreas de P&D (ex.: motor
+  com divisão maior entre combustão e parte elétrica, aerodinâmica ativa) dependem de pesquisa
+  para confirmar o que vale em 2026. Entra no plano de pesquisa de #3.
+
 ## Propostas do Claude (aguardando aprovação do usuário)
 
 Atendem ao pedido de inovar (#1) sem deixar o jogo pesado. Cada uma pode ser aceita, ajustada
@@ -339,3 +458,62 @@ Por que este formato:
 - Cada partida é diferente, e o modo vira um "lanche" rápido entre corridas sérias.
 - Podem existir **variantes prontas** (ex.: "Só chuva", "Tudo invertido", "Caos total") e
   corridas curtas (5–10 voltas).
+
+### P9 — Estúdio de design: pintura, patrocínio e identidade (#4, liberdade criativa dada pelo usuário)
+
+- **Camadas de pintura**: cor base, faixas, degradês, padrões geométricos, número do carro.
+  Cada camada pode ser movida, girada, espelhada e recolorida.
+- **Acabamentos de tinta**: brilhante, fosco, metálico, perolado, cromado, fluorescente e
+  **carbono exposto**.
+- **Zonas de patrocínio com valor**: asa traseira, laterais, bico, halo, asa dianteira, espelhos.
+  Cada patrocinador exige uma zona e um tamanho, e paga mais pelas zonas mais visíveis. Assim a
+  pintura e a aba de patrocínios ficam ligadas: um carro "limpo e bonito" pode render menos que
+  um "cheio de marcas".
+- **Pinturas especiais**: até 3 alternativas por temporada (ex.: corrida em casa, comemoração).
+  Usá-las gera mídia/fãs.
+- **Lançamento do carro**: no início de cada temporada, um evento de apresentação do carro novo.
+  Uma pintura ousada ou elegante rende repercussão na mídia, conforme a nota da "crítica".
+- **Capacete dos pilotos** com as mesmas ferramentas (opcional, aparece nos perfis).
+- **Editor de logo** da equipe criada: formas, símbolos, iniciais, tipografias e cores, com
+  modelos prontos para quem não quer perder tempo.
+- **Atalho para quem não gosta de editar**: botão "gerar pintura" com combinações automáticas
+  a partir das cores da equipe.
+
+### P10 — Origens da equipe criada (#4: caminhos, objetivos e dificuldade)
+
+Ao fundar a equipe, o jogador escolhe uma **origem**. Ela define o começo e o tipo de desafio:
+
+| Origem | Começo | Desafio | Dificuldade / complexidade |
+|---|---|---|---|
+| **Equipe de garagem** | Pouco dinheiro, fábrica mínima, motor comprado | Crescer devagar; diretoria paciente | Difícil, pouco complexa |
+| **Projeto de investidor** | Muito dinheiro, fábrica média | Metas agressivas e pouca paciência: pode ser demitido | Média, pressão alta |
+| **Montadora estreante** | Dinheiro alto, **motor próprio** desde o início | P&D de motor completa; a marca exige resultado rápido | Média, **mais complexa** |
+| **Resgate de equipe falida** | Estrutura razoável, **dívidas** e pessoal desmotivado | Recuperar finanças e moral antes de pensar em vencer | Difícil, complexa |
+
+Escolhas adicionais na criação:
+- **Objetivo de longo prazo**: ser campeão em X temporadas, vencer uma corrida, chegar ao
+  top 5, ou "só sobreviver".
+- **Nível de detalhe**: Essencial (o diretor técnico decide os detalhes da P&D) ou Avançado
+  (o jogador decide tudo). Resolve a tensão entre "bem completo" (#4) e "simples e divertido" (#1).
+- **Dificuldade da IA rival**: independente da origem.
+
+### P11 — Mais uma coisa para gerenciar, simples (#4)
+
+**Coletiva de imprensa e redes sociais.** Depois de cada GP, 1 ou 2 perguntas rápidas de
+jornalistas, com 3 respostas possíveis (diplomática, confiante, provocadora). Elas afetam a moral
+dos pilotos, a base de fãs, a satisfação dos patrocinadores e rivalidades com outras equipes.
+Leva menos de 30 segundos e dá personalidade à campanha.
+
+Alternativa, se preferir: **Academia de pilotos** — até 2 jovens de categorias de base que
+evoluem com o tempo e podem ser promovidos ou emprestados. Combina com a vontade do usuário de
+trazer pilotos de outras categorias.
+
+### P12 — Regras reais da F1 como mecânica de equilíbrio (#4)
+
+- **Teto de gastos**: limite de gasto anual igual para todos. Gastar bem vale mais que ter
+  muito dinheiro, e equipes ricas não fogem tanto das pequenas. (Na F1 real, salários de
+  pilotos e parte das obras ficam de fora do teto.)
+- **Restrição de túnel de vento/simulação**: quem termina melhor no campeonato tem menos tempo
+  de pesquisa aerodinâmica no ano seguinte. Isso ajuda quem está atrás, de forma realista.
+- **Anos de mudança de regulamento**: de tempos em tempos as regras mudam e parte do
+  desenvolvimento "zera". Isso premia quem investiu cedo no carro do ano seguinte.
