@@ -5,7 +5,6 @@ extends Control
 ## A tabela e os painéis são atualizados algumas vezes por segundo (não a cada quadro)
 ## para economizar bateria no celular.
 
-const LOGO := preload("res://assets/branding/logo.svg")
 const UI_REFRESH_S := 0.2
 const SPEEDS := [1.0, 2.0, 4.0, 8.0]
 
@@ -18,6 +17,7 @@ var _standings: StandingsPanel
 var _car_panels: Array[CarControlPanel] = []
 var _toasts: ToastFeed
 var _lap_label: Label
+var _watermark: Label
 var _refresh_timer := 0.0
 var _results_shown := false
 
@@ -35,47 +35,72 @@ func _ready() -> void:
 	_build_ui()
 	_connect_sim_signals()
 	_refresh_ui()
-	_toasts.push("Luzes apagadas! %d voltas em %s." % [sim.total_laps, sim.track.short_name], UiStyle.GOOD)
+	_toasts.push("Luzes apagadas! %d voltas em %s." % [sim.total_laps, sim.track.short_name])
 	if sim.is_over():  # (só acontece quando a corrida foi avançada antes de abrir a tela)
 		_on_race_finished()
 
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = UiStyle.BG
+	bg.color = UiStyle.PAPER
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	var root := VBoxContainer.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 8
-	root.offset_top = 6
-	root.offset_right = -8
-	root.offset_bottom = -8
+	root.offset_left = 16
+	root.offset_top = 10
+	root.offset_right = -16
+	root.offset_bottom = -10
+	root.add_theme_constant_override("separation", 0)
 	add_child(root)
-	root.add_child(_build_top_bar())
+	root.add_child(_build_masthead())
+	root.add_child(UiStyle.rule(UiStyle.RULE_THICK))
 
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 0)
 	root.add_child(body)
+
 	var left := VBoxContainer.new()
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.add_theme_constant_override("separation", 0)
 	body.add_child(left)
-
+	var map_row := HBoxContainer.new()
+	map_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	map_row.add_theme_constant_override("separation", 0)
+	left.add_child(map_row)
 	var track_holder := Control.new()
-	track_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	track_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	track_holder.clip_contents = true
-	left.add_child(track_holder)
+	map_row.add_child(track_holder)
+	map_row.add_child(UiStyle.rule(UiStyle.RULE_MID, true))
+
+	_watermark = UiStyle.label("", 130, Color(0, 0, 0, 0), true)
+	_watermark.add_theme_color_override("font_outline_color", Color(UiStyle.INK, 0.14))
+	_watermark.add_theme_constant_override("outline_size", 4)
+	_watermark.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_watermark.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_watermark.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_watermark.offset_right = -14
+	_watermark.offset_bottom = 10
+	track_holder.add_child(_watermark)
 	_track_view = TrackView.new()
 	_track_view.set_anchors_preset(Control.PRESET_FULL_RECT)
 	track_holder.add_child(_track_view)
 	_track_view.setup(sim)
 	_toasts = ToastFeed.new()
-	_toasts.position = Vector2(10, 10)
-	_toasts.custom_minimum_size = Vector2(360, 0)
+	_toasts.position = Vector2(6, 12)
+	_toasts.custom_minimum_size = Vector2(380, 0)
 	track_holder.add_child(_toasts)
 
+	left.add_child(UiStyle.rule(UiStyle.RULE_MID))
 	var panels := HBoxContainer.new()
-	left.add_child(panels)
+	panels.add_theme_constant_override("separation", 16)
+	var panels_margin := MarginContainer.new()
+	panels_margin.add_theme_constant_override("margin_top", 10)
+	panels_margin.add_theme_constant_override("margin_right", 14)
+	panels_margin.add_child(panels)
+	left.add_child(panels_margin)
 	for car in sim.cars:
 		if car.is_player:
 			var p := CarControlPanel.new()
@@ -83,39 +108,50 @@ func _build_ui() -> void:
 			p.setup(sim, car)
 			_car_panels.append(p)
 
+	var tower_margin := MarginContainer.new()
+	tower_margin.add_theme_constant_override("margin_left", 12)
+	tower_margin.add_theme_constant_override("margin_top", 8)
 	_standings = StandingsPanel.new()
-	body.add_child(_standings)
+	tower_margin.add_child(_standings)
+	body.add_child(tower_margin)
 	_standings.setup(sim)
 
 
-func _build_top_bar() -> Control:
+func _build_masthead() -> Control:
 	var bar := HBoxContainer.new()
-	bar.custom_minimum_size = Vector2(0, 44)
-	var logo := TextureRect.new()
-	logo.texture = LOGO
-	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
-	logo.custom_minimum_size = Vector2(110, 40)
-	bar.add_child(logo)
-	bar.add_child(UiStyle.label("%s · %s" % [sim.track.grand_prix, sim.track.short_name], 17, UiStyle.TEXT, true))
-	bar.add_child(UiStyle.hspacer())
-	_lap_label = UiStyle.label("", 18, UiStyle.ACCENT_2, true)
-	bar.add_child(_lap_label)
-	bar.add_child(UiStyle.hspacer())
-	var group := ButtonGroup.new()
-	var pause := UiStyle.button("II", true)
-	pause.custom_minimum_size = Vector2(48, 40)
+	bar.custom_minimum_size = Vector2(0, 58)
+	bar.add_theme_constant_override("separation", 14)
+	var title := UiStyle.label(sim.track.grand_prix.to_upper(), 36, UiStyle.INK, true)
+	title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	bar.add_child(title)
+	var meta := UiStyle.caption("%s · %d voltas · seco" % [sim.track.short_name, sim.total_laps])
+	meta.add_theme_font_size_override("font_size", 12)
+	meta.size_flags_vertical = Control.SIZE_SHRINK_END
+	bar.add_child(meta)
+	var speeds := HBoxContainer.new()
+	speeds.add_theme_constant_override("separation", 4)
+	speeds.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var pause := UiStyle.compact(UiStyle.button("II", true), 14)
+	pause.custom_minimum_size = Vector2(38, 34)
 	pause.toggled.connect(func(on: bool) -> void: paused = on)
-	bar.add_child(pause)
+	speeds.add_child(pause)
+	var group := ButtonGroup.new()
 	for s: float in SPEEDS:
-		var b := UiStyle.button("%d×" % int(s), true, group)
-		b.custom_minimum_size = Vector2(48, 40)
+		var b := UiStyle.compact(UiStyle.button("%d×" % int(s), true, group), 14)
+		b.custom_minimum_size = Vector2(38, 34)
 		b.button_pressed = is_equal_approx(s, time_scale)
 		b.pressed.connect(func() -> void: time_scale = s)
-		bar.add_child(b)
-	var menu := UiStyle.button("Menu")
+		speeds.add_child(b)
+	bar.add_child(speeds)
+	bar.add_child(UiStyle.hspacer())
+	var menu := UiStyle.compact(UiStyle.button("Menu"), 13)
+	menu.custom_minimum_size = Vector2(64, 34)
+	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	menu.pressed.connect(Session.go_to_title)
 	bar.add_child(menu)
+	_lap_label = UiStyle.label("", 36, UiStyle.RED, true)
+	_lap_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	bar.add_child(_lap_label)
 	return bar
 
 
@@ -137,35 +173,44 @@ func _process(delta: float) -> void:
 
 
 func _refresh_ui() -> void:
-	_lap_label.text = "BANDEIRADA" if sim.chequered else "VOLTA %d / %d" % [sim.leader_lap(), sim.total_laps]
+	_lap_label.text = "FIM" if sim.chequered else "%d/%d" % [sim.leader_lap(), sim.total_laps]
 	_standings.refresh()
 	var order := sim.standings()
+	var best := 99
 	for p in _car_panels:
-		p.refresh(order.find(p.car) + 1)
+		var pos := order.find(p.car) + 1
+		p.refresh(pos)
+		best = mini(best, pos)
+	_watermark.text = "P%d" % best
 
 
 # --- avisos (pop-ups não intrusivos) -------------------------------------------------
 
+func _surname(car: CarState) -> String:
+	return StandingsPanel.surname(car.display_name())
+
+
 func _on_overtake(att: CarState, def: CarState, zone: String) -> void:
 	var order := sim.standings()
 	var new_pos := order.find(att) + 1
-	if att.is_player or def.is_player or new_pos == 1:
-		var accent := UiStyle.GOOD if att.is_player else (UiStyle.WARN if def.is_player else UiStyle.ACCENT_2)
-		_toasts.push("%s passa %s (%s) — agora P%d" % [att.code(), def.code(), zone, new_pos], accent)
+	if att.is_player or def.is_player:
+		_toasts.push("%s passa %s! P%d" % [_surname(att), _surname(def), new_pos], "hot")
+	elif new_pos == 1:
+		_toasts.push("%s assume a liderança (%s)" % [_surname(att), zone])
 
 
 func _on_pit_stop(car: CarState, compound: String, stationary: float) -> void:
 	if car.is_player:
-		_toasts.push("Box: %s coloca %s (parado %.1f s)" % [car.code(), sim.tyres.compounds[compound]["name"], stationary])
+		_toasts.push("Box: %s coloca %s (%.1f s parado)" % [_surname(car), sim.tyres.compounds[compound]["name"], stationary])
 
 
 func _on_fastest_lap(car: CarState, lap_time: float) -> void:
 	if sim.leader_lap() > 3:
-		_toasts.push("Volta mais rápida: %s — %s" % [car.code(), UiStyle.format_time(lap_time)], Color("#B36BFF"))
+		_toasts.push("Volta mais rápida: %s — %s" % [_surname(car), UiStyle.format_time(lap_time)])
 
 
 func _on_tyre_warning(car: CarState) -> void:
-	_toasts.push("Rádio %s: \"Os pneus estão acabando!\" (%d%%)" % [car.code(), roundi(car.tyre_wear * 100.0)], UiStyle.WARN)
+	_toasts.push("Rádio %s: \"Os pneus estão acabando!\"" % _surname(car), "hot")
 
 
 func _on_race_finished() -> void:
@@ -185,31 +230,43 @@ func _notification(what: int) -> void:
 
 func _build_results() -> Control:
 	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.6)
+	shade.color = Color(UiStyle.INK, 0.45)
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	shade.add_child(center)
-	var panel := UiStyle.panel(UiStyle.PANEL, 12)
+	var panel := PanelContainer.new()
+	var style := UiStyle.outline_box(UiStyle.PAPER, UiStyle.INK, UiStyle.RULE_MID)
+	style.content_margin_left = 22
+	style.content_margin_right = 22
+	style.content_margin_top = 14
+	style.content_margin_bottom = 14
+	panel.add_theme_stylebox_override("panel", style)
 	center.add_child(panel)
 	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
 	panel.add_child(v)
-	v.add_child(UiStyle.label("RESULTADO · %s" % sim.track.grand_prix.to_upper(), 20, UiStyle.ACCENT_2, true))
+	var head := HBoxContainer.new()
+	head.add_child(UiStyle.label("RESULTADO", 30, UiStyle.INK, true))
+	head.add_child(UiStyle.hspacer())
+	head.add_child(UiStyle.label(sim.track.grand_prix.to_upper(), 20, UiStyle.RED, true))
+	v.add_child(head)
+	v.add_child(UiStyle.rule(UiStyle.RULE_THICK))
 
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(760, 470)
+	scroll.custom_minimum_size = Vector2(780, 440)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	v.add_child(scroll)
 	var grid := GridContainer.new()
 	grid.columns = 6
-	grid.add_theme_constant_override("h_separation", 18)
+	grid.add_theme_constant_override("h_separation", 20)
+	grid.add_theme_constant_override("v_separation", 3)
 	scroll.add_child(grid)
-	for h: String in ["POS", "PILOTO", "EQUIPE", "TEMPO / DIF.", "PARADAS", "MELHOR VOLTA"]:
-		grid.add_child(UiStyle.label(h, 12, UiStyle.MUTED, true))
+	for h: String in ["Pos", "Piloto", "Equipe", "Tempo / dif.", "Paradas", "Melhor volta"]:
+		grid.add_child(UiStyle.caption(h, UiStyle.MUTED))
 	var order := sim.standings()
 	for i in order.size():
 		var car := order[i]
-		var color := Color.WHITE if car.is_player else UiStyle.TEXT
 		var pos := "DSQ" if car.disqualified else str(i + 1)
 		var gap: String
 		if i == 0:
@@ -221,15 +278,22 @@ func _build_results() -> Control:
 		var best := UiStyle.format_time(car.best_lap_time)
 		if car == sim.fastest_lap_car:
 			best += "  ★"
-		for text: String in [pos, "%s  %s" % [car.code(), car.display_name()], car.team["name"], gap, str(car.pit_stops), best]:
-			grid.add_child(UiStyle.label(text, 14, color, car.is_player))
+		var color := UiStyle.RED if car.is_player else UiStyle.INK
+		grid.add_child(UiStyle.label(pos, 15, UiStyle.RED if i == 0 else color, true))
+		grid.add_child(UiStyle.label("%s  %s" % [car.code(), car.display_name()], 14, color, car.is_player))
+		grid.add_child(UiStyle.label(car.team["name"], 14, color))
+		grid.add_child(UiStyle.label(gap, 14, color))
+		grid.add_child(UiStyle.label(str(car.pit_stops), 14, color))
+		grid.add_child(UiStyle.label(best, 14, color))
 
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
-	var again := UiStyle.button("Correr de novo")
+	var again := UiStyle.accent(UiStyle.button("Correr de novo"))
+	again.custom_minimum_size = Vector2(170, 40)
 	again.pressed.connect(Session.restart_race)
 	buttons.add_child(again)
 	var menu := UiStyle.button("Menu")
+	menu.custom_minimum_size = Vector2(100, 40)
 	menu.pressed.connect(Session.go_to_title)
 	buttons.add_child(menu)
 	v.add_child(buttons)

@@ -2,8 +2,8 @@
 
 Requer: fonttools (pip install fonttools) e a fonte Inter instalada em /usr/share/fonts/opentype/inter/.
 Uso: python tools/make_logo.py <pasta_saida>
-Gera: icon.svg (ícone do app, com fundo) e logo.svg (marca + nome, fundo transparente).
-Copie icon.svg para game/icon.svg e logo.svg para game/assets/branding/logo.svg.
+Gera: icon.svg (ícone do app, com fundo), logo.svg (para fundo escuro) e logo-light.svg (para fundo claro).
+Copie icon.svg para game/icon.svg e os logos para game/assets/branding/.
 """
 import math
 import sys
@@ -102,7 +102,7 @@ def icon_svg():
 """
 
 
-def logo_svg():
+def logo_svg(f1_color="#FFFFFF", sub_color="#C9D4E8"):
     # Marca à esquerda (512 -> 420 px), nome à direita.
     f1_d, f1_w = text_path(INTER + "InterDisplay-BlackItalic.otf", "F1", 230, 470, 245)
     gl_d, gl_w = text_path(INTER + "Inter-ExtraBold.otf", "GUIDELINES", 76, 478, 345, tracking=0.16)
@@ -115,9 +115,9 @@ def logo_svg():
     </linearGradient>
   </defs>
   <g transform="translate(0 0) scale(0.82)">{mark("l_")}</g>
-  <path d="{f1_d}" fill="#FFFFFF"/>
+  <path d="{f1_d}" fill="{f1_color}"/>
   <rect x="478" y="268" width="{gl_w:.0f}" height="9" rx="4.5" fill="url(#txt)"/>
-  <path d="{gl_d}" fill="#C9D4E8"/>
+  <path d="{gl_d}" fill="{sub_color}"/>
 </svg>
 """
 
@@ -126,4 +126,6 @@ with open(f"{OUT}/icon.svg", "w") as f:
     f.write(icon_svg())
 with open(f"{OUT}/logo.svg", "w") as f:
     f.write(logo_svg())
+with open(f"{OUT}/logo-light.svg", "w") as f:  # para fundo claro (direção Paddock)
+    f.write(logo_svg("#141414", "#141414"))
 print("ok")

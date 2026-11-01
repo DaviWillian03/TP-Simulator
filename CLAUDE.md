@@ -18,10 +18,14 @@ das escolhas técnicas.
   marcados PROVISÓRIO até a pesquisa de atributos.
 - `src/sim/` — simulação **sem dependência de tela** (RaceSim, TrackModel, TyreModel, StrategyAI).
   Passo fixo `DT`, semente determinística. Regras novas entram aqui, com teste.
-- `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). Tema em `UiStyle`.
+- `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). Visual "Paddock"
+  (revista): **todas** as cores/fontes/fios vêm de `UiStyle` — nada de cor solta nas telas.
+  Emblemas via `TeamEmblems` (imagem em `user://import/emblems/<id>.png` tem prioridade).
 - `src/core/session.gd` — autoload `Session` (escolhas do menu + opções de desenvolvimento).
 - `test/unit`, `test/integration` — GUT. `tools/race_report.gd` — relatório de corridas simuladas.
-- Raiz: `tools/make_logo.py` (logo), `tools/geojson_to_track.py` (traçados).
+- Raiz: `tools/make_logo.py` (logo), `tools/make_emblems.py` (emblemas), `tools/geojson_to_track.py`.
+- `design/mockups/` — mockups HTML (gerador `build.py`). **Tela nova = mockup primeiro**, usuário
+  aprova, depois Godot, depois captura de tela comparando com o mockup.
 
 ## Comandos verificados (rodar dentro de `game/`)
 ```bash

@@ -83,3 +83,19 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - **Primeiro marco**: base do projeto + corrida simulada — um circuito 2026 com 22 carros,
   pneus com desgaste e tabela de posições.
 - **Primeiro circuito**: Interlagos (Brasil).
+
+## Direção visual (2026-11-01)
+- Método "mockup primeiro" (inspirado em github.com/halilc4/tabbyspaces): 8 direções em HTML
+  puro em `design/mockups/`; o usuário escolheu a **03 · Paddock** (estilo revista impressa).
+  (Chegou a indicar a 04 · Retrô 70 e se corrigiu em seguida.)
+- Tokens no código: `game/src/ui/ui_style.gd` — papel `#efe9de`, tinta `#141414`, vermelho
+  `#E10600`; Archivo Black (títulos/nomes/números) + Archivo Narrow 600 (texto); fios grossos.
+- Novas telas: primeiro mockup em `design/mockups/`, depois implementação, depois conferência
+  por captura de tela comparando com o mockup.
+- **Tabela da corrida** no formato da transmissão: posição, emblema da equipe, SOBRENOME.
+- **Emblemas das equipes**: o usuário pediu os símbolos reais. Logos oficiais são marcas
+  registradas e não entram no jogo distribuído. Solução aplicada (padrão recomendado; a pergunta
+  ficou sem resposta explícita): emblemas **originais** nas cores de cada equipe
+  (`game/assets/emblems/`, gerados por `tools/make_emblems.py`) e **importação pelo jogador**:
+  uma imagem em `user://import/emblems/<id_da_equipe>.png` substitui o emblema.
+- Escopo aplicado (padrão; pergunta sem resposta explícita): menu, corrida e resultado.

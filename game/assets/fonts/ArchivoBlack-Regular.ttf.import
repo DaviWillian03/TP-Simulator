@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://cbqe8bpecdg1s"
-path="res://.godot/imported/Inter-SemiBold.otf-9b53da2a861128c77c15803b68829495.fontdata"
+uid="uid://br712gxmfbhgu"
+path="res://.godot/imported/ArchivoBlack-Regular.ttf-2072c540025d966aae00ccf326200b77.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/Inter-SemiBold.otf"
-dest_files=["res://.godot/imported/Inter-SemiBold.otf-9b53da2a861128c77c15803b68829495.fontdata"]
+source_file="res://assets/fonts/ArchivoBlack-Regular.ttf"
+dest_files=["res://.godot/imported/ArchivoBlack-Regular.ttf-2072c540025d966aae00ccf326200b77.fontdata"]
 
 [params]
 

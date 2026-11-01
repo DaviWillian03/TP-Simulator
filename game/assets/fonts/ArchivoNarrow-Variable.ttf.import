@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://qo4skg770msn"
-path="res://.godot/imported/Inter-ExtraBold.otf-070e713093cbc7d905387dfaa2582452.fontdata"
+uid="uid://d2j4qd268jvue"
+path="res://.godot/imported/ArchivoNarrow-Variable.ttf-f0248af8eebb4aef640f54bfa5a00269.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/Inter-ExtraBold.otf"
-dest_files=["res://.godot/imported/Inter-ExtraBold.otf-070e713093cbc7d905387dfaa2582452.fontdata"]
+source_file="res://assets/fonts/ArchivoNarrow-Variable.ttf"
+dest_files=["res://.godot/imported/ArchivoNarrow-Variable.ttf-f0248af8eebb4aef640f54bfa5a00269.fontdata"]
 
 [params]
 

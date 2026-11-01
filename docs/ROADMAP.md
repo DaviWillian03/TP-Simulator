@@ -14,6 +14,10 @@ Cada marco termina jogável e testado. Itens vêm de `docs/DECISIONS.md`.
   tempo 1×/2×/4×/8× + pausa, avisos não intrusivos, resultado final.
 - 28 testes GUT (unidade + integração da tela de corrida).
 
+## ✅ Direção visual Paddock (2026-11-01)
+- 8 mockups → escolha do usuário → tokens em `UiStyle`; menu, corrida e resultado refeitos.
+- Tabela no formato da transmissão com emblemas originais + importação de logo pelo jogador.
+
 ## Marco 2 — Corrida completa (o que falta da gameplay de corrida)
 - **Clima dinâmico** + pneus intermediário/chuva + **radar de chuva com incerteza (P3)**.
 - **Safety car, VSC e bandeira vermelha (P6)**; incidentes, abandonos e quebras.

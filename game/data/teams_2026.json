@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "_notas": "Nomes reais por decisão do usuário (docs/DECISIONS.md); sem logos oficiais. 'car_rating' é PROVISÓRIO (0-100) até a pesquisa de atributos.",
+ "_notas": "Nomes reais por decisão do usuário (docs/DECISIONS.md); sem logos oficiais. 'car_rating' é PROVISÓRIO (0-100) até a pesquisa de atributos. 'emblem' = emblema ORIGINAL (forma + sigla) gerado por tools/make_emblems.py; logos reais só por importação pessoal (user://import/emblems/<id>.png).",
  "teams": [
   {
    "id": "mclaren",
@@ -8,7 +8,11 @@
    "power_unit": "Mercedes",
    "color": "#FF8000",
    "color2": "#1A1A1A",
-   "car_rating": 93
+   "car_rating": 93,
+   "emblem": {
+    "shape": "chevron",
+    "text": "Mc"
+   }
   },
   {
    "id": "mercedes",
@@ -16,7 +20,11 @@
    "power_unit": "Mercedes",
    "color": "#27F4D2",
    "color2": "#111111",
-   "car_rating": 92
+   "car_rating": 92,
+   "emblem": {
+    "shape": "ring",
+    "text": "Me"
+   }
   },
   {
    "id": "ferrari",
@@ -24,7 +32,11 @@
    "power_unit": "Ferrari",
    "color": "#E8002D",
    "color2": "#FFE600",
-   "car_rating": 90
+   "car_rating": 90,
+   "emblem": {
+    "shape": "shield",
+    "text": "F"
+   }
   },
   {
    "id": "redbull",
@@ -32,7 +44,11 @@
    "power_unit": "Red Bull Ford",
    "color": "#3671C6",
    "color2": "#FFD100",
-   "car_rating": 90
+   "car_rating": 90,
+   "emblem": {
+    "shape": "diamond",
+    "text": "R"
+   }
   },
   {
    "id": "williams",
@@ -40,7 +56,11 @@
    "power_unit": "Mercedes",
    "color": "#1868DB",
    "color2": "#FFFFFF",
-   "car_rating": 85
+   "car_rating": 85,
+   "emblem": {
+    "shape": "square",
+    "text": "W"
+   }
   },
   {
    "id": "racingbulls",
@@ -48,7 +68,11 @@
    "power_unit": "Red Bull Ford",
    "color": "#6692FF",
    "color2": "#FFFFFF",
-   "car_rating": 83
+   "car_rating": 83,
+   "emblem": {
+    "shape": "hex",
+    "text": "RB"
+   }
   },
   {
    "id": "astonmartin",
@@ -56,7 +80,11 @@
    "power_unit": "Honda",
    "color": "#229971",
    "color2": "#CEDC00",
-   "car_rating": 83
+   "car_rating": 83,
+   "emblem": {
+    "shape": "pill",
+    "text": "AM"
+   }
   },
   {
    "id": "haas",
@@ -64,7 +92,11 @@
    "power_unit": "Ferrari",
    "color": "#DEE1E2",
    "color2": "#E10600",
-   "car_rating": 82
+   "car_rating": 82,
+   "emblem": {
+    "shape": "square",
+    "text": "H"
+   }
   },
   {
    "id": "alpine",
@@ -72,7 +104,11 @@
    "power_unit": "Mercedes",
    "color": "#0093CC",
    "color2": "#FF87BC",
-   "car_rating": 81
+   "car_rating": 81,
+   "emblem": {
+    "shape": "peak",
+    "text": ""
+   }
   },
   {
    "id": "audi",
@@ -80,7 +116,11 @@
    "power_unit": "Audi",
    "color": "#8E9296",
    "color2": "#F50537",
-   "car_rating": 81
+   "car_rating": 81,
+   "emblem": {
+    "shape": "hex",
+    "text": "Au"
+   }
   },
   {
    "id": "cadillac",
@@ -88,7 +128,11 @@
    "power_unit": "Ferrari",
    "color": "#2B2B2B",
    "color2": "#F2F2F2",
-   "car_rating": 78
+   "car_rating": 78,
+   "emblem": {
+    "shape": "octagon",
+    "text": "C"
+   }
   }
  ]
 }

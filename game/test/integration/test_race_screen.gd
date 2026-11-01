@@ -53,7 +53,7 @@ func test_botoes_de_ritmo_mudam_o_modo_do_carro() -> void:
 	var panel: CarControlPanel = screen._car_panels[0]
 	var attack: Button = null
 	for b in _all_buttons(panel):
-		if b.text == "Atacar":
+		if b.text.to_lower() == "atacar":
 			attack = b
 	assert_not_null(attack)
 	attack.emit_signal("pressed")

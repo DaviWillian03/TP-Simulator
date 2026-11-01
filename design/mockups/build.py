@@ -439,7 +439,7 @@ def index():
 <style>body{{margin:0;background:#111;color:#eee;font-family:system-ui;padding:24px}}h1{{margin:0 0 4px}}p{{color:#aaa;margin:0 0 20px}}
 .g{{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}}a{{color:inherit;text-decoration:none;background:#1b1b1b;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}}
 a img{{width:100%;border-radius:6px}}a span{{color:#aaa;font-size:14px}}</style></head><body>
-<h1>F1 Guidelines — direções visuais da tela de corrida</h1><p>Escolha uma ou combine elementos ("tabela do 01 com as cores do 06").</p><div class="g">{cards}</div></body></html>'''
+<h1>F1 Guidelines — direções visuais da tela de corrida</h1><p><b>Escolhida pelo usuário: 03 · Paddock.</b> As demais ficam como histórico da exploração.</p><div class="g">{cards}</div></body></html>'''
 
 
 if __name__ == "__main__":
