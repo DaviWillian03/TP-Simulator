@@ -4,7 +4,7 @@
   "min_dry_compounds": 2,
   "exempt_if_wet_compound_used": true
  },
- "_notas": "Valores de desempenho PROVISÓRIOS para o primeiro marco; calibrar na pesquisa. Desgaste em fração por volta numa corrida de 100%.",
+ "_notas": "Valores PROVISÓRIOS; calibrar na pesquisa. wear_per_lap = fração de desgaste por volta numa corrida de 100%. wet_curve = segundos perdidos por volta conforme a umidade da pista (0, 0.2, 0.4, 0.6, 0.8, 1.0). Cruzamentos: slick x intermediário ~0.2; intermediário x chuva ~0.62. wet_optimum = umidade ideal (abaixo dela o pneu de chuva superaquece e gasta mais).",
  "compounds": {
   "soft": {
    "name": "Macio",
@@ -15,7 +15,15 @@
    "wear_per_lap": 0.045,
    "deg_coeff": 1.6,
    "cliff_start": 0.78,
-   "cliff_coeff": 40.0
+   "cliff_coeff": 40.0,
+   "wet_curve": [
+    0.0,
+    1.6,
+    5.5,
+    11.0,
+    17.0,
+    24.0
+   ]
   },
   "medium": {
    "name": "Médio",
@@ -26,7 +34,15 @@
    "wear_per_lap": 0.031,
    "deg_coeff": 1.3,
    "cliff_start": 0.78,
-   "cliff_coeff": 40.0
+   "cliff_coeff": 40.0,
+   "wet_curve": [
+    0.0,
+    1.6,
+    5.5,
+    11.0,
+    17.0,
+    24.0
+   ]
   },
   "hard": {
    "name": "Duro",
@@ -37,29 +53,55 @@
    "wear_per_lap": 0.022,
    "deg_coeff": 1.1,
    "cliff_start": 0.78,
-   "cliff_coeff": 40.0
+   "cliff_coeff": 40.0,
+   "wet_curve": [
+    0.0,
+    1.6,
+    5.5,
+    11.0,
+    17.0,
+    24.0
+   ]
   },
   "inter": {
    "name": "Intermediário",
    "letter": "I",
    "color": "#2DB34A",
    "dry": false,
-   "pace_offset_s": 4.0,
+   "pace_offset_s": 0.0,
    "wear_per_lap": 0.03,
    "deg_coeff": 1.2,
    "cliff_start": 0.8,
-   "cliff_coeff": 40.0
+   "cliff_coeff": 40.0,
+   "wet_curve": [
+    3.0,
+    1.6,
+    1.2,
+    2.2,
+    5.0,
+    9.0
+   ],
+   "wet_optimum": 0.35
   },
   "wet": {
    "name": "Chuva",
    "letter": "W",
    "color": "#1F6FE5",
    "dry": false,
-   "pace_offset_s": 7.0,
+   "pace_offset_s": 0.0,
    "wear_per_lap": 0.025,
    "deg_coeff": 1.0,
    "cliff_start": 0.8,
-   "cliff_coeff": 40.0
+   "cliff_coeff": 40.0,
+   "wet_curve": [
+    6.0,
+    4.2,
+    3.0,
+    2.4,
+    2.0,
+    2.2
+   ],
+   "wet_optimum": 0.7
   }
  }
 }

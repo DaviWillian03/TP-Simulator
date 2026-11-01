@@ -25,11 +25,12 @@ var _results_shown := false
 func _ready() -> void:
 	theme = UiStyle.make_theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	var options := {"duration_pct": Session.duration_pct, "seed": Session.race_seed, "player_team": Session.player_team}
+	options.merge(Session.sim_overrides, true)
 	sim = RaceSim.new(
 		TrackModel.new(GameData.circuit(Session.circuit_id)),
 		TyreModel.new(GameData.tyres()),
-		GameData.teams(), GameData.drivers(),
-		{"duration_pct": Session.duration_pct, "seed": Session.race_seed, "player_team": Session.player_team})
+		GameData.teams(), GameData.drivers(), options)
 	if Session.debug_advance_s > 0.0:
 		sim.advance(Session.debug_advance_s)
 	_build_ui()
@@ -159,7 +160,6 @@ func _connect_sim_signals() -> void:
 	sim.overtake.connect(_on_overtake)
 	sim.pit_stop.connect(_on_pit_stop)
 	sim.fastest_lap.connect(_on_fastest_lap)
-	sim.tyre_warning.connect(_on_tyre_warning)
 	sim.race_finished.connect(_on_race_finished)
 
 

@@ -10,8 +10,9 @@ func _init() -> void:
 	var circuit: String = args.get("circuit", "interlagos")
 	var pct := float(args.get("pct", "1.0"))
 	var seeds: Array = str(args.get("seeds", "1")).split(",")
+	var summary := args.has("summary")
 	for s: String in seeds:
-		_report(circuit, pct, int(s))
+		_report(circuit, pct, int(s), summary)
 	quit()
 
 
@@ -24,9 +25,15 @@ func _parse_args() -> Dictionary:
 	return out
 
 
-func _report(circuit: String, pct: float, seed_value: int) -> void:
+func _report(circuit: String, pct: float, seed_value: int, summary: bool = false) -> void:
 	var sim := RaceSim.new(TrackModel.new(GameData.circuit(circuit)), TyreModel.new(GameData.tyres()),
 		GameData.teams(), GameData.drivers(), {"duration_pct": pct, "seed": seed_value})
+	var penalties := [0]
+	var incidents := {}
+	var max_wet := [0.0]
+	sim.penalty.connect(func(_c: CarState, _k: String, _r: String) -> void: penalties[0] += 1)
+	sim.incident.connect(func(_c: CarState, k: String, _t: String) -> void: incidents[k] = incidents.get(k, 0) + 1)
+	sim.flag_changed.connect(func(_f: int, _t: String) -> void: max_wet[0] = maxf(max_wet[0], sim.weather.wetness))
 	var t0 := Time.get_ticks_msec()
 	sim.run_to_end()
 	var ms := Time.get_ticks_msec() - t0
@@ -36,12 +43,22 @@ func _report(circuit: String, pct: float, seed_value: int) -> void:
 	for car in sim.cars:
 		stops[car.pit_stops] = stops.get(car.pit_stops, 0) + 1
 	print("Paradas por carro: %s" % stops)
+	var dnf := 0
+	for car in sim.cars:
+		if car.retired:
+			dnf += 1
+	print("Chuva: %s | SC %d · VSC %d · vermelha %d | abandonos %d | incidentes %s | punições %d" % [
+		"sim" if not sim.weather.segments.is_empty() else "não", sim.control.sc_count, sim.control.vsc_count,
+		sim.control.red_count, dnf, incidents, penalties[0]])
+	if summary:
+		return
 	var pos := 1
 	for car in sim.standings():
 		var behind := sim.laps_behind_leader(car)
 		var gap := "+%d volta(s)" % behind if behind > 0 else ("+%.1fs" % sim.gap_to_leader_s(car) if pos > 1 else _fmt(car.finish_time))
+		var status := "  DSQ" if car.disqualified else ("  ABANDONO (%s)" % car.retire_reason if car.retired else "")
 		print("%2d. %s %-16s grid %2d  %-12s paradas %d  %s%s" % [pos, car.code(), car.team["name"], car.grid_position + 1,
-			gap, car.pit_stops, "-".join(car.compounds_used), "  DSQ" if car.disqualified else ""])
+			gap, car.pit_stops, "-".join(car.compounds_used), status])
 		pos += 1
 
 

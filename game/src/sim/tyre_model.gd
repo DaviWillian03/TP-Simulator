@@ -42,6 +42,41 @@ func pace_penalty(compound: String, wear: float) -> float:
 	return penalty
 
 
+## Segundos perdidos por volta por estar com este composto na umidade dada
+## (interpolação da curva "wet_curve" do arquivo de dados).
+func wet_penalty(compound: String, wetness: float) -> float:
+	var curve: Array = compounds[compound].get("wet_curve", [0, 0, 0, 0, 0, 0])
+	var x := clampf(wetness, 0.0, 1.0) * (curve.size() - 1)
+	var i := mini(floori(x), curve.size() - 2)
+	return lerpf(float(curve[i]), float(curve[i + 1]), x - i)
+
+
+## Pneus de chuva gastam muito mais quando a pista está mais seca que o ideal (superaquecem).
+func wet_wear_multiplier(compound: String, wetness: float) -> float:
+	var c: Dictionary = compounds[compound]
+	if not c.has("wet_optimum"):
+		return 1.0
+	return 1.0 + 3.0 * maxf(0.0, float(c["wet_optimum"]) - wetness)
+
+
+## Composto mais rápido para a umidade dada, entre os candidatos (padrão: todos).
+func best_for_wetness(wetness: float, candidates: Array = []) -> String:
+	var list: Array = candidates if not candidates.is_empty() else compounds.keys()
+	var best := ""
+	var best_t := INF
+	for c: String in list:
+		var t := wet_penalty(c, wetness) + float(compounds[c]["pace_offset_s"])
+		if t < best_t:
+			best_t = t
+			best = c
+	return best
+
+
+## "slick", "inter" ou "wet": o tipo de pneu, sem considerar o composto seco.
+func tyre_class(compound: String) -> String:
+	return "slick" if is_dry(compound) else compound
+
+
 ## Fração de desgaste por volta numa corrida de 100% (antes de multiplicadores).
 func wear_per_lap(compound: String) -> float:
 	return float(compounds[compound]["wear_per_lap"])

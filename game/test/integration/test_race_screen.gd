@@ -9,10 +9,15 @@ func before_each() -> void:
 	Session.duration_pct = 0.25
 	Session.race_seed = 2
 	Session.debug_advance_s = 0.0
+	Session.sim_overrides = {"weather": "dry", "incident_rate": 0.0}
 	screen = load("res://src/ui/race_screen.tscn").instantiate()
 	add_child_autofree(screen)
 	await wait_process_frames(2)
 	screen.paused = true  # o teste controla o tempo
+
+
+func after_all() -> void:
+	Session.sim_overrides = {}
 
 
 func test_tela_monta_um_painel_para_cada_carro_do_jogador() -> void:

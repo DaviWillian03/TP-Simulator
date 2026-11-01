@@ -17,6 +17,7 @@ var player_team := "mclaren"
 var duration_pct := 0.25
 var race_seed := 0
 var debug_advance_s := 0.0
+var sim_overrides: Dictionary = {}  ## opções extras da RaceSim (testes: clima, incidentes)
 
 var _screenshot_path := ""
 var _screenshot_frames := 0

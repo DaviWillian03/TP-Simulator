@@ -14,10 +14,13 @@ func before_all() -> void:
 	drivers = GameData.drivers()
 
 
+## Corridas destes testes: pista seca e sem incidentes, salvo se o teste pedir o contrário.
 func _sim(options: Dictionary, overrides: Dictionary = {}) -> RaceSim:
 	var td := track_data.duplicate(true)
 	td.merge(overrides, true)
-	return RaceSim.new(TrackModel.new(td), TyreModel.new(tyre_data), teams, drivers, options)
+	var opts := {"weather": "dry", "incident_rate": 0.0}
+	opts.merge(options, true)
+	return RaceSim.new(TrackModel.new(td), TyreModel.new(tyre_data), teams, drivers, opts)
 
 
 func _result_codes(sim: RaceSim) -> Array:
@@ -64,8 +67,8 @@ func test_ia_cumpre_a_regra_dos_dois_compostos() -> void:
 
 
 func test_jogador_sem_parar_e_desclassificado() -> void:
-	var sim := _sim({"duration_pct": 0.25, "seed": 5, "player_team": "williams"})
-	sim.run_to_end()  # o jogador não chamou ninguém para o box
+	var sim := _sim({"duration_pct": 0.25, "seed": 5, "player_team": "williams", "radio": false})
+	sim.run_to_end()  # o jogador não chamou ninguém para o box (e o rádio está desligado)
 	for car in sim.cars:
 		if car.is_player:
 			assert_eq(car.pit_stops, 0)

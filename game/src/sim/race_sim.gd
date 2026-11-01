@@ -4,12 +4,25 @@ extends RefCounted
 ##
 ## Avança em passos fixos de tempo (DT). Com a mesma semente aleatória, a corrida se
 ## repete igual — isso permite testar as regras com GUT e acelerar o tempo sem mudar o
-## resultado. A tela só lê o estado (posições, pneus) e envia ordens do jogador.
+## resultado. A tela só lê o estado (posições, pneus, clima, bandeiras) e envia ordens.
+##
+## Módulos: WeatherModel (clima), RaceControl (incidentes, bandeiras, punições),
+## RadioSystem (rádio dos pilotos do jogador), StrategyAI (decisões das equipes rivais).
 
 signal overtake(attacker: CarState, defender: CarState, zone_name: String)
 signal pit_stop(car: CarState, compound: String, stationary_s: float)
 signal fastest_lap(car: CarState, lap_time: float)
-signal tyre_warning(car: CarState)
+@warning_ignore("unused_signal")  # emitido por RaceControl/RadioSystem
+signal incident(car: CarState, kind: String, text: String)
+@warning_ignore("unused_signal")  # emitido por RaceControl/RadioSystem
+signal flag_changed(flag: int, text: String)
+@warning_ignore("unused_signal")  # emitido por RaceControl/RadioSystem
+signal penalty(car: CarState, kind: String, reason: String)
+signal team_order_result(car: CarState, obeyed: bool, text: String)
+@warning_ignore("unused_signal")  # emitido por RaceControl/RadioSystem
+signal radio_message(message: Dictionary)
+@warning_ignore("unused_signal")  # emitido por RaceControl/RadioSystem
+signal radio_answered(message: Dictionary)
 signal car_finished(car: CarState, position: int)
 signal race_finished
 
@@ -27,6 +40,8 @@ const CAR_K := 0.07  ## s/volta por ponto de nota do carro abaixo de 100
 const DRIVER_K := 0.035  ## s/volta por ponto de nota do piloto abaixo de 100
 const FUEL_START_S := 3.0  ## carro cheio de combustível é ~3 s/volta mais lento
 const LAP_NOISE_SIGMA := 0.12
+const WET_TRACK_S := 4.0  ## pista totalmente molhada deixa todos ~4 s/volta mais lentos
+const RUBBER_GAIN_S := 0.4  ## pista totalmente emborrachada: ~0,4 s/volta mais rápida
 const PACE_TIME := {CarState.PaceMode.CONSERVE: 0.45, CarState.PaceMode.NORMAL: 0.0, CarState.PaceMode.ATTACK: -0.35}
 const PACE_WEAR := {CarState.PaceMode.CONSERVE: 0.7, CarState.PaceMode.NORMAL: 1.0, CarState.PaceMode.ATTACK: 1.35}
 const ENERGY_TIME := {CarState.EnergyMode.HARVEST: 0.3, CarState.EnergyMode.BALANCED: 0.0, CarState.EnergyMode.DEPLOY: -0.3}
@@ -37,9 +52,14 @@ const OVERTAKE_SCALE := 0.2  ## quão "suave" é a curva de chance em torno da v
 const OVERTAKE_BASE_REQUIRED_S := 0.45  ## vantagem mínima mesmo na pista mais fácil
 const OVERTAKE_DIFFICULTY_S := 1.5  ## vantagem extra exigida por ponto de dificuldade da pista
 const OVERTAKE_MAX_CHANCE := 0.5
+const DEFEND_HARD_S := 0.15  ## "defender forte" exige mais vantagem de quem ataca
+const LET_BY_WINDOW_S := 1.2
 
 var track: TrackModel
 var tyres: TyreModel
+var weather: WeatherModel
+var control: RaceControl
+var radio: RadioSystem
 var cars: Array[CarState] = []
 var total_laps := 0
 var duration_pct := 1.0
@@ -54,18 +74,24 @@ var rng := RandomNumberGenerator.new()
 var _accum := 0.0
 var _mode_timer := 0.0
 var _finish_count := 0
+var _leader_laps := 0
 var _trace_dist := PackedFloat64Array()  # maior distância já alcançada por alguém...
 var _trace_time := PackedFloat64Array()  # ...e o instante em que foi alcançada (para os intervalos)
-var _warned: Dictionary = {}
 
 
-## options: duration_pct (0.25/0.5/1.0), seed (int), player_team (String)
+## options: duration_pct (0.25/0.5/1.0), seed (int), player_team (String),
+##          weather ("dry"/"rain"/segmentos/ausente), incident_rate (0 = sem incidentes; 1 = realista),
+##          radio (false = pilotos do jogador não perguntam nem decidem sozinhos)
 func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array, options: Dictionary = {}) -> void:
 	track = p_track
 	tyres = p_tyres
 	duration_pct = float(options.get("duration_pct", 1.0))
 	total_laps = maxi(3, roundi(track.laps * duration_pct))
 	rng.seed = int(options.get("seed", 1))
+	weather = WeatherModel.new(track.rain_probability, total_laps * track.base_lap_time_s * 1.05, rng, options)
+	control = RaceControl.new(self, float(options.get("incident_rate", 1.0)))
+	radio = RadioSystem.new(self)
+	radio.enabled = bool(options.get("radio", true))
 	var player_team: String = options.get("player_team", "")
 	for d: Dictionary in drivers:
 		var car := CarState.new()
@@ -90,6 +116,8 @@ func _setup_grid() -> void:
 		car.grid_position = i
 		car.distance = -GRID_SPACING_M * i - 5.0
 		car.tyre = StrategyAI.choose_start_compound(i, rng)
+		if weather.wetness >= 0.2:
+			car.tyre = tyres.best_for_wetness(weather.wetness, ["inter", "wet"])
 		car.compounds_used = [car.tyre]
 		car.pit_compound = "hard" if car.tyre != "hard" else "medium"
 		car.ai_pit_wear = rng.randf_range(0.66, 0.76)
@@ -113,19 +141,17 @@ func frac_of(car: CarState) -> float:
 
 ## Distância "visual" com interpolação entre passos da simulação (movimento suave).
 func render_distance(car: CarState) -> float:
-	if car.finished:
+	if car.finished or car.retired:
 		return car.distance
 	return car.distance + car.speed * _accum
 
 
 func leader_lap() -> int:
-	var best := 0
-	for car in cars:
-		best = maxi(best, car.laps_done)
-	return mini(best + 1, total_laps)
+	return mini(_leader_laps + 1, total_laps)
 
 
-## Classificação atual: voltas completas, depois quem terminou antes, depois a distância.
+## Classificação atual: na pista por voltas e distância; chegada pelo tempo (com punições);
+## abandonos depois; desclassificados por último.
 func standings() -> Array[CarState]:
 	var list := cars.duplicate()
 	list.sort_custom(_compare_position)
@@ -135,24 +161,26 @@ func standings() -> Array[CarState]:
 func _compare_position(a: CarState, b: CarState) -> bool:
 	if a.disqualified != b.disqualified:
 		return b.disqualified
+	if a.retired != b.retired:
+		return b.retired
 	if a.laps_done != b.laps_done:
 		return a.laps_done > b.laps_done
 	if a.finished != b.finished:
 		return a.finished
 	if a.finished:
-		return a.finish_time < b.finish_time
+		return a.classified_time() < b.classified_time()
 	return a.distance > b.distance
 
 
 ## Diferença para o líder em segundos.
 ## Em andamento: há quanto tempo o líder passou pelo ponto onde o carro está.
-## Depois da chegada: diferença entre os tempos de chegada.
+## Depois da chegada: diferença entre os tempos de classificação (com punições).
 func gap_to_leader_s(car: CarState) -> float:
 	var lead := leader()
 	if car == lead:
 		return 0.0
 	if car.finished and lead.finished:
-		return maxf(0.0, car.finish_time - lead.finish_time)
+		return maxf(0.0, car.classified_time() - lead.classified_time())
 	var d := minf(car.distance, race_distance())
 	if d <= 0.0 or _trace_dist.is_empty():
 		return 0.0
@@ -171,7 +199,7 @@ func leader() -> CarState:
 
 func laps_behind_leader(car: CarState) -> int:
 	var lead := leader()
-	if car.finished:
+	if car.finished or car.retired:
 		return lead.laps_done - car.laps_done
 	return floori((lead.distance - car.distance) / track.length_m)
 
@@ -183,21 +211,33 @@ func is_over() -> bool:
 ## Vida restante (em voltas) do pneu atual até o início do penhasco.
 func tyre_laps_left(car: CarState) -> float:
 	var c: Dictionary = tyres.compounds[car.tyre]
-	var per_lap := tyres.wear_per_lap(car.tyre) * wear_multiplier()
+	var per_lap := tyres.wear_per_lap(car.tyre) * wear_multiplier() * tyres.wet_wear_multiplier(car.tyre, weather.wetness)
 	return maxf(0.0, (float(c["cliff_start"]) - car.tyre_wear) / per_lap)
+
+
+func teammate_of(car: CarState) -> CarState:
+	for other in cars:
+		if other != car and other.team["id"] == car.team["id"]:
+			return other
+	return null
+
+
+## Ritmo do carro agora, sem tráfego nem sorte (para comparar quem é mais rápido).
+func ideal_pace(car: CarState) -> float:
+	return _lap_time(car, false)
 
 
 # --- ordens do jogador ---------------------------------------------------------------
 
 func request_pit(car: CarState, compound: String) -> void:
-	if car.finished or car.in_pit:
+	if car.finished or car.in_pit or car.retired:
 		return
 	car.pit_compound = compound
 	car.pit_requested = true
 
 
 func cancel_pit(car: CarState) -> void:
-	if not car.in_pit:
+	if not car.in_pit and not car.drive_through:
 		car.pit_requested = false
 
 
@@ -207,6 +247,37 @@ func set_pace_mode(car: CarState, mode: CarState.PaceMode) -> void:
 
 func set_energy_mode(car: CarState, mode: CarState.EnergyMode) -> void:
 	car.energy_mode = mode
+
+
+## Ordem de equipe. "Não brigar" vale para a dupla; "deixar passar" é para este carro abrir
+## para o companheiro. O piloto pode desobedecer (mais provável se estiver brigando por pódio
+## ou se for melhor que o companheiro).
+func set_team_order(car: CarState, order: CarState.TeamOrder) -> void:
+	var mate := teammate_of(car)
+	if order == CarState.TeamOrder.FREE:
+		car.team_order = order
+		if mate != null and mate.team_order == CarState.TeamOrder.HOLD:
+			mate.team_order = order
+		team_order_result.emit(car, true, "Pilotos liberados para disputar.")
+		return
+	var p := 0.85
+	var pos := standings().find(car) + 1
+	if order == CarState.TeamOrder.LET_BY and pos <= 3:
+		p -= 0.2
+	if mate != null and float(car.driver["rating"]) > float(mate.driver["rating"]):
+		p -= 0.15
+	var who := car.display_name().get_slice(" ", 0)
+	if rng.randf() >= p:
+		car.team_order = CarState.TeamOrder.FREE
+		var text := "%s: \"Não vou abrir! Ele que me passe na pista.\"" % who if order == CarState.TeamOrder.LET_BY \
+			else "%s: \"Desculpa, mas eu vou atacar.\"" % who
+		team_order_result.emit(car, false, text)
+		return
+	car.team_order = order
+	if order == CarState.TeamOrder.HOLD and mate != null:
+		mate.team_order = order
+	var ok := "%s: \"Entendido, vou abrir.\"" % who if order == CarState.TeamOrder.LET_BY else "%s: \"Ok, posições mantidas.\"" % who
+	team_order_result.emit(car, true, ok)
 
 
 # --- avanço do tempo -----------------------------------------------------------------
@@ -229,26 +300,36 @@ func run_to_end(max_steps: int = 2_000_000) -> void:
 
 func step() -> void:
 	time_s += DT
+	weather.step(DT, control.flag == RaceControl.Flag.GREEN)
 	_mode_timer -= DT
 	if _mode_timer <= 0.0:
 		_mode_timer = MODE_UPDATE_S
 		for car in cars:
-			if not car.is_player and not car.finished:
+			if not car.is_player and not car.finished and not car.retired:
 				StrategyAI.update_modes(self, car)
 
 	var order := _running_order()
 	_update_gaps(order)
 	for car in order:
-		car.speed = car.pit_speed if car.in_pit else track.length_m / _lap_time(car, true)
+		if car.drive_through and not car.pit_requested:
+			car.pit_requested = true
+		if car.in_pit:
+			car.speed = car.pit_speed
+		elif car.stall_s > 0.0:
+			car.speed = 0.0
+		else:
+			car.speed = control.flag_speed(car, track.length_m / _lap_time(car, true))
 
-	_resolve_overtakes(order)
-	order = _running_order()
+	if control.flag == RaceControl.Flag.GREEN:
+		_resolve_overtakes(order)
+		_apply_let_by(order)
+		order = _running_order()
 
 	for i in order.size():
 		var car: CarState = order[i]
 		var prev := car.distance
 		var target := prev + car.speed * DT
-		if not car.in_pit:
+		if car.lane() == 0:
 			var ahead := _same_lane_ahead(order, i)
 			if ahead != null:
 				target = minf(target, ahead.distance - MIN_GAP_M)
@@ -256,6 +337,7 @@ func step() -> void:
 		car.distance = target
 		_after_move(car, prev, target)
 
+	control.step(DT, _running_order())
 	_update_trace()
 	if chequered and _all_finished():
 		over = true
@@ -271,14 +353,18 @@ func _ideal_lap_time(car: CarState) -> float:
 		+ (100.0 - float(car.driver["rating"])) * DRIVER_K
 
 
-## Tempo de volta no estado atual. with_traffic inclui ruído e ar turbulento.
+## Tempo de volta no estado atual (bandeira verde). with_traffic inclui ruído e ar turbulento.
 func _lap_time(car: CarState, with_traffic: bool) -> float:
 	var t := _ideal_lap_time(car)
 	t += tyres.pace_penalty(car.tyre, car.tyre_wear)
+	t += tyres.wet_penalty(car.tyre, weather.wetness) + weather.wetness * WET_TRACK_S
+	t -= weather.rubber * RUBBER_GAIN_S
 	t += FUEL_START_S * (1.0 - clampf(car.distance / race_distance(), 0.0, 1.0))
 	t += PACE_TIME[car.pace_mode]
 	if car.energy_mode != CarState.EnergyMode.DEPLOY or car.battery > 0.0:
 		t += ENERGY_TIME[car.energy_mode]
+	t += car.damage_wing * RaceControl.WING_PENALTY_S + car.damage_floor * RaceControl.FLOOR_PENALTY_S
+	t += radio.confidence_delta_s(car)
 	if with_traffic:
 		t += car.lap_noise
 		var gap := gap_to_car_ahead_s(car)
@@ -287,27 +373,28 @@ func _lap_time(car: CarState, with_traffic: bool) -> float:
 	return t
 
 
-# --- ultrapassagens ------------------------------------------------------------------
+# --- ultrapassagens e ordens de equipe -------------------------------------------------
 
 func _resolve_overtakes(order: Array[CarState]) -> void:
 	for i in range(1, order.size()):
 		var att: CarState = order[i]
-		if att.in_pit:
+		if att.lane() != 0:
 			continue
 		var def := _same_lane_ahead(order, i)
 		if def == null:
 			continue
+		if att.team["id"] == def.team["id"] and (att.team_order == CarState.TeamOrder.HOLD or def.team_order == CarState.TeamOrder.HOLD):
+			continue  # "não brigar"
 		var gap_m := def.distance - att.distance
 		if gap_m > att.speed * ATTACK_WINDOW_S:
 			continue
 		var next_d := att.distance + att.speed * DT
 		for zone: Dictionary in track.overtaking_zones:
 			if _crossed(att.distance, next_d, float(zone["braking_frac"])):
+				if control.check_contact(att, def):
+					break
 				if _try_overtake(att, def, zone):
-					var def_d := def.distance
-					def.distance = att.distance
-					att.distance = def_d
-					def.distance -= def.speed * 0.25  # quem é ultrapassado perde um pouco de tempo
+					_swap(att, def, 0.25)
 					overtakes_count += 1
 					overtake.emit(att, def, zone["name"])
 				break
@@ -321,8 +408,35 @@ func _try_overtake(att: CarState, def: CarState, zone: Dictionary) -> bool:
 	# Ex.: Interlagos (0,35) exige ~1,0 s/volta de vantagem para a chance chegar à metade do máximo;
 	# uma pista tipo Mônaco (0,95) exige ~1,9 s.
 	var required := OVERTAKE_BASE_REQUIRED_S + track.overtaking_difficulty * OVERTAKE_DIFFICULTY_S
+	if def.defend_hard:
+		required += DEFEND_HARD_S
 	var p := float(zone["strength"]) / (1.0 + exp(-(advantage - required) / OVERTAKE_SCALE))
 	return rng.randf() < clampf(p, 0.0, OVERTAKE_MAX_CHANCE)
+
+
+## Troca de posição: quem estava atrás passa à frente; quem foi passado perde `loss_s`.
+func _swap(behind: CarState, ahead: CarState, loss_s: float) -> void:
+	var ahead_d := ahead.distance
+	ahead.distance = behind.distance - ahead.speed * loss_s
+	behind.distance = ahead_d
+
+
+## "Deixar passar": quando o companheiro encosta, o carro abre a posição.
+func _apply_let_by(order: Array[CarState]) -> void:
+	for i in order.size():
+		var car := order[i]
+		if car.team_order != CarState.TeamOrder.LET_BY or car.lane() != 0:
+			continue
+		var mate := teammate_of(car)
+		if mate == null or mate.lane() != 0 or mate.finished or mate.retired:
+			car.team_order = CarState.TeamOrder.FREE
+			continue
+		var gap := (car.distance - mate.distance) / maxf(mate.speed, 1.0)
+		var j := order.find(mate)
+		if j == i + 1 and gap > 0.0 and gap < LET_BY_WINDOW_S:
+			_swap(mate, car, 0.4)
+			car.team_order = CarState.TeamOrder.FREE
+			team_order_result.emit(car, true, "%s abre para %s." % [car.code(), mate.code()])
 
 
 # --- eventos de volta, box e chegada -------------------------------------------------
@@ -332,15 +446,16 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 	if moved <= 0.0:
 		return
 	var lap_part := moved / track.length_m
-	car.tyre_wear += tyres.wear_per_lap(car.tyre) * wear_multiplier() * PACE_WEAR[car.pace_mode] * lap_part
-	car.battery = clampf(car.battery + ENERGY_SOC[car.energy_mode] * lap_part, 0.0, 1.0)
+	var wear: float = tyres.wear_per_lap(car.tyre) * wear_multiplier() * PACE_WEAR[car.pace_mode]
+	wear *= tyres.wet_wear_multiplier(car.tyre, weather.wetness)
+	if control.is_neutralized():
+		wear *= 0.5
+	car.tyre_wear += wear * lap_part
+	var soc: float = ENERGY_SOC[car.energy_mode] + (0.1 if control.is_neutralized() else 0.0)
+	car.battery = clampf(car.battery + soc * lap_part, 0.0, 1.0)
 
 	if not car.is_player and _crossed(prev, now, STRATEGY_FRAC):
 		StrategyAI.decide_pit(self, car)
-
-	if car.is_player and car.tyre_wear >= 0.7 and not _warned.get(car.index, false):
-		_warned[car.index] = true
-		tyre_warning.emit(car)
 
 	if car.pit_requested and not car.in_pit and _crossed(prev, now, track.pit_entry_frac):
 		var on_last_lap := car.laps_done + 1 >= total_laps
@@ -359,7 +474,7 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 			return
 
 	if car.in_pit and not car.pit_service_done and _crossed(prev, now, track.pit_box_frac):
-		_change_tyres(car)
+		_service_car(car)
 	elif car.in_pit and car.pit_service_done and _crossed(prev, now, track.pit_exit_frac):
 		car.in_pit = false
 		car.pit_requested = false
@@ -368,25 +483,44 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 func _enter_pit(car: CarState) -> void:
 	car.in_pit = true
 	car.pit_service_done = false
-	var stationary := 2.4 + absf(rng.randfn(0.0, 0.3))
-	if rng.randf() < 0.05:
-		stationary += rng.randf_range(2.0, 5.0)  # parada lenta
+	var stationary := 0.0
+	if car.drive_through:
+		stationary = 0.0  # passa pelo pit lane sem parar
+	else:
+		stationary = 2.4 + absf(rng.randfn(0.0, 0.3))
+		if rng.randf() < 0.05:
+			stationary += rng.randf_range(2.0, 5.0)  # parada lenta
+		if not car.is_player and car.damage_wing > 0.15:
+			car.repair_wing = true
+		if car.repair_wing:
+			stationary += RaceControl.WING_CHANGE_S
+		stationary += car.penalty_pending_s  # cumpre a punição de tempo parado no box
 	car.pit_stationary_s = stationary
+	# tempo do pit lane é fixo (limite de velocidade): calculado com o ritmo de bandeira verde,
+	# por isso parar sob safety car/VSC custa menos em relação a quem fica na pista
 	var normal_speed := track.length_m / _lap_time(car, false)
 	var lane := track.pit_lane_length_m()
 	var lane_time := lane / normal_speed + track.pit_lane_loss_s + (stationary - 2.4)
 	car.pit_speed = lane / lane_time
 
 
-func _change_tyres(car: CarState) -> void:
+func _service_car(car: CarState) -> void:
+	car.pit_service_done = true
+	if car.drive_through:
+		car.drive_through = false
+		pit_stop.emit(car, "", 0.0)
+		return
+	car.penalty_pending_s = 0.0
+	if car.repair_wing:
+		car.damage_wing = 0.0
+		car.repair_wing = false
 	car.tyre = car.pit_compound
 	car.tyre_wear = 0.0
 	car.tyre_laps = 0
 	if not car.compounds_used.has(car.tyre):
 		car.compounds_used.append(car.tyre)
 	car.pit_stops += 1
-	car.pit_service_done = true
-	_warned.erase(car.index)
+	control.on_pit_stop(car)
 	pit_stop.emit(car, car.tyre, car.pit_stationary_s)
 
 
@@ -396,7 +530,11 @@ func _complete_lap(car: CarState, lap_number: int, cross_time: float) -> void:
 	car.lap_start_time = cross_time
 	car.tyre_laps += 1
 	car.lap_noise = rng.randfn(0.0, LAP_NOISE_SIGMA)
-	if lap_number > 1:  # a 1ª volta inclui a largada parada
+	if lap_number > _leader_laps:
+		_leader_laps = lap_number
+		control.on_leader_lap(lap_number)
+	var green_lap := control.flag == RaceControl.Flag.GREEN
+	if lap_number > 1 and green_lap:  # a 1ª volta inclui a largada parada
 		car.best_lap_time = minf(car.best_lap_time, car.last_lap_time)
 		if car.last_lap_time < fastest_lap_time:
 			fastest_lap_time = car.last_lap_time
@@ -406,6 +544,8 @@ func _complete_lap(car: CarState, lap_number: int, cross_time: float) -> void:
 		chequered = true
 	if chequered:
 		_finish(car, cross_time)
+	elif car.is_player:
+		radio.on_lap(car)
 
 
 func _finish(car: CarState, cross_time: float) -> void:
@@ -419,6 +559,45 @@ func _finish(car: CarState, cross_time: float) -> void:
 	car_finished.emit(car, _finish_count)
 
 
+# --- chamados pela direção de prova ----------------------------------------------------
+
+func retire_car(car: CarState, reason: String) -> void:
+	car.retired = true
+	car.retire_reason = reason
+	car.speed = 0.0
+	car.in_pit = false
+	car.pit_requested = false
+	car.stall_s = 0.0
+
+
+## Safety car ou VSC acionado: parada "barata". A IA aproveita; o jogador recebe a pergunta.
+func on_neutralization() -> void:
+	for car in _running_order():
+		if car.is_player:
+			radio.on_neutralization(car)
+		else:
+			StrategyAI.on_neutralization(self, car)
+
+
+## Bandeira vermelha: todos podem trocar pneus (e reparar a asa) sem perder tempo.
+func free_tyre_change() -> void:
+	for car in _running_order():
+		var remaining := total_laps - car.laps_done
+		var best := tyres.best_for_wetness(weather.wetness + 0.05)
+		var compound := best
+		if tyres.is_dry(best):
+			compound = car.pit_compound if car.is_player and tyres.is_dry(car.pit_compound) else StrategyAI.choose_compound(self, car, remaining)
+		car.tyre = compound
+		car.tyre_wear = 0.0
+		car.tyre_laps = 0
+		if not car.compounds_used.has(compound):
+			car.compounds_used.append(compound)
+		car.damage_wing = 0.0
+		car.in_pit = false
+		car.pit_requested = false
+		car.stall_s = 0.0
+
+
 # --- utilidades ----------------------------------------------------------------------
 
 ## O carro passou pelo ponto "frac" da volta entre as distâncias a e b?
@@ -430,19 +609,22 @@ func _crossed(a: float, b: float, frac: float) -> bool:
 func _running_order() -> Array[CarState]:
 	var list: Array[CarState] = []
 	for car in cars:
-		if not car.finished:
+		if not car.finished and not car.retired:
 			list.append(car)
 	list.sort_custom(func(a: CarState, b: CarState) -> bool: return a.distance > b.distance)
 	return list
 
 
-## Carro mais próximo à frente (em distância total) que está na mesma faixa (pista ou box).
+## Carro mais próximo à frente (em distância total) na mesma faixa (pista, box ou fora do traçado).
 ## Carros com uma volta a mais ficam longe em distância total: é a "bandeira azul" implícita.
 func _same_lane_ahead(order: Array[CarState], i: int) -> CarState:
 	var car := order[i]
+	var lane := car.lane()
+	if lane == 2:
+		return null  # fora do traçado não disputa nada
 	for j in range(i - 1, -1, -1):
 		var other := order[j]
-		if other.in_pit == car.in_pit:
+		if other.lane() == lane:
 			return other
 	return null
 
@@ -456,7 +638,7 @@ func _update_gaps(order: Array[CarState]) -> void:
 
 func _all_finished() -> bool:
 	for car in cars:
-		if not car.finished:
+		if not car.finished and not car.retired:
 			return false
 	return true
 
@@ -464,7 +646,8 @@ func _all_finished() -> bool:
 func _update_trace() -> void:
 	var lead := -INF
 	for car in cars:
-		lead = maxf(lead, car.distance)
+		if not car.retired:
+			lead = maxf(lead, car.distance)
 	lead = minf(lead, race_distance())  # depois da bandeirada a referência do líder para
 	if lead <= 0.0:
 		return
