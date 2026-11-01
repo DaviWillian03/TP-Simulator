@@ -14,7 +14,7 @@ var _body: VBoxContainer
 var _header: PanelContainer
 
 
-func setup(cols: Array, row_count: int) -> void:
+func setup(cols: Array, rows: int) -> void:
 	columns = cols
 	add_theme_stylebox_override("panel", UiStyle.sheet_box())
 	_body = VBoxContainer.new()
@@ -34,7 +34,7 @@ func setup(cols: Array, row_count: int) -> void:
 		cap.horizontal_alignment = _align(columns[i])
 		h.add_child(_wrap(cap, columns[i]))
 	_body.add_child(_header)
-	set_row_count(row_count)
+	set_row_count(rows)
 
 
 func set_row_count(n: int) -> void:

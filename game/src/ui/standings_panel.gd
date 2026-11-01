@@ -50,11 +50,11 @@ func _make_row() -> PanelContainer:
 	name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var emblem := TeamEmblems.make_rect("", 18)
 	name_box.add_child(emblem)
-	var name := UiStyle.label("", 13, UiStyle.INK, true)
-	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	name.clip_text = true
-	name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_box.add_child(name)
+	var name_label := UiStyle.label("", 13, UiStyle.INK, true)
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name_label.clip_text = true
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_box.add_child(name_label)
 	var pen := _penalty_tag()
 	name_box.add_child(pen)
 	h.add_child(_pad(name_box, 0.0))
@@ -75,7 +75,7 @@ func _make_row() -> PanelContainer:
 	wear.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	h.add_child(_pad(wear, W_WEAR))
 
-	_rows.append({"bg": bg, "pos": pos, "emblem": emblem, "name": name, "pen": pen,
+	_rows.append({"bg": bg, "pos": pos, "emblem": emblem, "name": name_label, "pen": pen,
 		"gap": gap, "tyre": tyre, "wear": wear, "team": ""})
 	return bg
 
