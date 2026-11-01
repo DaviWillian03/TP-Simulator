@@ -528,6 +528,7 @@ func _complete_lap(car: CarState, lap_number: int, cross_time: float) -> void:
 	car.laps_done = lap_number
 	car.last_lap_time = cross_time - car.lap_start_time
 	car.lap_start_time = cross_time
+	car.lap_times.append(car.last_lap_time)
 	car.tyre_laps += 1
 	car.lap_noise = rng.randfn(0.0, LAP_NOISE_SIGMA)
 	if lap_number > _leader_laps:

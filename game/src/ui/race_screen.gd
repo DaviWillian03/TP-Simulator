@@ -16,6 +16,10 @@ var _track_view: TrackView
 var _standings: StandingsPanel
 var _car_panels: Array[CarControlPanel] = []
 var _toasts: ToastFeed
+var _radar: RadarWidget
+var _radio: RadioCard
+var _drawer: DataDrawer
+var _meta: Label
 var _lap_label: Label
 var _watermark: Label
 var _refresh_timer := 0.0
@@ -33,7 +37,11 @@ func _ready() -> void:
 		GameData.teams(), GameData.drivers(), options)
 	if Session.debug_advance_s > 0.0:
 		sim.advance(Session.debug_advance_s)
+	if Session.debug_sc:
+		sim.control.deploy_sc("teste de captura")
+		sim.advance(40.0)
 	_build_ui()
+	_drawer.visible = Session.debug_open_data
 	_connect_sim_signals()
 	_refresh_ui()
 	_toasts.push("Luzes apagadas! %d voltas em %s." % [sim.total_laps, sim.track.short_name])
@@ -93,6 +101,28 @@ func _build_ui() -> void:
 	_toasts.position = Vector2(6, 12)
 	_toasts.custom_minimum_size = Vector2(380, 0)
 	track_holder.add_child(_toasts)
+	_radar = RadarWidget.new()
+	_radar.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_radar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_radar.offset_right = -12
+	_radar.offset_top = 12
+	track_holder.add_child(_radar)
+	_radar.setup(sim)
+	_radio = RadioCard.new()
+	_radio.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_radio.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_radio.offset_left = 8
+	_radio.offset_bottom = -10
+	track_holder.add_child(_radio)
+	_radio.answered.connect(func(id: int, option: int) -> void:
+		sim.radio.answer(id, option)
+		_refresh_ui())
+	_drawer = DataDrawer.new()
+	_drawer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_drawer.visible = false
+	track_holder.add_child(_drawer)
+	_drawer.setup(sim)
+	_drawer.closed.connect(func() -> void: _drawer.visible = false)
 
 	left.add_child(UiStyle.rule(UiStyle.RULE_MID))
 	var panels := HBoxContainer.new()
@@ -125,10 +155,10 @@ func _build_masthead() -> Control:
 	var title := UiStyle.label(sim.track.grand_prix.to_upper(), 36, UiStyle.INK, true)
 	title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	bar.add_child(title)
-	var meta := UiStyle.caption("%s · %d voltas · seco" % [sim.track.short_name, sim.total_laps])
-	meta.add_theme_font_size_override("font_size", 12)
-	meta.size_flags_vertical = Control.SIZE_SHRINK_END
-	bar.add_child(meta)
+	_meta = UiStyle.caption("")
+	_meta.add_theme_font_size_override("font_size", 12)
+	_meta.size_flags_vertical = Control.SIZE_SHRINK_END
+	bar.add_child(_meta)
 	var speeds := HBoxContainer.new()
 	speeds.add_theme_constant_override("separation", 4)
 	speeds.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -144,6 +174,13 @@ func _build_masthead() -> Control:
 		b.pressed.connect(func() -> void: time_scale = s)
 		speeds.add_child(b)
 	bar.add_child(speeds)
+	var data := UiStyle.compact(UiStyle.button("Dados"), 13)
+	data.custom_minimum_size = Vector2(70, 34)
+	data.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	data.pressed.connect(func() -> void:
+		_drawer.visible = not _drawer.visible
+		_drawer.refresh())
+	bar.add_child(data)
 	bar.add_child(UiStyle.hspacer())
 	var menu := UiStyle.compact(UiStyle.button("Menu"), 13)
 	menu.custom_minimum_size = Vector2(64, 34)
@@ -161,6 +198,11 @@ func _connect_sim_signals() -> void:
 	sim.pit_stop.connect(_on_pit_stop)
 	sim.fastest_lap.connect(_on_fastest_lap)
 	sim.race_finished.connect(_on_race_finished)
+	sim.incident.connect(_on_incident)
+	sim.flag_changed.connect(_on_flag_changed)
+	sim.penalty.connect(_on_penalty)
+	sim.team_order_result.connect(_on_team_order)
+	sim.radio_message.connect(_on_radio_message)
 
 
 func _process(delta: float) -> void:
@@ -174,7 +216,17 @@ func _process(delta: float) -> void:
 
 func _refresh_ui() -> void:
 	_lap_label.text = "FIM" if sim.chequered else "%d/%d" % [sim.leader_lap(), sim.total_laps]
+	var rain := sim.weather.rain_label()
+	_meta.text = "%s · %d voltas · %s" % [sim.track.short_name, sim.total_laps, ("pista " + sim.weather.surface_label()) if rain == "sem chuva" else rain]
 	_standings.refresh()
+	_radar.refresh()
+	_drawer.refresh()
+	var question := {}
+	for p in _car_panels:
+		var q := sim.radio.pending_for(p.car)
+		if not q.is_empty() and (question.is_empty() or int(q["id"]) < int(question["id"])):
+			question = q
+	_radio.show_message(question)
 	var order := sim.standings()
 	var best := 99
 	for p in _car_panels:
@@ -209,8 +261,29 @@ func _on_fastest_lap(car: CarState, lap_time: float) -> void:
 		_toasts.push("Volta mais rápida: %s — %s" % [_surname(car), UiStyle.format_time(lap_time)])
 
 
-func _on_tyre_warning(car: CarState) -> void:
-	_toasts.push("Rádio %s: \"Os pneus estão acabando!\"" % _surname(car), "hot")
+func _on_incident(car: CarState, kind: String, text: String) -> void:
+	var important := car.is_player or kind in ["crash", "failure", "contact"] or sim.standings().find(car) < 5
+	if important:
+		_toasts.push(text, "hot" if car.is_player or kind == "crash" else "note")
+
+
+func _on_flag_changed(_flag: int, text: String) -> void:
+	_toasts.push(text, "hot")
+
+
+func _on_penalty(car: CarState, kind: String, reason: String) -> void:
+	_toasts.push("Punição para %s: %s (%s)" % [_surname(car), kind, reason], "hot" if car.is_player else "note")
+
+
+func _on_team_order(car: CarState, _obeyed: bool, text: String) -> void:
+	if car.is_player:
+		_toasts.push("Rádio — " + text)
+
+
+func _on_radio_message(m: Dictionary) -> void:
+	if m["kind"] == "info":
+		_toasts.push("Rádio — " + m["text"])
+	_refresh_ui()
 
 
 func _on_race_finished() -> void:
@@ -267,18 +340,22 @@ func _build_results() -> Control:
 	var order := sim.standings()
 	for i in order.size():
 		var car := order[i]
-		var pos := "DSQ" if car.disqualified else str(i + 1)
+		var pos := "DSQ" if car.disqualified else ("–" if car.retired else str(i + 1))
 		var gap: String
-		if i == 0:
+		if car.retired:
+			gap = "Abandono (%s)" % car.retire_reason
+		elif i == 0:
 			gap = UiStyle.format_time(car.finish_time)
 		elif sim.laps_behind_leader(car) > 0:
 			gap = "+%d volta(s)" % sim.laps_behind_leader(car)
 		else:
 			gap = "+%.3f s" % sim.gap_to_leader_s(car)
+		if car.penalty_pending_s > 0.0 and car.finished:
+			gap += "  (inclui +%ds)" % int(car.penalty_pending_s)
 		var best := UiStyle.format_time(car.best_lap_time)
 		if car == sim.fastest_lap_car:
 			best += "  ★"
-		var color := UiStyle.RED if car.is_player else UiStyle.INK
+		var color := UiStyle.RED if car.is_player else (UiStyle.MUTED if car.retired else UiStyle.INK)
 		grid.add_child(UiStyle.label(pos, 15, UiStyle.RED if i == 0 else color, true))
 		grid.add_child(UiStyle.label("%s  %s" % [car.code(), car.display_name()], 14, color, car.is_player))
 		grid.add_child(UiStyle.label(car.team["name"], 14, color))

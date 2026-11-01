@@ -6,12 +6,17 @@ Feito em **Godot 4.7** com GDScript.
 ![logo](game/assets/branding/logo.svg)
 
 ## Estado atual
-Primeiro marco jogável: corrida rápida em Interlagos com o grid de 2026, estratégia de pneus,
-ordens de ritmo e energia, pit stops e IA das equipes rivais. Detalhes em `docs/ROADMAP.md`.
+Corrida rápida em Interlagos com o grid de 2026: estratégia de pneus (inclusive chuva), clima
+dinâmico com radar, safety car/VSC/bandeira vermelha, incidentes e punições, ordens de equipe,
+rádio dos pilotos e menu de dados ao vivo. Detalhes em `docs/ROADMAP.md`.
 
 | Menu | Corrida | Resultado |
 |---|---|---|
 | ![menu](docs/screenshots/menu.png) | ![corrida](docs/screenshots/corrida.png) | ![resultado](docs/screenshots/resultado.png) |
+
+| Chuva e rádio | Safety car e dados |
+|---|---|
+| ![chuva](docs/screenshots/chuva-radio.png) | ![safety car](docs/screenshots/safety-car-dados.png) |
 
 ## Como rodar
 1. Instale o Godot 4.7.2 (no Linux: `scripts/setup-godot.sh`).

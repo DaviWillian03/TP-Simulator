@@ -16,8 +16,10 @@ das escolhas técnicas.
 ## Estrutura (`game/` é o projeto Godot)
 - `data/` — JSON orientado a dados (equipes, pilotos, pneus, circuitos). Valores de desempenho
   marcados PROVISÓRIO até a pesquisa de atributos.
-- `src/sim/` — simulação **sem dependência de tela** (RaceSim, TrackModel, TyreModel, StrategyAI).
-  Passo fixo `DT`, semente determinística. Regras novas entram aqui, com teste.
+- `src/sim/` — simulação **sem dependência de tela**: RaceSim (orquestra), TrackModel, TyreModel,
+  WeatherModel (clima/radar), RaceControl (incidentes, bandeiras, punições), RadioSystem (rádio),
+  StrategyAI (IA). Passo fixo `DT`, semente determinística. Regras novas entram aqui, com teste.
+  Módulos que guardam o RaceSim usam `WeakRef` (ciclo de referência vazaria memória).
 - `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). Visual "Paddock"
   (revista): **todas** as cores/fontes/fios vêm de `UiStyle` — nada de cor solta nas telas.
   Emblemas via `TeamEmblems` (imagem em `user://import/emblems/<id>.png` tem prioridade).
@@ -34,6 +36,9 @@ godot --headless -d -s --path "$PWD" addons/gut/gut_cmdln.gd -gexit   # testes (
 godot --headless -s tools/race_report.gd -- --pct=1.0 --seeds=1,2,3    # balanceamento
 DISPLAY=:99 godot --resolution 1280x720 -- --race --team=williams --advance=420 --screenshot=/caminho/x.png --frames=60
 ```
+Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--weather=dry`,
+`--incidents=<mult>`, `--sc` (aciona safety car), `--data` (abre o menu DADOS), `--seed`, `--pct`.
+Testes de regras usam `{"weather": "dry", "incident_rate": 0.0}` salvo quando testam clima/incidentes.
 - Captura de tela precisa de display: `Xvfb :99 -screen 0 1280x720x24 &`. Use para conferir
   layout depois de mexer na interface (ler logs não mostra a tela).
 - O GUT sai com 0 se tudo passar e 1 se algo falhar. Erro de áudio ALSA no container é esperado.

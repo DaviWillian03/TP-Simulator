@@ -90,7 +90,7 @@ func forecast(lap_time_s: float, horizon_laps: int = 10) -> Array[float]:
 			t += lap_time_s / 4.0
 		var p := 0.08 + 0.84 * clampf(truth / 0.5, 0.0, 1.0)
 		var slot := floori(a / lap_time_s / 2.0)
-		var noise := _stable_noise(slot) * (0.06 + 0.045 * h)
+		var noise := _stable_noise(slot) * (0.04 + 0.025 * h)  # erro cresce com a distância, sem alarme falso grosseiro
 		out.append(clampf(p + noise, 0.02, 0.98))
 		h += 2
 	return out
@@ -110,14 +110,15 @@ func _stable_noise(slot: int) -> float:
 	return (x - floorf(x)) * 2.0 - 1.0
 
 
+## Estado da superfície no feminino, para "pista seca/úmida/molhada/encharcada".
 func surface_label() -> String:
 	if wetness < 0.08:
-		return "seco"
+		return "seca"
 	if wetness < 0.35:
-		return "úmido"
+		return "úmida"
 	if wetness < 0.7:
-		return "molhado"
-	return "encharcado"
+		return "molhada"
+	return "encharcada"
 
 
 func rain_label() -> String:

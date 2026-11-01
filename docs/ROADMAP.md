@@ -18,15 +18,19 @@ Cada marco termina jogável e testado. Itens vêm de `docs/DECISIONS.md`.
 - 8 mockups → escolha do usuário → tokens em `UiStyle`; menu, corrida e resultado refeitos.
 - Tabela no formato da transmissão com emblemas originais + importação de logo pelo jogador.
 
-## Marco 2 — Corrida completa (o que falta da gameplay de corrida)
-- **Clima dinâmico** + pneus intermediário/chuva + **radar de chuva com incerteza (P3)**.
-- **Safety car, VSC e bandeira vermelha (P6)**; incidentes, abandonos e quebras.
-- **Punições**: 5 s / 10 s / drive-through, pontos na licença.
-- **Ordens entre companheiros** (ceder posição), com chance de desobediência.
-- **Rádio com personalidade (P1)**: sugestões e perguntas dos pilotos que pedem resposta.
-- **Pista que evolui (P5)**: borracha acumulada; traçado secando após chuva.
-- Pit stop com troca de asa e reparos (depende de danos).
-- Menu dinâmico com dados completos de todos os pilotos, sem pausar.
+## ✅ Marco 2 — Corrida completa (2026-11-01)
+- Mockups aprovados (`design/mockups/m2-*.html`) e implementados.
+- **Clima dinâmico** com umidade e secagem da pista, pneus intermediário/chuva com curva por
+  umidade, **radar de chuva com incerteza (P3)** e **pista que evolui (P5)** (borracha).
+- **Safety car, VSC e bandeira vermelha (P6)**: SC agrupa e barateia a parada; VSC mantém as
+  diferenças; vermelha libera troca de pneus e relarga atrás do SC.
+- Rodadas, batidas, quebras e toques; **dano de asa** com troca no box; **punições** 5 s / 10 s /
+  drive-through, cumpridas no box ou somadas ao tempo final; **pontos na licença**.
+- **Ordens de equipe** (deixar passar, não brigar, liberado) com chance de desobediência.
+- **Rádio com personalidade (P1)**: perguntas em momentos-chave com efeito de confiança; sem
+  resposta, o piloto decide sozinho.
+- **Menu DADOS** sem pausar (todos os pilotos, meus pilotos, tempos de volta).
+- Calibração "realista" conferida com `tools/race_report.gd`; 52 testes.
 
 ## Marco 3 — Modo Grande Prêmio
 - Fim de semana completo: treinos livres (acerto), classificação Q1/Q2/Q3, corrida, formato

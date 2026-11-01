@@ -72,3 +72,39 @@ func _all_buttons(node: Node) -> Array[Button]:
 			out.append(c)
 		out.append_array(_all_buttons(c))
 	return out
+
+
+func test_cartao_do_radio_responde_e_chama_para_o_box() -> void:
+	var car: CarState = screen._car_panels[0].car
+	screen.sim.radio.ask(car, "Pergunta de teste?", [{"label": "Box: duro", "action": "pit", "arg": "hard"}, {"label": "Fica", "action": "stay", "arg": ""}], 0)
+	screen._refresh_ui()
+	assert_true(screen._radio.visible, "cartão aparece")
+	var first: Button = screen._radio._answers.get_child(0)
+	first.emit_signal("pressed")
+	assert_true(car.pit_requested)
+	assert_eq(car.pit_compound, "hard")
+	screen._refresh_ui()
+	assert_false(screen._radio.visible, "cartão some depois da resposta")
+
+
+func test_menu_dados_abre_e_atualiza_as_tres_abas() -> void:
+	for i in 600:
+		screen.sim.step()
+	screen._drawer.visible = true
+	for tab in 3:
+		screen._drawer._select(tab)
+		screen._drawer.refresh()
+	screen._drawer._select(0)
+	screen._drawer.refresh()
+	var first_row: Array = screen._drawer._cells[0]
+	assert_eq(first_row[0].text, "1")
+	assert_ne(first_row[1].text, "")
+
+
+func test_faixa_de_status_mostra_safety_car() -> void:
+	for i in 600:
+		screen.sim.step()
+	screen.sim.control.deploy_sc("teste")
+	screen._refresh_ui()
+	assert_true(screen._standings._status_panel.visible)
+	assert_string_contains(screen._standings._status.text, "SAFETY CAR")

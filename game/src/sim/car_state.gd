@@ -20,6 +20,7 @@ var laps_done := 0
 var lap_start_time := 0.0
 var last_lap_time := 0.0
 var best_lap_time := INF
+var lap_times := PackedFloat32Array()  ## histórico de tempos de volta (menu DADOS)
 var lap_noise := 0.0  ## variação aleatória do ritmo nesta volta
 
 # pneus e energia
