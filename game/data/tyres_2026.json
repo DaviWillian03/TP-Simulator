@@ -1,0 +1,65 @@
+{
+ "season": 2026,
+ "rule": {
+  "min_dry_compounds": 2,
+  "exempt_if_wet_compound_used": true
+ },
+ "_notas": "Valores de desempenho PROVISÓRIOS para o primeiro marco; calibrar na pesquisa. Desgaste em fração por volta numa corrida de 100%.",
+ "compounds": {
+  "soft": {
+   "name": "Macio",
+   "letter": "S",
+   "color": "#E8261C",
+   "dry": true,
+   "pace_offset_s": 0.0,
+   "wear_per_lap": 0.045,
+   "deg_coeff": 1.6,
+   "cliff_start": 0.78,
+   "cliff_coeff": 40.0
+  },
+  "medium": {
+   "name": "Médio",
+   "letter": "M",
+   "color": "#F5C400",
+   "dry": true,
+   "pace_offset_s": 0.55,
+   "wear_per_lap": 0.031,
+   "deg_coeff": 1.3,
+   "cliff_start": 0.78,
+   "cliff_coeff": 40.0
+  },
+  "hard": {
+   "name": "Duro",
+   "letter": "H",
+   "color": "#F2F2F2",
+   "dry": true,
+   "pace_offset_s": 1.0,
+   "wear_per_lap": 0.022,
+   "deg_coeff": 1.1,
+   "cliff_start": 0.78,
+   "cliff_coeff": 40.0
+  },
+  "inter": {
+   "name": "Intermediário",
+   "letter": "I",
+   "color": "#2DB34A",
+   "dry": false,
+   "pace_offset_s": 4.0,
+   "wear_per_lap": 0.03,
+   "deg_coeff": 1.2,
+   "cliff_start": 0.8,
+   "cliff_coeff": 40.0
+  },
+  "wet": {
+   "name": "Chuva",
+   "letter": "W",
+   "color": "#1F6FE5",
+   "dry": false,
+   "pace_offset_s": 7.0,
+   "wear_per_lap": 0.025,
+   "deg_coeff": 1.0,
+   "cliff_start": 0.8,
+   "cliff_coeff": 40.0
+  }
+ }
+}

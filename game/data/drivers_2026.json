@@ -1,0 +1,204 @@
+{
+ "season": 2026,
+ "_notas": "Grid oficial de 2026 (confirmado por busca em 2026-11-01). 'rating' é PROVISÓRIO (0-100); dados biográficos (idade, altura, peso, conquistas) entram após a pesquisa.",
+ "drivers": [
+  {
+   "id": "norris",
+   "name": "Lando Norris",
+   "code": "NOR",
+   "number": 1,
+   "nationality": "Reino Unido",
+   "team": "mclaren",
+   "rating": 94
+  },
+  {
+   "id": "piastri",
+   "name": "Oscar Piastri",
+   "code": "PIA",
+   "number": 81,
+   "nationality": "Austrália",
+   "team": "mclaren",
+   "rating": 92
+  },
+  {
+   "id": "russell",
+   "name": "George Russell",
+   "code": "RUS",
+   "number": 63,
+   "nationality": "Reino Unido",
+   "team": "mercedes",
+   "rating": 92
+  },
+  {
+   "id": "antonelli",
+   "name": "Kimi Antonelli",
+   "code": "ANT",
+   "number": 12,
+   "nationality": "Itália",
+   "team": "mercedes",
+   "rating": 87
+  },
+  {
+   "id": "leclerc",
+   "name": "Charles Leclerc",
+   "code": "LEC",
+   "number": 16,
+   "nationality": "Mônaco",
+   "team": "ferrari",
+   "rating": 93
+  },
+  {
+   "id": "hamilton",
+   "name": "Lewis Hamilton",
+   "code": "HAM",
+   "number": 44,
+   "nationality": "Reino Unido",
+   "team": "ferrari",
+   "rating": 90
+  },
+  {
+   "id": "verstappen",
+   "name": "Max Verstappen",
+   "code": "VER",
+   "number": 3,
+   "nationality": "Países Baixos",
+   "team": "redbull",
+   "rating": 96
+  },
+  {
+   "id": "hadjar",
+   "name": "Isack Hadjar",
+   "code": "HAD",
+   "number": 6,
+   "nationality": "França",
+   "team": "redbull",
+   "rating": 85
+  },
+  {
+   "id": "albon",
+   "name": "Alexander Albon",
+   "code": "ALB",
+   "number": 23,
+   "nationality": "Tailândia",
+   "team": "williams",
+   "rating": 86
+  },
+  {
+   "id": "sainz",
+   "name": "Carlos Sainz",
+   "code": "SAI",
+   "number": 55,
+   "nationality": "Espanha",
+   "team": "williams",
+   "rating": 88
+  },
+  {
+   "id": "lawson",
+   "name": "Liam Lawson",
+   "code": "LAW",
+   "number": 30,
+   "nationality": "Nova Zelândia",
+   "team": "racingbulls",
+   "rating": 82
+  },
+  {
+   "id": "lindblad",
+   "name": "Arvid Lindblad",
+   "code": "LIN",
+   "number": 41,
+   "nationality": "Reino Unido",
+   "team": "racingbulls",
+   "rating": 80
+  },
+  {
+   "id": "alonso",
+   "name": "Fernando Alonso",
+   "code": "ALO",
+   "number": 14,
+   "nationality": "Espanha",
+   "team": "astonmartin",
+   "rating": 89
+  },
+  {
+   "id": "stroll",
+   "name": "Lance Stroll",
+   "code": "STR",
+   "number": 18,
+   "nationality": "Canadá",
+   "team": "astonmartin",
+   "rating": 80
+  },
+  {
+   "id": "ocon",
+   "name": "Esteban Ocon",
+   "code": "OCO",
+   "number": 31,
+   "nationality": "França",
+   "team": "haas",
+   "rating": 83
+  },
+  {
+   "id": "bearman",
+   "name": "Oliver Bearman",
+   "code": "BEA",
+   "number": 87,
+   "nationality": "Reino Unido",
+   "team": "haas",
+   "rating": 84
+  },
+  {
+   "id": "gasly",
+   "name": "Pierre Gasly",
+   "code": "GAS",
+   "number": 10,
+   "nationality": "França",
+   "team": "alpine",
+   "rating": 86
+  },
+  {
+   "id": "colapinto",
+   "name": "Franco Colapinto",
+   "code": "COL",
+   "number": 43,
+   "nationality": "Argentina",
+   "team": "alpine",
+   "rating": 81
+  },
+  {
+   "id": "hulkenberg",
+   "name": "Nico Hülkenberg",
+   "code": "HUL",
+   "number": 27,
+   "nationality": "Alemanha",
+   "team": "audi",
+   "rating": 84
+  },
+  {
+   "id": "bortoleto",
+   "name": "Gabriel Bortoleto",
+   "code": "BOR",
+   "number": 5,
+   "nationality": "Brasil",
+   "team": "audi",
+   "rating": 84
+  },
+  {
+   "id": "perez",
+   "name": "Sergio Pérez",
+   "code": "PER",
+   "number": 11,
+   "nationality": "México",
+   "team": "cadillac",
+   "rating": 83
+  },
+  {
+   "id": "bottas",
+   "name": "Valtteri Bottas",
+   "code": "BOT",
+   "number": 77,
+   "nationality": "Finlândia",
+   "team": "cadillac",
+   "rating": 83
+  }
+ ]
+}

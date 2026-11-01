@@ -1,0 +1,94 @@
+{
+ "season": 2026,
+ "_notas": "Nomes reais por decisão do usuário (docs/DECISIONS.md); sem logos oficiais. 'car_rating' é PROVISÓRIO (0-100) até a pesquisa de atributos.",
+ "teams": [
+  {
+   "id": "mclaren",
+   "name": "McLaren",
+   "power_unit": "Mercedes",
+   "color": "#FF8000",
+   "color2": "#1A1A1A",
+   "car_rating": 93
+  },
+  {
+   "id": "mercedes",
+   "name": "Mercedes",
+   "power_unit": "Mercedes",
+   "color": "#27F4D2",
+   "color2": "#111111",
+   "car_rating": 92
+  },
+  {
+   "id": "ferrari",
+   "name": "Ferrari",
+   "power_unit": "Ferrari",
+   "color": "#E8002D",
+   "color2": "#FFE600",
+   "car_rating": 90
+  },
+  {
+   "id": "redbull",
+   "name": "Red Bull Racing",
+   "power_unit": "Red Bull Ford",
+   "color": "#3671C6",
+   "color2": "#FFD100",
+   "car_rating": 90
+  },
+  {
+   "id": "williams",
+   "name": "Williams",
+   "power_unit": "Mercedes",
+   "color": "#1868DB",
+   "color2": "#FFFFFF",
+   "car_rating": 85
+  },
+  {
+   "id": "racingbulls",
+   "name": "Racing Bulls",
+   "power_unit": "Red Bull Ford",
+   "color": "#6692FF",
+   "color2": "#FFFFFF",
+   "car_rating": 83
+  },
+  {
+   "id": "astonmartin",
+   "name": "Aston Martin",
+   "power_unit": "Honda",
+   "color": "#229971",
+   "color2": "#CEDC00",
+   "car_rating": 83
+  },
+  {
+   "id": "haas",
+   "name": "Haas",
+   "power_unit": "Ferrari",
+   "color": "#DEE1E2",
+   "color2": "#E10600",
+   "car_rating": 82
+  },
+  {
+   "id": "alpine",
+   "name": "Alpine",
+   "power_unit": "Mercedes",
+   "color": "#0093CC",
+   "color2": "#FF87BC",
+   "car_rating": 81
+  },
+  {
+   "id": "audi",
+   "name": "Audi",
+   "power_unit": "Audi",
+   "color": "#8E9296",
+   "color2": "#F50537",
+   "car_rating": 81
+  },
+  {
+   "id": "cadillac",
+   "name": "Cadillac",
+   "power_unit": "Ferrari",
+   "color": "#2B2B2B",
+   "color2": "#F2F2F2",
+   "car_rating": 78
+  }
+ ]
+}

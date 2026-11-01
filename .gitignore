@@ -1,7 +1,7 @@
 # Godot 4 — cache e dados gerados pelo editor (inclui export_credentials.cfg)
 .godot/
 # Template de build Gradle instalado pelo editor (regenerável)
-/android/
+/game/android/
 
 # Saídas de exportação
 build/
