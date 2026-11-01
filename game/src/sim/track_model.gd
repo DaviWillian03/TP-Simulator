@@ -19,6 +19,9 @@ var overtaking_difficulty := 0.5
 var overtaking_zones: Array = []
 var rain_probability := 0.0
 var points := PackedVector2Array()
+var elevation: Array = []  ## [[fração, metros], ...] (aproximado); vazio = plana
+var night := false
+var scenery: Dictionary = {}
 
 var _cum := PackedFloat64Array()  # distância acumulada até cada ponto do traçado
 var _poly_length := 0.0
@@ -40,6 +43,9 @@ func _init(d: Dictionary) -> void:
 	overtaking_difficulty = float(d["overtaking_difficulty"])
 	overtaking_zones = d["overtaking_zones"]
 	rain_probability = float(d.get("rain_probability", 0.0))
+	elevation = d.get("elevation", [])
+	night = bool(d.get("night", false))
+	scenery = d.get("scenery", {"theme": "park", "landmark": ""})
 	for p: Array in d["points"]:
 		points.append(Vector2(float(p[0]), float(p[1])))
 	_build_lengths()
@@ -72,6 +78,20 @@ func direction_at(frac: float) -> Vector2:
 	var a := position_at(frac - 0.002)
 	var b := position_at(frac + 0.002)
 	return (b - a).normalized()
+
+
+## Altura (metros) do traçado na fração dada, interpolando o perfil de relevo.
+func height_at(frac: float) -> float:
+	if elevation.size() < 2:
+		return 0.0
+	var f := fposmod(frac, 1.0)
+	for i in range(1, elevation.size()):
+		var a: Array = elevation[i - 1]
+		var b: Array = elevation[i]
+		if f <= float(b[0]):
+			var t := (f - float(a[0])) / maxf(float(b[0]) - float(a[0]), 0.0001)
+			return lerpf(float(a[1]), float(b[1]), smoothstep(0.0, 1.0, t))
+	return float(elevation[elevation.size() - 1][1])
 
 
 func bounds() -> Rect2:

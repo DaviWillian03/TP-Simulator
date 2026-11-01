@@ -48,6 +48,14 @@ CAL = [
 ]
 
 
+# Relevo APROXIMADO (fração da volta, altura relativa em metros), modelado à mão a partir das
+# subidas/descidas conhecidas. Pistas sem entrada aqui ficam planas por enquanto.
+ELEVATION = {
+    "interlagos": [[0.0, 0.0], [0.064, -9.0], [0.17, -16.0], [0.314, -22.0], [0.4, -25.0], [0.461, -27.0],
+                   [0.6, -21.0], [0.75, -29.0], [0.86, -35.0], [0.93, -18.0], [1.0, 0.0]],
+}
+
+
 def project(coords):
     lat0 = sum(c[1] for c in coords) / len(coords)
     lon0 = sum(c[0] for c in coords) / len(coords)
@@ -101,10 +109,12 @@ def main():
             "pit_entry_frac": 0.95, "pit_box_frac": 0.0, "pit_exit_frac": 0.05,
             "tyre_wear_factor": 1.0, "overtaking_difficulty": diff, "overtaking_zones": zones,
             "rain_probability": rain, "scenery": {"theme": theme, "landmark": landmark},
+            "elevation": ELEVATION.get(cid, []),
             "_notas": {
                 "tracado": f"bacinger/f1-circuits {geo}.geojson (MIT), escalado para {int(length)} m",
                 "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
                 "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
+                "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana",
             },
             "points": [[round(x, 1), round(y, 1)] for x, y in pts],
         }

@@ -40,10 +40,12 @@
   "theme": "strip",
   "landmark": "sphere"
  },
+ "elevation": [],
  "_notas": {
   "tracado": "bacinger/f1-circuits us-2023.geojson (MIT), escalado para 6201 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
-  "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria"
+  "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
+  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana"
  },
  "points": [
   [

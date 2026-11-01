@@ -12,7 +12,7 @@ var sim: RaceSim
 var time_scale := 2.0
 var paused := false
 
-var _track_view: TrackView
+var _track_view: TrackView3D
 var _standings: StandingsPanel
 var _car_panels: Array[CarControlPanel] = []
 var _toasts: ToastFeed
@@ -93,10 +93,18 @@ func _build_ui() -> void:
 	_watermark.offset_right = -14
 	_watermark.offset_bottom = 10
 	track_holder.add_child(_watermark)
-	_track_view = TrackView.new()
+	_track_view = TrackView3D.new()
 	_track_view.set_anchors_preset(Control.PRESET_FULL_RECT)
 	track_holder.add_child(_track_view)
 	_track_view.setup(sim)
+	if Session.debug_camera.size() > 0:  # (opções de desenvolvimento para capturas)
+		_track_view.yaw = Session.debug_camera.get("yaw", _track_view.yaw)
+		_track_view.pitch = Session.debug_camera.get("pitch", _track_view.pitch)
+		_track_view.distance = Session.debug_camera.get("dist", _track_view.distance)
+		for i in int(Session.debug_camera.get("mode", 0)):
+			_track_view.cycle_camera()
+		if Session.debug_camera.has("dist"):
+			_track_view.distance = Session.debug_camera["dist"]
 	_toasts = ToastFeed.new()
 	_toasts.position = Vector2(6, 12)
 	_toasts.custom_minimum_size = Vector2(380, 0)
@@ -174,6 +182,11 @@ func _build_masthead() -> Control:
 		b.pressed.connect(func() -> void: time_scale = s)
 		speeds.add_child(b)
 	bar.add_child(speeds)
+	var cam := UiStyle.compact(UiStyle.button("Câmera"), 13)
+	cam.custom_minimum_size = Vector2(80, 34)
+	cam.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	cam.pressed.connect(func() -> void: _toasts.push("Câmera: " + _track_view.cycle_camera()))
+	bar.add_child(cam)
 	var data := UiStyle.compact(UiStyle.button("Dados"), 13)
 	data.custom_minimum_size = Vector2(70, 34)
 	data.size_flags_vertical = Control.SIZE_SHRINK_CENTER

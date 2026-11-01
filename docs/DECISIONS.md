@@ -128,3 +128,8 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   evolui; risco de tráfego, bandeira vermelha e chuva).
 - **Sprint**: formato real 2026 — TL1, classificação sprint, corrida sprint (~1/3 da distância,
   sem parada obrigatória, pontos para o top 8), classificação e corrida.
+- **Visual 3D** (respostas em múltipla escolha): **tudo em 3D** (o mapa 2D sai), **relevo
+  aproximado** por pista (subidas/descidas conhecidas, valores provisórios) e estilo **mais
+  realista** (texturas, sombras, iluminação). Texturas geradas por código (ruído procedural), pois
+  bibliotecas de assets estão bloqueadas na rede; protótipo em Interlagos para aprovação antes de
+  estender aos 22 circuitos.

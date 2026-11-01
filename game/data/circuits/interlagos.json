@@ -40,10 +40,57 @@
   "theme": "lake",
   "landmark": "skyline"
  },
+ "elevation": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   0.064,
+   -9.0
+  ],
+  [
+   0.17,
+   -16.0
+  ],
+  [
+   0.314,
+   -22.0
+  ],
+  [
+   0.4,
+   -25.0
+  ],
+  [
+   0.461,
+   -27.0
+  ],
+  [
+   0.6,
+   -21.0
+  ],
+  [
+   0.75,
+   -29.0
+  ],
+  [
+   0.86,
+   -35.0
+  ],
+  [
+   0.93,
+   -18.0
+  ],
+  [
+   1.0,
+   0.0
+  ]
+ ],
  "_notas": {
   "tracado": "bacinger/f1-circuits br-1940.geojson (MIT), escalado para 4309 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
-  "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria"
+  "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
+  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana"
  },
  "points": [
   [
