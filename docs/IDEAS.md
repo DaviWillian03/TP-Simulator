@@ -88,6 +88,10 @@ Como este arquivo funciona:
 
 ## Dúvidas em aberto
 
+> **Pedido do usuário (2026-11-01):** estas perguntas devem ser feitas em **formato de múltipla
+> escolha** no momento de criar o projeto (não antes). Até lá, apenas acumular aqui.
+> Ao perguntar, incluir também as propostas P1–P7 para aprovação.
+
 Prioritárias (afetam a base da simulação):
 1. **Regra de pneus**: seguir a regra atual da F1 — usar **pelo menos dois compostos de pista
    seca diferentes** — ou só "uma parada obrigatória"? Haverá pneus intermediários e de chuva?

@@ -4,6 +4,9 @@ Futuro jogo mobile Android de gestão de automobilismo. **Fase atual: coleta de 
 O usuário está enviando ideias passo a passo: registre cada uma em `docs/IDEAS.md` (fiel ao que
 foi dito), organize por tema, anote dúvidas e observações técnicas separadamente.
 **Não implemente nada do jogo** (projeto Godot, cenas, scripts) até o usuário mandar começar.
+Durante a coleta, não faça perguntas: acumule as dúvidas em `docs/IDEAS.md`. Quando o usuário
+mandar começar, faça TODAS as perguntas pendentes em **múltipla escolha** (ferramenta
+AskUserQuestion) antes de criar o projeto.
 Nome, visual, mecânicas, arquitetura e escopo ainda NÃO foram decididos — não invente
 requisitos; pergunte quando faltar informação.
 
