@@ -116,6 +116,17 @@ Como este arquivo funciona:
 > - Se quiser criar mais uma coisa legal que seja possível gerenciar pode, nada que seja tão
 >   complexo.
 
+### #5 — Campanha: mudanças de regras e eventos inesperados (2026-11-01)
+
+> Complementando o modo campanha.
+>
+> - ao longo dos anos serão tomadas decisões sobre mudanças de regras como pontuação, tipo dos
+>   carros, se serão motores V8, V6 etc, tipo de chassi, tipos de pneus.
+> - teremos eventos inesperados que podem alterar o campeonato, como corridas sendo canceladas por
+>   motivos de o país estar em problemas, piloto sofrer acidente e ficar fora de corrida, piloto ter
+>   problemas emocionais e perder desempenho entre outras coisas que você pode inventar etc.
+>   dependendo do acontecimento, você pode tomar decisões para ajudar na gestão de pessoal.
+
 ---
 
 ## Ideias por tema
@@ -186,6 +197,23 @@ Como este arquivo funciona:
 - **Pessoal**: negociar contratos dos cargos; contratar **agentes livres** e profissionais de
   **outras equipes**; negociar com **novos pilotos**.
 - O Claude pode propor **mais uma coisa gerenciável, sem ser complexa** (ver P11).
+
+### Campanha — regulamento que muda com os anos (#5)
+- Ao longo das temporadas, **decisões mudam as regras**:
+  - **sistema de pontuação**;
+  - **tipo dos carros**;
+  - **motor** (V8, V6 etc.);
+  - **tipo de chassi**;
+  - **tipos de pneus**.
+- (Quem decide e como o jogador participa: dúvida 35 e proposta P13.)
+
+### Campanha — eventos inesperados (#5)
+- Eventos que **alteram o campeonato**, por exemplo:
+  - **corrida cancelada** por problemas no país;
+  - **piloto acidentado**, fora de corridas;
+  - **piloto com problemas emocionais**, perdendo desempenho;
+  - outros inventados pelo Claude (ver P14).
+- Conforme o evento, o jogador **toma decisões** para ajudar na **gestão de pessoal**.
 
 ### Pilotos, equipes e dados (#3)
 - Desejo do usuário, em ordem de preferência:
@@ -283,6 +311,24 @@ Campanha (#4):
 33. **Negociação de contratos**: simples (oferta → aceita/recusa/contraproposta) ou com
     cláusulas (duração, bônus por resultado, multa rescisória, papel de 1º/2º piloto)?
 34. Aprovar/ajustar as propostas **P9 a P12**.
+
+Regras e eventos (#5):
+35. **Quem decide as mudanças de regras**:
+    - (a) uma federação fictícia decide sozinha;
+    - (b) as equipes votam e o jogador vota e faz lobby com sua influência (P13);
+    - (c) o jogador escolhe livremente no início de cada temporada, como opção de personalização.
+36. **Antecedência e frequência**: mudanças anunciadas com 1 temporada de antecedência (motor,
+    2 temporadas)? Quantas por temporada, no máximo?
+37. **Outras regras mutáveis** além das citadas: reabastecimento, corridas sprint, asa móvel,
+    peso mínimo, número de corridas no calendário?
+38. **Frequência dos eventos** configurável (desligados / raros / normais / frequentes)?
+39. **Tom dos temas sensíveis**:
+    - cancelamentos com motivos genéricos e fictícios ("instabilidade no país-sede", "desastre
+      natural"), sem citar crises reais;
+    - saúde mental tratada com respeito, com opções de apoio ao piloto (psicólogo, folga) e não
+      como punição.
+    Confirmar.
+40. Aprovar/ajustar as propostas **P13 e P14**.
 
 ---
 
@@ -409,6 +455,27 @@ Campanha (#4):
   com divisão maior entre combustão e parte elétrica, aerodinâmica ativa) dependem de pesquisa
   para confirmar o que vale em 2026. Entra no plano de pesquisa de #3.
 
+### Regras e eventos — implicações técnicas (#5)
+- **O regulamento vira um objeto de dados** que a simulação lê: tabela de pontos, compostos de
+  pneu disponíveis, fórmula do motor, limites de chassi. Isso confirma a recomendação de #2
+  (motor de corrida com regras configuráveis desde o início). Mudar uma regra é trocar dados, sem
+  reescrever código.
+- **Tipo de motor muda o "perfil" do carro**, não só um número de potência. Um V8 aspirado, por
+  exemplo, pode ter mais velocidade final e menos eficiência que um V6 híbrido. Também muda
+  confiabilidade e custo de desenvolvimento. O som do motor nas corridas pode acompanhar (P7).
+- **Mudança de regra afeta a P&D**: parte das melhorias perde validade, o que liga direto à
+  árvore de P&D e ao carro do ano seguinte (#4, P12).
+- **Sistema de eventos orientado a dados**: cada evento tem condições, chance, intervalo mínimo
+  entre repetições, opções e efeitos. Assim dá para adicionar eventos sem mexer no código e
+  testar com semente fixa.
+  - **As equipes da IA também sofrem eventos**, para ser justo.
+  - Os eventos aparecem pelo sistema de pop-ups de #1.
+- **Exigências que surgem daqui**:
+  - **piloto reserva** no contrato (para substituir o acidentado);
+  - atributo de **moral/estado emocional** dos pilotos, a definir junto com os atributos (#1, #3).
+- **Histórico da campanha**: guardar campeões, regras de cada ano e eventos marcantes. Serve aos
+  menus (história da equipe, citada em #4) e precisa entrar no formato do save desde o início.
+
 ## Propostas do Claude (aguardando aprovação do usuário)
 
 Atendem ao pedido de inovar (#1) sem deixar o jogo pesado. Cada uma pode ser aceita, ajustada
@@ -517,3 +584,41 @@ trazer pilotos de outras categorias.
   de pesquisa aerodinâmica no ano seguinte. Isso ajuda quem está atrás, de forma realista.
 - **Anos de mudança de regulamento**: de tempos em tempos as regras mudam e parte do
   desenvolvimento "zera". Isso premia quem investiu cedo no carro do ano seguinte.
+
+### P13 — Conselho de Regras com votação e lobby (#5)
+
+- No meio de cada temporada, uma **federação fictícia** apresenta 1 a 3 propostas para o futuro.
+  Exemplos: "motores V8 aspirados a partir de 2029", "pontos até o 12º colocado", "pneus de
+  dois compostos apenas".
+- **Todas as equipes votam**, incluindo as da IA, que votam conforme o próprio interesse: quem
+  é forte em motor quer manter a regra de motor. O voto do jogador tem peso fixo, mas ele pode
+  **gastar influência para fazer lobby** e convencer equipes indecisas.
+- **Antecedência**: regras de pontuação e pneus valem na temporada seguinte; motor e chassi em
+  2 temporadas. Dá tempo de planejar a P&D do carro futuro.
+- **Mudanças grandes geram "anos de virada"** (P12), em que o grid pode embaralhar. É a melhor
+  chance para uma equipe pequena subir.
+- Simples na prática: um pop-up com a proposta, quem apoia e quem é contra, e botões
+  "a favor / contra / fazer lobby".
+
+### P14 — Eventos inesperados com escolhas (#5, liberdade criativa dada pelo usuário)
+
+Cada evento chega como pop-up, com 2 ou 3 escolhas e consequências. Exemplos:
+
+| Evento | Escolhas do jogador (exemplos) |
+|---|---|
+| **Piloto acidentado**, fora por 1–4 corridas | Promover o reserva · contratar alguém de outra categoria · antecipar a volta (risco de piorar a lesão) |
+| **Piloto em fase emocional difícil** (desempenho e consistência caem) | Contratar psicólogo esportivo (custo) · liberar de compromissos de mídia (patrocinador reclama) · conversa individual (resultado depende da relação com o piloto) |
+| **Corrida cancelada** (instabilidade no país-sede, desastre natural) | Calendário menor (menos receita de prêmios para todos) — às vezes surge uma pista substituta |
+| **Funcionário-chave recebe proposta de rival** | Contraproposta · deixar sair e promover alguém · cláusula de "jardinagem" (fica parado, sem trabalhar para o rival, por um tempo) |
+| **Protesto técnico**: rival questiona a legalidade de uma peça | Retirar a peça (perde desempenho) · defender na federação (risco de punição) |
+| **Peças presas na alfândega/logística** antes de um GP | Frete aéreo urgente (caro) · correr com peças antigas |
+| **Patrocinador envolvido em escândalo** | Romper (perde dinheiro) · manter (perde influência e fãs) |
+| **Briga entre companheiros de equipe** | Definir 1º e 2º piloto · deixar livre (risco de toque na pista) · reunião conjunta |
+| **Pane no túnel de vento ou simulador** | Reparo emergencial (caro) · esperar (P&D aerodinâmica fica mais lenta) |
+| **Prodígio disponível** de repente numa categoria de base | Contratar para a academia/reserva · ignorar (um rival pode pegar) |
+| **Onda de calor ou tempestade no fim de semana** | Ajustar refrigeração (menos ritmo, mais confiabilidade) · arriscar |
+
+Regras para não ficar maçante:
+- poucos eventos por temporada e frequência configurável (dúvida 38);
+- nenhum evento se repete em seguida;
+- eventos negativos e positivos equilibrados.
