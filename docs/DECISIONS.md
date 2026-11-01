@@ -115,3 +115,16 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   preto ou branco conforme a luminosidade da cor).
 - Pneu: **círculo colorido com a letra + porcentagem de desgaste**.
 - Vale para a tabela da corrida, o menu DADOS e o resultado final.
+
+## Marco 3 — modo Grande Prêmio (2026-11-01)
+- Mockups `design/mockups/m3-*.html`: telas de configuração, fim de semana e classificação aprovadas
+  no conceito.
+- **Cenário e pista em 3D** (resposta livre do usuário): cenário mais detalhado e **tridimensional**,
+  com câmera que o jogador gira para ver de outros ângulos. Substitui o cenário 2D proposto.
+- **Treinos livres** (resposta livre): o jogador **monta um programa** combinando blocos
+  predefinidos e os pilotos seguem. Pode **jogar** o treino (acompanhar a execução) ou **simular**
+  (resultados aleatórios desses programas).
+- **Classificação**: o jogador escolhe o pneu e o momento de sair para a volta rápida (pista
+  evolui; risco de tráfego, bandeira vermelha e chuva).
+- **Sprint**: formato real 2026 — TL1, classificação sprint, corrida sprint (~1/3 da distância,
+  sem parada obrigatória, pontos para o top 8), classificação e corrida.

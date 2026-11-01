@@ -1,0 +1,67 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>M3 — fim de semana</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden}
+.screen{width:1280px;height:720px;position:relative;display:grid;gap:8px;padding:8px}
+.track{width:100%;height:100%;display:block}
+.tower{display:flex;flex-direction:column;overflow:hidden}
+.row{display:flex;align-items:center;gap:6px;height:24px;flex:0 0 auto}
+.row .pos{width:24px;text-align:center}.row .name{flex:1;white-space:nowrap;overflow:hidden}
+.row .gap{width:52px;text-align:right}.row .tyre{width:16px;text-align:center;color:var(--t)}.row .wear{width:34px;text-align:right}
+.emb{flex:0 0 auto}
+.btns,.pit,.car-info,.car-head{display:flex;align-items:center;gap:5px}
+.btns b,.pit b{flex:1;display:flex;align-items:center;justify-content:center;height:36px;cursor:pointer}
+.btns em{width:6px}
+.pit .c{flex:0 0 40px}.pit .box{flex:0 0 132px}.pit .hint{flex:1;font-size:11px;line-height:1.2}
+.car-info .ttxt{width:150px}.bar{flex:1;height:8px;position:relative}.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--t,#3DDC84)}
+.car-head .cname{flex:1}.car{display:flex;flex-direction:column;gap:7px}
+.toast{position:absolute;z-index:5}
+.screen>*{min-width:0;min-height:0}
+.main{position:relative;overflow:hidden}.main>.track{position:absolute;inset:0}
+.right .main{grid-column:1;grid-row:2}.right .tower{grid-column:2;grid-row:2/4}.right .panels{grid-column:1;grid-row:3}
+.left .tower{grid-column:1;grid-row:2/4}.left .main{grid-column:2;grid-row:2}.left .panels{grid-column:2;grid-row:3}
+
+body{background:#efe9de;color:#141414;font-family:ArchivoN;font-weight:600}
+.pg{width:1280px;height:720px;padding:12px 16px;display:flex;flex-direction:column}
+.mast{display:flex;align-items:flex-end;gap:14px;border-bottom:5px solid #141414;padding-bottom:6px}
+.mast h1{font-family:ArchivoBlack;font-size:34px;line-height:.9}.cap{font-size:10px;letter-spacing:2px;text-transform:uppercase}
+.mast .r{margin-left:auto;font-family:ArchivoBlack;font-size:30px;color:#E10600;line-height:.9}
+.btn{border:2px solid #141414;padding:6px 10px;font-size:13px;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.on{background:#141414;color:#efe9de}.btn.red{background:#E10600;border-color:#E10600;color:#fff;font-family:ArchivoBlack}
+.sheet{border:2px solid #141414}.sh{display:flex;background:#141414;color:#efe9de;font-size:10px;letter-spacing:1.5px;height:24px;align-items:center}
+.row{display:flex;align-items:center;height:25px;border-bottom:1px solid #141414;font-size:13px}.row>*,.sh>*{padding:0 6px;border-right:1px solid #c9c1b2;height:100%;display:flex;align-items:center}
+.sh>*{border-right-color:#3d3d3d}.row .pos{width:30px;justify-content:center;font-family:ArchivoBlack;padding:0}
+.row.me{background:#141414;color:#efe9de}.row.sel{background:#141414;color:#efe9de}.row.out{color:#a39a8a}
+.tyre{width:18px;height:18px;border-radius:50%;border:3px solid var(--t);background:#141414;color:#fff;font-family:ArchivoBlack;font-size:9px;display:inline-flex;align-items:center;justify-content:center}
+.tag{font-family:ArchivoBlack;font-size:9px;padding:1px 4px;margin-left:6px}.tag.s{background:#E10600;color:#fff}.tag.n{background:#1d2436;color:#ffd36b}
+h2{font-family:ArchivoBlack;font-size:20px;margin:10px 0 6px}
+.bar{height:8px;background:#d8d0c1;position:relative;flex:1}.bar i{position:absolute;inset:0 auto 0 0;background:#141414}
+</style></head><body><div class="pg"><div class="mast"><h1>GP DE SÃO PAULO</h1><span class="cap">Interlagos · fim de semana · Williams</span><span class="r">SEXTA</span></div>
+<div style="display:grid;grid-template-columns:1fr 470px;gap:18px;margin-top:12px;flex:1">
+<div style="display:flex;flex-direction:column;gap:8px"><h2 style="margin:0">PROGRAMAÇÃO</h2><div style="display:flex;align-items:center;gap:14px;border:2px solid #141414;padding:10px 12px;background:#e3dccd"><span style="font-family:ArchivoBlack;font-size:20px;width:96px">TL1</span><span style="flex:1"><b style="font-family:ArchivoBlack;font-size:15px">Treino livre 1</b><br><span style="font-size:12px">Concluído · ALB 3º, SAI 7º</span></span><span class='cap'>✓ concluído</span></div><div style="display:flex;align-items:center;gap:14px;border:2px solid #141414;padding:10px 12px;background:#141414;color:#efe9de"><span style="font-family:ArchivoBlack;font-size:20px;width:96px">TL2</span><span style="flex:1"><b style="font-family:ArchivoBlack;font-size:15px">Treino livre 2</b><br><span style="font-size:12px">Agora</span></span><span class="btn red">JOGAR</span><span class="btn" style="border-color:#efe9de;color:#efe9de">SIMULAR</span></div><div style="display:flex;align-items:center;gap:14px;border:2px solid #141414;padding:10px 12px;background:transparent"><span style="font-family:ArchivoBlack;font-size:20px;width:96px">TL3</span><span style="flex:1"><b style="font-family:ArchivoBlack;font-size:15px">Treino livre 3</b><br><span style="font-size:12px">Sábado 11:30</span></span></div><div style="display:flex;align-items:center;gap:14px;border:2px solid #141414;padding:10px 12px;background:transparent"><span style="font-family:ArchivoBlack;font-size:20px;width:96px">CLASS</span><span style="flex:1"><b style="font-family:ArchivoBlack;font-size:15px">Classificação Q1 · Q2 · Q3</b><br><span style="font-size:12px">Sábado 15:00</span></span></div><div style="display:flex;align-items:center;gap:14px;border:2px solid #141414;padding:10px 12px;background:transparent"><span style="font-family:ArchivoBlack;font-size:20px;width:96px">CORRIDA</span><span style="flex:1"><b style="font-family:ArchivoBlack;font-size:15px">Corrida · 18 voltas</b><br><span style="font-size:12px">Domingo 14:00</span></span></div><h2>PREVISÃO DO TEMPO</h2><div style="display:flex;gap:8px"><div style="flex:1;border:2px solid #141414;padding:8px;text-align:center"><div class="cap">Sexta</div><div style="font-family:ArchivoBlack;font-size:22px">10%</div><div style="font-size:11px">chance de chuva</div></div><div style="flex:1;border:2px solid #141414;padding:8px;text-align:center"><div class="cap">Sábado</div><div style="font-family:ArchivoBlack;font-size:22px">25%</div><div style="font-size:11px">chance de chuva</div></div><div style="flex:1;border:2px solid #141414;padding:8px;text-align:center"><div class="cap">Domingo</div><div style="font-family:ArchivoBlack;font-size:22px">55%</div><div style="font-size:11px">chance de chuva</div></div></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><h2 style="margin:0">SEUS CARROS</h2><div style="border:2px solid #141414;padding:10px"><div style="display:flex;align-items:center;gap:8px"><svg class="emb" width="20" height="20" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" fill="#1868DB" stroke="#FFFFFF" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="12" fill="#FFFFFF">W</text></svg><b style="font-family:ArchivoBlack;font-size:16px">Alexander Albon</b></div>
+<div class="cap" style="margin-top:8px">Acerto do carro</div><div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:4px"><span style="width:90px">Aerodinâmica</span><div class="bar"><i style="width:62%"></i></div><span style="width:34px;text-align:right">62%</span></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:4px"><span style="width:90px">Mecânico</span><div class="bar"><i style="width:48%"></i></div><span style="width:34px;text-align:right">48%</span></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:4px"><span style="width:90px">Equilíbrio</span><div class="bar"><i style="width:55%"></i></div><span style="width:34px;text-align:right">55%</span></div>
+<div style="font-size:12px;margin-top:8px;font-style:italic">“O carro sai de frente nas curvas lentas.”</div>
+<div class="cap" style="margin-top:8px">Programa no próximo treino</div><div style="display:flex;gap:4px;margin-top:4px"><span class="btn on" style="font-size:11px;padding:4px 6px">Acerto aero</span><span class="btn" style="font-size:11px;padding:4px 6px">Acerto mecânico</span><span class="btn" style="font-size:11px;padding:4px 6px">Simulação de corrida</span><span class="btn" style="font-size:11px;padding:4px 6px">Volta rápida</span></div></div><div style="border:2px solid #141414;padding:10px"><div style="display:flex;align-items:center;gap:8px"><svg class="emb" width="20" height="20" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" fill="#1868DB" stroke="#FFFFFF" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="12" fill="#FFFFFF">W</text></svg><b style="font-family:ArchivoBlack;font-size:16px">Carlos Sainz</b></div>
+<div class="cap" style="margin-top:8px">Acerto do carro</div><div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:4px"><span style="width:90px">Aerodinâmica</span><div class="bar"><i style="width:40%"></i></div><span style="width:34px;text-align:right">40%</span></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:4px"><span style="width:90px">Mecânico</span><div class="bar"><i style="width:66%"></i></div><span style="width:34px;text-align:right">66%</span></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:4px"><span style="width:90px">Equilíbrio</span><div class="bar"><i style="width:51%"></i></div><span style="width:34px;text-align:right">51%</span></div>
+<div style="font-size:12px;margin-top:8px;font-style:italic">“Falta asa na Junção, traseira solta.”</div>
+<div class="cap" style="margin-top:8px">Programa no próximo treino</div><div style="display:flex;gap:4px;margin-top:4px"><span class="btn on" style="font-size:11px;padding:4px 6px">Acerto aero</span><span class="btn" style="font-size:11px;padding:4px 6px">Acerto mecânico</span><span class="btn" style="font-size:11px;padding:4px 6px">Simulação de corrida</span><span class="btn" style="font-size:11px;padding:4px 6px">Volta rápida</span></div></div></div></div></div></body></html>
