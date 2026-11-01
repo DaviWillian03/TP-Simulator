@@ -5,9 +5,12 @@
  "grand_prix": "GP de São Paulo",
  "country": "Brasil",
  "city": "São Paulo",
- "length_m": 4309,
+ "round": 19,
+ "date": "2026-11-08",
+ "sprint": false,
+ "night": false,
+ "length_m": 4309.0,
  "laps": 71,
- "direction": "anti-horário",
  "base_lap_time_s": 72.0,
  "pit_lane_loss_s": 21.0,
  "pit_entry_frac": 0.905,
@@ -17,27 +20,30 @@
  "overtaking_difficulty": 0.35,
  "overtaking_zones": [
   {
-   "name": "Reta dos boxes → S do Senna",
-   "braking_frac": 0.064,
+   "name": "Reta principal",
+   "braking_frac": 0.314,
    "strength": 1.0
   },
   {
-   "name": "Reta Oposta → Descida do Lago",
-   "braking_frac": 0.314,
-   "strength": 0.9
+   "name": "Segunda reta",
+   "braking_frac": 0.064,
+   "strength": 0.8
   },
   {
-   "name": "Ferradura",
+   "name": "Terceira reta",
    "braking_frac": 0.461,
-   "strength": 0.3
+   "strength": 0.4
   }
  ],
  "rain_probability": 0.35,
+ "scenery": {
+  "theme": "lake",
+  "landmark": "skyline"
+ },
  "_notas": {
-  "tracado": "bacinger/f1-circuits br-1940.geojson (MIT), escalado para 4309 m; ver data/circuits/LICENSE-f1-circuits.md",
-  "base_lap_time_s": "PROVISÓRIO — tempo de volta de referência para o carro nota 100; calibrar na pesquisa",
-  "overtaking": "zonas = pontos de freada ao fim das retas, identificados pela geometria do traçado",
-  "frac": "posição ao longo da volta (0 = linha de chegada, 1 = volta completa) no sentido de corrida"
+  "tracado": "bacinger/f1-circuits br-1940.geojson (MIT), escalado para 4309 m",
+  "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
+  "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria"
  },
  "points": [
   [

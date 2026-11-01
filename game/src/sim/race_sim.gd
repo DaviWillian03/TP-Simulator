@@ -52,6 +52,7 @@ const OVERTAKE_SCALE := 0.2  ## quão "suave" é a curva de chance em torno da v
 const OVERTAKE_BASE_REQUIRED_S := 0.45  ## vantagem mínima mesmo na pista mais fácil
 const OVERTAKE_DIFFICULTY_S := 1.5  ## vantagem extra exigida por ponto de dificuldade da pista
 const OVERTAKE_MAX_CHANCE := 0.5
+const OVERTAKE_HARD_TRACK_S := 4.0  ## pistas muito travadas (dificuldade > 0,7) exigem bem mais
 const DEFEND_HARD_S := 0.15  ## "defender forte" exige mais vantagem de quem ataca
 const LET_BY_WINDOW_S := 1.2
 
@@ -406,8 +407,9 @@ func _try_overtake(att: CarState, def: CarState, zone: Dictionary) -> bool:
 		advantage += OVERTAKE_MODE_BONUS_S
 		att.battery = maxf(0.0, att.battery - OVERTAKE_MODE_COST)
 	# Ex.: Interlagos (0,35) exige ~1,0 s/volta de vantagem para a chance chegar à metade do máximo;
-	# uma pista tipo Mônaco (0,95) exige ~1,9 s.
-	var required := OVERTAKE_BASE_REQUIRED_S + track.overtaking_difficulty * OVERTAKE_DIFFICULTY_S
+	# Mônaco (0,95) exige ~2,9 s (quase impossível, como na vida real).
+	var required := OVERTAKE_BASE_REQUIRED_S + track.overtaking_difficulty * OVERTAKE_DIFFICULTY_S \
+		+ maxf(0.0, track.overtaking_difficulty - 0.7) * OVERTAKE_HARD_TRACK_S
 	if def.defend_hard:
 		required += DEFEND_HARD_S
 	var p := float(zone["strength"]) / (1.0 + exp(-(advantage - required) / OVERTAKE_SCALE))
