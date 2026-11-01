@@ -1,8 +1,11 @@
 # TP-Simulator
 
-Futuro jogo mobile Android de gestão de automobilismo. **Fase atual: só ambiente preparado.**
+Futuro jogo mobile Android de gestão de automobilismo. **Fase atual: coleta de ideias.**
+O usuário está enviando ideias passo a passo: registre cada uma em `docs/IDEAS.md` (fiel ao que
+foi dito), organize por tema, anote dúvidas e observações técnicas separadamente.
+**Não implemente nada do jogo** (projeto Godot, cenas, scripts) até o usuário mandar começar.
 Nome, visual, mecânicas, arquitetura e escopo ainda NÃO foram decididos — não invente
-requisitos; espere as ideias do usuário e pergunte quando faltar informação.
+requisitos; pergunte quando faltar informação.
 
 Usuário: estudante de Sistemas de Informação. Responda em português, explicando o porquê
 das escolhas técnicas.
