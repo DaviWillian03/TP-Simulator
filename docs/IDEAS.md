@@ -51,6 +51,18 @@ Como este arquivo funciona:
 >   eu não tenha citado aqui, mas que não mude a proposta do jogo ser na prática simples e
 >   divertido, sem deixar pesado e maçante demais.
 
+### #2 — Modos de jogo (2026-11-01)
+
+> Vamos agora aos modos de jogo.
+>
+> Quero que essa nossa primeira versão do jogo tenha os seguintes modos:
+> - grande prêmio, o modo onde você escolhe uma equipe, e corre um final de semana completo da
+>   Fórmula 1 até o fim.
+> - modo campanha, o carro-chefe do jogo, onde você terá a opção de se juntar a uma das equipes
+>   reais do grid, ou criar a sua própria equipe e desafiar as equipes já existentes.
+> - corrida caótica, um modo divertido onde darei liberdade para você criar algo que me surpreenda,
+>   que faça uma corrida totalmente livre para a bizarrice e o entretenimento.
+
 ---
 
 ## Ideias por tema
@@ -84,6 +96,14 @@ Como este arquivo funciona:
 - **Menu dinâmico** com dados completos dos seus pilotos e de todos os pilotos, **sem pausar**. (#1)
 - **Pop-ups não intrusivos** para eventos importantes da corrida e do campeonato. (#1)
 
+### Modos de jogo (primeira versão)
+- **Grande Prêmio**: escolher uma equipe e disputar um **fim de semana completo** de F1 até o
+  fim. (#2)
+- **Campanha** — o **carro-chefe** do jogo: entrar numa das **equipes do grid** ou **criar a
+  própria equipe** e desafiar as existentes. (#2)
+- **Corrida Caótica**: modo de diversão, livre para bizarrice e entretenimento; o usuário deu
+  **liberdade criativa ao Claude** para surpreender (ver proposta P8). (#2)
+
 ---
 
 ## Dúvidas em aberto
@@ -107,6 +127,24 @@ Para depois:
 8. Safety car / bandeira vermelha fazem parte?
 9. "Pagar punições": cumprir punição de tempo no pit (como na F1) ou também multa em dinheiro?
 10. Orientação da tela: paisagem (deitado) ou retrato (em pé)?
+
+Modos de jogo (#2):
+11. **Equipes "reais do grid"** (#2) × licenças: equipes reais licenciadas não são viáveis para
+    publicar; opções: equipes fictícias inspiradas nas reais, nomes editáveis pelo jogador, ou
+    jogo sem publicação. (liga com a dúvida 5)
+12. **Fim de semana do Grande Prêmio**: quais sessões? Treinos livres (para acertar o carro?),
+    classificação em três partes (Q1/Q2/Q3), corrida — e fins de semana com **sprint**?
+    O jogador pode **pular/simular** sessões?
+13. **Grande Prêmio**: o jogador escolhe livremente circuito, clima e duração? O desempenho de
+    cada equipe é fixo ou configurável?
+14. **Campanha — duração**: número fixo de temporadas, ou carreira sem fim?
+15. **Campanha — o que o jogador gerencia** entre corridas (desenvolvimento do carro, pilotos,
+    funcionários, patrocinadores, finanças)? Pode ser tratado num próximo passo.
+16. **Campanha — criar equipe**: o que é personalizável (nome, cores, logo, base, orçamento
+    inicial)? Equipe nova começa mais fraca?
+17. **Campanha — fracasso**: o jogador pode ser **demitido** (se entrou numa equipe existente)
+    ou a equipe própria pode **falir**?
+18. **Corrida Caótica**: aprovar ou ajustar o conceito da proposta P8.
 
 ---
 
@@ -134,6 +172,21 @@ Para depois:
 - **Interface sem pausa no celular**: tela pequena com tabela, mapa, menu e pop-ups ao mesmo tempo.
   Isso pede painéis recolhíveis e pop-ups em fila por prioridade. Provavelmente favorece a tela
   deitada (dúvida 10).
+- **Os três modos usam o mesmo "motor de corrida"** (#2). A simulação da corrida é construída
+  uma vez e reaproveitada:
+  - **Grande Prêmio** = um fim de semana avulso (classificação + corrida) sem a parte de gestão.
+  - **Campanha** = vários fins de semana + gestão entre as corridas + salvar progresso.
+  - **Corrida Caótica** = a mesma corrida com uma camada de **modificadores** que alteram as
+    regras.
+  Por isso a simulação deve aceitar regras configuráveis desde o início: número de voltas, regra
+  de pneus, chance de chuva, dificuldade de ultrapassagem etc. Isso faz o modo caótico sair
+  barato e já serve para testes.
+- **Ordem natural de construção**: corrida → fim de semana (Grande Prêmio) → Corrida Caótica
+  (modificadores) → Campanha (a maior, depende de gestão e de salvar progresso). O Grande
+  Prêmio é a primeira versão jogável completa.
+- **Campanha precisa salvar progresso** entre sessões. No Godot isso é simples (arquivo em
+  `user://`), mas o formato dos dados deve ser pensado cedo, para não quebrar os saves quando o
+  jogo for atualizado.
 
 ---
 
@@ -151,3 +204,38 @@ ou descartada.
 | P5 | **Pista que evolui**: borracha acumulada deixa a pista mais rápida; depois da chuva surge um traçado seco aos poucos. | Mais realismo; muda o melhor momento de trocar pneu. | Médio |
 | P6 | **Safety car e VSC**: eventos que "barateiam" o pit stop e embaralham a estratégia. | Momentos de virada, muito típicos da F1. | Médio |
 | P7 | **Som ambiente reativo**: torcida, chuva e motores que reagem aos eventos (mais alto numa ultrapassagem, numa corrida "em casa"). | Imersão grande com pouco código. | Baixo (depende de áudio) |
+
+### P8 — Conceito para a Corrida Caótica (#2, liberdade criativa dada pelo usuário)
+
+**Nome de trabalho: "Roleta do Caos".** É uma corrida normal que vai sendo sabotada pelo
+próprio jogo e pelos jogadores. Duas mecânicas simples:
+
+1. **A Roleta** — a cada poucas voltas, uma roleta gira na tela (sem pausar) e sorteia um evento
+   que vale para todos por algumas voltas. Aparece um aviso 1 volta antes, para dar tempo de reagir.
+2. **Cartas de Caos** — o jogador começa com 3 cartas e ganha mais ao ultrapassar ou completar
+   voltas. Usa-as na hora certa, a seu favor ou contra rivais. As equipes da IA também têm
+   cartas.
+
+Exemplos de eventos e cartas (lista inicial, para escolher/cortar):
+
+| Evento / carta | O que acontece |
+|---|---|
+| **Pista invertida** | Todos dão meia-volta e passam a correr no sentido contrário; o último vira o primeiro a chegar na "nova" freada. |
+| **Tempestade num setor só** | Chove forte em metade da pista e faz sol na outra; nenhum pneu é perfeito. |
+| **Roleta de pneus** | Todos os carros recebem, à força, um composto sorteado. |
+| **Vácuo gigante** | Por 3 voltas ultrapassar fica fácil demais — festival de trocas de posição. |
+| **Pit lane fechado** | Ninguém pode parar por algumas voltas (quem estava para trocar pneu sofre). |
+| **Grid embaralhado** | Uma bandeira vermelha "maluca" reordena as posições aleatoriamente. |
+| **Invasão de pista** | Animais típicos da região do circuito atravessam a pista (aproveita os cenários de cada pista). Carros desaceleram para desviar. |
+| **Óleo na pista** | Carta: deixa uma mancha num ponto do circuito; quem passa por ela perde tempo. |
+| **Escudo** | Carta: protege seu piloto do próximo evento negativo. |
+| **Volta de pontos em dobro** | Quem estiver na frente ao fim da volta sorteada ganha bônus. |
+| **Troca de pilotos** | Dois pilotos de equipes diferentes trocam de carro até o fim da corrida. |
+
+Por que este formato:
+- É **simples**: são as mesmas bolinhas e o mesmo pit stop, só que com regras malucas, então
+  qualquer um entende em segundos.
+- Reaproveita o motor de corrida e os cenários, então custa pouco para construir.
+- Cada partida é diferente, e o modo vira um "lanche" rápido entre corridas sérias.
+- Podem existir **variantes prontas** (ex.: "Só chuva", "Tudo invertido", "Caos total") e
+  corridas curtas (5–10 voltas).
