@@ -362,7 +362,7 @@ func _build_results() -> Control:
 		var out := car.retired or car.disqualified
 		table.set_row_style(i, "me" if car.is_player else ("out" if out else "normal"))
 		table.set_pos(i, 0, pos, UiStyle.BAR_BG if out else car.team_color())
-		table.set_text(i, 1, "%s  %s" % [car.code(), car.display_name()])
+		table.set_text(i, 1, car.display_name())
 		table.set_text(i, 2, car.team["name"])
 		table.set_text(i, 3, gap)
 		table.set_text(i, 4, str(car.pit_stops))
