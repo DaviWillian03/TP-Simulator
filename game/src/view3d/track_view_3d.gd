@@ -5,8 +5,14 @@ extends SubViewportContainer
 ## Controles: arrastar = girar · pinça/roda do mouse = zoom · botão de câmera = alterna entre
 ## visão geral, seguir seus pilotos e seguir o líder.
 
-const CAR_SCALE := 4.0  ## carros ampliados para serem vistos de longe
-const PIT_OFFSET_M := 16.0
+const CAR_SCALE := 4.0  ## ampliação máxima dos carros (câmera longe)
+
+
+## De perto o carro fica quase no tamanho real (senão se sobrepõem no grid);
+## de longe é ampliado para continuar visível.
+func _car_scale() -> float:
+	return clampf(distance / 70.0, 1.2, CAR_SCALE)
+const PIT_OFFSET_M := 15.0
 
 enum CamMode { OVERVIEW, FOLLOW_1, FOLLOW_2, LEADER }
 
@@ -14,6 +20,7 @@ var sim: RaceSim
 var t3: Track3D
 var cam_mode := CamMode.OVERVIEW
 var yaw := 0.6
+var snap_camera := false  ## câmera vai direto ao alvo (capturas de tela)
 var pitch := 0.62  ## radianos acima do horizonte
 var distance := 1400.0
 
@@ -121,6 +128,7 @@ func _build_track() -> void:
 	verge.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_add_mesh(t3.skirt(-Track3D.WIDTH / 2.0 - Track3D.KERB_W, 3.0), verge)
 	_add_mesh(t3.skirt(Track3D.WIDTH / 2.0 + Track3D.KERB_W, 3.0), verge)
+	_build_track_details()
 	# linha de chegada (quadriculada simplificada: faixa branca larga)
 	var line := MeshInstance3D.new()
 	var bm := BoxMesh.new()
@@ -129,6 +137,82 @@ func _build_track() -> void:
 	line.transform = Transform3D(t3.basis_at(0.0), t3.point_at(0.0) + Vector3.UP * 0.1)
 	line.material_override = Materials3D.flat(Color.WHITE, 0.5)
 	_world_root.add_child(line)
+
+
+## Detalhes que todo circuito real tem: pit lane, prédio dos boxes, brita nas curvas,
+## guard-rails, barreiras de pneus e marcações do grid de largada.
+func _build_track_details() -> void:
+	var w := Track3D.WIDTH / 2.0
+	var k := Track3D.KERB_W
+	# pit lane (lado esquerdo da reta principal)
+	_add_mesh(t3.strip(-w - 22.0, -w - 8.0, 0.04, 8.0, t3.in_pit_zone), _asphalt)
+	var wall_mat := Materials3D.vertex_color(0.5)
+	wall_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_add_mesh(t3.wall(-w - 6.0, 1.1, t3.in_pit_zone, Color("#d9d9d9"), Color("#d9d9d9")), wall_mat)
+	# brita só do lado de fora das curvas, depois das zebras, com barreira de pneus atrás
+	var gravel := Materials3D.ground(Color("#7a6a4e"))
+	gravel.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var out_r := func(i: int) -> bool: return t3.outside_side(i) > 0.0  # pit lane só à esquerda
+	var out_l := func(i: int) -> bool: return t3.outside_side(i) < 0.0 and not t3.in_pit_zone(i)
+	_add_mesh(t3.strip(w + k, w + k + 16.0, 0.03, 8.0, out_r), gravel)
+	_add_mesh(t3.strip(-w - k - 16.0, -w - k, 0.03, 8.0, out_l), gravel)
+	_add_mesh(t3.wall(w + k + 17.0, 1.2, out_r, Color("#1d1d1f"), Color("#c8102e")), wall_mat)
+	_add_mesh(t3.wall(-w - k - 17.0, 1.2, out_l, Color("#1d1d1f"), Color("#1f4fa0")), wall_mat)
+	# guard-rail (cinza) no resto da volta, mais perto da pista
+	var rail_r := func(i: int) -> bool: return t3.outside_side(i) <= 0.0
+	var rail_l := func(i: int) -> bool: return t3.outside_side(i) >= 0.0 and not t3.in_pit_zone(i)
+	_add_mesh(t3.wall(w + 9.0, 0.9, rail_r, Color("#bfc4c9"), Color("#aab0b6")), wall_mat)
+	_add_mesh(t3.wall(-w - 9.0, 0.9, rail_l, Color("#bfc4c9"), Color("#aab0b6")), wall_mat)
+	_build_pit_building(w)
+	# marcações do grid (duas filas, atrás da linha de chegada)
+	var grid_mat := Materials3D.flat(Color("#f2f2f2"), 0.6)
+	for slot in sim.cars.size():
+		var d := -RaceSim.GRID_SPACING_M * slot - 5.0 - 2.0
+		var f := fposmod(d, sim.track.length_m) / sim.track.length_m
+		var b := t3.basis_at(f)
+		var mark := MeshInstance3D.new()
+		var bm2 := BoxMesh.new()
+		bm2.size = Vector3(2.4, 0.05, 0.35)
+		mark.mesh = bm2
+		mark.material_override = grid_mat
+		mark.transform = Transform3D(b, t3.point_at(f) + b.x * (3.0 if slot % 2 == 0 else -3.0) + Vector3.UP * 0.09)
+		_world_root.add_child(mark)
+
+
+## Prédio dos boxes atrás do pit lane: um vão de 12 m por garagem, com portão escuro
+## virado para o pit lane e uma faixa na cor da equipe (duas garagens por equipe).
+func _build_pit_building(w: float) -> void:
+	var teams: Array[Dictionary] = []
+	for car in sim.cars:
+		if not teams.has(car.team):
+			teams.append(car.team)
+	var body := Materials3D.flat(Color("#6f7276"), 0.85)
+	var door := Materials3D.flat(Color("#1c1e22"), 0.6)
+	var glass := Materials3D.flat(Color("#33414d"), 0.15)
+	glass.metallic = 0.4
+	var roof := Materials3D.flat(Color("#3f4247"), 0.95)
+	var bays := teams.size() * 2
+	for k in bays:
+		var f := float((k - bays / 2) * 3) / t3.n  # 3 amostras = 12 m por vão
+		var b := t3.basis_at(f)
+		var base := t3.point_at(f) - b.x * (w + 31.0)
+		var team: Dictionary = teams[k / 2]
+		var stripe := Materials3D.flat(Color(team["color"]), 0.5)
+		# (deslocamento lateral a partir do centro do prédio, altura, tamanho, material)
+		for part: Array in [
+			[0.0, 4.5, Vector3(16.0, 9.0, 12.05), body],
+			[8.05, 2.4, Vector3(0.2, 4.8, 9.6), door],  # portão (face do pit lane)
+			[8.1, 5.6, Vector3(0.2, 0.7, 11.0), stripe],  # faixa da equipe
+			[8.05, 7.6, Vector3(0.2, 1.8, 11.4), glass],  # vidro do andar de cima
+			[2.0, 9.15, Vector3(20.0, 0.3, 12.05), roof],  # laje com beiral sobre o pit lane
+		]:
+			var mi := MeshInstance3D.new()
+			var bm := BoxMesh.new()
+			bm.size = part[2]
+			mi.mesh = bm
+			mi.material_override = part[3]
+			mi.transform = Transform3D(b, base + b.x * float(part[0]) + Vector3.UP * float(part[1]))
+			_world_root.add_child(mi)
 
 
 func _add_mesh(mesh: Mesh, mat: Material) -> void:
@@ -198,12 +282,12 @@ func _process(delta: float) -> void:
 			basis = basis.rotated(Vector3.UP, 1.2)
 		elif d < 0.0:
 			pos += basis.x * (3.0 if car.grid_position % 2 == 0 else -3.0)
-		mi.transform = Transform3D(basis.scaled(Vector3.ONE * CAR_SCALE), pos + Vector3.UP * 0.1)
+		mi.transform = Transform3D(basis.scaled(Vector3.ONE * _car_scale()), pos + Vector3.UP * 0.1)
 	_sc.visible = sim.control.flag == RaceControl.Flag.SC
 	if _sc.visible:
 		var lead := sim.standings()[0]
 		var f := fposmod(sim.render_distance(lead) + 80.0, sim.track.length_m) / sim.track.length_m
-		_sc.transform = Transform3D(t3.basis_at(f).scaled(Vector3.ONE * CAR_SCALE), t3.point_at(f) + Vector3.UP * 0.1)
+		_sc.transform = Transform3D(t3.basis_at(f).scaled(Vector3.ONE * _car_scale()), t3.point_at(f) + Vector3.UP * 0.1)
 	var w := sim.weather.wetness
 	var r := sim.weather.rain_now()
 	if absf(w - _last_wet) > 0.01 or (r > WeatherModel.RAIN_THRESHOLD) != _rain.emitting:
@@ -288,7 +372,7 @@ func _update_camera(delta: float) -> void:
 	var goal := _overview_target
 	if car != null and _cars.has(car):
 		goal = (_cars[car] as MeshInstance3D).position
-	_target = _target.lerp(goal, clampf(delta * 4.0, 0.0, 1.0))
+	_target = goal if snap_camera else _target.lerp(goal, clampf(delta * 4.0, 0.0, 1.0))
 	var dir := Vector3(cos(pitch) * sin(yaw), sin(pitch), cos(pitch) * cos(yaw))
 	_cam.position = _target + dir * distance
 	_cam.look_at(_target, Vector3.UP)

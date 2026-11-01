@@ -7,6 +7,7 @@ extends Node
 ##   --pct=<0.25|0.5|1.0>   duração da corrida
 ##   --seed=<n>             semente da corrida
 ##   --advance=<segundos>   avança a corrida antes de mostrar (para capturas de tela)
+##   --pause                começa pausado
 ##   --rain-at=<segundos> [--rain=<0..1>]   força chuva a partir desse instante
 ##   --weather=dry          sem chuva · --incidents=<0..n> multiplicador de incidentes
 ##   --screenshot=<arquivo.png> --frames=<n>   salva a tela após n quadros e fecha o jogo
@@ -19,6 +20,7 @@ var player_team := "mclaren"
 var duration_pct := 0.25
 var race_seed := 0
 var debug_advance_s := 0.0
+var debug_pause := false  ## --pause: começa pausado (capturas do grid parado)
 var debug_sc := false  ## --sc: aciona o safety car logo após o --advance
 var debug_open_data := false  ## --data: abre o menu DADOS
 var debug_camera: Dictionary = {}  ## --yaw --pitch --dist --cam=<n> (capturas da vista 3D)
@@ -36,6 +38,7 @@ func _ready() -> void:
 	player_team = args.get("team", player_team)
 	duration_pct = float(args.get("pct", duration_pct))
 	debug_advance_s = float(args.get("advance", "0"))
+	debug_pause = args.has("pause")
 	if args.has("rain-at"):
 		var t := float(args["rain-at"])
 		sim_overrides["weather"] = [{"start_s": t, "end_s": t + 5000.0, "intensity": float(args.get("rain", "0.8"))}]
@@ -71,6 +74,7 @@ func _process(_delta: float) -> void:
 func start_race() -> void:
 	race_seed = randi()
 	debug_advance_s = 0.0
+	debug_pause = false
 	get_tree().change_scene_to_file(RACE_SCENE)
 
 

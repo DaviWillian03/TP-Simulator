@@ -269,8 +269,8 @@ func _grandstands() -> void:
 		var f := float(k) / t3.n * 2.0
 		var c := t3.point_at(f)
 		var b := t3.basis_at(f)
-		var side := b.x * -1.0  # lado esquerdo da reta principal
-		var pos := c + side * (Track3D.WIDTH / 2.0 + 14.0)
+		var side := b.x  # lado de fora da reta (o pit lane fica do lado de dentro)
+		var pos := c + side * (Track3D.WIDTH / 2.0 + 16.0)
 		for tier in 3:
 			var stand := MeshInstance3D.new()
 			var bm := BoxMesh.new()

@@ -8,6 +8,8 @@ const WIDTH := 14.0
 const STEP_M := 4.0
 const KERB_W := 1.6
 const LINE_W := 0.35
+## Curvatura (rad em ~24 m) a partir da qual há área de escape com brita: raio < ~200 m.
+const SHARP_CORNER := 0.12
 
 var track: TrackModel
 var n := 0
@@ -116,6 +118,55 @@ func kerbs() -> ArrayMesh:
 				st.set_color(col)
 				st.set_normal(Vector3.UP)
 				st.add_vertex(quad[k] + Vector3.UP * lift)
+	return st.commit()
+
+
+## A amostra i está no trecho do pit lane (da entrada à saída, passando pela linha)?
+func in_pit_zone(i: int) -> bool:
+	var f := float(i) / n
+	return f >= track.pit_entry_frac or f <= track.pit_exit_frac
+
+
+## Curva ou perto de uma (para brita e barreiras de pneus).
+func near_corner(i: int, span: int = 4) -> bool:
+	for k in range(-span, span + 1):
+		if is_corner((i + k + n) % n):
+			return true
+	return false
+
+
+## Lado de fora da curva perto da amostra i: +1 = direita, -1 = esquerda, 0 = reta.
+## (O carro que perde a curva escapa para fora, por isso a brita fica desse lado.)
+func outside_side(i: int, span: int = 4) -> float:
+	var best := SHARP_CORNER
+	var side := 0.0
+	for k in range(-span, span + 1):
+		var m := (i + k + n) % n
+		if curvature[m] > best:
+			best = curvature[m]
+			var a := center[m] - center[(m - 3 + n) % n]
+			var b := center[(m + 3) % n] - center[m]
+			# y do produto vetorial > 0 = virando à esquerda (x leste, z sul) -> fora = direita
+			side = 1.0 if a.cross(b).y > 0.0 else -1.0
+	return side
+
+
+## Parede vertical ao longo da pista no deslocamento lateral dado (guard-rail / barreira).
+func wall(offset: float, height: float, mask: Callable, col_a: Color, col_b: Color) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in n:
+		if not mask.call(i):
+			continue
+		var j := (i + 1) % n
+		var a := center[i] + right[i] * offset
+		var b := center[j] + right[j] * offset
+		var col := col_a if (i / 2) % 2 == 0 else col_b
+		var nrm := -right[i] * signf(offset)
+		for v in [a, b, b + Vector3.UP * height, a, b + Vector3.UP * height, a + Vector3.UP * height]:
+			st.set_color(col)
+			st.set_normal(nrm)
+			st.add_vertex(v)
 	return st.commit()
 
 

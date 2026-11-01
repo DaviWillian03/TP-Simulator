@@ -105,6 +105,7 @@ func _build_ui() -> void:
 			_track_view.cycle_camera()
 		if Session.debug_camera.has("dist"):
 			_track_view.distance = Session.debug_camera["dist"]
+		_track_view.snap_camera = true  # captura: câmera já no alvo, sem deslizar
 	_toasts = ToastFeed.new()
 	_toasts.position = Vector2(6, 12)
 	_toasts.custom_minimum_size = Vector2(380, 0)
@@ -173,6 +174,7 @@ func _build_masthead() -> Control:
 	var pause := UiStyle.compact(UiStyle.button("II", true), 14)
 	pause.custom_minimum_size = Vector2(38, 34)
 	pause.toggled.connect(func(on: bool) -> void: paused = on)
+	pause.button_pressed = Session.debug_pause
 	speeds.add_child(pause)
 	var group := ButtonGroup.new()
 	for s: float in SPEEDS:

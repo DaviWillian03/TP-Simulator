@@ -37,7 +37,9 @@ godot --headless -s tools/race_report.gd -- --pct=1.0 --seeds=1,2,3    # balance
 DISPLAY=:99 godot --resolution 1280x720 -- --race --team=williams --advance=420 --screenshot=/caminho/x.png --frames=60
 ```
 Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--weather=dry`,
-`--incidents=<mult>`, `--sc` (aciona safety car), `--data` (abre o menu DADOS), `--seed`, `--pct`.
+`--incidents=<mult>`, `--sc` (aciona safety car), `--data` (abre o menu DADOS), `--seed`, `--pct`,
+`--pause` (começa pausado: grid parado), `--circuit=<id>`, câmera 3D `--cam=<n> --yaw --pitch --dist`
+(a câmera vai direto ao alvo nas capturas).
 Testes de regras usam `{"weather": "dry", "incident_rate": 0.0}` salvo quando testam clima/incidentes.
 - Captura de tela precisa de display: `Xvfb :99 -screen 0 1280x720x24 &`. Use para conferir
   layout depois de mexer na interface (ler logs não mostra a tela).
