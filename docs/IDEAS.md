@@ -63,6 +63,23 @@ Como este arquivo funciona:
 > - corrida caótica, um modo divertido onde darei liberdade para você criar algo que me surpreenda,
 >   que faça uma corrida totalmente livre para a bizarrice e o entretenimento.
 
+### #3 — Dados reais, modo edição e importação (2026-11-01)
+
+> Informações práticas sobre como serão os modos de jogo:
+>
+> Eu não sei se é possível você utilizar nomes, fotos etc de pilotos e equipes reais da Fórmula 1,
+> mas se for possível quero isso, com eles tendo habilidades, potencial e qualidade de estrutura,
+> equipamento etc baseados na vida real, com informações realistas de conquistas até hoje, idade,
+> peso, altura etc, faça pesquisa profunda em sites especializados, opiniões de especialistas sobre
+> automobilismo para fazer esse aspecto bem realista.
+> Caso não seja possível usar essas informações reais, quero que você faça nomes e fotos totalmente
+> parecidos com a vida real.
+> Aí que entraria o modo edição do jogo, onde seria possível para o usuário em si trocar os nomes
+> dos pilotos, fotos oficiais, e até imagem dos carros para que tenha menus interativos com essas
+> informações de forma mais imersiva, para burlar os direitos de imagem, você até poderia fazer o
+> jogo com essas informações genéricas que pedi antes, mas dar a opção de importar depois com dados
+> e imagens reais por cima como se fosse um option file.
+
 ---
 
 ## Ideias por tema
@@ -103,6 +120,21 @@ Como este arquivo funciona:
   própria equipe** e desafiar as existentes. (#2)
 - **Corrida Caótica**: modo de diversão, livre para bizarrice e entretenimento; o usuário deu
   **liberdade criativa ao Claude** para surpreender (ver proposta P8). (#2)
+
+### Pilotos, equipes e dados (#3)
+- Desejo do usuário, em ordem de preferência:
+  1. Nomes, fotos e dados **reais** de pilotos e equipes, **se for possível**.
+  2. Se não for possível: nomes e fotos **"totalmente parecidos"** com os reais.
+- Atributos baseados na vida real: **habilidades, potencial**, qualidade da **estrutura e
+  equipamento** das equipes.
+- Dados biográficos realistas: **conquistas até hoje, idade, peso, altura** etc.
+- Base dos atributos: **pesquisa profunda** em sites especializados e opinião de especialistas.
+
+### Modo Edição e importação (#3)
+- **Modo Edição** no jogo: o usuário troca **nomes dos pilotos, fotos e imagem dos carros**.
+- Os menus mostram essas informações de forma **interativa e imersiva**.
+- O jogo pode vir com **dados genéricos** e permitir **importar depois** dados e imagens reais
+  por cima, **como um "option file"**.
 
 ---
 
@@ -146,6 +178,21 @@ Modos de jogo (#2):
     ou a equipe própria pode **falir**?
 18. **Corrida Caótica**: aprovar ou ajustar o conceito da proposta P8.
 
+Dados reais, edição e importação (#3) — absorve as dúvidas 5 e 11:
+19. **Intenção de publicação**: publicar na Play Store, distribuir de graça fora da loja, ou
+    projeto pessoal/de estudo? Isso muda o nível de risco aceitável com nomes e imagens.
+20. **Nomes no jogo base**: (a) fictícios e claramente diferentes, inspirados em perfis reais;
+    (b) "quase iguais" aos reais (o usuário pediu, mas o risco jurídico é o mesmo de usar o nome
+    real — ver observações); (c) outra opção.
+21. **Retratos no jogo base**: ilustrações estilizadas de pessoas fictícias, gerador de rostos
+    combinando partes, silhuetas/capacetes, ou outra opção.
+22. **O que o Modo Edição pode mudar**: só nomes, fotos e pinturas dos carros, ou também
+    atributos, equipes, cores, logos e nomes de circuitos?
+23. **Compartilhar o arquivo de importação**: deve ser um arquivo único fácil de passar entre
+    jogadores (como os option files de PES)?
+24. **Temporada de referência** para os dados: grid de 2026 ou de 2027 (a próxima temporada,
+    já que o jogo ainda vai ser construído)?
+
 ---
 
 ## Observações técnicas (análise do Claude, não são requisitos)
@@ -187,6 +234,59 @@ Modos de jogo (#2):
 - **Campanha precisa salvar progresso** entre sessões. No Godot isso é simples (arquivo em
   `user://`), mas o formato dos dados deve ser pensado cedo, para não quebrar os saves quando o
   jogo for atualizado.
+
+### Direitos de nome e imagem (#3) — não é parecer jurídico, é o panorama geral
+- **Nomes reais de pilotos** são protegidos pelo direito de imagem/personalidade. Jogos oficiais
+  pagam licença ao piloto ou à associação de pilotos. **Nomes de equipes, logos e
+  "Fórmula 1/F1"** são marcas registradas.
+- **Fotos oficiais** têm direito autoral do fotógrafo ou agência, além do direito de imagem da
+  pessoa. Não podem ir dentro do jogo nem ser baixadas pelo Claude para o projeto.
+- **Nomes "quase iguais" e rostos parecidos** (ex.: trocar uma letra do sobrenome, gerar um
+  rosto que imita o piloto) **não resolvem o problema**. A lei protege a identidade
+  reconhecível da pessoa, não só a grafia exata. Por isso o Claude não vai gerar retratos
+  realistas que imitem pessoas reais.
+- **Fatos não têm dono**: idade, altura, número de vitórias e títulos são informação pública e
+  podem ser pesquisados. Eles podem orientar a criação de pilotos fictícios ("um bicampeão
+  holandês de 29 anos") ou preencher um arquivo de importação feito pelo usuário.
+- **O modelo "option file" é o caminho viável**, e foi o que o usuário sugeriu: o jogo traz só
+  conteúdo fictício e um importador genérico. Quem importa dados e imagens reais é o próprio
+  jogador, para uso pessoal. Cuidados:
+  - o jogo **não deve trazer nem divulgar** pacotes com dados ou fotos reais;
+  - a página da loja **não deve anunciar** "importe a F1 real" (a Play Store tem regras contra
+    apps que incentivam violação de propriedade intelectual).
+
+### Modo Edição / importação — implicações técnicas (#3)
+- O jogo precisa ser **orientado a dados** desde o início: pilotos, equipes, carros e circuitos
+  vêm de arquivos de dados (ex.: JSON) e não ficam escritos no código. Isso também facilita
+  balancear o jogo e testar.
+- Imagens importadas são carregadas **em tempo de execução** a partir de `user://` (pasta do app
+  no celular). O Godot consegue carregar PNG/JPG de fora do projeto (`Image.load_from_file`).
+- **Formato do pacote** (sugestão): um `.zip` com um `manifest.json` (versão do formato,
+  nome do pacote) e pastas `pilotos/`, `equipes/`, `carros/`. Assim fica um arquivo único fácil
+  de compartilhar (dúvida 23).
+- **Validação** na importação: tamanho máximo das imagens, campos obrigatórios e versão do
+  formato. Um pacote ruim não pode travar o jogo nem corromper o save.
+- No Android, o usuário escolhe o arquivo pelo seletor do sistema. Precisa ser testado em
+  aparelho real (acesso a arquivos muda entre versões do Android).
+- **Pinturas dos carros importadas**: as "bolinhas" da corrida usam as cores da equipe. A imagem
+  importada do carro aparece nos menus (garagem, perfil da equipe).
+
+### Pesquisa de dados reais — planejamento (#3)
+- O usuário pediu **pesquisa profunda**. Ela será feita, mas **só depois de definirmos os
+  atributos** dos pilotos e das equipes (o usuário disse em #1 que isso será tratado mais
+  tarde). Sem saber quais notas existem (ex.: ritmo, consistência, chuva, ultrapassagem,
+  gestão de pneus), não há o que medir, e a pesquisa teria de ser refeita.
+- Plano quando chegar a hora:
+  - fatos (idade, altura, peso, vitórias, títulos, pódios) em bancos de resultados e estatísticas;
+  - avaliações qualitativas a partir de análises de especialistas e de comparações com
+    companheiros de equipe (o principal dado objetivo na F1);
+  - estrutura das equipes a partir de resultados recentes, investimento e notícias técnicas.
+- Saídas possíveis, conforme a dúvida 20:
+  - perfis para pilotos fictícios inspirados nos reais;
+  - um arquivo de exemplo com dados reais para o usuário importar por conta própria — **sem
+    fotos e fora do jogo distribuído**.
+- Limitação conhecida: na nuvem, vários sites estão bloqueados pela rede. A pesquisa pode
+  exigir liberar domínios ou ser feita localmente.
 
 ---
 
