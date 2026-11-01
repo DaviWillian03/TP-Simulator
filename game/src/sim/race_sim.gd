@@ -144,13 +144,19 @@ func _compare_position(a: CarState, b: CarState) -> bool:
 	return a.distance > b.distance
 
 
-## Diferença para o líder em segundos (o líder passou por este ponto há X s).
+## Diferença para o líder em segundos.
+## Em andamento: há quanto tempo o líder passou pelo ponto onde o carro está.
+## Depois da chegada: diferença entre os tempos de chegada.
 func gap_to_leader_s(car: CarState) -> float:
-	var d := car.distance
+	var lead := leader()
+	if car == lead:
+		return 0.0
+	if car.finished and lead.finished:
+		return maxf(0.0, car.finish_time - lead.finish_time)
+	var d := minf(car.distance, race_distance())
 	if d <= 0.0 or _trace_dist.is_empty():
 		return 0.0
-	var reference_time := car.finish_time if car.finished else time_s
-	return maxf(0.0, reference_time - _time_at_distance(d))
+	return maxf(0.0, time_s - _time_at_distance(d))
 
 
 ## Segundos até o carro imediatamente à frente na mesma faixa (-1 se não houver).
@@ -345,7 +351,10 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 	var lap_before := floori(prev / track.length_m)
 	var lap_after := floori(now / track.length_m)
 	if now > 0.0 and lap_after > lap_before and lap_after >= 1:
-		_complete_lap(car, lap_after)
+		# instante exato em que cruzou a linha, interpolado dentro do passo
+		var line_d := lap_after * track.length_m
+		var cross_time := time_s - DT + DT * (line_d - prev) / moved
+		_complete_lap(car, lap_after, cross_time)
 		if car.finished:
 			return
 
@@ -381,10 +390,10 @@ func _change_tyres(car: CarState) -> void:
 	pit_stop.emit(car, car.tyre, car.pit_stationary_s)
 
 
-func _complete_lap(car: CarState, lap_number: int) -> void:
+func _complete_lap(car: CarState, lap_number: int, cross_time: float) -> void:
 	car.laps_done = lap_number
-	car.last_lap_time = time_s - car.lap_start_time
-	car.lap_start_time = time_s
+	car.last_lap_time = cross_time - car.lap_start_time
+	car.lap_start_time = cross_time
 	car.tyre_laps += 1
 	car.lap_noise = rng.randfn(0.0, LAP_NOISE_SIGMA)
 	if lap_number > 1:  # a 1ª volta inclui a largada parada
@@ -396,12 +405,12 @@ func _complete_lap(car: CarState, lap_number: int) -> void:
 	if not chequered and lap_number >= total_laps:
 		chequered = true
 	if chequered:
-		_finish(car)
+		_finish(car, cross_time)
 
 
-func _finish(car: CarState) -> void:
+func _finish(car: CarState, cross_time: float) -> void:
 	car.finished = true
-	car.finish_time = time_s
+	car.finish_time = cross_time
 	car.in_pit = false
 	car.speed = 0.0
 	if not tyres.rule_satisfied(car.compounds_used):
@@ -456,6 +465,7 @@ func _update_trace() -> void:
 	var lead := -INF
 	for car in cars:
 		lead = maxf(lead, car.distance)
+	lead = minf(lead, race_distance())  # depois da bandeirada a referência do líder para
 	if lead <= 0.0:
 		return
 	if _trace_dist.is_empty() or lead - _trace_dist[_trace_dist.size() - 1] >= TRACE_STEP_M:

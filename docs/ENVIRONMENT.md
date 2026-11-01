@@ -45,9 +45,11 @@ adicionar os domínios em *Allowed domains*. Passos: https://code.claude.com/doc
   Vulkan para OpenGL (llvmpipe) e o áudio usa driver nulo — avisos esperados, não são erros do jogo.
 
 ### Referência da API, na versão exata
-`godot --headless --doctool <pasta>` gera ~1.076 XML (7 MB) com a referência de todas as classes
-do executável instalado. Gere fora do repositório (ex.: `refs/godot-api/`, ignorado pelo Git) e
-consulte apenas a classe necessária.
+`godot --headless --doctool <pasta>` gera ~1.076 XML (7 MB) com as **assinaturas** (métodos,
+parâmetros, propriedades) de todas as classes do executável instalado — **sem as descrições**.
+Gere fora do repositório (ex.: `refs/godot-api/`, ignorado pelo Git) e consulte só a classe
+necessária. Para as descrições, use o XML oficial da mesma versão:
+`https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/doc/classes/<Classe>.xml`.
 
 ## Godot MCP (Coding-Solo/godot-mcp)
 

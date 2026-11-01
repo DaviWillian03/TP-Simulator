@@ -46,5 +46,5 @@ func _report(circuit: String, pct: float, seed_value: int) -> void:
 
 
 func _fmt(seconds: float) -> String:
-	var m := int(seconds) / 60
+	var m := floori(seconds / 60.0)
 	return "%d:%06.3f" % [m, seconds - m * 60]

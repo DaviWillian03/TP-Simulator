@@ -144,3 +144,30 @@ func test_diferenca_para_o_lider_cresce_ao_longo_do_grid() -> void:
 	var order := sim.standings()
 	assert_eq(sim.gap_to_leader_s(order[0]), 0.0)
 	assert_gt(sim.gap_to_leader_s(order[10]), sim.gap_to_leader_s(order[1]))
+
+
+func test_diferencas_finais_sao_positivas_e_crescentes() -> void:
+	# regressão: carros que cruzavam a linha depois do líder apareciam com +0.0 s
+	var sim := _sim({"duration_pct": 0.25, "seed": 8})
+	sim.run_to_end()
+	var order := sim.standings()
+	var previous := 0.0
+	for i in range(1, order.size()):
+		var car := order[i]
+		if car.disqualified or sim.laps_behind_leader(car) > 0:
+			continue
+		var gap := sim.gap_to_leader_s(car)
+		assert_gt(gap, 0.0, "%s" % car.code())
+		assert_true(gap >= previous, "%s: %.3f depois de %.3f" % [car.code(), gap, previous])
+		previous = gap
+
+
+func test_tempos_de_volta_tem_precisao_de_milissegundos() -> void:
+	var sim := _sim({"duration_pct": 0.25, "seed": 8})
+	sim.run_to_end()
+	var not_round := 0
+	for car in sim.cars:
+		var tenths := car.best_lap_time * 10.0
+		if absf(tenths - roundf(tenths)) > 0.001:
+			not_round += 1
+	assert_gt(not_round, 15, "tempos não deveriam ser múltiplos de 0,1 s")
