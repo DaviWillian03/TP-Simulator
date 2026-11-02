@@ -302,4 +302,4 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   confirmados), estreia e títulos de construtores; o resto é null ("—"). **Altura, peso, vitórias e pódios** ainda não
   entram: as buscas e o acesso a páginas de estatísticas na nuvem não deram fonte confiável (nada inventado).
 - Os valores dos atributos são **estimativa do projeto** (resultados 2024–2025 e reputação), não dados oficiais.
-- Aguarda: mockup da ficha do piloto (Pessoal e mercado).
+- **Ficha do piloto implementada** (mockup v12 aprovado): toque num piloto (seu ou do mercado) abre a ficha; "Negociar/Renovar" leva à folha de contrato; técnicos vão direto à negociação. Captura: `--staff --fresh --team=<id> --profile=<id>`.

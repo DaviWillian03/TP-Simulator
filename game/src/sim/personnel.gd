@@ -126,8 +126,12 @@ func person(id: String, camp: Campaign = null) -> Dictionary:
 			return {"id": id, "name": f["name"], "nationality": f["nationality"], "kind": "driver", "role": "driver", "rating": int(f["rating"]), "category": f["category"]}
 	if _ex.has(id):
 		var e: Dictionary = _ex[id]
-		return {"id": id, "name": e["name"], "nationality": e["nationality"], "kind": "driver", "role": "driver", "rating": int(e["rating"]),
+		var out2 := {"id": id, "name": e["name"], "nationality": e["nationality"], "kind": "driver", "role": "driver", "rating": int(e["rating"]),
 			"category": "F1", "number": int(e["number"]), "code": e["code"]}
+		for k: String in ["attrs", "birth", "titles", "potential"]:
+			if e.has(k):
+				out2[k] = e[k]
+		return out2
 	return {}
 
 
@@ -417,7 +421,11 @@ func _release_to_pool(camp: Campaign, d: Dictionary) -> void:
 		if f["id"] == d["id"]:
 			is_feeder = true
 	if not is_feeder and not _free_agent_ids().has(d["id"]):
-		_ex[d["id"]] = {"name": d["name"], "nationality": d["nationality"], "rating": int(d["rating"]), "number": int(d["number"]), "code": d["code"]}
+		var e := {"name": d["name"], "nationality": d["nationality"], "rating": int(d["rating"]), "number": int(d["number"]), "code": d["code"]}
+		for k: String in ["attrs", "birth", "titles", "potential"]:
+			if d.has(k):
+				e[k] = d[k]
+		_ex[d["id"]] = e
 	contracts[d["id"]] = {"team": "", "salary": float(contracts[d["id"]]["salary"]), "until": camp.season}
 	if d["team"] != camp.player_team:
 		_log("%s não foi renovado e é agente livre." % d["name"])

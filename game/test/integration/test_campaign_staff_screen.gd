@@ -95,3 +95,45 @@ func test_trocar_tecnico_filtra_o_mercado_pela_funcao() -> void:
 	assert_eq(screen._role, "aero")
 	for c in screen._list.get_children():
 		assert_string_contains(((c as Button).get_child(0).get_child(1).get_child(1) as Label).text.to_lower(), "aerodin")
+
+
+func test_tocar_num_piloto_abre_a_ficha_e_negociar_leva_a_folha() -> void:
+	var screen: Control = await _open()
+	var e := _free_driver()
+	screen._open_profile(e["id"])
+	assert_true(screen._sheet is DriverSheet, "a ficha abre primeiro")
+	var sheet: DriverSheet = screen._sheet
+	sheet.negotiate.emit(e["id"])
+	await wait_process_frames(2)
+	assert_true(screen._sheet is Control and not (screen._sheet is DriverSheet), "agora é a folha de negociação")
+	var neg: Control = screen._sheet
+	neg.closed.emit("")
+	neg.queue_free()
+
+
+func test_ficha_de_piloto_do_grid_mostra_atributos_e_ficha_sem_atributos_avisa() -> void:
+	var screen: Control = await _open()
+	var mine: Dictionary = camp.personnel.player_drivers(camp)[0]
+	screen._open_profile(mine["id"])
+	var bars := 0
+	for n in _all(screen._sheet):
+		if n is ProgressBar:
+			bars += 1
+	assert_eq(bars, 6, "6 atributos")
+	var first: Control = screen._sheet
+	first.closed.emit()
+	first.queue_free()
+	var feeder: Dictionary = camp.personnel.market(camp, "driver", "feeder")[0]
+	screen._open_profile(feeder["id"])
+	var bars2 := 0
+	for n in _all(screen._sheet):
+		if n is ProgressBar:
+			bars2 += 1
+	assert_eq(bars2, 0, "F2/F3 não têm atributos individuais")
+
+
+func _all(node: Node) -> Array[Node]:
+	var out: Array[Node] = [node]
+	for c in node.get_children():
+		out.append_array(_all(c))
+	return out

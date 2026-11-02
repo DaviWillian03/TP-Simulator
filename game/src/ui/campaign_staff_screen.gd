@@ -73,6 +73,8 @@ func _ready() -> void:
 	_toasts.custom_minimum_size = Vector2(420, 0)
 	ScreenKit.place(_toasts, _layer, Control.PRESET_TOP_LEFT, Vector2(670, 100), Vector2(420, 0))
 	_refresh()
+	if Session.debug_profile != "":  # (captura) abre a ficha de um piloto
+		_open_profile.call_deferred(Session.debug_profile)
 
 
 func _chip(caption: String) -> PanelContainer:
@@ -190,7 +192,7 @@ func _driver_card(d: Dictionary) -> Control:
 	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rt.add_child(cap)
 	h.add_child(rt)
-	b.pressed.connect(_open_sheet.bind(id))
+	b.pressed.connect(_open_profile.bind(id))
 	return b
 
 
@@ -399,7 +401,7 @@ func _market_row(e: Dictionary) -> Control:
 	r.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(r)
-	b.pressed.connect(_open_sheet.bind(e["id"]))
+	b.pressed.connect((_open_profile if e["kind"] == "driver" else _open_sheet).bind(e["id"]))
 	return b
 
 
@@ -428,6 +430,20 @@ func _on_filter(value: String) -> void:
 
 
 # --- negociação ----------------------------------------------------------------------------------
+
+## Pilotos abrem a ficha primeiro ("Negociar" leva à folha de contrato); técnicos vão direto à negociação.
+func _open_profile(id: String) -> void:
+	if _sheet != null:
+		return
+	var sheet := DriverSheet.new()
+	sheet.setup(campaign, id)
+	sheet.closed.connect(func() -> void: _sheet = null)
+	sheet.negotiate.connect(func(pid: String) -> void:
+		_sheet = null
+		_open_sheet(pid))
+	_layer.add_child(sheet)
+	_sheet = sheet
+
 
 func _open_sheet(id: String) -> void:
 	if _sheet != null:
