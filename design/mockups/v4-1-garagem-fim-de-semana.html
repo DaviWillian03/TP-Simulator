@@ -1,0 +1,141 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>V4 · Garagem · fim de semana</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:1280px;height:720px;overflow:hidden}.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.scene{background:#0b0c0f;color:#eef0f3;font-family:Titillium;font-weight:600}
+.wall{position:absolute;inset:0 0 250px 0;background:linear-gradient(#1b1e24,#111318 80%)}
+.wall:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:250px;background:linear-gradient(#181a1f,#0a0b0d)}
+.lamp{position:absolute;top:0;height:6px;background:#f4f6fa;border-radius:0 0 4px 4px;box-shadow:0 0 34px 10px rgba(240,245,255,.22)}
+.glow{position:absolute;inset:0;background:radial-gradient(ellipse 46% 40% at 64% 66%,rgba(24,104,219,.42),transparent 70%)}
+.cone{position:absolute;left:470px;top:0;width:560px;height:720px;background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0) 75%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%)}
+.car{position:absolute}.refl{position:absolute;transform:scaleY(-1);opacity:.13;-webkit-mask:linear-gradient(transparent 55%,#000)}
+.logo{position:absolute;left:52px;top:34px;height:74px}
+.season{position:absolute;left:56px;top:118px;font-size:13px;letter-spacing:3px;color:#9aa3b2}
+.modes{position:absolute;left:52px;top:168px;width:388px;display:flex;flex-direction:column;gap:12px}
+.mode{display:flex;align-items:center;gap:16px;border-radius:16px;padding:0 20px;background:rgba(255,255,255,.06)}
+.mode b{display:block;font-weight:900;font-size:24px;letter-spacing:.5px;line-height:1}.mode small{display:block;font-size:15px;color:#a8b0bd;margin-top:5px}
+.mode .go{margin-left:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.mode.main{height:112px;background:#f3f4f6;color:#11141a;position:relative;overflow:hidden}
+.mode.main:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:#E10600}
+.mode.main b{font-size:34px}.mode.main small{color:#4b5260}.mode.main .go{background:#E10600;color:#fff;width:54px;height:54px}
+.mode.alt{height:84px}
+.mode.lock svg{flex:none}.mode.lock{height:50px;white-space:nowrap;background:none;color:#6c7380;padding-left:20px}.mode.lock b{font-size:18px;color:#7b8290}
+.tag{font-size:12px;letter-spacing:2px;border-radius:20px;padding:4px 10px;background:rgba(255,255,255,.07);color:#8a92a0;margin-left:auto}
+.pill{display:flex;align-items:center;gap:12px;border-radius:40px;padding:8px 18px 8px 10px;background:rgba(255,255,255,.07)}
+.pill b{display:block;font-size:17px;font-weight:900;letter-spacing:1px}.pill small{display:block;font-size:13px;color:#a8b0bd}
+.top{position:absolute;right:44px;top:40px;display:flex;align-items:center;gap:12px}
+.swap{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07)}
+.plates{position:absolute;right:56px;bottom:40px;display:flex;gap:44px}
+.plate{display:flex;align-items:flex-end;gap:12px}.plate .n{font-weight:900;font-size:62px;line-height:.8;color:transparent;-webkit-text-stroke:2px #5c93ea}
+.plate b{display:block;font-size:20px;font-weight:900}.plate small{display:block;font-size:13px;color:#9aa3b2;letter-spacing:1.5px}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#5d6574}
+/* configuração */
+.hdr{position:absolute;left:44px;top:30px;display:flex;align-items:center;gap:16px}
+.round{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.hdr b{font-size:15px;letter-spacing:3px;font-weight:700;color:#9aa3b2;display:block}.hdr h1{font-size:30px;font-weight:900;letter-spacing:1px}
+.map{position:absolute;left:30px;top:96px;width:830px;height:420px}
+.map svg.trk{position:absolute;left:340px;top:6px;filter:drop-shadow(0 0 10px rgba(110,170,255,.55))}
+.badge{display:inline-flex;gap:8px;align-items:center;border-radius:20px;padding:5px 12px;font-size:13px;letter-spacing:2px;font-weight:700}
+.gpname{position:absolute;left:14px;top:40px;width:420px}
+.gpname h2{font-size:50px;font-weight:900;line-height:.95;margin:14px 0 8px}.gpname p{font-size:16px;color:#a8b0bd}
+.stats{position:absolute;left:14px;top:268px;display:grid;grid-template-columns:repeat(2,170px);gap:22px 26px}
+.stat b{display:block;font-size:40px;font-weight:900;line-height:1}.stat small{font-size:12px;letter-spacing:2px;color:#8f98a7}
+.panel{position:absolute;right:40px;top:92px;width:360px;display:flex;flex-direction:column;gap:13px}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#8f98a7;margin-bottom:8px}
+.seg{display:flex;background:rgba(255,255,255,.07);border-radius:28px;padding:4px;gap:4px}
+.seg span{flex:1;height:44px;border-radius:24px;display:grid;place-items:center;font-size:16px;font-weight:700;color:#c3c9d3}
+.seg span.on{background:#f3f4f6;color:#11141a}
+.wx{display:flex;gap:8px}.wx span{flex:1;height:58px;border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:#c3c9d3}
+.wx span.on{background:#f3f4f6;color:#11141a}
+.cta{height:60px;margin-top:2px;background:#E10600;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;font-weight:900;letter-spacing:1px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%);border-radius:14px 0 14px 14px}
+.cal{position:absolute;left:0;right:0;bottom:16px;height:108px;display:flex;gap:12px;padding-left:44px}
+.card{flex:0 0 172px;border-radius:16px;background:rgba(255,255,255,.055);padding:12px 14px;position:relative}
+.card .rd{font-size:12px;letter-spacing:2px;color:#8f98a7}.card b{display:block;font-size:17px;font-weight:900;margin-top:2px;white-space:nowrap}
+.card small{font-size:13px;color:#a8b0bd}.card svg{position:absolute;right:10px;bottom:10px;opacity:.75}
+.card.on{background:#f3f4f6;color:#11141a}.card.on small,.card.on .rd{color:#4b5260}.card.on:before{content:"";position:absolute;left:14px;right:14px;top:0;height:4px;border-radius:0 0 4px 4px;background:#1868DB}
+.chip{font-size:10px;letter-spacing:1.5px;border-radius:10px;padding:2px 7px;margin-left:4px;vertical-align:middle;font-weight:700}
+.chip.s{background:#E10600;color:#fff}.chip.n{background:#26324a;color:#ffd36b}
+.fade{position:absolute;right:0;bottom:0;width:160px;height:170px;background:linear-gradient(90deg,transparent,#0b0c0f)}
+
+.wrap{position:absolute;inset:0}
+.hdr2{position:absolute;left:44px;top:26px;right:44px;display:flex;align-items:center;gap:16px}
+.hdr2 .day{margin-left:auto;font-weight:900;font-size:30px;color:#E10600;letter-spacing:1px}
+.hdr2 b{display:block;font-size:13px;letter-spacing:3px;color:#8f98a7}.hdr2 h1{font-size:30px;font-weight:900;line-height:1}
+.steps{position:absolute;left:44px;right:44px;top:104px;display:flex;align-items:center}
+.st{display:flex;align-items:center;gap:10px;font-size:15px;color:#8f98a7;font-weight:700;white-space:nowrap}
+.st i{font-style:normal;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);font-size:13px;font-weight:900;color:#c3c9d3}
+.st.done i{background:#2a6b3f;color:#fff}.st.now{color:#fff}.st.now i{background:#E10600;color:#fff;box-shadow:0 0 0 5px rgba(225,6,0,.25)}
+.ln{flex:1;height:3px;margin:0 12px;background:rgba(255,255,255,.08);border-radius:2px}.ln.done{background:#2a6b3f}
+.next{position:absolute;left:44px;top:162px;width:700px;height:226px;border-radius:20px;background:#f3f4f6;color:#11141a;padding:24px 28px;overflow:hidden}
+.next:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:#E10600}
+.next .k{font-size:13px;letter-spacing:3px;color:#4b5260;font-weight:700}.next h2{font-size:46px;font-weight:900;line-height:1;margin:6px 0 6px}
+.next p{font-size:16px;color:#4b5260;max-width:420px}
+.next .acts{position:absolute;left:28px;bottom:22px;display:flex;gap:12px}
+.btn2{height:56px;padding:0 26px;border-radius:14px;display:flex;align-items:center;gap:10px;font-size:19px;font-weight:900;letter-spacing:.5px}
+.btn2.sim{background:#e3e6eb;color:#11141a}
+.next svg.trk{position:absolute;right:26px;top:26px;opacity:.9}
+.fc{position:absolute;left:44px;top:404px;width:700px;display:flex;gap:10px}
+.fc>div{flex:1;border-radius:16px;background:rgba(255,255,255,.06);padding:12px 16px;display:flex;align-items:center;gap:12px}
+.fc b{display:block;font-size:22px;font-weight:900}.fc small{font-size:12px;letter-spacing:2px;color:#8f98a7}
+.prog{position:absolute;left:44px;top:494px;width:700px}
+.prog .row{display:flex;gap:10px;align-items:center;margin-top:8px}
+.blk{flex:1;justify-content:center;height:52px;border-radius:14px;padding:0 8px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;background:rgba(255,255,255,.07);white-space:nowrap}
+.blk em{font-style:normal;font-size:12px;color:#8f98a7;letter-spacing:1px}
+.blk.on{background:#f3f4f6;color:#11141a}.blk.on em{color:#4b5260}.blk.add{background:none;border:2px dashed rgba(255,255,255,.18);color:#a8b0bd}
+.cars{position:absolute;right:40px;top:162px;width:450px;display:flex;flex-direction:column;gap:14px}
+.car2{border-radius:20px;background:rgba(255,255,255,.06);padding:16px 20px;position:relative;overflow:hidden}
+.car2 .nm{display:flex;align-items:center;gap:12px}.car2 .nm b{font-size:21px;font-weight:900}.car2 .nm .no{margin-left:auto;font-size:38px;font-weight:900;color:transparent;-webkit-text-stroke:1.5px #5c93ea;line-height:.8}
+.bars{margin-top:12px;display:flex;flex-direction:column;gap:9px}
+.bar2{display:flex;align-items:center;gap:12px;font-size:14px}.bar2 span{width:96px;color:#c3c9d3}.bar2 .t{flex:1;height:10px;border-radius:6px;background:rgba(255,255,255,.08);position:relative}
+.bar2 .t i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,#1868DB,#5c93ea)}.bar2 b{width:44px;text-align:right;font-size:16px;font-weight:900}
+.quote{margin-top:12px;font-size:15px;color:#c3c9d3;display:flex;gap:10px;align-items:flex-start}.quote i{font-size:28px;line-height:.6;color:#5c93ea;font-style:normal;font-weight:900}
+.tag2{display:inline-block;font-size:12px;letter-spacing:2px;border-radius:12px;padding:4px 10px;background:rgba(255,255,255,.08);color:#a8b0bd;margin-top:10px}
+/* treino */
+.sheet{position:absolute;left:44px;top:104px;width:720px;bottom:20px;border-radius:20px;background:rgba(255,255,255,.04);overflow:hidden}
+.th{display:flex;height:40px;align-items:center;font-size:12px;letter-spacing:2px;color:#8f98a7;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.tr{display:flex;height:36px;align-items:center;padding:0 14px;font-size:16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.tr .p{width:34px;height:26px;border-radius:7px;display:grid;place-items:center;font-weight:900;font-size:15px;margin-right:12px}
+.tr .n{flex:1;font-weight:900;letter-spacing:.5px}.tr .c{width:96px;text-align:right;font-variant-numeric:tabular-nums}.tr .d{width:80px;text-align:right;color:#a8b0bd}
+.tr .l{width:66px;text-align:right;color:#a8b0bd}.tr .s{width:170px;padding-left:18px;color:#a8b0bd;font-size:14px}
+.tr.me{background:rgba(24,104,219,.22)}.tr.me .n{color:#fff}
+.clock{margin-left:auto;display:flex;align-items:center;gap:14px}.clock b{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums;color:#eef0f3}
+.spd{display:flex;background:rgba(255,255,255,.07);border-radius:24px;padding:4px;gap:4px}.spd span{width:52px;height:40px;border-radius:20px;display:grid;place-items:center;font-size:15px;font-weight:700;color:#c3c9d3}.spd span.on{background:#f3f4f6;color:#11141a}
+.right{position:absolute;right:40px;top:104px;width:430px;display:flex;flex-direction:column;gap:14px}
+.tl{display:flex;gap:6px;margin-top:12px}.tl div{flex:1;height:44px;border-radius:12px;background:rgba(255,255,255,.07);font-size:12px;font-weight:700;display:flex;flex-direction:column;justify-content:center;padding:0 10px;color:#a8b0bd;position:relative;overflow:hidden}
+.tl div.done{color:#cfe8d6}.tl div.done:after{content:"";position:absolute;left:0;bottom:0;height:4px;width:100%;background:#3c9d5d}
+.tl div.now{background:#f3f4f6;color:#11141a}.tl div.now:after{content:"";position:absolute;left:0;bottom:0;height:4px;width:58%;background:#E10600}
+.tl small{font-size:11px;font-weight:600;opacity:.8}
+.feed{border-radius:20px;background:rgba(255,255,255,.04);padding:14px 18px;font-size:15px;color:#c3c9d3;line-height:1.7}
+.feed b{color:#fff}.feed .w{color:#ffb4a8}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#5d6574}
+</style></head><body><div class="scene"><div class="wall" style="bottom:0"></div><div class="glow" style="background:radial-gradient(ellipse 45% 50% at 30% 40%,rgba(24,104,219,.22),transparent 70%)"></div>
+<div class="hdr2"><span class="round"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#eef0f3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span><div><b>FIM DE SEMANA · WILLIAMS</b><h1>GP DE SÃO PAULO</h1></div><span class="day">SEXTA</span></div>
+<div class="steps"><div class="st done"><i>✓</i>TL1</div><div class="ln done"></div><div class="st now"><i>2</i>TL2</div><div class="ln"></div><div class="st "><i>3</i>TL3</div><div class="ln"></div><div class="st "><i>Q</i>CLASS</div><div class="ln"></div><div class="st "><i>R</i>CORRIDA</div></div>
+<div class="next"><div class="k">PRÓXIMA SESSÃO · AGORA</div><h2>TREINO LIVRE 2</h2><p>60 minutos. Seus pilotos seguem o programa abaixo; jogue para acompanhar ou simule para ver o resultado.</p>
+<svg class="trk" width="150" height="130" viewBox="0 0 150 130"><polygon points="46.0,89.8 52.4,114.5 53.0,117.1 53.7,118.6 55.2,120.9 56.0,121.5 57.2,122.0 58.3,122.0 59.5,121.8 60.1,121.4 62.1,119.6 64.1,117.4 64.8,116.8 65.8,116.5 66.8,116.4 68.3,116.9 71.4,118.8 73.9,119.8 75.7,120.3 77.4,120.5 78.9,120.6 81.1,120.3 82.9,120.0 85.0,119.2 87.0,118.0 88.9,116.5 90.5,114.8 91.7,113.1 92.7,111.4 93.5,109.5 96.5,99.5 97.8,94.5 100.0,85.9 102.7,75.0 107.4,57.1 109.1,50.7 110.2,46.2 110.8,44.1 111.0,42.7 110.9,41.5 110.6,40.6 109.9,39.6 108.7,38.8 107.3,38.2 105.2,37.8 99.1,36.6 96.7,36.3 95.2,36.4 93.4,36.7 91.7,37.2 90.2,38.1 88.7,38.9 87.3,40.1 85.9,41.6 84.0,44.0 77.8,52.4 74.1,57.6 71.0,62.1 67.6,66.5 65.8,69.0 64.4,70.9 63.5,72.0 62.4,72.6 60.9,73.2 59.2,73.4 56.6,73.3 55.0,73.0 53.6,72.6 52.4,72.1 50.4,71.0 49.4,70.1 48.7,69.2 48.0,67.9 47.5,66.1 46.9,63.5 46.4,61.2 45.7,56.8 45.6,55.0 45.6,53.2 46.0,51.8 46.7,51.1 47.2,50.8 47.8,50.6 48.7,50.5 49.6,50.7 50.5,51.1 52.9,53.0 53.9,53.6 54.7,53.9 55.5,54.1 56.3,54.1 57.2,54.0 58.3,53.6 59.7,52.5 60.4,51.3 60.8,50.1 60.9,49.0 60.7,47.8 60.3,46.8 59.2,45.3 58.3,44.3 54.9,41.0 53.1,39.0 51.9,37.2 51.0,34.8 50.3,31.8 50.0,30.0 49.9,28.4 50.0,27.1 50.5,26.2 50.9,25.6 51.6,25.4 52.2,25.2 52.9,25.4 53.8,25.7 58.0,30.4 61.5,34.4 62.2,34.9 63.5,35.8 64.7,36.4 65.8,36.7 67.0,36.9 68.2,37.0 69.5,37.0 71.6,36.7 73.2,36.2 74.9,35.2 76.7,33.8 77.6,32.6 78.7,31.1 81.4,26.8 84.4,21.7 87.9,16.1 88.1,15.5 88.2,14.7 88.0,13.9 87.6,13.1 86.8,12.4 85.0,11.4 82.4,10.5 77.0,8.5 76.0,8.2 74.7,8.0 72.0,8.3 69.7,8.7 64.5,9.8 62.8,10.4 59.4,11.8 57.7,12.5 53.8,14.7 52.2,15.8 50.8,17.0 49.5,18.2 48.3,19.6 47.3,21.1 46.4,23.1 45.7,25.2 44.5,29.5 43.3,34.9 42.5,40.0 41.0,45.4 40.1,49.5 39.3,52.3 39.1,54.4 39.0,57.2 39.1,60.5 39.5,63.0 40.1,65.9 41.2,70.0 44.3,83.2" fill="none" stroke="#11141a" stroke-width="6" stroke-linejoin="round"/></svg>
+<div class="acts"><div class="cta" style="height:56px;padding:0 26px;font-size:19px">JOGAR <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></div><div class="btn2 sim">SIMULAR</div></div></div>
+<div class="fc"><div><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#dfe3ea" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><div><small>SEXTA</small><b>10% chuva</b></div></div><div><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#dfe3ea" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M8 2v1M2 8h1M3.8 3.8l.7.7"/><path d="M10 17a3.5 3.5 0 1 1 .9-6.9A4.5 4.5 0 0 1 19.5 12 3 3 0 0 1 19 18H10"/></svg><div><small>SÁBADO</small><b>25% chuva</b></div></div><div><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#dfe3ea" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15a4 4 0 1 1 1-7.9A5 5 0 0 1 17.5 9 3.5 3.5 0 0 1 17 16H7"/><path d="M9 19l-1 2M13 19l-1 2M17 19l-1 2"/></svg><div><small>DOMINGO</small><b>55% chuva</b></div></div></div>
+<div class="prog"><div class="lbl">PROGRAMA DO TREINO · ALBON · 60 / 60 MIN · TOQUE NUM BLOCO PARA TIRAR</div><div class="row"><div class="blk on">Acerto aero <em>15 min</em></div><div class="blk on">Acerto mecânico <em>15 min</em></div><div class="blk on">Simulação de corrida <em>20 min</em></div><div class="blk on">Volta rápida <em>10 min</em></div></div>
+<div class="row"><div class="blk add">+ Aero</div><div class="blk add">+ Mecânico</div><div class="blk add">+ Corrida</div><div class="blk add">+ Volta rápida</div></div></div>
+<div class="cars"><div class="car2"><div class="nm"><img src="../../game/assets/emblems/williams.svg" width="28"><b>Alexander Albon</b><span class="no">23</span></div>
+<div class="bars"><div class="bar2"><span>Aerodinâmica</span><div class="t"><i style="width:62%"></i></div><b>62%</b></div><div class="bar2"><span>Mecânico</span><div class="t"><i style="width:48%"></i></div><b>48%</b></div><div class="bar2"><span>Equilíbrio</span><div class="t"><i style="width:55%"></i></div><b>55%</b></div></div><div class="quote"><i>“</i>O carro sai de frente nas curvas lentas e pula nas zebras.</div><span class="tag2">TL1: 3º · 14 VOLTAS</span></div><div class="car2"><div class="nm"><img src="../../game/assets/emblems/williams.svg" width="28"><b>Carlos Sainz</b><span class="no">55</span></div>
+<div class="bars"><div class="bar2"><span>Aerodinâmica</span><div class="t"><i style="width:40%"></i></div><b>40%</b></div><div class="bar2"><span>Mecânico</span><div class="t"><i style="width:66%"></i></div><b>66%</b></div><div class="bar2"><span>Equilíbrio</span><div class="t"><i style="width:51%"></i></div><b>51%</b></div></div><div class="quote"><i>“</i>Falta asa nas curvas rápidas, a traseira fica solta.</div><span class="tag2">TL1: 3º · 14 VOLTAS</span></div></div>
+<div class="note" style="left:44px;bottom:8px">MOCKUP · ACERTO, COMENTÁRIOS E POSIÇÕES = DADOS DE EXEMPLO DO JOGO</div></div></body></html>

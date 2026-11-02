@@ -151,3 +151,6 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - Carro em destaque: ilustração vetorial **original** (`tools/make_car_art.py`), uma por equipe.
 - **Logos oficiais**: usuário pediu; continuam fora do repositório (marcas registradas). Para o
   APK pessoal: pasta `game/local/emblems/` (ignorada pelo git) ou `user://import/emblems/`.
+- **Aprovadas** (múltipla escolha): tela inicial e configuração do GP na Garagem viram o padrão.
+  Ordem de migração: painel do fim de semana → treino ao vivo (mockup próprio antes) →
+  classificação → resultados → corrida; depois os ajustes do 3D.
