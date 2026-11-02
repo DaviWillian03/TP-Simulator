@@ -212,7 +212,7 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - Rostos (só locais, `game/local/drivers/`; sem foto, iniciais na cor da equipe): placas da tela inicial,
   cartões dos pilotos no painel do fim de semana, vencedor do GP, cartões da corrida, rádio, box e resultado.
 - Ambiente na cor da equipe: já vem de `ScreenKit.garage_page` em todas as telas Garagem (início, GP, fim de
-  semana, treino, campanha, corrida, box). Classificação ao vivo ainda é Paddock; ganha o ambiente ao migrar.
+  semana, treino, campanha, corrida, box). A classificação ao vivo também foi migrada (mesmo layout do treino).
 
 ## Balanceamento do desgaste de pneus (pedido do usuário, valores PROVISÓRIOS)
 - Problema: em corridas curtas (25%) o desgaste crescia na proporção cheia (÷ duração) e o pneu morria em ~6–8

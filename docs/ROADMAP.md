@@ -61,8 +61,10 @@ Cada marco termina jogável e testado. Itens vêm de `docs/DECISIONS.md`.
   semana jogável ou simulado, campeonatos de construtores e pilotos, meta da diretoria por origem
   (ou pelo nível do carro) com confiança, caixa simples (patrocínio − custos + prêmio final),
   demissão, falência e virada de temporada. Valores PROVISÓRIOS em `campaign_origins.json`.
-- ⬜ Camadas seguintes (ordem do roadmap abaixo): finanças, pessoal e contratos, P&D, fábrica,
-  patrocínios, estúdio de design, academia, teto de gastos, conselho, eventos, F2/F3/F4.
+- ✅ P&D (2026-11-02): árvore estilo F1 2017 (4 departamentos, 92 nós, carro atual × ano seguinte,
+  Essencial/Avançado) e Fábrica (4 estruturas, níveis 1–5). `CarDevelopment`, telas Carro e Fábrica.
+- ⬜ Camadas seguintes (ordem do roadmap abaixo): finanças, pessoal e contratos, patrocínios,
+  estúdio de design, academia, teto de gastos, conselho, eventos, F2/F3/F4.
 
 ## Marco 5+ — Campanha (em camadas jogáveis)
 Finanças e temporada → pessoal/pilotos e contratos → P&D (Essencial/Avançado) → fábrica →
@@ -81,3 +83,31 @@ F2/F3/F4 simuladas ao fundo → Modo Edição e importação (.zip).
 - Instalar Android SDK (bloqueado na nuvem: `dl.google.com`) e criar o preset de exportação.
 - No preset: excluir `addons/gut/*`, `test/*` e `tools/*`; conferir que `data/*.json` entra no APK.
 - Primeiro teste em aparelho real: desempenho, toque e legibilidade da tela de corrida.
+
+
+## ✅ Garagem em todo o fluxo jogável (2026-11-02)
+- Corrida (torre tocável, cartões compactos, ícones de status), tela do box (estoque, ajustes, parada
+  dupla, punição, mini-jogo de toque), classificação ao vivo, treino, painel do fim de semana, campanha.
+- Rostos dos pilotos e logos das equipes (só locais, `game/local/`). Cor da equipe como ambiente.
+- Desgaste de pneus balanceado (1 parada em corridas de 25%).
+
+## O que falta para o jogo ficar pronto (auditoria dos pedidos do usuário, 2026-11-02)
+Ordem sugerida por impacto. Itens vêm de `docs/IDEAS.md` (#1–#6) e das mensagens da sessão.
+1. **Dados reais** (#3, #4): hoje cada piloto tem só `rating` e cada equipe só `car_rating`. Faltam atributos
+   (ritmo, regularidade, ultrapassagem, chuva, potencial), idade/altura/peso/conquistas, dirigentes técnicos,
+   engenheiros, história e estrutura reais da equipe, e pesquisa de 2026 para trocar os valores PROVISÓRIOS.
+2. **Corrida Caótica** (#2): modo inteiro (Roleta do Caos) — a tela inicial mostra "em desenvolvimento".
+3. **Campanha — camadas que faltam** (#4, #5): Pilotos/pessoal e contratos (agentes livres, outras equipes,
+   novos pilotos), Finanças e aba de patrocínios (negociar por influência), estúdio de design do carro e editor
+   de logo completos, academia de pilotos, teto de gastos e restrição de túnel de vento, conselho de regras
+   (pontuação, motor, chassi, pneus…), eventos inesperados, F2/F3/F4 simuladas ao fundo, mercado de pilotos na virada.
+4. **IA rival que joga o mesmo jogo**: as outras equipes não desenvolvem o carro (o jogador acaba ultrapassando).
+5. **Modo Edição e importação** (#3): pacote .zip com validação (nomes, fotos, pinturas, logos, atributos,
+   circuitos) e importador no celular (seletor de arquivos do Android).
+6. **Cenários 3D** (#1): conferir o cenário e o relevo dos 22 circuitos (chão de Xangai, escala dos pinheiros,
+   materiais) e trocar por modelos/texturas CC0 quando kenney.nl/polyhaven.com forem liberados.
+7. **Android**: instalar o SDK (liberar `dl.google.com`), gerar o APK de teste e validar toque e desempenho.
+8. **Balanceamento geral**: custos e efeitos de P&D/fábrica, finanças, calibração por circuito, simulação de
+   várias temporadas; `tests` de economia.
+9. **Acabamento**: som/efeitos (P7 foi recusada), tela de configurações, tutorial/ajuda, salvar vários
+   slots de campanha, ícone e tela de abertura final, textos revisados.
