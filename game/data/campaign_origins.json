@@ -175,5 +175,17 @@
    "hard": 1.4
   },
   "drift_per_race": 0.35
+ },
+ "rivals": {
+  "_notas": "PROVISÓRIO. Evolução das equipes da IA: ganho anual na nota do carro = base × dificuldade × fator do ranking × sorte da temporada; o ganho cresce com o calendário. Na virada a IA guarda 'carry' do ganho.",
+  "yearly_gain": {
+   "easy": 2.0,
+   "normal": 3.0,
+   "hard": 4.5
+  },
+  "rank_spread": 0.3,
+  "luck_min": 0.55,
+  "luck_max": 1.45,
+  "carry": 0.5
  }
 }

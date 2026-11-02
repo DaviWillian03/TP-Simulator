@@ -38,6 +38,8 @@ var history: Array = []  ## [{round, circuit, results: [ids]}]
 
 var dev := CarDevelopment.new()  ## árvore de P&D e fábrica
 var base_rating := 0.0  ## nota do carro da equipe sem os upgrades
+var rival_carry: Dictionary = {}  ## id da equipe da IA -> bônus herdado das temporadas anteriores
+var _file_ratings: Dictionary = {}  ## id -> nota do carro nos dados (sem evolução)
 var _teams: Array = []
 var _drivers: Array = []
 
@@ -133,9 +135,45 @@ func refresh_rating() -> void:
 			t["car_rating"] = base_rating + dev.rating_bonus()
 			t["failure_mult"] = dev.failure_mult()
 			t["practice_gain_mult"] = dev.practice_gain_mult()
+		else:  # equipes da IA também desenvolvem o carro ao longo da temporada
+			t["car_rating"] = float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0)) + rival_gain(t["id"])
+
+
+## Quanto da temporada já passou (0 = véspera da primeira rodada, 1 = depois da última).
+func season_progress() -> float:
+	var start := _season_start_day()
+	var end_day := _day_of(calendar()[calendar().size() - 1]["date"]) + 1
+	return clampf(float(day - start) / maxf(float(end_day - start), 1.0), 0.0, 1.0)
+
+
+## Ganho total que a equipe da IA consegue na temporada: mais para quem tem mais estrutura
+## (carro melhor), com a sorte de cada ano e o fator da dificuldade.
+func rival_potential(team_id: String) -> float:
+	var cfg: Dictionary = origins_data()["rivals"]
+	var order: Array = _teams.map(func(t: Dictionary) -> float: return float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0)))
+	order.sort()
+	order.reverse()
+	var mine := float(_file_ratings.get(team_id, 0.0)) + float(rival_carry.get(team_id, 0.0))
+	var rank := order.find(mine)
+	var rank_factor := 1.0 + float(cfg["rank_spread"]) * (0.5 - float(rank) / maxf(order.size() - 1, 1))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d|%s" % [season, team_id])
+	var luck := rng.randf_range(float(cfg["luck_min"]), float(cfg["luck_max"]))
+	return float(cfg["yearly_gain"][ai_difficulty]) * rank_factor * luck
+
+
+func rival_gain(team_id: String) -> float:
+	return rival_potential(team_id) * season_progress()
+
+
+func _init_rivals() -> void:
+	_file_ratings.clear()
+	for t: Dictionary in _teams:
+		_file_ratings[t["id"]] = float(t["car_rating"])
 
 
 func _init_dev(initial_level: int) -> void:
+	_init_rivals()
 	dev = CarDevelopment.new()
 	dev.set_all_levels(initial_level)
 	dev.seed_base = season
@@ -197,7 +235,7 @@ func to_dict() -> Dictionary:
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
-		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict()}
+		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry}
 
 
 static func from_dict(d: Dictionary) -> Campaign:
@@ -227,6 +265,7 @@ static func from_dict(d: Dictionary) -> Campaign:
 	c.state = d.get("state", "active")
 	c.goal_shift = int(d.get("goal_shift", 0))
 	c._build_grid()
+	c.rival_carry = d.get("rival_carry", {})
 	c._init_dev(maxi(1, c.factory_level))
 	if d.has("dev"):
 		c.dev = CarDevelopment.from_dict(d["dev"])
@@ -234,6 +273,7 @@ static func from_dict(d: Dictionary) -> Campaign:
 		c.refresh_rating()
 	c.trust = float(d.get("trust", c._start_trust()))
 	c.day = int(d.get("day", c._season_start_day()))
+	c.refresh_rating()
 	return c
 
 
@@ -386,8 +426,10 @@ func team_position(team_id: String) -> int:
 
 ## Posição da equipe por nota do carro (1 = o melhor carro).
 func rating_rank(team_id: String) -> int:
+	# nota "de base" (dados + herança): a meta da diretoria não muda no meio da temporada
 	var rated := _teams.duplicate()
-	rated.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["car_rating"]) > int(b["car_rating"]))
+	var base_of := func(t: Dictionary) -> float: return float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0))
+	rated.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return base_of.call(a) > base_of.call(b))
 	for i in rated.size():
 		if rated[i]["id"] == team_id:
 			return i + 1
@@ -466,6 +508,10 @@ func close_season() -> Dictionary:
 
 ## Começa a próxima temporada (mesmo grid: o mercado de pilotos chega na camada de contratos).
 func start_next_season() -> void:
+	var cfg: Dictionary = origins_data()["rivals"]
+	for t: Dictionary in _teams:  # a IA guarda parte do que desenvolveu neste ano
+		if t["id"] != player_team:
+			rival_carry[t["id"]] = (float(rival_carry.get(t["id"], 0.0)) + rival_potential(t["id"])) * float(cfg["carry"])
 	season += 1
 	round = 0
 	driver_points = {}

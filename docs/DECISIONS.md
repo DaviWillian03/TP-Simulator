@@ -250,3 +250,14 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - Telas: `campaign_car_screen` (Carro) e `campaign_factory_screen` (Fábrica), abas na sede (`ScreenKit.campaign_nav`).
   Capturas: `--car` / `--factory` (+ `--fresh --demo --team=<id>`).
 - Pendente: IA das outras equipes não desenvolve (o jogador pode ultrapassar com o tempo); balancear custos/efeitos.
+
+## IA rival e Pessoal/Contratos (2026-11-02)
+- **IA rival (implementada)**: as outras equipes evoluem a nota do carro ao longo do calendário: ganho anual =
+  3,0 (fácil 2,0 · difícil 4,5) × fator do ranking (mais estrutura, mais ganho) × sorte da temporada (0,55–1,45);
+  na virada guardam 50% do ganho. A meta da diretoria usa a nota de base (não muda no meio do ano).
+- **Pessoal e contratos — respostas do usuário**: escopo = **pilotos + diretor técnico e engenheiros**; contratos
+  **vencem na virada** e a negociação é **a qualquer hora** (troca só vale na virada; piloto de outra equipe só depois
+  que vence ou pagando multa); a **IA também renova, dispensa e contrata na virada** e os que sobram viram agentes
+  livres. Contrato simples: salário + duração → aceita / recusa / contraproposta.
+- Mockups v10 (`v10-1-pessoal`, `v10-2-negociacao`) aguardando aprovação. Técnicos de exemplo são fictícios; salários
+  e notas PROVISÓRIOS. A aba "Pilotos" da sede passa a se chamar "Pessoal".
