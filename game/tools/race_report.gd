@@ -12,7 +12,7 @@ func _init() -> void:
 	var seeds: Array = str(args.get("seeds", "1")).split(",")
 	var summary := args.has("summary")
 	for s: String in seeds:
-		_report(circuit, pct, int(s), summary)
+		_report(circuit, pct, int(s), summary, str(args.get("weather", "")))
 	quit()
 
 
@@ -25,9 +25,12 @@ func _parse_args() -> Dictionary:
 	return out
 
 
-func _report(circuit: String, pct: float, seed_value: int, summary: bool = false) -> void:
+func _report(circuit: String, pct: float, seed_value: int, summary: bool = false, weather: String = "") -> void:
+	var opts := {"duration_pct": pct, "seed": seed_value}
+	if weather != "":
+		opts["weather"] = weather
 	var sim := RaceSim.new(TrackModel.new(GameData.circuit(circuit)), TyreModel.new(GameData.tyres()),
-		GameData.teams(), GameData.drivers(), {"duration_pct": pct, "seed": seed_value})
+		GameData.teams(), GameData.drivers(), opts)
 	var penalties := [0]
 	var incidents := {}
 	var max_wet := [0.0]

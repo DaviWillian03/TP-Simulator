@@ -213,3 +213,12 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   cartões dos pilotos no painel do fim de semana, vencedor do GP, cartões da corrida, rádio, box e resultado.
 - Ambiente na cor da equipe: já vem de `ScreenKit.garage_page` em todas as telas Garagem (início, GP, fim de
   semana, treino, campanha, corrida, box). Classificação ao vivo ainda é Paddock; ganha o ambiente ao migrar.
+
+## Balanceamento do desgaste de pneus (pedido do usuário, valores PROVISÓRIOS)
+- Problema: em corridas curtas (25%) o desgaste crescia na proporção cheia (÷ duração) e o pneu morria em ~6–8
+  voltas, com 2–3 paradas em 18 voltas.
+- Ajuste: o multiplicador de corrida curta agora é `1 / duração^0,5` (`RaceSim.WEAR_SHORT_RACE_EXP`) e o desgaste
+  base dos compostos secos caiu ~9% (macio 0,042 · médio 0,028 · duro 0,020 por volta).
+- Resultado medido (`tools/race_report.gd --weather=dry`, 4 sementes, Interlagos): 25% → quase todos 1 parada;
+  50% → 1–2; 100% → 2 (às vezes 3 com SC). Ferramenta ganhou `--weather=dry`.
+- Rever depois com a pesquisa de atributos e circuitos de alto desgaste (`tyre_wear_factor`).

@@ -27,6 +27,7 @@ signal car_finished(car: CarState, position: int)
 signal pit_box_stop(car: CarState, hold_s: float)  ## carro parou no box (a tela pode abrir o mini-jogo)
 signal race_finished
 
+const WEAR_SHORT_RACE_EXP := 0.5  ## quanto o desgaste cresce em corridas curtas (1 = proporcional)
 const DT := 0.1  ## segundos de corrida por passo
 const GRID_SPACING_M := 10.0
 const MIN_GAP_M := 9.0  ## sem ultrapassar, um carro não chega mais perto que isso do da frente
@@ -156,8 +157,9 @@ func race_distance() -> float:
 
 
 func wear_multiplier() -> float:
-	# corridas mais curtas desgastam proporcionalmente mais, para manter as paradas
-	return track.tyre_wear_factor / duration_pct
+	# corridas mais curtas desgastam mais (senão ninguém pararia), mas não na proporção cheia:
+	# com o expoente 1 uma corrida de 25% pedia 3 paradas em 18 voltas (balanceado: ver DECISIONS)
+	return track.tyre_wear_factor / pow(duration_pct, WEAR_SHORT_RACE_EXP)
 
 
 func frac_of(car: CarState) -> float:
