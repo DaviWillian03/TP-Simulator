@@ -58,7 +58,7 @@ CSS = V.G_CSS + """
 .hint{font-size:12px;color:#ffb4a8;margin-top:5px}
 .tlife{display:inline-block;width:42px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);position:relative;flex:none}
 .tlife i{position:absolute;inset:0 auto 0 0;border-radius:4px}
-.tr .age{width:34px;text-align:right;font-size:12px;color:#a8b0bd;font-variant-numeric:tabular-nums}
+.fi{vertical-align:-3px;margin-left:6px}.tr .age{width:34px;text-align:right;font-size:12px;color:#a8b0bd;font-variant-numeric:tabular-nums}
 .tr .retire{flex:1;display:flex;gap:8px;align-items:center;font-size:12px;color:#8f98a7;white-space:nowrap}
 .tr .retire b{background:rgba(255,255,255,.12);color:#c3c9d3;border-radius:5px;padding:1px 6px;font-size:10px;letter-spacing:.5px}
 .th .seg{padding:2px;margin-left:auto;gap:2px;height:26px}.th .seg span{min-width:0;height:22px;padding:0 9px;font-size:11px;letter-spacing:1px;font-weight:700}
@@ -102,6 +102,12 @@ def tyre(c, size=20, pct=None):
     return f'<span class="ty" style="--t:{TYRE[c]}">{c}</span>'
 
 
+ICON_FL = '<svg class="fi" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c77dff" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 8.5V13l3 2M9 2h6"/></svg>'
+ICON_INV = '<svg class="fi" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2.5L22.5 21h-21z" fill="#ffd24a"/><path d="M12 9v6M12 17.6v.5" stroke="#11141a" stroke-width="2.6" stroke-linecap="round"/></svg>'
+ICON_PEN = '<svg class="fi" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5" fill="#E10600"/><path d="M12 6.5v7M12 16.6v.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>'
+FLAGS = {"PIASTRI": ICON_FL, "VERSTAPPEN": ICON_INV, "ALONSO": ICON_PEN, "ALBON": ICON_PEN}
+
+
 def life_color(rem):
     return "#f3f4f6" if rem > 40 else ("#F5C400" if rem > 20 else "#ff6b5e")
 
@@ -110,7 +116,7 @@ def life_color(rem):
 ROWS = [("mclaren", "NORRIS", 0.0, "M", 29, 5, ""), ("williams", "SAINZ", 5.0, "M", 31, 5, ""), ("williams", "ALBON", 9.1, "M", 31, 5, ""),
         ("audi", "HÜLKENBERG", 10.9, "M", 20, 5, ""), ("racingbulls", "LINDBLAD", 11.6, "M", 20, 5, ""), ("redbull", "VERSTAPPEN", 22.5, "H", 88, 1, ""),
         ("mclaren", "PIASTRI", 23.7, "H", 97, 0, ""), ("mercedes", "RUSSELL", 24.4, "H", 96, 0, ""), ("ferrari", "LECLERC", 25.1, "H", 88, 1, ""),
-        ("redbull", "HADJAR", 27.2, "H", 89, 1, ""), ("astonmartin", "ALONSO", 28.5, "H", 98, 0, "+5s"),
+        ("redbull", "HADJAR", 27.2, "H", 89, 1, ""), ("astonmartin", "ALONSO", 28.5, "H", 98, 0, ""),
         ("haas", "BEARMAN", 30.0, "H", 98, 0, ""), ("mercedes", "ANTONELLI", 31.2, "H", 80, 2, ""), ("haas", "OCON", 31.9, "H", 97, 0, "BOX"),
         ("audi", "BORTOLETO", 32.4, "H", 98, 0, ""), ("astonmartin", "STROLL", 32.6, "H", 97, 0, ""), ("alpine", "COLAPINTO", 32.9, "H", 97, 0, ""),
         ("racingbulls", "LAWSON", 33.1, "H", 98, 0, ""), ("cadillac", "PÉREZ", 33.2, "H", 97, 0, ""), ("alpine", "GASLY", 33.4, "H", 98, 0, ""),
@@ -140,7 +146,7 @@ def tower(rows, mode="interval"):
         tail = (f'<span class="tlife"><i style="width:{life}%;background:{life_color(life)}"></i></span>' if mine
                 else f'<span class="age">{age}v</span>')
         out += (f'<div class="tr{" me" if mine else ""}"><span class="p" style="background:{col};color:{fg}">{i + 1}</span>'
-                f'<img src="{V.EMB.format(tid)}" width="22"><span class="n">{name}</span>{tg}<span class="g">{g}</span>{tyre(tyr)}{tail}</div>')
+                f'<img src="{V.EMB.format(tid)}" width="22"><span class="n">{name}{FLAGS.get(name, "")}</span>{tg}<span class="g">{g}</span>{tyre(tyr)}{tail}</div>')
     return out
 
 
@@ -180,7 +186,7 @@ def corrida(popover=False):
 <div class="opts"><span class="h">Parar agora</span><span>Mais 3 voltas</span><span>Decido eu</span></div><div class="t"><span>Sem resposta, o piloto decide sozinho</span><span>12 s</span></div></div>
 <div class="card camc"><span class="on">Seguir ALB</span><span>Seguir SAI</span><span>Líder</span><span>Geral</span></div></div>
 <div class="tower">{tower_head("interval")}{tower(ROWS, "interval")}</div>
-{ctl(16, me[0], 3, "M", "Médio · 5 voltas", 31, 12, "Normal", "Equilíbrio", "Liberado", "M", "Falta usar outro composto seco.", "+4.1 s", "1.8 s")}
+{ctl(16, me[0], 3, "M", "Médio · 5 voltas", 31, 12, "Normal", "Equilíbrio", "Liberado", "M", "Punição de 5 s: cumpra no box ou soma ao tempo final.", "+4.1 s", "1.8 s")}
 {ctl(482, me[1], 2, "M", "Médio · 5 voltas", 31, 24, "Normal", "Equilíbrio", "Liberado", "H", "Falta usar outro composto seco.", "+5.0 s", "4.1 s")}
 </div>'''
     return V.page("V7 · Corrida · Garagem", CSS, body)

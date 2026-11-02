@@ -167,3 +167,24 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   (contratos, patrocínios e P&D ficam nas próximas camadas).
 - **Logos oficiais** (usuário joga só no celular pessoal): ficam fora do repositório; o usuário envia
   as imagens, o Claude padroniza e devolve um zip para `game/local/emblems/` (ignorada pelo git).
+
+## Tela de corrida na Garagem e box (2026-11-02)
+- **Layout aprovado** (mockup v7): pista 3D maior (916×462), cartões de controle baixos, ordens de
+  equipe em botão com popover, câmera por botões diretos, logos e rostos do usuário.
+- **Pneu**: a vida do pneu dos **seus** carros é uma barra que esvazia; dos **rivais** só composto +
+  **idade em voltas** (desgaste exato é telemetria interna). A torre alterna intervalo **à frente** e **líder**.
+- **Fotos de pilotos** (uso pessoal do usuário): só o **rosto**, recortado por `tools/prepare_portraits.py`
+  para `game/local/drivers/` (ignorada pelo git). Sem foto (F2/F3, equipe criada): círculo com iniciais.
+- **Chamar para o box** abre uma **tela própria**, sem pausar a corrida (fica em **1× ou 2×**), com todas
+  as opções da parada. Recursos escolhidos (múltipla escolha): **estoque limitado de pneus** (jogos novos
+  e usados por composto; no GP vem da classificação), **ajustes do carro** (ângulo da asa dianteira, troca
+  de asa, reparo parcial do assoalho, cada um custa tempo parado) e **parada dupla** (fila no box; decidir
+  a ordem). Execução: **mini-jogo de toque na hora certa** (ganha ou perde décimos). Não escolhido: modos
+  seguro/agressivo da equipe de box. A "prévia de retorno do pit" (P2) segue recusada.
+- **Indicadores na torre** (ícones com formas diferentes, não só cores): relógio **roxo** = melhor volta
+  da corrida; triângulo **amarelo** "!" = piloto sob investigação; círculo **vermelho** "!" = punição de
+  tempo ainda não cumprida.
+- **Investigação** (nova regra, pedido do usuário): um toque entre carros abre investigação do causador
+  (1–2 voltas); o veredito mantém a chance atual de punição (50%) ou arquiva sem punição.
+- **Punição de tempo no box por escolha**: na tela do box o jogador decide cumprir a punição parado
+  agora (soma ao tempo parado) ou levá-la ao fim (soma ao tempo final). Drive-through segue como está.
