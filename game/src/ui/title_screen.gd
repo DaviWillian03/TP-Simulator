@@ -29,17 +29,16 @@ func _ready() -> void:
 	var modes := VBoxContainer.new()
 	modes.add_theme_constant_override("separation", UiStyle.SP_M)
 	ScreenKit.place(modes, layer, Control.PRESET_TOP_LEFT, Vector2(52, 166), Vector2(392, 0))
-	_gp_tile = ScreenKit.mode_tile("Grande Prêmio", "Treinos, classificação, sprint e corrida", "main")
+	var camp := ScreenKit.mode_tile("Campanha", "Assuma uma equipe ou crie a sua", "main")
+	camp.pressed.connect(Session.open_campaign)
+	modes.add_child(camp)
+	_gp_tile = ScreenKit.mode_tile("Grande Prêmio", "Um fim de semana avulso", "alt")
 	_gp_tile.pressed.connect(Session.open_gp_setup)
 	modes.add_child(_gp_tile)
 	_quick_tile = ScreenKit.mode_tile("Corrida rápida", "", "alt")
 	_quick_tile.pressed.connect(_open_quick_race)
 	modes.add_child(_quick_tile)
-	var locked := VBoxContainer.new()
-	locked.add_theme_constant_override("separation", 0)
-	locked.add_child(ScreenKit.locked_row("Campanha"))
-	locked.add_child(ScreenKit.locked_row("Corrida Caótica"))
-	modes.add_child(locked)
+	modes.add_child(ScreenKit.locked_row("Corrida Caótica"))
 
 	var team_row := HBoxContainer.new()
 	team_row.add_theme_constant_override("separation", UiStyle.SP_M)
@@ -95,6 +94,10 @@ func _apply_team() -> void:
 		_plates.add_child(_plate(d, color))
 	var circuit := GameData.circuit(Session.circuit_id)
 	(_quick_tile.get_child(0).get_child(0).get_child(1) as Label).text = "%s · direto para a largada" % circuit.get("short_name", "")
+	var saved := Campaign.load_saved()
+	if saved != null:
+		var camp: Button = (_gp_tile.get_parent() as VBoxContainer).get_child(0)
+		(camp.get_child(0).get_child(0).get_child(1) as Label).text = "Continuar: %s · RD %d" % [saved.team().get("name", ""), mini(saved.round + 1, 22)]
 
 
 func _plate(d: Dictionary, color: Color) -> HBoxContainer:

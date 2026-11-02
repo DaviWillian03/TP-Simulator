@@ -107,7 +107,17 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		best_set_at[car] = [INF, INF, INF]
 		new_softs[car] = NEW_SOFT_SETS
 		eliminated_in[car] = -1
+	_set_cuts(cars.size())
 	_begin_segment()
+
+
+## Cortes por número de carros: 10 chegam ao Q3 e o resto é dividido entre Q1 e Q2
+## (22 carros: 6 + 6 — regra 2026; 24 carros com a equipe criada: 7 + 7).
+func _set_cuts(n: int) -> void:
+	var out := maxi(1, floori((n - 10) / 2.0))
+	segments = segments.duplicate(true)
+	segments[0]["advance"] = n - out
+	segments[1]["advance"] = 10
 
 
 # --- tempo ------------------------------------------------------------------------------

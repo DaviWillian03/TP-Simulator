@@ -19,7 +19,9 @@ das escolhas técnicas.
 - `src/sim/` — simulação **sem dependência de tela**: RaceSim (orquestra), TrackModel, TyreModel,
   WeatherModel (clima/radar), RaceControl (incidentes, bandeiras, punições), RadioSystem (rádio),
   StrategyAI (IA); fim de semana: WeekendSim (sessões, previsão, grids, pontos), CarSetup (acerto),
-  PracticeSession (programas de blocos), QualiSim (Q1/Q2/Q3). Passo fixo `DT`, semente
+  PracticeSession (programas de blocos), QualiSim (Q1/Q2/Q3; cortes pelo nº de carros);
+  campanha: `Campaign` (equipe real ou criada = 12ª equipe, 24 carros; salva em
+  user://campaign.json). Passo fixo `DT`, semente
   determinística. Regras novas entram aqui, com teste.
 - Telas do GP: `gp_setup_screen`, `weekend_screen`, `practice_screen`, `quali_screen` (peças comuns
   em `ScreenKit`); o fim de semana ativo fica em `Session.weekend`.
@@ -53,7 +55,8 @@ Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--
 (painel) e `--play` (sessão atual ao vivo), com `--skip=<n>` para simular as n primeiras sessões
 (ex.: `--play --circuit=shanghai --skip=2` abre a sprint); `--advance` vale também no treino e na
 classificação. Capturas de interface: `--ui=team|quick` (folhas da tela inicial), `--ui=gallery`
-(estados dos componentes), `--view-only` (só o 3D, base de mockups).
+(estados dos componentes), `--view-only` (só o 3D, base de mockups). Campanha: `--campaign`,
+`--creator [--ui=<passo 0..3>]`, `--hub` e `--camp-race` (usam a campanha salva).
 Testes de regras usam `{"weather": "dry", "incident_rate": 0.0}` salvo quando testam clima/incidentes.
 - Captura de tela precisa de display: `Xvfb :99 -screen 0 1280x720x24 &`. Use para conferir
   layout depois de mexer na interface (ler logs não mostra a tela).

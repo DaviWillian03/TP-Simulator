@@ -11,6 +11,7 @@ extends Node
 ##   --rain-at=<segundos> [--rain=<0..1>]   força chuva a partir desse instante
 ##   --weather=dry          sem chuva · --incidents=<0..n> multiplicador de incidentes
 ##   --screenshot=<arquivo.png> --frames=<n>   salva a tela após n quadros e fecha o jogo
+##   --campaign / --creator / --hub   entrada da campanha, criação da equipe, sede (campanha salva)
 ##   --gp                   abre a configuração do Grande Prêmio
 ##   --weekend [--skip=<n>] abre o fim de semana (com --circuit/--team), simulando n sessões
 ##   --play                 abre a sessão atual do fim de semana (depois do --skip)
@@ -21,6 +22,9 @@ const GP_SETUP_SCENE := "res://src/ui/gp_setup_screen.tscn"
 const WEEKEND_SCENE := "res://src/ui/weekend_screen.tscn"
 const PRACTICE_SCENE := "res://src/ui/practice_screen.tscn"
 const QUALI_SCENE := "res://src/ui/quali_screen.tscn"
+const CAMPAIGN_ENTRY_SCENE := "res://src/ui/campaign_entry_screen.tscn"
+const TEAM_CREATOR_SCENE := "res://src/ui/team_creator_screen.tscn"
+const CAMPAIGN_HUB_SCENE := "res://src/ui/campaign_hub_screen.tscn"
 
 var circuit_id := "interlagos"
 var player_team := "mclaren"
@@ -35,6 +39,7 @@ var debug_view_only := false  ## --view-only: só o cenário 3D em tela cheia (b
 var debug_camera: Dictionary = {}  ## --yaw --pitch --dist --cam=<n> (capturas da vista 3D)
 var sim_overrides: Dictionary = {}  ## opções extras da RaceSim (testes: clima, incidentes)
 var weekend: WeekendSim = null  ## Grande Prêmio em andamento (null = corrida rápida)
+var campaign: Campaign = null  ## campanha em andamento (carregada do arquivo salvo)
 var gp_weather := "realistic"  ## escolhas da configuração do GP
 var gp_format := "full"
 
@@ -76,6 +81,23 @@ func _ready() -> void:
 	if args.has("race"):
 		race_seed = int(args.get("seed", "1"))
 		get_tree().change_scene_to_file.call_deferred(RACE_SCENE)
+	elif args.has("campaign"):
+		get_tree().change_scene_to_file.call_deferred(CAMPAIGN_ENTRY_SCENE)
+	elif args.has("creator"):
+		get_tree().change_scene_to_file.call_deferred(TEAM_CREATOR_SCENE)
+	elif args.has("camp-race"):  # (capturas) corrida da próxima rodada da campanha salva
+		campaign = Campaign.load_saved()
+		if campaign != null:
+			if campaign.mode == "created":
+				TeamEmblems.register_custom(campaign.team())
+			player_team = campaign.player_team
+			weekend = WeekendSim.new(campaign.next_round()["id"], campaign.weekend_options({"duration_pct": duration_pct, "format": "race_only",
+				"weather": args.get("weather", "realistic")}))
+			play_session.call_deferred()
+	elif args.has("hub"):
+		var c := Campaign.load_saved()
+		if c != null:
+			start_campaign.call_deferred(c)
 	elif args.has("gp"):
 		get_tree().change_scene_to_file.call_deferred(GP_SETUP_SCENE)
 	elif args.has("weekend") or args.has("practice") or args.has("quali") or args.has("play"):
@@ -129,6 +151,46 @@ func start_gp() -> void:
 	opts.merge(sim_overrides.duplicate(), false)
 	weekend = WeekendSim.new(circuit_id, opts)
 	go_to_weekend()
+
+
+# --- Campanha ---------------------------------------------------------------------------
+
+func open_campaign() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_ENTRY_SCENE)
+
+
+func open_team_creator() -> void:
+	get_tree().change_scene_to_file(TEAM_CREATOR_SCENE)
+
+
+## Começa (ou retoma) uma campanha: registra a arte da equipe criada, salva e abre a sede.
+func start_campaign(c: Campaign) -> void:
+	campaign = c
+	player_team = c.player_team
+	if c.mode == "created":
+		TeamEmblems.register_custom(c.team())
+		CarModel3D._cache.erase(c.player_team)
+	c.save()
+	get_tree().change_scene_to_file(CAMPAIGN_HUB_SCENE)
+
+
+## Fim de semana da próxima rodada da campanha.
+func play_campaign_round() -> void:
+	var r := campaign.next_round()
+	if r.is_empty():
+		return
+	circuit_id = r["id"]
+	weekend = WeekendSim.new(r["id"], campaign.weekend_options({"duration_pct": duration_pct}))
+	go_to_weekend()
+
+
+## Fim do fim de semana da campanha: soma os pontos, avança a rodada, salva e volta para a sede.
+func finish_campaign_weekend() -> void:
+	if campaign != null and weekend != null and weekend.campaign and weekend.is_over():
+		campaign.record_weekend(weekend)
+		campaign.save()
+	weekend = null
+	get_tree().change_scene_to_file(CAMPAIGN_HUB_SCENE)
 
 
 func go_to_weekend() -> void:

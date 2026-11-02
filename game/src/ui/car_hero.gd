@@ -44,8 +44,8 @@ func _ready() -> void:
 	_layout()
 
 
-func set_team(team_id: String, number: int, number_color: Color = Color.WHITE) -> void:
-	var tex: Texture2D = load("res://assets/cars/%s.svg" % team_id)
+func set_team(team_id: String, number: int, number_color: Color = Color.WHITE, team: Dictionary = {}) -> void:
+	var tex: Texture2D = CarArt.car_texture(team if not team.is_empty() else {"id": team_id})
 	_car.texture = tex
 	_refl.texture = tex
 	_number.text = str(number)

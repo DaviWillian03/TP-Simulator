@@ -16,6 +16,7 @@ ICONS = {
     "swap": '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
     "close": '<path d="M6 6l12 12M18 6L6 18"/>',
     "check": '<path d="M5 12l5 5 9-10"/>',
+    "bolt": '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
 }
 
 if __name__ == "__main__":

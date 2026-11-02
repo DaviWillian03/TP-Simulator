@@ -142,3 +142,35 @@ func test_configuracao_preserva_as_escolhas_do_session() -> void:
 	assert_eq(screen._go.text, "COMEÇAR CORRIDA", "o botão diz o que vai acontecer")
 	Session.gp_weather = "realistic"
 	Session.gp_format = "full"
+
+
+# --- campanha ---------------------------------------------------------------------------
+
+func test_criacao_de_equipe_valida_nome_sigla_e_pilotos() -> void:
+	var screen: Control = await _open("res://src/ui/team_creator_screen.tscn")
+	screen._go(1)
+	await wait_process_frames(1)
+	assert_true(screen._next.disabled, "sem nome e sigla não avança")
+	screen.spec["name"] = "Aurora Racing"
+	screen.spec["short"] = "AUR"
+	screen._validate()
+	assert_false(screen._next.disabled)
+	screen._go(3)
+	await wait_process_frames(1)
+	assert_true(screen._next.disabled, "precisa de dois pilotos")
+	screen._toggle_driver("rafael_camara")
+	screen._toggle_driver("colton_herta")
+	assert_false(screen._next.disabled)
+	assert_eq(screen.spec["drivers"], ["rafael_camara", "colton_herta"])
+	screen._toggle_driver("rafael_camara")
+	assert_true(screen._next.disabled, "tocar de novo tira o piloto")
+
+
+func test_origem_montadora_trava_o_motor_proprio() -> void:
+	var screen: Control = await _open("res://src/ui/team_creator_screen.tscn")
+	screen.spec["origin"] = "manufacturer"
+	screen._go(2)
+	await wait_process_frames(1)
+	assert_eq(screen.spec["engine"], "own")
+	var enabled: Array = screen._content.find_children("*", "Button", true, false).filter(func(b: Button) -> bool: return b.toggle_mode and not b.disabled and String(b.text).contains("cliente"))
+	assert_eq(enabled.size(), 0, "fornecedores desabilitados para a montadora")

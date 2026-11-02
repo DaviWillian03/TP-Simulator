@@ -52,6 +52,16 @@ Cada marco termina jogável e testado. Itens vêm de `docs/DECISIONS.md`.
 ## Marco 4 — Corrida Caótica ("Roleta do Caos", P8)
 - Roleta de eventos + cartas de caos + variantes prontas, sobre o mesmo motor de corrida.
 
+## Campanha — modo principal (prioridade desde 2026-11-02)
+- ✅ 1ª camada: entrada (equipe real ou criada), criação da equipe em 4 passos (origem,
+  identidade com carro e emblema gerados, motor e objetivos, pilotos reais da F2/F3), equipe
+  criada como 12ª do grid (24 carros; classificação corta 7+7), salvar/carregar
+  (`user://campaign.json`), sede mínima com a próxima rodada e o campeonato de construtores.
+- ⬜ Temporada completa: sede com mockup próprio, calendário em dias e "avançar até o próximo
+  evento", classificação de pilotos, objetivos da diretoria, virada de temporada.
+- ⬜ Camadas seguintes (ordem do roadmap abaixo): finanças, pessoal e contratos, P&D, fábrica,
+  patrocínios, estúdio de design, academia, teto de gastos, conselho, eventos, F2/F3/F4.
+
 ## Marco 5+ — Campanha (em camadas jogáveis)
 Finanças e temporada → pessoal/pilotos e contratos → P&D (Essencial/Avançado) → fábrica →
 patrocínios → estúdio de design (P9) → origens da equipe (P10) → academia de pilotos (P11) →

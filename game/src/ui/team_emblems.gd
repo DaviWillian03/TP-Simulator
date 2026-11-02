@@ -13,11 +13,23 @@ const LOCAL_DIR := "res://local/emblems/"
 const BUILTIN_DIR := "res://assets/emblems/"
 
 static var _cache: Dictionary = {}
+static var _custom: Dictionary = {}  ## emblemas gerados (equipe criada na campanha)
+
+
+## Registra o emblema da equipe criada (forma + cores escolhidas na criação).
+## Imagens importadas pelo jogador continuam tendo prioridade (ver get_texture).
+static func register_custom(team: Dictionary) -> void:
+	var id: String = team["id"]
+	_cache.erase(id)
+	var imported := _load_imported(id)
+	_custom[id] = imported if imported != null else CarArt.emblem_texture(team.get("shape", "hex"), team["color"], team["color2"], team.get("short_name", ""))
 
 
 static func get_texture(team_id: String) -> Texture2D:
 	if _cache.has(team_id):
 		return _cache[team_id]
+	if _custom.has(team_id):
+		return _custom[team_id]
 	var tex: Texture2D = _load_imported(team_id)
 	if tex == null:
 		for ext: String in ["png", "svg", "webp", "jpg"]:

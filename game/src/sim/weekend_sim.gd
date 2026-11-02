@@ -39,6 +39,7 @@ var race_only := false
 var sprint_weekend := false
 var seed_value := 1
 var incident_rate := 1.0
+var campaign := false  ## fim de semana de uma campanha (volta para a sede ao terminar)
 
 var sessions: Array[String] = []
 var current := 0
@@ -53,18 +54,19 @@ var rng := RandomNumberGenerator.new()
 
 
 ## options: player_team, duration_pct, weather ("realistic"/"dry"/"rain"/"variable"),
-##          format ("full"/"race_only"), seed, incident_rate.
+##          format ("full"/"race_only"), seed, incident_rate, teams/drivers (grid da campanha).
 func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	circuit = GameData.circuit(circuit_id)
 	track = TrackModel.new(circuit)
 	tyres = TyreModel.new(GameData.tyres())
-	teams = GameData.teams()
-	drivers = GameData.drivers()
+	teams = options.get("teams", GameData.teams())  # campanha: grid com a equipe criada
+	drivers = options.get("drivers", GameData.drivers())
 	player_team = options.get("player_team", "")
 	duration_pct = float(options.get("duration_pct", 1.0))
 	weather_mode = options.get("weather", "realistic")
 	race_only = options.get("format", "full") == "race_only"
 	incident_rate = float(options.get("incident_rate", 1.0))
+	campaign = bool(options.get("campaign", false))
 	seed_value = int(options.get("seed", 1))
 	rng.seed = seed_value
 	sprint_weekend = bool(circuit.get("sprint", false))
