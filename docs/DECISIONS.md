@@ -154,3 +154,10 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - **Aprovadas** (múltipla escolha): tela inicial e configuração do GP na Garagem viram o padrão.
   Ordem de migração: painel do fim de semana → treino ao vivo (mockup próprio antes) →
   classificação → resultados → corrida; depois os ajustes do 3D.
+
+## Campanha — prioridade e primeira camada (2026-11-02)
+- **Foco**: a campanha é o modo principal; telas do Grande Prêmio são adaptadas depois.
+- **1ª camada** (múltipla escolha): **criação da equipe** (4 origens, motor próprio, objetivo de
+  longo prazo, nível Essencial/Avançado, dificuldade da IA) + temporada simples em seguida.
+- **Entrada** (múltipla escolha): **equipe real ou criada**; a equipe real entra junto.
+- **Grid** (múltipla escolha): a equipe criada é a **12ª equipe — 24 carros**.
