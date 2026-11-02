@@ -1,0 +1,123 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>V6 · Campanha · relatório da diretoria</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:1280px;height:720px;overflow:hidden}.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.scene{background:#0b0c0f;color:#eef0f3;font-family:Titillium;font-weight:600}
+.wall{position:absolute;inset:0 0 250px 0;background:linear-gradient(#1b1e24,#111318 80%)}
+.wall:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:250px;background:linear-gradient(#181a1f,#0a0b0d)}
+.lamp{position:absolute;top:0;height:6px;background:#f4f6fa;border-radius:0 0 4px 4px;box-shadow:0 0 34px 10px rgba(240,245,255,.22)}
+.glow{position:absolute;inset:0;background:radial-gradient(ellipse 46% 40% at 64% 66%,rgba(24,104,219,.42),transparent 70%)}
+.cone{position:absolute;left:470px;top:0;width:560px;height:720px;background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0) 75%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%)}
+.car{position:absolute}.refl{position:absolute;transform:scaleY(-1);opacity:.13;-webkit-mask:linear-gradient(transparent 55%,#000)}
+.logo{position:absolute;left:52px;top:34px;height:74px}
+.season{position:absolute;left:56px;top:118px;font-size:13px;letter-spacing:3px;color:#9aa3b2}
+.modes{position:absolute;left:52px;top:168px;width:388px;display:flex;flex-direction:column;gap:12px}
+.mode{display:flex;align-items:center;gap:16px;border-radius:16px;padding:0 20px;background:rgba(255,255,255,.06)}
+.mode b{display:block;font-weight:900;font-size:24px;letter-spacing:.5px;line-height:1}.mode small{display:block;font-size:15px;color:#a8b0bd;margin-top:5px}
+.mode .go{margin-left:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.mode.main{height:112px;background:#f3f4f6;color:#11141a;position:relative;overflow:hidden}
+.mode.main:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:#E10600}
+.mode.main b{font-size:34px}.mode.main small{color:#4b5260}.mode.main .go{background:#E10600;color:#fff;width:54px;height:54px}
+.mode.alt{height:84px}
+.mode.lock svg{flex:none}.mode.lock{height:50px;white-space:nowrap;background:none;color:#6c7380;padding-left:20px}.mode.lock b{font-size:18px;color:#7b8290}
+.tag{font-size:12px;letter-spacing:2px;border-radius:20px;padding:4px 10px;background:rgba(255,255,255,.07);color:#8a92a0;margin-left:auto}
+.pill{display:flex;align-items:center;gap:12px;border-radius:40px;padding:8px 18px 8px 10px;background:rgba(255,255,255,.07)}
+.pill b{display:block;font-size:17px;font-weight:900;letter-spacing:1px}.pill small{display:block;font-size:13px;color:#a8b0bd}
+.top{position:absolute;right:44px;top:40px;display:flex;align-items:center;gap:12px}
+.swap{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07)}
+.plates{position:absolute;right:56px;bottom:40px;display:flex;gap:44px}
+.plate{display:flex;align-items:flex-end;gap:12px}.plate .n{font-weight:900;font-size:62px;line-height:.8;color:transparent;-webkit-text-stroke:2px #5c93ea}
+.plate b{display:block;font-size:20px;font-weight:900}.plate small{display:block;font-size:13px;color:#9aa3b2;letter-spacing:1.5px}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#5d6574}
+/* configuração */
+.hdr{position:absolute;left:44px;top:30px;display:flex;align-items:center;gap:16px}
+.round{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.hdr b{font-size:15px;letter-spacing:3px;font-weight:700;color:#9aa3b2;display:block}.hdr h1{font-size:30px;font-weight:900;letter-spacing:1px}
+.map{position:absolute;left:30px;top:96px;width:830px;height:420px}
+.map svg.trk{position:absolute;left:340px;top:6px;filter:drop-shadow(0 0 10px rgba(110,170,255,.55))}
+.badge{display:inline-flex;gap:8px;align-items:center;border-radius:20px;padding:5px 12px;font-size:13px;letter-spacing:2px;font-weight:700}
+.gpname{position:absolute;left:14px;top:40px;width:420px}
+.gpname h2{font-size:50px;font-weight:900;line-height:.95;margin:14px 0 8px}.gpname p{font-size:16px;color:#a8b0bd}
+.stats{position:absolute;left:14px;top:268px;display:grid;grid-template-columns:repeat(2,170px);gap:22px 26px}
+.stat b{display:block;font-size:40px;font-weight:900;line-height:1}.stat small{font-size:12px;letter-spacing:2px;color:#8f98a7}
+.panel{position:absolute;right:40px;top:92px;width:360px;display:flex;flex-direction:column;gap:13px}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#8f98a7;margin-bottom:8px}
+.seg{display:flex;background:rgba(255,255,255,.07);border-radius:28px;padding:4px;gap:4px}
+.seg span{flex:1;height:44px;border-radius:24px;display:grid;place-items:center;font-size:16px;font-weight:700;color:#c3c9d3}
+.seg span.on{background:#f3f4f6;color:#11141a}
+.wx{display:flex;gap:8px}.wx span{flex:1;height:58px;border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:#c3c9d3}
+.wx span.on{background:#f3f4f6;color:#11141a}
+.cta{height:60px;margin-top:2px;background:#E10600;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;font-weight:900;letter-spacing:1px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%);border-radius:14px 0 14px 14px}
+.cal{position:absolute;left:0;right:0;bottom:16px;height:108px;display:flex;gap:12px;padding-left:44px}
+.card{flex:0 0 172px;border-radius:16px;background:rgba(255,255,255,.055);padding:12px 14px;position:relative}
+.card .rd{font-size:12px;letter-spacing:2px;color:#8f98a7}.card b{display:block;font-size:17px;font-weight:900;margin-top:2px;white-space:nowrap}
+.card small{font-size:13px;color:#a8b0bd}.card svg{position:absolute;right:10px;bottom:10px;opacity:.75}
+.card.on{background:#f3f4f6;color:#11141a}.card.on small,.card.on .rd{color:#4b5260}.card.on:before{content:"";position:absolute;left:14px;right:14px;top:0;height:4px;border-radius:0 0 4px 4px;background:#1868DB}
+.chip{font-size:10px;letter-spacing:1.5px;border-radius:10px;padding:2px 7px;margin-left:4px;vertical-align:middle;font-weight:700}
+.chip.s{background:#E10600;color:#fff}.chip.n{background:#26324a;color:#ffd36b}
+.fade{position:absolute;right:0;bottom:0;width:160px;height:170px;background:linear-gradient(90deg,transparent,#0b0c0f)}
+
+.top{position:absolute;left:44px;right:44px;top:24px;display:flex;align-items:center;gap:14px}
+.top .tm b{display:block;font-size:13px;letter-spacing:3px;color:#8f98a7}.top .tm h1{font-size:28px;font-weight:900;line-height:1}
+.date{margin-left:auto;display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.07);border-radius:26px;padding:8px 20px}
+.date b{font-size:20px;font-weight:900}.date small{display:block;font-size:12px;letter-spacing:2px;color:#8f98a7}
+.chipm{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:22px;padding:8px 16px;font-size:15px;font-weight:700}
+.chipm small{font-size:11px;letter-spacing:2px;color:#8f98a7;font-weight:700}
+.nav{position:absolute;left:44px;top:92px;display:flex;gap:6px;background:rgba(255,255,255,.07);border-radius:26px;padding:4px}
+.nav span{height:44px;padding:0 20px;border-radius:22px;display:grid;place-items:center;font-size:16px;font-weight:700;color:#c3c9d3}.nav span.on{background:#f3f4f6;color:#11141a}
+.hero{position:absolute;left:44px;top:156px;width:560px;height:262px;border-radius:22px;background:#f3f4f6;color:#11141a;padding:24px 28px;overflow:hidden}
+.hero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:#E10600}
+.hero .k{font-size:13px;letter-spacing:3px;color:#4b5260;font-weight:700}.hero h2{font-size:40px;font-weight:900;line-height:1;margin:6px 0 4px}
+.hero p{font-size:15px;color:#4b5260}.hero svg.trk{position:absolute;right:24px;top:22px}
+.cnt{display:flex;gap:10px;margin-top:10px}.cnt div{background:#e3e6eb;border-radius:12px;padding:8px 14px 9px;font-size:13px;color:#4b5260;line-height:1.25}.cnt b{display:block;font-size:22px;color:#11141a;font-weight:900;line-height:1.05}
+.hero .acts{position:absolute;left:28px;bottom:20px;display:flex;gap:12px}
+.card{position:absolute;border-radius:20px;background:rgba(255,255,255,.06);padding:18px 20px}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#8f98a7;margin-bottom:8px;font-weight:700}
+.prog{height:12px;border-radius:7px;background:rgba(255,255,255,.1);position:relative;margin:10px 0 6px}.prog i{position:absolute;left:0;top:0;bottom:0;border-radius:7px}
+.tick{position:absolute;top:-4px;bottom:-4px;width:3px;background:#fff;border-radius:2px}
+.row2{display:flex;align-items:center;gap:10px;height:40px;font-size:16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.card .row2 svg,.card .row2 img{position:static;opacity:1;flex:none}.row2 .n{width:26px;font-weight:900;color:#a8b0bd}.row2 .nm{flex:1;font-weight:700}.row2 .p{font-weight:900;min-width:40px;text-align:right}.card p b{display:inline}.row2.me{background:rgba(14,124,102,.3);border-radius:10px;border-bottom:none;padding:0 18px 0 12px;margin:4px -8px 0;gap:10px}
+.pos{width:30px;height:24px;border-radius:7px;display:grid;place-items:center;font-weight:900;font-size:14px}
+.tab{display:flex;background:rgba(255,255,255,.07);border-radius:22px;padding:4px;gap:4px}.tab span{height:38px;padding:0 18px;border-radius:19px;display:grid;place-items:center;font-size:15px;font-weight:700;color:#c3c9d3}.tab span.on{background:#f3f4f6;color:#11141a}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#5d6574}
+.sh{position:absolute;border-radius:20px;background:rgba(255,255,255,.04);overflow:hidden}
+.th{display:flex;height:40px;align-items:center;font-size:12px;letter-spacing:2px;color:#8f98a7;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.tr{display:flex;height:34px;align-items:center;padding:0 14px;font-size:15px;border-bottom:1px solid rgba(255,255,255,.07)}
+.tr .p{width:32px;height:24px;border-radius:7px;display:grid;place-items:center;font-weight:900;font-size:14px;margin-right:12px}
+.tr .n{flex:1;font-weight:900}.tr .t{width:170px;color:#a8b0bd;font-size:14px}.tr .w{width:60px;text-align:right;color:#a8b0bd}.tr .s{width:70px;text-align:right;font-weight:900;font-size:17px}
+.tr.me{background:rgba(14,124,102,.3)}
+.verd{position:absolute;left:44px;top:110px;width:600px}
+.big{font-size:70px;font-weight:900;line-height:.95}
+</style></head><body><div class="scene"><div class="wall" style="bottom:0"></div><div class="glow" style="background:radial-gradient(ellipse 40% 50% at 30% 45%,#0E7C6655,transparent 70%)"></div>
+<div class="top"><span class="round"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#eef0f3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span><div class="tm"><b>AURORA RACING · FIM DA TEMPORADA 2026</b><h1>RELATÓRIO DA DIRETORIA</h1></div></div>
+<div class="verd"><div class="lbl">VEREDITO</div><div class="big">META<br>CUMPRIDA</div>
+<p style="font-size:18px;color:#c3c9d3;margin-top:14px;max-width:520px;line-height:1.5">Vocês terminaram em <b style="color:#fff">8º</b> entre os construtores, a meta era o top 8. A diretoria renova a confiança e libera mais orçamento.</p>
+<div style="display:flex;gap:14px;margin-top:22px"><div class="card" style="position:static;width:170px"><div class="lbl" style="margin:0">POSIÇÃO FINAL</div><b style="font-size:38px;font-weight:900">8º</b></div>
+<div class="card" style="position:static;width:170px"><div class="lbl" style="margin:0">PONTOS</div><b style="font-size:38px;font-weight:900">64</b></div>
+<div class="card" style="position:static;width:170px"><div class="lbl" style="margin:0">MELHOR CORRIDA</div><b style="font-size:38px;font-weight:900">6º</b></div></div></div>
+<div class="card" style="right:44px;top:100px;width:520px;height:420px"><div class="lbl">PRÓXIMA TEMPORADA · 2027</div>
+<div class="row2"><span class="nm">Orçamento base</span><span class="p">US$ 210 mi <small style="color:#7fe0b1;font-size:13px">+ 34</small></span></div>
+<div class="row2"><span class="nm">Paciência da diretoria</span><span class="p">Boa</span></div>
+<div class="row2"><span class="nm">Nova meta</span><span class="p">Top 6 dos construtores</span></div>
+<div class="row2"><span class="nm">Contratos que vencem</span><span class="p">0 pilotos</span></div>
+<p style="margin-top:18px;font-size:14px;color:#a8b0bd;line-height:1.55;display:block">Se a meta não fosse cumprida, a paciência cairia. Com a paciência esgotada ou o caixa negativo, o resultado seria <b style="color:#ffb4a8;display:inline;font-size:inherit">demissão</b> ou <b style="color:#ffb4a8;display:inline;font-size:inherit">falência</b>, e outra equipe poderia fazer uma proposta.</p></div>
+<div class="foot" style="position:absolute;left:44px;right:44px;bottom:26px;display:flex;align-items:center"><div class="cta" style="margin-left:auto;width:380px">INICIAR TEMPORADA 2027 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></div></div>
+<div class="note" style="left:44px;bottom:6px">EXEMPLO · METAS E VALORES PROVISÓRIOS · O CAMINHO DE FRACASSO (DEMISSÃO/FALÊNCIA) USA UMA VARIAÇÃO DESTA MESMA TELA</div></div></body></html>
