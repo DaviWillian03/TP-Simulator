@@ -14,6 +14,7 @@ const ROW_H_GARAGE := 36
 var style := "paddock"
 var me_color := Color("#1868DB")  ## destaque das linhas do jogador (garage)
 
+var row_h := ROW_H_GARAGE  ## altura da linha (garage); tabelas de 24 carros usam menos
 var columns: Array = []
 var _rows: Array = []  # [{panel, cells: [Control]}]
 var _body: VBoxContainer
@@ -63,7 +64,7 @@ func _make_row() -> Dictionary:
 	panel.add_theme_stylebox_override("panel", _garage_line(Color(0, 0, 0, 0), 0.07, 0) if _garage() else UiStyle.row_box(UiStyle.PAPER))
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 0)
-	h.custom_minimum_size = Vector2(0, ROW_H_GARAGE if _garage() else ROW_H)
+	h.custom_minimum_size = Vector2(0, row_h if _garage() else ROW_H)
 	panel.add_child(h)
 	var cells: Array = []
 	for i in columns.size():
@@ -75,7 +76,7 @@ func _make_row() -> Dictionary:
 			"pos":
 				cell = UiStyle.pos_cell(float(col["width"]))
 				if _garage():
-					cell.custom_minimum_size = Vector2(float(col["width"]), 26)
+					cell.custom_minimum_size = Vector2(float(col["width"]), mini(26, row_h - 6))
 					cell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 					var m := MarginContainer.new()
 					m.add_theme_constant_override("margin_left", 12)
@@ -88,7 +89,7 @@ func _make_row() -> Dictionary:
 				var box := HBoxContainer.new()
 				box.add_theme_constant_override("separation", 10)
 				box.add_child(TextureRect.new())
-				var nl := UiStyle.g_label("", 16, UiStyle.G_TEXT, "black")
+				var nl := UiStyle.g_label("", 16 if row_h >= 32 else 14, UiStyle.G_TEXT, "black")
 				nl.clip_text = true
 				nl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				box.add_child(nl)
@@ -102,7 +103,7 @@ func _make_row() -> Dictionary:
 				cell = box
 				h.add_child(_wrap(box, col))
 			_:
-				var l := UiStyle.g_label("", 16, UiStyle.G_TEXT_2) if _garage() else UiStyle.label("", 13, UiStyle.INK, bool(col.get("heavy", false)))
+				var l := UiStyle.g_label("", 16 if row_h >= 32 else 14, UiStyle.G_TEXT_2) if _garage() else UiStyle.label("", 13, UiStyle.INK, bool(col.get("heavy", false)))
 				l.horizontal_alignment = _align(col)
 				l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 				l.clip_text = true
