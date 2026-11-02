@@ -21,7 +21,8 @@ das escolhas técnicas.
   StrategyAI (IA); fim de semana: WeekendSim (sessões, previsão, grids, pontos), CarSetup (acerto),
   PracticeSession (programas de blocos), QualiSim (Q1/Q2/Q3; cortes pelo nº de carros);
   campanha: `Campaign` (equipe real ou criada = 12ª equipe, 24 carros; salva em
-  user://campaign.json). Passo fixo `DT`, semente
+  user://campaign.json), `CarDevelopment` (árvore de P&D em `data/rd_tree.json`, gerada por
+  `tools/make_rd_tree.py`, e fábrica em `data/factory.json`). Passo fixo `DT`, semente
   determinística. Regras novas entram aqui, com teste.
 - Telas do GP: `gp_setup_screen`, `weekend_screen`, `practice_screen`, `quali_screen` (peças comuns
   em `ScreenKit`); o fim de semana ativo fica em `Session.weekend`.

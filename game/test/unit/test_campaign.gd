@@ -148,6 +148,7 @@ func test_meta_da_diretoria_vem_da_origem_e_do_carro() -> void:
 
 func test_caixa_acompanha_patrocinio_e_custos() -> void:
 	var c := Campaign.new_created(SPEC)
+	c.detail = "advanced"  # no essencial o diretor técnico também gasta com projetos de P&D
 	var before := c.budget_musd
 	_played(c, 1)
 	assert_almost_eq(c.budget_musd, before + c.sponsor_per_race() - c.cost_per_race(), 0.001)

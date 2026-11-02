@@ -634,3 +634,39 @@ static func popover(screen: Control, anchor: Control, title: String, options: Ar
 	panel.reset_size()
 	panel.position = Vector2(clampf(r.position.x, 8.0, screen.size.x - 288.0), maxf(8.0, r.position.y - panel.size.y - 8.0))
 	return catcher
+
+
+## Abas da sede da campanha (Início · Campeonatos · Pilotos · Carro · Fábrica · Finanças).
+## active: "hub", "standings", "car" ou "factory". Pilotos e Finanças ainda são camadas futuras.
+static func campaign_nav(layer: Control, active: String, y: float = 88.0) -> PanelContainer:
+	var nav := PanelContainer.new()
+	nav.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE, 26, 4, 4))
+	var nh := HBoxContainer.new()
+	nh.add_theme_constant_override("separation", 4)
+	nav.add_child(nh)
+	var items := [["Início", "hub"], ["Campeonatos", "standings"], ["Pilotos", ""], ["Carro", "car"], ["Fábrica", "factory"], ["Finanças", ""]]
+	for t: Array in items:
+		var on: bool = t[1] == active
+		var b := Button.new()
+		b.text = t[0]
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
+		_selectable_styles(b, UiStyle.R_PILL - 4)
+		b.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_LIGHT if on else Color(0, 0, 0, 0), UiStyle.R_PILL - 4, 20, 0))
+		b.add_theme_color_override("font_color", UiStyle.G_INK if on else UiStyle.G_TEXT)
+		b.add_theme_color_override("font_disabled_color", UiStyle.G_TEXT_OFF)
+		b.add_theme_font_size_override("font_size", UiStyle.FS_BODY)
+		b.disabled = t[1] == ""
+		if t[1] != "" and not on:
+			match t[1]:
+				"hub":
+					b.pressed.connect(Session.open_campaign_hub)
+				"standings":
+					b.pressed.connect(Session.open_campaign_standings)
+				"car":
+					b.pressed.connect(Session.open_campaign_car)
+				"factory":
+					b.pressed.connect(Session.open_campaign_factory)
+		nh.add_child(b)
+	place(nav, layer, Control.PRESET_TOP_LEFT, Vector2(44, y))
+	return nav

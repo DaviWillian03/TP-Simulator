@@ -180,7 +180,7 @@ func practice_lap_time(car: CarState, block_id: String) -> float:
 func _finish_block(car: CarState, plan: Dictionary) -> void:
 	var id: String = plan["block"]
 	var setup: CarSetup = setups[car.driver["id"]]
-	var gain := rng.randf_range(GAIN_MIN, GAIN_MAX) * float(plan.get("block_share", 1.0))
+	var gain := rng.randf_range(GAIN_MIN, GAIN_MAX) * float(plan.get("block_share", 1.0)) * float(car.team.get("practice_gain_mult", 1.0))
 	var text := ""
 	var problem_chance := PROBLEM_BASE + (100.0 - float(car.driver["rating"])) * PROBLEM_PER_RATING
 	if weather.wetness > 0.3 and id != "race":

@@ -12,6 +12,7 @@ extends Node
 ##   --weather=dry          sem chuva · --incidents=<0..n> multiplicador de incidentes
 ##   --screenshot=<arquivo.png> --frames=<n>   salva a tela após n quadros e fecha o jogo
 ##   --campaign / --creator / --hub   entrada da campanha, criação da equipe, sede (campanha salva)
+##   --car / --factory                árvore de P&D e fábrica da campanha salva
 ##   --gp                   abre a configuração do Grande Prêmio
 ##   --weekend [--skip=<n>] abre o fim de semana (com --circuit/--team), simulando n sessões
 ##   --play                 abre a sessão atual do fim de semana (depois do --skip)
@@ -26,6 +27,8 @@ const CAMPAIGN_ENTRY_SCENE := "res://src/ui/campaign_entry_screen.tscn"
 const TEAM_CREATOR_SCENE := "res://src/ui/team_creator_screen.tscn"
 const CAMPAIGN_HUB_SCENE := "res://src/ui/campaign_hub_screen.tscn"
 const CAMPAIGN_STANDINGS_SCENE := "res://src/ui/campaign_standings_screen.tscn"
+const CAMPAIGN_CAR_SCENE := "res://src/ui/campaign_car_screen.tscn"
+const CAMPAIGN_FACTORY_SCENE := "res://src/ui/campaign_factory_screen.tscn"
 const CAMPAIGN_REPORT_SCENE := "res://src/ui/campaign_report_screen.tscn"
 
 var circuit_id := "interlagos"
@@ -99,6 +102,29 @@ func _ready() -> void:
 			if c2.mode == "created":
 				TeamEmblems.register_custom(c2.team())
 			open_campaign_standings.call_deferred()
+	elif args.has("car") or args.has("factory"):  # (capturas) árvore de P&D / fábrica da campanha salva
+		var c4 := Campaign.load_saved()
+		if args.has("fresh"):  # (captura) campanha nova da equipe --team, com --demo = P&D e obras de exemplo
+			c4 = Campaign.new_real(player_team)
+			c4.budget_musd = 176.0
+			if args.has("demo"):
+				for id in ["aero.0.0", "aero.0.1", "aero.0.2", "aero.0.3", "aero.1.0", "aero.1.1", "chassis.0.0", "durability.0.0"]:
+					c4.dev.done["cur"][id] = "full"
+				c4.dev.done["cur"]["aero.2.0"] = "partial"
+				c4.detail = "advanced"
+				c4.dev.start_project(c4, "cur", "aero.0.4")
+				c4.dev.start_project(c4, "cur", "chassis.0.1")
+				c4.dev.start_upgrade(c4, "media")
+				c4.refresh_rating()
+		if c4 != null:
+			campaign = c4
+			player_team = c4.player_team
+			if c4.mode == "created":
+				TeamEmblems.register_custom(c4.team())
+			if args.has("car"):
+				open_campaign_car.call_deferred()
+			else:
+				open_campaign_factory.call_deferred()
 	elif args.has("report"):
 		var c3 := Campaign.load_saved()
 		if c3 != null:
@@ -208,6 +234,14 @@ func open_campaign_hub() -> void:
 
 func open_campaign_standings() -> void:
 	get_tree().change_scene_to_file(CAMPAIGN_STANDINGS_SCENE)
+
+
+func open_campaign_car() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_CAR_SCENE)
+
+
+func open_campaign_factory() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_FACTORY_SCENE)
 
 
 ## Fim da temporada: a sede leva ao relatório da diretoria.

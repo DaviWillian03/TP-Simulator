@@ -36,6 +36,8 @@ var driver_points: Dictionary = {}  ## id do piloto -> pontos na temporada
 var team_points: Dictionary = {}  ## id da equipe -> pontos na temporada
 var history: Array = []  ## [{round, circuit, results: [ids]}]
 
+var dev := CarDevelopment.new()  ## árvore de P&D e fábrica
+var base_rating := 0.0  ## nota do carro da equipe sem os upgrades
 var _teams: Array = []
 var _drivers: Array = []
 
@@ -66,6 +68,7 @@ static func new_real(team_id: String, options: Dictionary = {}) -> Campaign:
 	c.budget_musd = 140.0  # PROVISÓRIO: orçamento padrão das equipes reais até a camada de finanças
 	c.factory_level = 3
 	c._build_grid()
+	c._init_dev(3)
 	c.board_patience = clampi(1 + int((c.rating_rank(team_id) - 1) / 3.0), 1, 5)
 	c.trust = c._start_trust()
 	c.day = c._season_start_day()
@@ -93,6 +96,7 @@ static func new_created(spec: Dictionary) -> Campaign:
 	c.board_patience = int(c.origin.get("board_patience", 3))
 	c.driver_ids.assign(spec.get("drivers", []))
 	c._build_grid()
+	c._init_dev(c.factory_level)
 	c.trust = c._start_trust()
 	c.day = c._season_start_day()
 	return c
@@ -109,6 +113,41 @@ func drivers() -> Array:
 
 func team() -> Dictionary:
 	return GameData.team_by_id(_teams, player_team)
+
+
+## Equipe com motor próprio (desenvolve o departamento Motor).
+func has_own_engine() -> bool:
+	if mode == "created":
+		return engine == "own"
+	return CarDevelopment.factory_data()["own_engine_teams"].has(player_team)
+
+
+func sync_factory_level() -> void:
+	factory_level = dev.overall_level()
+
+
+## Nota do carro = base + upgrades; também publica a confiabilidade e o ganho dos treinos na equipe.
+func refresh_rating() -> void:
+	for t: Dictionary in _teams:
+		if t["id"] == player_team:
+			t["car_rating"] = base_rating + dev.rating_bonus()
+			t["failure_mult"] = dev.failure_mult()
+			t["practice_gain_mult"] = dev.practice_gain_mult()
+
+
+func _init_dev(initial_level: int) -> void:
+	dev = CarDevelopment.new()
+	dev.set_all_levels(initial_level)
+	dev.seed_base = season
+	base_rating = float(team().get("car_rating", 75))
+	sync_factory_level()
+	refresh_rating()
+
+
+func _dev_tick(n: int) -> void:
+	if n > 0:
+		dev.tick(self, n)
+		refresh_rating()
 
 
 func is_valid() -> bool:
@@ -158,7 +197,7 @@ func to_dict() -> Dictionary:
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
-		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift}
+		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict()}
 
 
 static func from_dict(d: Dictionary) -> Campaign:
@@ -188,6 +227,11 @@ static func from_dict(d: Dictionary) -> Campaign:
 	c.state = d.get("state", "active")
 	c.goal_shift = int(d.get("goal_shift", 0))
 	c._build_grid()
+	c._init_dev(maxi(1, c.factory_level))
+	if d.has("dev"):
+		c.dev = CarDevelopment.from_dict(d["dev"])
+		c.sync_factory_level()
+		c.refresh_rating()
 	c.trust = float(d.get("trust", c._start_trust()))
 	c.day = int(d.get("day", c._season_start_day()))
 	return c
@@ -251,7 +295,9 @@ func record_weekend(w: WeekendSim) -> void:
 	var drift: float = origins_data()["board"]["drift_per_race"]
 	trust = clampf(trust + (drift if gap >= 0 else float(gap) * drift * 0.5) * _difficulty_factor(), 0.0, 100.0)
 	round += 1
-	day = _day_of(calendar()[round - 1]["date"]) + 1
+	var new_day := _day_of(calendar()[round - 1]["date"]) + 1
+	_dev_tick(new_day - day)
+	day = new_day
 	if budget_musd < 0.0:
 		state = "bankrupt"
 	elif trust <= 0.0:
@@ -305,6 +351,7 @@ func advance_days(n: int) -> int:
 		target = mini(target, event_start_day())
 	var moved := maxi(0, target - day)
 	day += moved
+	_dev_tick(moved)
 	return moved
 
 
@@ -356,13 +403,12 @@ func season_goal() -> int:
 
 func cost_per_race() -> float:
 	var f: Dictionary = origins_data()["finance"]
-	return float(f["cost_base"]) + factory_level * float(f["cost_per_factory"])
+	return float(f["cost_base"]) + dev.upkeep_per_race()
 
 
 func sponsor_per_race() -> float:
-	if mode == "created":
-		return float(origin.get("sponsor_per_race_musd", 2.0))
-	return float(origins_data()["finance"]["sponsor_default"])
+	var base: float = float(origin.get("sponsor_per_race_musd", 2.0)) if mode == "created" else float(origins_data()["finance"]["sponsor_default"])
+	return base * dev.sponsor_mult()
 
 
 func _difficulty_factor() -> float:
@@ -427,6 +473,8 @@ func start_next_season() -> void:
 	wins = {}
 	history = []
 	best_finish = 99
+	dev.rollover()
+	refresh_rating()
 	day = _season_start_day()  # (calendário de 2027+ ainda repete as datas de 2026: PROVISÓRIO)
 
 

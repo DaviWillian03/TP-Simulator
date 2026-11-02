@@ -2,7 +2,7 @@ extends Control
 ## Sede da campanha — direção Garagem (mockup design/mockups/v6-1-campanha-sede.html).
 ## Topo: data, caixa e humor da diretoria. Destaque: o próximo evento (avançar o tempo e jogar).
 ## Abaixo: objetivo e paciência da diretoria, finanças simples. À direita: construtores e o carro.
-## As abas Pilotos, Carro, Fábrica e Finanças são camadas futuras (aparecem apagadas).
+## Abas: Carro (árvore de P&D) e Fábrica já existem; Pilotos e Finanças são camadas futuras (apagadas).
 
 var campaign: Campaign
 var _hero: PanelContainer
@@ -47,26 +47,7 @@ func _ready() -> void:
 	ScreenKit.place(chips, layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 26))
 
 	# abas
-	var nav := PanelContainer.new()
-	nav.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE, 26, 4, 4))
-	var nh := HBoxContainer.new()
-	nh.add_theme_constant_override("separation", 4)
-	nav.add_child(nh)
-	for t: Array in [["Início", true, true], ["Campeonatos", true, false], ["Pilotos", false, false], ["Carro", false, false], ["Fábrica", false, false], ["Finanças", false, false]]:
-		var b := Button.new()
-		b.text = t[0]
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
-		ScreenKit._selectable_styles(b, UiStyle.R_PILL - 4)
-		b.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_LIGHT if t[2] else Color(0, 0, 0, 0), UiStyle.R_PILL - 4, 20, 0))
-		b.add_theme_color_override("font_color", UiStyle.G_INK if t[2] else UiStyle.G_TEXT)
-		b.add_theme_color_override("font_disabled_color", UiStyle.G_TEXT_OFF)
-		b.add_theme_font_size_override("font_size", UiStyle.FS_BODY)
-		b.disabled = not t[1]
-		if t[0] == "Campeonatos":
-			b.pressed.connect(Session.open_campaign_standings)
-		nh.add_child(b)
-	ScreenKit.place(nav, layer, Control.PRESET_TOP_LEFT, Vector2(44, 88))
+	ScreenKit.campaign_nav(layer, "hub")
 
 	# coluna esquerda
 	var left := VBoxContainer.new()
@@ -257,6 +238,15 @@ func _finance_card() -> Control:
 		v.add_child(UiStyle.g_caption(f[0]))
 		v.add_child(UiStyle.g_label(f[1], 20, UiStyle.G_TEXT, "black"))
 		h.add_child(v)
+	if campaign.dev.news.size() > 0:  # última notícia do desenvolvimento do carro
+		var wrap := VBoxContainer.new()
+		wrap.add_theme_constant_override("separation", 4)
+		card.remove_child(h)
+		card.add_child(wrap)
+		wrap.add_child(h)
+		var n := UiStyle.g_label("P&D · " + String(campaign.dev.news[0]), 13, Color("#c3c9d3"))
+		n.clip_text = true
+		wrap.add_child(n)
 	return card
 
 

@@ -1,0 +1,811 @@
+{
+ "_notas": "PROVISÓRIO. Gerado por tools/make_rd_tree.py. Custo do nó = cost_musd do tipo × (1 + 0,06 × posição no braço).",
+ "kinds": {
+  "m": {
+   "name": "Menor",
+   "cost_musd": 2.5,
+   "days": 3,
+   "perf": 0.12,
+   "rel": 0.04,
+   "eff": 0.03,
+   "qual": 1.5
+  },
+  "i": {
+   "name": "Importante",
+   "cost_musd": 8.0,
+   "days": 7,
+   "perf": 0.35,
+   "rel": 0.1,
+   "eff": 0.06,
+   "qual": 3.0
+  },
+  "d": {
+   "name": "Definitiva",
+   "cost_musd": 22.0,
+   "days": 14,
+   "perf": 0.9,
+   "rel": 0.24,
+   "eff": 0.12,
+   "qual": 6.0
+  }
+ },
+ "cost_step": 0.06,
+ "departments": [
+  {
+   "id": "engine",
+   "name": "Motor",
+   "color": "#ff6a5a",
+   "desc": "Potência e consumo da unidade de potência. Só quem fabrica o próprio motor desenvolve aqui.",
+   "needs_own_engine": true,
+   "arms": [
+    {
+     "name": "Potência do motor",
+     "effect": "perf",
+     "nodes": [
+      {
+       "n": "Mapeamento de ignição",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Turbo de maior fluxo",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -46
+      },
+      {
+       "n": "Pistões leves",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 46
+      },
+      {
+       "n": "Câmara de combustão v2",
+       "k": "i",
+       "p": 0,
+       "d": 184,
+       "l": 0
+      },
+      {
+       "n": "Sistema ERS-K",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": -46
+      },
+      {
+       "n": "Admissão otimizada",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": 46
+      },
+      {
+       "n": "Unidade de potência Mk2",
+       "k": "d",
+       "p": 3,
+       "d": 268,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Consumo de combustível",
+     "effect": "perf",
+     "nodes": [
+      {
+       "n": "Injeção de precisão",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Mistura pobre",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -46
+      },
+      {
+       "n": "Recuperação térmica",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 46
+      },
+      {
+       "n": "Bomba de baixo atrito",
+       "k": "i",
+       "p": 0,
+       "d": 184,
+       "l": 0
+      },
+      {
+       "n": "Combustível sustentável v2",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": 0
+      },
+      {
+       "n": "Ciclo de energia Mk2",
+       "k": "d",
+       "p": 4,
+       "d": 268,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Eficiência do departamento",
+     "effect": "eff",
+     "nodes": [
+      {
+       "n": "Equipe dedicada",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Ferramentas de produção",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -40
+      },
+      {
+       "n": "Gestão de projetos",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 40
+      },
+      {
+       "n": "Banco de dados técnico",
+       "k": "i",
+       "p": 0,
+       "d": 190,
+       "l": 0
+      },
+      {
+       "n": "Centro de simulação",
+       "k": "d",
+       "p": 3,
+       "d": 240,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Controle de qualidade",
+     "effect": "qual",
+     "nodes": [
+      {
+       "n": "Inspeção de peças",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Controle de tolerâncias",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -40
+      },
+      {
+       "n": "Testes de fadiga",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 40
+      },
+      {
+       "n": "Auditoria de fornecedores",
+       "k": "i",
+       "p": 0,
+       "d": 190,
+       "l": 0
+      },
+      {
+       "n": "Certificação total",
+       "k": "d",
+       "p": 3,
+       "d": 240,
+       "l": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "aero",
+   "name": "Aerodinâmica",
+   "color": "#ffd24a",
+   "desc": "Pressão = curvas mais rápidas · menos arrasto = retas mais rápidas.",
+   "needs_own_engine": false,
+   "arms": [
+    {
+     "name": "Pressão aerodinâmica",
+     "effect": "perf",
+     "nodes": [
+      {
+       "n": "Aerofólio dianteiro v2",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Aleta do bico",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -46
+      },
+      {
+       "n": "Assoalho com túneis",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 46
+      },
+      {
+       "n": "Difusor v2",
+       "k": "i",
+       "p": 0,
+       "d": 184,
+       "l": 0
+      },
+      {
+       "n": "Defletores laterais",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": -46
+      },
+      {
+       "n": "Asa traseira de alta carga",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": 46
+      },
+      {
+       "n": "Pacote aerodinâmico Mk2",
+       "k": "d",
+       "p": 3,
+       "d": 268,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Arrasto",
+     "effect": "perf",
+     "nodes": [
+      {
+       "n": "Asa móvel eficiente",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Carenagem do cockpit",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -46
+      },
+      {
+       "n": "Entradas de ar compactas",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 46
+      },
+      {
+       "n": "Fendas de arrasto",
+       "k": "i",
+       "p": 0,
+       "d": 184,
+       "l": 0
+      },
+      {
+       "n": "Perfil de baixo arrasto",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": 0
+      },
+      {
+       "n": "Pacote de retas Mk2",
+       "k": "d",
+       "p": 4,
+       "d": 268,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Eficiência do departamento",
+     "effect": "eff",
+     "nodes": [
+      {
+       "n": "Túnel de vento ampliado",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Fluidodinâmica (CFD)",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -40
+      },
+      {
+       "n": "Modelos em escala",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 40
+      },
+      {
+       "n": "Equipe de aerodinâmicos",
+       "k": "i",
+       "p": 0,
+       "d": 190,
+       "l": 0
+      },
+      {
+       "n": "Correlação pista-túnel",
+       "k": "d",
+       "p": 3,
+       "d": 240,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Controle de qualidade",
+     "effect": "qual",
+     "nodes": [
+      {
+       "n": "Acabamento de superfície",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Moldes de carbono",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -40
+      },
+      {
+       "n": "Medição a laser",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 40
+      },
+      {
+       "n": "Testes de estrutura",
+       "k": "i",
+       "p": 0,
+       "d": 190,
+       "l": 0
+      },
+      {
+       "n": "Certificação de peças",
+       "k": "d",
+       "p": 3,
+       "d": 240,
+       "l": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "chassis",
+   "name": "Chassi",
+   "color": "#5c93ea",
+   "desc": "Aderência mecânica e peso do carro: suspensão, freios e estrutura.",
+   "needs_own_engine": false,
+   "arms": [
+    {
+     "name": "Aderência mecânica",
+     "effect": "perf",
+     "nodes": [
+      {
+       "n": "Suspensão dianteira v2",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Barra estabilizadora",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -46
+      },
+      {
+       "n": "Amortecedores de precisão",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 46
+      },
+      {
+       "n": "Geometria traseira",
+       "k": "i",
+       "p": 0,
+       "d": 184,
+       "l": 0
+      },
+      {
+       "n": "Freios de maior potência",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": -46
+      },
+      {
+       "n": "Diferencial ativo",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": 46
+      },
+      {
+       "n": "Pacote mecânico Mk2",
+       "k": "d",
+       "p": 3,
+       "d": 268,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Peso e estrutura",
+     "effect": "perf",
+     "nodes": [
+      {
+       "n": "Fibra de carbono leve",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Parafusos de titânio",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -46
+      },
+      {
+       "n": "Monobloco mais leve",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 46
+      },
+      {
+       "n": "Painéis finos",
+       "k": "i",
+       "p": 0,
+       "d": 184,
+       "l": 0
+      },
+      {
+       "n": "Lastro móvel",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": 0
+      },
+      {
+       "n": "Pacote de peso Mk2",
+       "k": "d",
+       "p": 4,
+       "d": 268,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Eficiência do departamento",
+     "effect": "eff",
+     "nodes": [
+      {
+       "n": "Equipe dedicada",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Ferramentas de produção",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -40
+      },
+      {
+       "n": "Gestão de projetos",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 40
+      },
+      {
+       "n": "Banco de dados técnico",
+       "k": "i",
+       "p": 0,
+       "d": 190,
+       "l": 0
+      },
+      {
+       "n": "Centro de simulação",
+       "k": "d",
+       "p": 3,
+       "d": 240,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Controle de qualidade",
+     "effect": "qual",
+     "nodes": [
+      {
+       "n": "Inspeção de peças",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Controle de tolerâncias",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -40
+      },
+      {
+       "n": "Testes de fadiga",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 40
+      },
+      {
+       "n": "Auditoria de fornecedores",
+       "k": "i",
+       "p": 0,
+       "d": 190,
+       "l": 0
+      },
+      {
+       "n": "Certificação total",
+       "k": "d",
+       "p": 3,
+       "d": 240,
+       "l": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "durability",
+   "name": "Durabilidade",
+   "color": "#3c9d5d",
+   "desc": "Confiabilidade: menos quebras no motor, no câmbio e na hidráulica durante a corrida.",
+   "needs_own_engine": false,
+   "arms": [
+    {
+     "name": "Confiabilidade do motor",
+     "effect": "rel",
+     "nodes": [
+      {
+       "n": "Refrigeração reforçada",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Rolamentos reforçados",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -46
+      },
+      {
+       "n": "Selos de longa vida",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 46
+      },
+      {
+       "n": "Controle térmico",
+       "k": "i",
+       "p": 0,
+       "d": 184,
+       "l": 0
+      },
+      {
+       "n": "Óleo de alta resistência",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": -46
+      },
+      {
+       "n": "Monitor de vibração",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": 46
+      },
+      {
+       "n": "Motor de longa duração",
+       "k": "d",
+       "p": 3,
+       "d": 268,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Confiabilidade do câmbio",
+     "effect": "rel",
+     "nodes": [
+      {
+       "n": "Engrenagens reforçadas",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Embreagem durável",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -46
+      },
+      {
+       "n": "Hidráulica robusta",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 46
+      },
+      {
+       "n": "Eixos de transmissão",
+       "k": "i",
+       "p": 0,
+       "d": 184,
+       "l": 0
+      },
+      {
+       "n": "Câmbio de cartucho",
+       "k": "m",
+       "p": 3,
+       "d": 226,
+       "l": 0
+      },
+      {
+       "n": "Câmbio de longa vida",
+       "k": "d",
+       "p": 4,
+       "d": 268,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Eficiência do departamento",
+     "effect": "eff",
+     "nodes": [
+      {
+       "n": "Equipe dedicada",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Ferramentas de produção",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -40
+      },
+      {
+       "n": "Gestão de projetos",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 40
+      },
+      {
+       "n": "Banco de dados técnico",
+       "k": "i",
+       "p": 0,
+       "d": 190,
+       "l": 0
+      },
+      {
+       "n": "Centro de simulação",
+       "k": "d",
+       "p": 3,
+       "d": 240,
+       "l": 0
+      }
+     ]
+    },
+    {
+     "name": "Controle de qualidade",
+     "effect": "qual",
+     "nodes": [
+      {
+       "n": "Inspeção de peças",
+       "k": "m",
+       "p": -1,
+       "d": 100,
+       "l": 0
+      },
+      {
+       "n": "Controle de tolerâncias",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": -40
+      },
+      {
+       "n": "Testes de fadiga",
+       "k": "m",
+       "p": 0,
+       "d": 142,
+       "l": 40
+      },
+      {
+       "n": "Auditoria de fornecedores",
+       "k": "i",
+       "p": 0,
+       "d": 190,
+       "l": 0
+      },
+      {
+       "n": "Certificação total",
+       "k": "d",
+       "p": 3,
+       "d": 240,
+       "l": 0
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

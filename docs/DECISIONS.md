@@ -236,3 +236,17 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   trocável a qualquer momento (decisão anterior #31).
 - Efeito na pista (PROVISÓRIO): nós somam à nota do carro (`car_rating`); durabilidade reduz falhas. Valores de custo,
   prazo, nota e níveis dos mockups são exemplos.
+
+### P&D e Fábrica implementados (mockups v9 aprovados pelo usuário)
+- `CarDevelopment` (sem tela): 92 nós (4 depts × 4 braços); custo em US$ mi, dias de calendário, vagas de projeto =
+  nível da fábrica de peças (mín. 2); chance de acerto = 58% + túnel (aero) ou fábrica de peças (demais) + nós de
+  qualidade; defeito de produção devolve metade do dinheiro; resultado parcial rende metade do efeito.
+- Efeitos: nós "perf" somam à `car_rating` da equipe; "rel" reduz quebras (`failure_mult`); "eff" reduz dias do
+  departamento; "qual" soma chance de acerto. Simulador aumenta o ganho dos treinos; marketing, o patrocínio.
+- Virada de temporada: o carro do ano seguinte vira o atual; o carro velho deixa 50% do bônus. Projetos do carro
+  velho não terminados são perdidos.
+- Modo Essencial: o diretor técnico preenche as vagas livres (teto US$ 40 mi/mês, 30% para o carro do ano seguinte),
+  com foco escolhível; no Avançado nada é automático. Trocável a qualquer momento.
+- Telas: `campaign_car_screen` (Carro) e `campaign_factory_screen` (Fábrica), abas na sede (`ScreenKit.campaign_nav`).
+  Capturas: `--car` / `--factory` (+ `--fresh --demo --team=<id>`).
+- Pendente: IA das outras equipes não desenvolve (o jogador pode ultrapassar com o tempo); balancear custos/efeitos.

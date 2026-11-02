@@ -110,7 +110,7 @@ func step(dt: float, running: Array[CarState]) -> void:
 		var p_incident := incident_rate_per_lap(car) * dt / lap_time
 		if flag == Flag.GREEN and s.rng.randf() < p_incident:
 			_incident(car)
-		elif s.rng.randf() < FAILURE_PER_LAP * rate * dt / lap_time:
+		elif s.rng.randf() < FAILURE_PER_LAP * rate * float(car.team.get("failure_mult", 1.0)) * dt / lap_time:
 			_failure(car)
 
 
