@@ -108,3 +108,24 @@ func test_faixa_de_status_mostra_safety_car() -> void:
 	screen._refresh_ui()
 	assert_true(screen._standings._status_panel.visible)
 	assert_string_contains(screen._standings._status.text, "SAFETY CAR")
+
+
+func test_tempo_acelerado_leva_a_camera_3d_para_a_vista_geral_e_depois_volta() -> void:
+	var view: TrackView3D = screen._track_view
+	view.cycle_camera()  # segue o primeiro carro do jogador
+	assert_eq(view.cam_mode, TrackView3D.CamMode.FOLLOW_1)
+	screen.set_time_scale(8.0)
+	assert_eq(view.cam_mode, TrackView3D.CamMode.OVERVIEW)
+	screen.set_time_scale(4.0)
+	assert_eq(view.cam_mode, TrackView3D.CamMode.OVERVIEW)
+	screen.set_time_scale(1.0)
+	assert_eq(view.cam_mode, TrackView3D.CamMode.FOLLOW_1)
+	assert_almost_eq(view.distance, 140.0, 0.01)
+
+
+func test_camera_escolhida_no_tempo_acelerado_e_respeitada() -> void:
+	var view: TrackView3D = screen._track_view
+	screen.set_time_scale(8.0)
+	view.cycle_camera()  # jogador escolhe seguir um carro mesmo no 8×
+	screen.set_time_scale(2.0)
+	assert_eq(view.cam_mode, TrackView3D.CamMode.FOLLOW_1)

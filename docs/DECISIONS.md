@@ -137,3 +137,6 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   resto do Marco 3 e vai **liberar kenney.nl e polyhaven.com** na rede para usar modelos e
   texturas CC0 (registrar origem/licença em docs/THIRD_PARTY.md). Enquanto isso: detalhes de pista
   independentes de assets (brita, barreiras, prédio dos boxes, grid).
+- **Tempo acelerado no 3D** (múltipla escolha): continua 3D; no **4× e 8×** a câmera vai sozinha
+  para a **vista geral** e volta à câmera anterior no 1×/2×. Se o jogador trocar a câmera enquanto
+  acelerado, vale a escolha dele. (Sem mapa 2D: o custo do 3D não depende da velocidade.)

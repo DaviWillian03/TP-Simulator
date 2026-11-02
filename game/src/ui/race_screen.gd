@@ -7,6 +7,7 @@ extends Control
 
 const UI_REFRESH_S := 0.2
 const SPEEDS := [1.0, 2.0, 4.0, 8.0]
+const FAST_TIME := 4.0  ## a partir desta velocidade a câmera 3D vai para a vista geral
 
 var sim: RaceSim
 var time_scale := 2.0
@@ -181,7 +182,7 @@ func _build_masthead() -> Control:
 		var b := UiStyle.compact(UiStyle.button("%d×" % int(s), true, group), 14)
 		b.custom_minimum_size = Vector2(38, 34)
 		b.button_pressed = is_equal_approx(s, time_scale)
-		b.pressed.connect(func() -> void: time_scale = s)
+		b.pressed.connect(func() -> void: set_time_scale(s))
 		speeds.add_child(b)
 	bar.add_child(speeds)
 	var cam := UiStyle.compact(UiStyle.button("Câmera"), 13)
@@ -218,6 +219,13 @@ func _connect_sim_signals() -> void:
 	sim.penalty.connect(_on_penalty)
 	sim.team_order_result.connect(_on_team_order)
 	sim.radio_message.connect(_on_radio_message)
+
+
+func set_time_scale(s: float) -> void:
+	time_scale = s
+	var label := _track_view.set_fast_time(s >= FAST_TIME)
+	if label != "":
+		_toasts.push("Câmera: " + label)
 
 
 func _process(delta: float) -> void:

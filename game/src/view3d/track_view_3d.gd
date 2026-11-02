@@ -330,6 +330,7 @@ func _apply_lighting(wetness: float, rain: float) -> void:
 # --- câmera ----------------------------------------------------------------------------
 
 func cycle_camera() -> String:
+	_saved_cam = {}  # o jogador escolheu a câmera: vale a escolha dele, mesmo acelerado
 	cam_mode = (cam_mode + 1) % 4 as CamMode
 	var players: Array[CarState] = []
 	for car in sim.cars:
@@ -346,6 +347,37 @@ func cycle_camera() -> String:
 		_:
 			distance = 140.0
 			return "Seguindo o líder"
+
+
+## Tempo acelerado (4×/8×): a câmera se afasta para a vista geral, mais fácil de acompanhar;
+## ao voltar para 1×/2× retorna à câmera que o jogador usava. Devolve o rótulo quando muda.
+var _saved_cam: Dictionary = {}
+
+
+func set_fast_time(on: bool) -> String:
+	if on and _saved_cam.is_empty() and cam_mode != CamMode.OVERVIEW:
+		_saved_cam = {"mode": cam_mode, "distance": distance, "pitch": pitch}
+		cam_mode = CamMode.OVERVIEW
+		distance = _overview_distance()
+		pitch = 0.62
+		return "Visão geral (tempo acelerado)"
+	if not on and not _saved_cam.is_empty():
+		cam_mode = _saved_cam["mode"]
+		distance = _saved_cam["distance"]
+		pitch = _saved_cam["pitch"]
+		_saved_cam = {}
+		return _cam_label()
+	return ""
+
+
+func _cam_label() -> String:
+	match cam_mode:
+		CamMode.OVERVIEW:
+			return "Visão geral"
+		CamMode.FOLLOW_1, CamMode.FOLLOW_2:
+			var car := _follow_car()
+			return "Seguindo %s" % (car.code() if car != null else "—")
+	return "Seguindo o líder"
 
 
 func _overview_distance() -> float:
