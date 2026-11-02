@@ -19,7 +19,7 @@ func _init() -> void:
 		e.content_margin_right = 24
 		add_theme_stylebox_override(s, e)
 	add_theme_font_override("font", UiStyle.G_BLACK)
-	add_theme_font_size_override("font_size", 22)
+	add_theme_font_size_override("font_size", UiStyle.fs(22))
 	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 		add_theme_color_override(k, Color.WHITE)
 	add_theme_color_override("font_disabled_color", UiStyle.G_TEXT_OFF)

@@ -152,7 +152,7 @@ func _build() -> void:
 	bar.add_child(count)
 	var back := ScreenKit.light_button("Voltar à corrida")
 	back.custom_minimum_size = Vector2(0, 44)
-	back.add_theme_font_size_override("font_size", 15)
+	back.add_theme_font_size_override("font_size", UiStyle.fs(15))
 	back.pressed.connect(_close)
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.add_child(back)
@@ -244,7 +244,7 @@ func _build_double() -> void:
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		ScreenKit._selectable_styles(b, 12)
 		b.add_theme_stylebox_override("normal", UiStyle.g_box(Color(1, 1, 1, 0.08), 12, 6, 0))
-		b.add_theme_font_size_override("font_size", 12)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(12))
 		b.set_pressed_no_signal(_double == int(o[0]))
 		var val: int = o[0]
 		b.pressed.connect(func() -> void:
@@ -300,7 +300,7 @@ func _build_sets() -> void:
 		var used: bool = o[0]
 		ScreenKit._selectable_styles(b, 12)
 		b.add_theme_stylebox_override("normal", UiStyle.g_box(Color(1, 1, 1, 0.08), 12, 6, 0))
-		b.add_theme_font_size_override("font_size", 13)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(13))
 		b.set_pressed_no_signal(_use_used == used)
 		b.disabled = not PitStop.has_set(car, _compound, used)
 		b.pressed.connect(func() -> void:
@@ -409,7 +409,7 @@ func _build_right() -> void:
 		b.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN - 4, UiStyle.TOUCH_MIN - 4)
 		ScreenKit._selectable_styles(b, 10)
 		b.add_theme_stylebox_override("normal", UiStyle.g_box(Color(1, 1, 1, 0.08), 10, 4, 0))
-		b.add_theme_font_size_override("font_size", 14)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(14))
 		b.set_pressed_no_signal(_wing == s)
 		var val := s
 		b.pressed.connect(func() -> void:
@@ -475,14 +475,14 @@ func _build_right() -> void:
 	cancel.custom_minimum_size = Vector2(0, 44)
 	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 		cancel.add_theme_stylebox_override(s, UiStyle.g_box(Color(1, 1, 1, 0.1) if s != "pressed" else Color(1, 1, 1, 0.2), 14, 10, 0))
-	cancel.add_theme_font_size_override("font_size", 14)
+	cancel.add_theme_font_size_override("font_size", UiStyle.fs(14))
 	cancel.pressed.connect(_cancel)
 	ScreenKit.press_feedback(cancel)
 	_col_right.add_child(cancel)
 	var ok := CutButton.new()
 	ok.text = "CONFIRMAR BOX"
 	ok.custom_minimum_size = Vector2(0, 54)
-	ok.add_theme_font_size_override("font_size", 18)
+	ok.add_theme_font_size_override("font_size", UiStyle.fs(18))
 	ok.disabled = not PitStop.has_set(car, _compound, _use_used)
 	ok.pressed.connect(_confirm)
 	_col_right.add_child(ok)

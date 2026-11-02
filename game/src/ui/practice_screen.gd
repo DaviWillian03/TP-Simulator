@@ -60,7 +60,7 @@ func _ready() -> void:
 	rest.text = "SIMULAR RESTO"
 	rest.focus_mode = Control.FOCUS_NONE
 	rest.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN + 4)
-	rest.add_theme_font_size_override("font_size", 15)
+	rest.add_theme_font_size_override("font_size", UiStyle.fs(15))
 	rest.pressed.connect(func() -> void:
 		p.run_to_end()
 		_refresh_ui())
@@ -72,7 +72,7 @@ func _ready() -> void:
 	tools.add_child(_clock)
 	ScreenKit.place(tools, layer, Control.PRESET_TOP_RIGHT, Vector2(-40, 26))
 
-	var scroll := ScrollContainer.new()
+	var scroll := DragScroll.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	layer.add_child(scroll)
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)

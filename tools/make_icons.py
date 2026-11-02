@@ -15,6 +15,10 @@ ICONS = {
     "flag": '<path d="M5 21V4h11l-2 4 2 4H5"/>',
     "swap": '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
     "close": '<path d="M6 6l12 12M18 6L6 18"/>',
+    "plus": '<path d="M12 5v14M5 12h14"/>',
+    "minus": '<path d="M5 12h14"/>',
+    "sound": '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
+    "mute": '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9.5l5 5M22 9.5l-5 5"/>',
     "check": '<path d="M5 12l5 5 9-10"/>',
     "bolt": '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
 }

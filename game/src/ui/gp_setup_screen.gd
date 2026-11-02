@@ -111,7 +111,7 @@ func _ready() -> void:
 	_refresh_cta()
 
 	# calendário em carrossel
-	_scroll = ScrollContainer.new()
+	_scroll = DragScroll.new()
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	layer.add_child(_scroll)
@@ -230,7 +230,7 @@ func _chip(text: String, bg: Color, fg: Color) -> PanelContainer:
 	p.add_theme_stylebox_override("panel", UiStyle.g_box(bg, 9, 7, 1))
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var l := UiStyle.g_caption(text, fg)
-	l.add_theme_font_size_override("font_size", 11)
+	l.add_theme_font_size_override("font_size", UiStyle.fs(11))
 	p.add_child(l)
 	return p
 
@@ -262,7 +262,7 @@ func _select(circuit_id: String) -> void:
 		UiStyle.team_color(Session.player_team), "flag"))
 	var title := String(c["grand_prix"]).to_upper()
 	_gp_title.text = title
-	_gp_title.add_theme_font_size_override("font_size", UiStyle.FS_DISPLAY if title.length() <= 16 else 40)
+	_gp_title.add_theme_font_size_override("font_size", UiStyle.fs(UiStyle.FS_DISPLAY if title.length() <= 16 else 40))
 	var fmt := "fim de semana sprint" if c.get("sprint", false) else "fim de semana normal"
 	if c.get("night", false):
 		fmt += " · noturna"

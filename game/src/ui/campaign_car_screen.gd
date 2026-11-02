@@ -73,7 +73,7 @@ func _ready() -> void:
 
 	_right = VBoxContainer.new()
 	_right.add_theme_constant_override("separation", 6)
-	ScreenKit.place(_right, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 146), Vector2(384, 0))
+	ScreenKit.scroll_column(_right, _layer, Vector2(1280 - 44 - 384, 146), Vector2(384, 720 - 146 - 8))
 
 	_toasts = ToastFeed.new()
 	_toasts.custom_minimum_size = Vector2(380, 0)
@@ -277,7 +277,7 @@ func _node_card() -> Control:
 	var go := CutButton.new()
 	go.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	go.custom_minimum_size = Vector2(0, 48)
-	go.add_theme_font_size_override("font_size", 15)
+	go.add_theme_font_size_override("font_size", UiStyle.fs(15))
 	if state == "now":
 		go.text = "CANCELAR PROJETO"
 		go.pressed.connect(_on_cancel.bind(_selected))
@@ -296,7 +296,7 @@ func _node_card() -> Control:
 		sug.add_theme_stylebox_override(s, UiStyle.g_box(Color("#e3e6eb"), 14, 10, 0))
 	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 		sug.add_theme_color_override(k, UiStyle.G_INK)
-	sug.add_theme_font_size_override("font_size", 15)
+	sug.add_theme_font_size_override("font_size", UiStyle.fs(15))
 	sug.pressed.connect(_on_suggest)
 	ScreenKit.press_feedback(sug)
 	row.add_child(sug)
@@ -315,7 +315,7 @@ func _hint_card() -> Control:
 	v.add_child(t)
 	var sug := ScreenKit.light_button("SUGERIR UM NÓ")
 	sug.custom_minimum_size = Vector2(0, 48)
-	sug.add_theme_font_size_override("font_size", 15)
+	sug.add_theme_font_size_override("font_size", UiStyle.fs(15))
 	sug.pressed.connect(_on_suggest)
 	v.add_child(sug)
 	return card
@@ -344,7 +344,7 @@ func _director_card() -> Control:
 			b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_INK if on else Color("#e3e6eb"), 12, 6, 0))
 		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 			b.add_theme_color_override(k, Color.WHITE if on else UiStyle.G_INK)
-		b.add_theme_font_size_override("font_size", 13)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(13))
 		b.pressed.connect(_on_focus.bind(o[0]))
 		ScreenKit.press_feedback(b)
 		focus.add_child(b)
@@ -518,7 +518,7 @@ class Donut:
 			draw_rect(Rect2(c + Vector2(-6, -2), Vector2(12, 9)), UiStyle.G_TEXT_2)
 			draw_arc(c + Vector2(0, -2), 4.0, PI, TAU, 10, UiStyle.G_TEXT_2, 2.0, true)
 		elif text != "":
-			draw_string(UiStyle.G_BLACK, Vector2(0, c.y + 4.0), text, HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, text_color)
+			draw_string(UiStyle.G_BLACK, Vector2(0, c.y + 4.0), text, HORIZONTAL_ALIGNMENT_CENTER, size.x, UiStyle.fs(11), text_color)
 
 
 ## Ícones da legenda (hexágono, quadrado, quadrado grande).

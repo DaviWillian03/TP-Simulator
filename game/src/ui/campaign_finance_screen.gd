@@ -240,7 +240,7 @@ class CashChart:
 			return Vector2(x0 + w * r / float(maxi(rounds, 1)), 8.0 + (1.0 - (cash - lo) / maxf(hi - lo, 0.01)) * (h - 16.0))
 		var ry: float = (pt.call(0.0, CarDevelopment.RESERVE_MUSD) as Vector2).y
 		draw_dashed_line(Vector2(x0, ry), Vector2(x0 + w, ry), Color(1, 0.42, 0.35, 0.5), 1.5, 6.0)
-		draw_string(UiStyle.G_BOLD, Vector2(x0 + 4, ry - 5), "RESERVA MÍNIMA", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#ff6a5a"))
+		draw_string(UiStyle.G_BOLD, Vector2(x0 + 4, ry - 5), "RESERVA MÍNIMA", HORIZONTAL_ALIGNMENT_LEFT, -1, UiStyle.fs(11), Color("#ff6a5a"))
 		var pp := PackedVector2Array()
 		for p: Array in proj:
 			pp.append(pt.call(float(p[0]), float(p[1])))
@@ -256,5 +256,5 @@ class CashChart:
 		var end: Vector2 = lp[lp.size() - 1]
 		draw_circle(end, 7.0, Color.WHITE, true, -1.0, true)
 		draw_arc(end, 7.0, 0.0, TAU, 20, Color("#3ec9a6"), 3.0, true)
-		draw_string(UiStyle.G_BOLD, Vector2(x0, size.y - 6), "RD 1", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, UiStyle.G_TEXT_3)
-		draw_string(UiStyle.G_BOLD, Vector2(x0 + w - 40, size.y - 6), "RD %d" % rounds, HORIZONTAL_ALIGNMENT_RIGHT, 40, 11, UiStyle.G_TEXT_3)
+		draw_string(UiStyle.G_BOLD, Vector2(x0, size.y - 6), "RD 1", HORIZONTAL_ALIGNMENT_LEFT, -1, UiStyle.fs(11), UiStyle.G_TEXT_3)
+		draw_string(UiStyle.G_BOLD, Vector2(x0 + w - 40, size.y - 6), "RD %d" % rounds, HORIZONTAL_ALIGNMENT_RIGHT, 40, UiStyle.fs(11), UiStyle.G_TEXT_3)

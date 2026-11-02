@@ -129,7 +129,8 @@ P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, 
 ### D. Corrida, 3D e experiência
 12. **Cenários 3D** (#1): conferir relevo e cenário dos 22 circuitos (chão de Xangai, escala dos pinheiros, materiais) e trocar por modelos/texturas CC0
     quando kenney.nl/polyhaven.com forem liberados. Pop-ups do **campeonato mundial** durante a corrida (#1) só existem para eventos da corrida.
-13. **Revisão de jogabilidade no aparelho**: toque, tamanho dos alvos, legibilidade da corrida e do box, desempenho do 3D no celular.
+13. ✅ 1ª rodada (2026-11-02): som na corrida, zoom por pinça e botões, bolinhas por equipe, letra maior, arrastar para rolar.
+    **Revisão de jogabilidade no aparelho** (continua): toque, tamanho dos alvos, legibilidade da corrida e do box, desempenho do 3D no celular.
 
 ### E. Plataforma e qualidade
 14. **Android**: instalar o SDK (liberar `dl.google.com`), gerar o APK de teste (preset e `scripts/build-apk.sh` prontos) e validar em aparelho.
@@ -137,4 +138,4 @@ P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, 
     arquivos em paralelo (`scripts/run-tests.sh`), reduzir as corridas simuladas dentro dos testes e separar os testes lentos.
 16. **Balanceamento de economia** (simular várias temporadas em lote: caixa, P&D, folha, patrocínio) e de eventos; pesos de IA.
 17. **Acabamento**: tela de configurações, tutorial/ajuda, vários slots de campanha, versão do save (migração), tela de abertura e ícone finais,
-    revisão de textos, `docs/THIRD_PARTY.md` completo. (Som segue fora do escopo: P7 foi recusada.)
+    revisão de textos, `docs/THIRD_PARTY.md` completo. Som: já há som na corrida (2026-11-02); faltam música/sons de menu se o usuário quiser.

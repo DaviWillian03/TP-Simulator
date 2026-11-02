@@ -76,11 +76,7 @@ func test_sugerir_escolhe_um_no_aberto() -> void:
 
 func test_tela_da_fabrica_tem_quatro_cartoes_e_iniciar_obra() -> void:
 	var screen: Control = await _open("res://src/ui/campaign_factory_screen.tscn")
-	var cards := 0
-	for c in screen._layer.get_children():
-		if c is PanelContainer and (c as Control).custom_minimum_size == Vector2(574, 252):
-			cards += 1
-	assert_eq(cards, 4)
+	assert_eq(screen._grid.get_child_count(), 4, "um cartão por estrutura, na grade que rola")
 	var before := camp.budget_musd
 	camp.dev.start_upgrade(camp, "sim")
 	assert_lt(camp.budget_musd, before)

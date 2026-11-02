@@ -62,7 +62,7 @@ func _ready() -> void:
 	rest.text = "SIMULAR RESTO"
 	rest.focus_mode = Control.FOCUS_NONE
 	rest.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN + 4)
-	rest.add_theme_font_size_override("font_size", 15)
+	rest.add_theme_font_size_override("font_size", UiStyle.fs(15))
 	rest.pressed.connect(_simulate_rest)
 	ScreenKit.press_feedback(rest)
 	tools.add_child(rest)
@@ -72,7 +72,7 @@ func _ready() -> void:
 	tools.add_child(_clock)
 	ScreenKit.place(tools, layer, Control.PRESET_TOP_RIGHT, Vector2(-40, 30))
 
-	var scroll := ScrollContainer.new()
+	var scroll := DragScroll.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	layer.add_child(scroll)
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
@@ -149,7 +149,7 @@ func _player_panel(car: CarState) -> Control:
 	var go := CutButton.new()
 	go.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
 	go.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	go.add_theme_font_size_override("font_size", 17)
+	go.add_theme_font_size_override("font_size", UiStyle.fs(17))
 	v.add_child(go)
 	var panel := {"car": car, "pos": pos, "status": status, "tyres": tyres, "go": go}
 	go.pressed.connect(_send_out.bind(panel))
@@ -222,7 +222,7 @@ func _refresh_ui() -> void:
 	_sub.text = "%s · %s · %s" % [weekend.circuit["grand_prix"], seg["name"],
 		("%d avançam" % adv) if adv > 0 else "disputa da pole"]
 	_clock.text = "%s %s" % [seg["name"], "BANDEIRA VERMELHA" if q.is_red_flag() else ScreenKit.clock(q.time_left_s())]
-	_clock.add_theme_font_size_override("font_size", 20 if q.is_red_flag() else 30)
+	_clock.add_theme_font_size_override("font_size", UiStyle.fs(20 if q.is_red_flag() else 30))
 	if q.is_over():
 		_clock.text = "ENCERRADA"
 	var order := q.standings()

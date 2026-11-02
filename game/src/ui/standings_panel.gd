@@ -31,7 +31,7 @@ func setup(p_sim: RaceSim) -> void:
 	v.add_theme_constant_override("separation", 0)
 	add_child(v)
 	v.add_child(_header())
-	var scroll := ScrollContainer.new()
+	var scroll := DragScroll.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	v.add_child(scroll)
@@ -88,7 +88,7 @@ func _seg_button(text: String, group: ButtonGroup, on: bool) -> Button:
 	b.focus_mode = Control.FOCUS_NONE
 	b.custom_minimum_size = Vector2(0, 26)
 	ScreenKit._selectable_styles(b, 12)
-	b.add_theme_font_size_override("font_size", 11)
+	b.add_theme_font_size_override("font_size", UiStyle.fs(11))
 	return b
 
 
@@ -109,7 +109,7 @@ func _make_row(index: int) -> Dictionary:
 	pos.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pos.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	(pos.get_child(0) as Label).add_theme_font_override("font", UiStyle.G_BLACK)
-	(pos.get_child(0) as Label).add_theme_font_size_override("font_size", 13)
+	(pos.get_child(0) as Label).add_theme_font_size_override("font_size", UiStyle.fs(13))
 	h.add_child(pos)
 	var emblem := TeamEmblems.make_rect("", 22)
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE

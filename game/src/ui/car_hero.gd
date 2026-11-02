@@ -62,5 +62,5 @@ func _layout() -> void:
 	_shadow.size = Vector2(w * 0.96, h * 0.14)
 	_refl.position = Vector2(0, 2.0 * g - h)
 	_refl.size = Vector2(w, h)
-	_number.add_theme_font_size_override("font_size", int(w * 0.036))
+	_number.add_theme_font_size_override("font_size", UiStyle.fs(int(w * 0.036)))
 	_number.position = Vector2(w * 0.632, h * 0.5)

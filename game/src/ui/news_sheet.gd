@@ -44,7 +44,7 @@ func setup(camp: Campaign) -> void:
 		camp.events.freq = f
 		camp.save()))
 	v.add_child(row)
-	var scroll := ScrollContainer.new()
+	var scroll := DragScroll.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	v.add_child(scroll)

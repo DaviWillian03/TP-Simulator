@@ -116,7 +116,7 @@ func _ready() -> void:
 	if not bad:
 		var council := ScreenKit.light_button("CONSELHO DE REGRAS")
 		council.custom_minimum_size = Vector2(300, UiStyle.TOUCH_MAIN + 4)
-		council.add_theme_font_size_override("font_size", 16)
+		council.add_theme_font_size_override("font_size", UiStyle.fs(16))
 		council.pressed.connect(Session.open_campaign_council)
 		ScreenKit.place(council, layer, Control.PRESET_BOTTOM_RIGHT, Vector2(-44 - 380 - 16, -30))
 	layer.modulate = Color(1, 1, 1, 0)

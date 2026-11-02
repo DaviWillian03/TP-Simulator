@@ -289,7 +289,7 @@ func _build_identity() -> void:
 	country.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 14, 18, 0))
 	country.add_theme_stylebox_override("hover", UiStyle.g_box(UiStyle.G_SURFACE_PRESS, 14, 18, 0))
 	country.add_theme_stylebox_override("pressed", UiStyle.g_box(UiStyle.G_SURFACE_PRESS, 14, 18, 0))
-	country.add_theme_font_size_override("font_size", 19)
+	country.add_theme_font_size_override("font_size", UiStyle.fs(19))
 	country.pressed.connect(_open_countries.bind(country))
 	cv.add_child(country)
 	row.add_child(cv)
@@ -377,7 +377,7 @@ func _line_edit(value: String, placeholder: String, max_len: int) -> LineEdit:
 	focus.set_border_width_all(2)
 	e.add_theme_stylebox_override("focus", focus)
 	e.add_theme_font_override("font", UiStyle.G_BOLD)
-	e.add_theme_font_size_override("font_size", 20)
+	e.add_theme_font_size_override("font_size", UiStyle.fs(20))
 	e.add_theme_color_override("font_color", UiStyle.G_TEXT)
 	e.add_theme_color_override("font_placeholder_color", UiStyle.G_TEXT_OFF)
 	return e
@@ -549,7 +549,7 @@ func _tile_button(title: String, sub: String, group: ButtonGroup) -> Button:
 	b.text = title if sub == "" else "%s\n%s" % [title, sub]
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.add_theme_font_override("font", UiStyle.G_BOLD)
-	b.add_theme_font_size_override("font_size", 16)
+	b.add_theme_font_size_override("font_size", UiStyle.fs(16))
 	b.add_theme_color_override("font_color", UiStyle.G_TEXT)
 	b.add_theme_color_override("font_disabled_color", UiStyle.G_TEXT_OFF)
 	return b
@@ -616,7 +616,7 @@ func _build_drivers() -> void:
 	var count := UiStyle.g_label("%d pilotos reais · F2 e F3 2026" % Campaign.feeder_drivers().size(), 14, UiStyle.G_TEXT_3)
 	count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	head.add_child(count)
-	var scroll := ScrollContainer.new()
+	var scroll := DragScroll.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	v.add_child(scroll)

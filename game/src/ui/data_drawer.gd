@@ -32,9 +32,10 @@ func setup(p_sim: RaceSim) -> void:
 	close.pressed.connect(func() -> void: closed.emit())
 	head.add_child(close)
 	v.add_child(head)
-	var scroll := ScrollContainer.new()
+	var scroll := DragScroll.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	# a tabela larga desliza para o lado também (todas as colunas com a letra maior)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	v.add_child(scroll)
 	_body = VBoxContainer.new()
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL

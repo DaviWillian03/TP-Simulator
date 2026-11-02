@@ -71,7 +71,7 @@ func _ready() -> void:
 
 ## Tabela rolável com título, ocupando a altura útil da tela.
 func _table(layer: Control, title: String, x: float, w: float) -> TimingTable:
-	var scroll := ScrollContainer.new()
+	var scroll := DragScroll.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	layer.add_child(scroll)
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)

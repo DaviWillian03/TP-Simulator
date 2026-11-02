@@ -47,11 +47,14 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	head.add_child(num)
 	_rule_label = UiStyle.g_label("", 12, Color("#ffb4a8"), "bold")
 	_rule_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# avisos encolhem com "…" em vez de alargar o cartão (a letra ficou maior)
+	_rule_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rule_label.clip_text = true
+	_rule_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	head.add_child(_rule_label)
 	_damage_label = UiStyle.g_label("", 12, Color("#ffd24a"), "black")
 	_damage_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(_damage_label)
-	head.add_child(UiStyle.hspacer())
 	_pos_label = UiStyle.g_label("P–", 27, UiStyle.RED, "black")
 	head.add_child(_pos_label)
 	v.add_child(head)
@@ -62,7 +65,9 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_tyre_badge.custom_minimum_size = Vector2(20, 20)
 	tyre.add_child(_tyre_badge)
 	_tyre_label = UiStyle.g_label("", 12, Color("#c3c9d3"))
-	_tyre_label.custom_minimum_size = Vector2(84, 0)
+	_tyre_label.custom_minimum_size = Vector2(110, 0)
+	_tyre_label.clip_text = true
+	_tyre_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	tyre.add_child(_tyre_label)
 	_life_bar = StandingsPanel.LifeBar.new()
 	_life_bar.custom_minimum_size = Vector2(0, 18)
@@ -90,6 +95,7 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	modes.add_theme_constant_override("separation", 8)
 	modes.add_child(_segment([["Poupar", CarState.PaceMode.CONSERVE], ["Normal", CarState.PaceMode.NORMAL], ["Atacar", CarState.PaceMode.ATTACK]],
 		car.pace_mode, _pace_buttons, func(m: int) -> void: sim.set_pace_mode(car, m)))
+	modes.get_child(0).size_flags_stretch_ratio = 0.85  # palavras do ritmo são mais curtas
 	modes.add_child(_segment([["Carregar", CarState.EnergyMode.HARVEST], ["Equilíbrio", CarState.EnergyMode.BALANCED], ["Bateria", CarState.EnergyMode.DEPLOY]],
 		car.energy_mode, _energy_buttons, func(m: int) -> void: sim.set_energy_mode(car, m)))
 	v.add_child(modes)
@@ -122,7 +128,7 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_box_btn.text = "CHAMAR P/ BOX"
 	_box_btn.custom_minimum_size = Vector2(0, 44)
 	_box_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_box_btn.add_theme_font_size_override("font_size", 15)
+	_box_btn.add_theme_font_size_override("font_size", UiStyle.fs(15))
 	_box_btn.pressed.connect(func() -> void: pit_pressed.emit(car))
 	pit.add_child(_box_btn)
 	v.add_child(pit)
@@ -144,9 +150,14 @@ func _segment(options: Array, selected: int, store: Dictionary, on_pick: Callabl
 		b.button_group = group
 		b.focus_mode = Control.FOCUS_NONE
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size = Vector2(0, 34)
+		b.custom_minimum_size = Vector2(0, 38)
+		b.clip_text = true  # os três dividem a largura; o texto não alarga o cartão
 		ScreenKit._selectable_styles(b, 17)
-		b.add_theme_font_size_override("font_size", 12)
+		for st: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+			var sb: StyleBoxFlat = b.get_theme_stylebox(st)
+			sb.content_margin_left = 2
+			sb.content_margin_right = 2
+		b.add_theme_font_size_override("font_size", UiStyle.fs(12))
 		b.button_pressed = o[1] == selected
 		b.pressed.connect(on_pick.bind(o[1]))
 		store[o[1]] = b

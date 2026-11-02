@@ -32,9 +32,13 @@ das escolhas técnicas.
   **Garagem** (seção "Garagem" do UiStyle + peças em `ScreenKit`, `GarageBackdrop`, `CutButton`,
   `CarHero`); migradas: tudo (tela inicial, GP, fim de semana, treino, classificação, corrida, box e campanha)
   (`TimingTable` com estilo "garage"). Todas as telas jogáveis já são Garagem (corrida, box, classificação, resultados e campanha).
-  Mínimos: texto 12 px, alvo de toque 44 px (ação principal 56). Emblemas sempre via
+  Mínimos: texto 12 px, alvo de toque 44 px (ação principal 56). Tamanho de fonte **sempre** via `UiStyle.fs()`
+  (escala global da letra). Listas/colunas que podem passar da tela: `DragScroll` (arrastar rola; nunca ScrollContainer puro)
+  ou `ScreenKit.scroll_column`. Emblemas sempre via
   `TeamEmblems` (prioridade: `user://import/emblems/`, depois `game/local/emblems/` — ignorada
   pelo git, para logos pessoais —, depois os originais).
+- `src/audio/race_audio.gd` — som da corrida (sons originais de `tools/make_sounds.py` em `assets/audio/`).
+  Na pista 3D os carros são bolinhas na cor da equipe (do jogador: maiores, com anel); zoom por pinça/botões.
 - `src/core/session.gd` — autoload `Session` (escolhas do menu + opções de desenvolvimento).
 - `test/unit`, `test/integration` — GUT. `tools/race_report.gd` — relatório de corridas simuladas.
 - Raiz: `tools/make_logo.py` (logo), `tools/make_emblems.py` (emblemas), `tools/make_car_art.py`

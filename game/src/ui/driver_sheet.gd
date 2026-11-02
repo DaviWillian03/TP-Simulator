@@ -120,7 +120,7 @@ func setup(camp: Campaign, id: String) -> void:
 	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 		close.add_theme_stylebox_override(s, UiStyle.g_box(Color(1, 1, 1, 0.1), 14, 20, 0))
 	close.add_theme_font_override("font", UiStyle.G_BLACK)
-	close.add_theme_font_size_override("font_size", 16)
+	close.add_theme_font_size_override("font_size", UiStyle.fs(16))
 	close.pressed.connect(func() -> void:
 		closed.emit()
 		queue_free())
@@ -130,7 +130,7 @@ func setup(camp: Campaign, id: String) -> void:
 	var go := CutButton.new()
 	go.text = "RENOVAR" if mine else "NEGOCIAR"
 	go.custom_minimum_size = Vector2(220, UiStyle.TOUCH_MAIN)
-	go.add_theme_font_size_override("font_size", 18)
+	go.add_theme_font_size_override("font_size", UiStyle.fs(18))
 	go.pressed.connect(func() -> void:
 		negotiate.emit(id)
 		queue_free())

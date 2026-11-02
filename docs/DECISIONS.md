@@ -335,3 +335,17 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   equipes votam (IA por força do carro + 15% de ruído), jogador só vota, maioria simples, empate barra; valem na temporada seguinte e entram nos
   fins de semana (`points_race`, `sprint`, `min_dry_compounds`).
 - Telas: cartão de evento na sede (`EventCard`), lista e frequência (`NewsSheet`, botão Notícias), `campaign_council_screen` (aba Conselho, botão no relatório).
+
+### Ajustes de jogabilidade pedidos após testar o APK (2026-11-02)
+- **Som na corrida** (muda a decisão antiga de deixar som fora): ronco de fundo de vários carros, passagens de carro
+  alternadas (3 variações com efeito Doppler, em intervalos aleatórios), torcida em loop, torcida vibrando nas ultrapassagens
+  (mais forte com os carros do jogador) e na bandeirada, semáforo da largada, pistola do box nas paradas do jogador, clique de
+  rádio e alerta de bandeira/safety car. Sons **originais por síntese** (`tools/make_sounds.py` → `game/assets/audio/`);
+  botão de som na barra da corrida. Código: `src/audio/race_audio.gd` (só escuta os sinais do RaceSim).
+- **Zoom da pista**: pinça com dois dedos (tratada à mão, porque no celular o gesto chega como dois toques), botões + / −
+  na pista e roda do mouse; distância entre 40 e 4000 m.
+- **Bolinhas na cor da equipe** no lugar dos carros 3D; os carros do jogador são maiores e têm anel branco — sem siglas.
+- **Letra maior em todo o jogo**: `UiStyle.fs()` — até 22 px cresce 20% (12 → 14), títulos ganham +4 px. Tudo passa por ela.
+- **Arrastar para rolar** em todas as listas, tabelas e faixas laterais: `DragScroll` lê o arrasto antes dos botões; arrastar
+  não aperta botão; inércia ao soltar. Colunas que passam do fim da tela rolam (`ScreenKit.scroll_column`), a barra de abas da
+  campanha e os blocos do treino deslizam para o lado, e a tabela de Dados da corrida desliza para o lado.

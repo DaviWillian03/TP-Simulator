@@ -62,7 +62,7 @@ func setup(item: Dictionary) -> void:
 	var ok := CutButton.new()
 	ok.text = "ENTENDI"
 	ok.custom_minimum_size = Vector2(260, UiStyle.TOUCH_MAIN)
-	ok.add_theme_font_size_override("font_size", 18)
+	ok.add_theme_font_size_override("font_size", UiStyle.fs(18))
 	ok.pressed.connect(func() -> void:
 		dismissed.emit()
 		queue_free())

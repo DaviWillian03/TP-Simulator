@@ -156,6 +156,17 @@ static func garage_page(screen: Control, team_id: String) -> Dictionary:
 
 
 ## Posiciona um elemento por âncora e deslocamento (referência 1280×720).
+## Coloca uma coluna dentro de uma lista que rola na vertical arrastando o dedo
+## (para colunas que, com a letra maior, passam do fim da tela).
+static func scroll_column(node: Control, parent: Control, offset: Vector2, size: Vector2) -> DragScroll:
+	var sc := DragScroll.new()
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(node)
+	place(sc, parent, Control.PRESET_TOP_LEFT, offset, size)
+	return sc
+
+
 static func place(node: Control, parent: Control, preset: Control.LayoutPreset, offset: Vector2, min_size := Vector2.ZERO) -> Control:
 	parent.add_child(node)
 	if min_size != Vector2.ZERO:
@@ -391,7 +402,7 @@ static func _selectable_styles(b: Button, radius: int) -> void:
 	b.add_theme_color_override("font_hover_color", UiStyle.G_TEXT)
 	b.add_theme_color_override("font_pressed_color", UiStyle.G_INK)
 	b.add_theme_color_override("font_hover_pressed_color", UiStyle.G_INK)
-	b.add_theme_font_size_override("font_size", UiStyle.FS_BODY)
+	b.add_theme_font_size_override("font_size", UiStyle.fs(UiStyle.FS_BODY))
 
 
 ## Número grande com legenda (dados do circuito).
@@ -414,7 +425,7 @@ static func badge(text: String, fill: Color, icon_name: String = "") -> PanelCon
 	if icon_name != "":
 		h.add_child(icon(icon_name, 16, fg))
 	var l := UiStyle.g_caption(text, fg)
-	l.add_theme_font_size_override("font_size", 13)
+	l.add_theme_font_size_override("font_size", UiStyle.fs(13))
 	h.add_child(l)
 	p.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	return p
@@ -580,7 +591,7 @@ static func light_button(text: String) -> Button:
 	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 		b.add_theme_color_override(k, UiStyle.G_INK)
 	b.add_theme_font_override("font", UiStyle.G_BLACK)
-	b.add_theme_font_size_override("font_size", 19)
+	b.add_theme_font_size_override("font_size", UiStyle.fs(19))
 	press_feedback(b)
 	return b
 
@@ -622,7 +633,7 @@ static func popover(screen: Control, anchor: Control, title: String, options: Ar
 			b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_INK if on else Color("#e3e6eb"), 12, 14, 0))
 		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 			b.add_theme_color_override(k, Color.WHITE if on else UiStyle.G_INK)
-		b.add_theme_font_size_override("font_size", UiStyle.FS_BODY)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(UiStyle.FS_BODY))
 		var val: Variant = o[0]
 		b.pressed.connect(func() -> void:
 			on_pick.call(val)
@@ -655,7 +666,7 @@ static func campaign_nav(layer: Control, active: String, y: float = 88.0) -> Pan
 		b.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_LIGHT if on else Color(0, 0, 0, 0), UiStyle.R_PILL - 4, 20, 0))
 		b.add_theme_color_override("font_color", UiStyle.G_INK if on else UiStyle.G_TEXT)
 		b.add_theme_color_override("font_disabled_color", UiStyle.G_TEXT_OFF)
-		b.add_theme_font_size_override("font_size", UiStyle.FS_BODY)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(UiStyle.FS_BODY))
 		b.disabled = t[1] == ""
 		if t[1] != "" and not on:
 			match t[1]:
@@ -676,5 +687,12 @@ static func campaign_nav(layer: Control, active: String, y: float = 88.0) -> Pan
 				"council":
 					b.pressed.connect(Session.open_campaign_council)
 		nh.add_child(b)
-	place(nav, layer, Control.PRESET_TOP_LEFT, Vector2(44, y))
+	# com a letra maior as abas podem passar da largura da tela: a faixa desliza para o lado
+	var strip := DragScroll.new()
+	strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE  # a parte vazia da faixa não bloqueia o que está ao lado
+	nav.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	strip.add_child(nav)
+	place(strip, layer, Control.PRESET_TOP_LEFT, Vector2(44, y), Vector2(1280 - 88, UiStyle.TOUCH_MIN + 8))
 	return nav

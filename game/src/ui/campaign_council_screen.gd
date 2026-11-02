@@ -61,7 +61,7 @@ func _ready() -> void:
 		var done := CutButton.new()
 		done.text = "CONFIRMAR VOTOS E FECHAR"
 		done.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN + 2)
-		done.add_theme_font_size_override("font_size", 16)
+		done.add_theme_font_size_override("font_size", UiStyle.fs(16))
 		done.pressed.connect(_confirm)
 		rv.add_child(done)
 	ScreenKit.place(right, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 150), Vector2(400, 0))
@@ -124,7 +124,7 @@ func _proposal(p: Dictionary) -> Control:
 		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 			b.add_theme_color_override(k, UiStyle.G_INK if on else UiStyle.G_TEXT)
 		b.add_theme_font_override("font", UiStyle.G_BLACK)
-		b.add_theme_font_size_override("font_size", 14)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(14))
 		b.pressed.connect(_on_vote.bind(id, o[0]))
 		ScreenKit.press_feedback(b)
 		top.add_child(b)

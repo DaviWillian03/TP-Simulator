@@ -90,9 +90,9 @@ func _draw() -> void:
 			count += 1
 	var title: String = String(dep["name"]).to_upper()
 	var font := UiStyle.G_BLACK
-	draw_string(font, c + Vector2(-HUB_R, -2), title, HORIZONTAL_ALIGNMENT_CENTER, HUB_R * 2.0, 15, UiStyle.G_TEXT)
+	draw_string(font, c + Vector2(-HUB_R, -2), title, HORIZONTAL_ALIGNMENT_CENTER, HUB_R * 2.0, UiStyle.fs(15), UiStyle.G_TEXT)
 	draw_string(UiStyle.G_BOLD, c + Vector2(-HUB_R, 17), "%d / %d · %d%%" % [count, total, roundi(100.0 * count / maxf(total, 1))] if not locked else "motor do fornecedor",
-		HORIZONTAL_ALIGNMENT_CENTER, HUB_R * 2.0, 12, UiStyle.G_TEXT_2)
+		HORIZONTAL_ALIGNMENT_CENTER, HUB_R * 2.0, UiStyle.fs(12), UiStyle.G_TEXT_2)
 	for a in dep["arms"].size():
 		var arm_col: Color = ARM_COLORS[a] if not locked else Color("#4b5260")
 		var nodes: Array = dep["arms"][a]["nodes"]
@@ -136,7 +136,7 @@ func _draw_node(p: Vector2, kind: String, state: String, col: Color, sel: bool, 
 			var r := 28.0 if kind == "d" else 22.0
 			draw_arc(p, r, 0.0, TAU, 48, Color(1, 1, 1, 0.14), 4.0, true)
 			draw_arc(p, r, -PI / 2.0, -PI / 2.0 + TAU * clampf(frac, 0.02, 1.0), 48, col, 4.0, true)
-			draw_string(UiStyle.G_BLACK, p + Vector2(-16, 5), "%dd" % int(pr.get("days_left", 0)), HORIZONTAL_ALIGNMENT_CENTER, 32.0, 13, ink)
+			draw_string(UiStyle.G_BLACK, p + Vector2(-16, 5), "%dd" % int(pr.get("days_left", 0)), HORIZONTAL_ALIGNMENT_CENTER, 32.0, UiStyle.fs(13), ink)
 		"lock":
 			draw_rect(Rect2(p + Vector2(-4.5, -1), Vector2(9, 7)), stroke)
 			draw_arc(p + Vector2(0, -1), 3.0, PI, TAU, 10, stroke, 1.6, true)

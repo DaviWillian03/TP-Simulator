@@ -34,7 +34,7 @@ func _ready() -> void:
 		cont.text = "CONTINUAR · %s · RD %d" % [String(saved.team().get("name", "")).to_upper(), mini(saved.round + 1, 22)]
 		cont.focus_mode = Control.FOCUS_NONE
 		cont.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
-		cont.add_theme_font_size_override("font_size", 16)
+		cont.add_theme_font_size_override("font_size", UiStyle.fs(16))
 		cont.icon = load("res://assets/icons/chevron.svg")
 		cont.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		cont.add_theme_constant_override("icon_max_width", 20)
@@ -107,7 +107,7 @@ func _choice(light: bool, kicker: String, title: String, desc: String, pills: Ar
 		b.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 14, 24, 0))
 		b.add_theme_stylebox_override("hover", UiStyle.g_box(UiStyle.G_SURFACE_PRESS, 14, 24, 0))
 		b.add_theme_stylebox_override("pressed", UiStyle.g_box(UiStyle.G_SURFACE_PRESS, 14, 24, 0))
-		b.add_theme_font_size_override("font_size", 17)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(17))
 		ScreenKit.press_feedback(b)
 	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	v.add_child(b)

@@ -60,7 +60,7 @@ func _ready() -> void:
 
 	_left = VBoxContainer.new()
 	_left.add_theme_constant_override("separation", 8)
-	ScreenKit.place(_left, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 150), Vector2(600, 0))
+	ScreenKit.scroll_column(_left, _layer, Vector2(44, 150), Vector2(600, 720 - 150 - 12))
 
 	var market := PanelContainer.new()
 	market.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.05), 22, 18, 14))
@@ -275,7 +275,7 @@ func _staff_row(role: String) -> Control:
 	go.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
 	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 		go.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 12, 10, 0))
-	go.add_theme_font_size_override("font_size", 12)
+	go.add_theme_font_size_override("font_size", UiStyle.fs(12))
 	go.pressed.connect(_on_swap.bind(role))
 	ScreenKit.press_feedback(go)
 	row.add_child(go)
@@ -320,12 +320,12 @@ func _build_market() -> void:
 			b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_LIGHT if on else Color(1, 1, 1, 0.08), 18, 12, 0))
 		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 			b.add_theme_color_override(k, UiStyle.G_INK if on else Color("#c3c9d3"))
-		b.add_theme_font_size_override("font_size", 13)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(13))
 		b.pressed.connect(_on_filter.bind(o[0]))
 		ScreenKit.press_feedback(b)
 		chips.add_child(b)
 	_market_box.add_child(chips)
-	var scroll := ScrollContainer.new()
+	var scroll := DragScroll.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_market_box.add_child(scroll)
@@ -579,7 +579,7 @@ class NegotiationSheet:
 		b.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN, UiStyle.TOUCH_MIN)
 		for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 			b.add_theme_stylebox_override(s, UiStyle.g_box(Color(1, 1, 1, 0.12 if s == "normal" else 0.22), 22, 0, 0))
-		b.add_theme_font_size_override("font_size", 22)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(22))
 		b.pressed.connect(cb)
 		ScreenKit.press_feedback(b)
 		return b
@@ -654,7 +654,7 @@ class NegotiationSheet:
 		for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 			cancel.add_theme_stylebox_override(s, UiStyle.g_box(Color(1, 1, 1, 0.1), 14, 20, 0))
 		cancel.add_theme_font_override("font", UiStyle.G_BLACK)
-		cancel.add_theme_font_size_override("font_size", 16)
+		cancel.add_theme_font_size_override("font_size", UiStyle.fs(16))
 		cancel.pressed.connect(func() -> void: closed.emit(""); queue_free())
 		ScreenKit.press_feedback(cancel)
 		h.add_child(cancel)
@@ -666,21 +666,21 @@ class NegotiationSheet:
 			for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 				dis.add_theme_stylebox_override(s, UiStyle.g_box(Color(0.88, 0.02, 0.0, 0.22), 14, 18, 0))
 			dis.add_theme_font_override("font", UiStyle.G_BLACK)
-			dis.add_theme_font_size_override("font_size", 14)
+			dis.add_theme_font_size_override("font_size", UiStyle.fs(14))
 			dis.pressed.connect(_on_dismiss)
 			ScreenKit.press_feedback(dis)
 			h.add_child(dis)
 		h.add_child(UiStyle.hspacer())
 		_accept_btn = ScreenKit.light_button("ACEITAR CONTRA")
 		_accept_btn.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
-		_accept_btn.add_theme_font_size_override("font_size", 16)
+		_accept_btn.add_theme_font_size_override("font_size", UiStyle.fs(16))
 		_accept_btn.visible = false
 		_accept_btn.pressed.connect(_on_accept_counter)
 		h.add_child(_accept_btn)
 		_propose_btn = CutButton.new()
 		_propose_btn.text = "PROPOR"
 		_propose_btn.custom_minimum_size = Vector2(190, UiStyle.TOUCH_MAIN)
-		_propose_btn.add_theme_font_size_override("font_size", 18)
+		_propose_btn.add_theme_font_size_override("font_size", UiStyle.fs(18))
 		_propose_btn.pressed.connect(_on_propose)
 		h.add_child(_propose_btn)
 		return h
@@ -701,7 +701,7 @@ class NegotiationSheet:
 			b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
 			ScreenKit._selectable_styles(b, 14)
 			b.add_theme_stylebox_override("normal", UiStyle.g_box(Color(1, 1, 1, 0.08), 14, 12, 0))
-			b.add_theme_font_size_override("font_size", 14)
+			b.add_theme_font_size_override("font_size", UiStyle.fs(14))
 			var did: String = d["id"]
 			b.pressed.connect(func() -> void:
 				replace_id = did

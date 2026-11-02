@@ -5,13 +5,17 @@ extends SubViewportContainer
 ## Controles: arrastar = girar · pinça/roda do mouse = zoom · botão de câmera = alterna entre
 ## visão geral, seguir seus pilotos e seguir o líder.
 
-const CAR_SCALE := 4.0  ## ampliação máxima dos carros (câmera longe)
+const CAR_SCALE := 6.0  ## ampliação máxima das bolinhas (câmera longe)
+const BALL_RADIUS := 2.2  ## raio da bolinha em metros (escala 1)
+const PLAYER_BALL := 1.35  ## bolinhas do jogador são maiores
+const ZOOM_MIN := 40.0
+const ZOOM_MAX := 4000.0
 
 
 ## De perto o carro fica quase no tamanho real (senão se sobrepõem no grid);
 ## de longe é ampliado para continuar visível.
 func _car_scale() -> float:
-	return clampf(distance / 70.0, 1.2, CAR_SCALE)
+	return clampf(distance / 80.0, 1.0, CAR_SCALE)
 const PIT_OFFSET_M := 15.0
 
 enum CamMode { OVERVIEW, FOLLOW_1, FOLLOW_2, LEADER, CAR }
@@ -223,31 +227,40 @@ func _add_mesh(mesh: Mesh, mat: Material) -> void:
 	_world_root.add_child(mi)
 
 
+## Cada carro é uma bolinha na cor da equipe (decisão do usuário: mais legível que o carro visto de cima).
+## Os carros do jogador são maiores e têm um anel branco em volta, então não precisam de sigla.
 func _build_cars() -> void:
-	var mat := Materials3D.vertex_color(0.35)
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var ball := SphereMesh.new()
+	ball.radius = BALL_RADIUS
+	ball.height = BALL_RADIUS * 2.0
+	ball.radial_segments = 16
+	ball.rings = 8
+	var ring := TorusMesh.new()
+	ring.inner_radius = BALL_RADIUS * 1.25
+	ring.outer_radius = BALL_RADIUS * 1.6
+	ring.rings = 24
+	ring.ring_segments = 6
+	var ring_mat := Materials3D.flat(Color.WHITE, 0.5)
+	ring_mat.emission_enabled = true
+	ring_mat.emission = Color.WHITE
+	ring_mat.emission_energy_multiplier = 0.8
 	for car in sim.cars:
 		var mi := MeshInstance3D.new()
-		mi.mesh = CarModel3D.mesh_for(car.team)
-		mi.material_override = mat
-		mi.scale = Vector3.ONE * CAR_SCALE
+		mi.mesh = ball
+		var col := car.team_color()
+		var m := Materials3D.flat(col, 0.35)
+		m.emission_enabled = true
+		m.emission = col
+		m.emission_energy_multiplier = 0.35
+		mi.material_override = m
 		_world_root.add_child(mi)
 		_cars[car] = mi
 		if car.is_player:
-			var l := Label3D.new()
-			l.text = car.code()
-			l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			l.no_depth_test = true
-			l.fixed_size = true
-			l.pixel_size = 0.0004
-			l.font = UiStyle.HEAVY_FONT
-			l.font_size = 26
-			l.outline_size = 9
-			l.modulate = Color.WHITE
-			l.outline_modulate = UiStyle.INK
-			l.position = Vector3(0, 4.0, 0)
-			mi.add_child(l)
-			_labels[car] = l
+			var r := MeshInstance3D.new()
+			r.mesh = ring
+			r.material_override = ring_mat
+			mi.add_child(r)
+			_labels[car] = r
 	_sc = MeshInstance3D.new()
 	var sc_mesh := BoxMesh.new()
 	sc_mesh.size = Vector3(2.0, 1.4, 4.6)
@@ -283,7 +296,8 @@ func _process(delta: float) -> void:
 			basis = basis.rotated(Vector3.UP, 1.2)
 		elif d < 0.0:
 			pos += basis.x * (3.0 if car.grid_position % 2 == 0 else -3.0)
-		mi.transform = Transform3D(basis.scaled(Vector3.ONE * _car_scale()), pos + Vector3.UP * 0.1)
+		var sc := _car_scale() * (PLAYER_BALL if car.is_player else 1.0)
+		mi.transform = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * sc), pos + Vector3.UP * (BALL_RADIUS * sc + 0.1))
 	_sc.visible = sim.control.flag == RaceControl.Flag.SC
 	if _sc.visible:
 		var lead := sim.standings()[0]
@@ -430,17 +444,51 @@ func _update_camera(delta: float) -> void:
 	_cam.look_at(_target, Vector3.UP)
 
 
+## Zoom: pinça com dois dedos (calculada aqui, porque no celular o gesto chega como dois toques),
+## roda do mouse, gesto de lupa e os botões + / − da tela de corrida. Um dedo gira a câmera.
+var _touches: Dictionary = {}  # índice do dedo -> posição
+var _pinch_start := 0.0
+var _pinch_distance := 0.0
+
+
+func zoom_by(factor: float) -> void:
+	distance = clampf(distance * factor, ZOOM_MIN, ZOOM_MAX)
+
+
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventScreenDrag or (event is InputEventMouseMotion and (event.button_mask & MOUSE_BUTTON_MASK_LEFT)):
-		var rel: Vector2 = event.relative
-		yaw -= rel.x * 0.006
-		pitch = clampf(pitch + rel.y * 0.004, 0.12, 1.45)
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_touches[event.index] = event.position
+		else:
+			_touches.erase(event.index)
+		if _touches.size() == 2:
+			var p: Array = _touches.values()
+			_pinch_start = (p[0] as Vector2).distance_to(p[1])
+			_pinch_distance = distance
+		accept_event()
+	elif event is InputEventScreenDrag:
+		_touches[event.index] = event.position
+		if _touches.size() >= 2:
+			var p2: Array = _touches.values()
+			var now := (p2[0] as Vector2).distance_to(p2[1])
+			if _pinch_start > 10.0 and now > 10.0:
+				distance = clampf(_pinch_distance * _pinch_start / now, ZOOM_MIN, ZOOM_MAX)
+		else:
+			_rotate(event.relative)
+		accept_event()
+	elif event is InputEventMouseMotion and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) and event.device != InputEvent.DEVICE_ID_EMULATION:
+		_rotate(event.relative)
 		accept_event()
 	elif event is InputEventMagnifyGesture:
-		distance = clampf(distance / event.factor, 60.0, 4000.0)
+		distance = clampf(distance / event.factor, ZOOM_MIN, ZOOM_MAX)
 		accept_event()
 	elif event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			distance = clampf(distance * 0.88, 60.0, 4000.0)
+			zoom_by(0.88)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			distance = clampf(distance * 1.12, 60.0, 4000.0)
+			zoom_by(1.12)
+
+
+func _rotate(rel: Vector2) -> void:
+	yaw -= rel.x * 0.006
+	pitch = clampf(pitch + rel.y * 0.004, 0.12, 1.45)

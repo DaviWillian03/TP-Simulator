@@ -636,3 +636,8 @@ Regras para não ficar maçante:
 - poucos eventos por temporada e frequência configurável (dúvida 38);
 - nenhum evento se repete em seguida;
 - eventos negativos e positivos equilibrados.
+
+## Pedidos após testar o APK (2026-11-02)
+"o jogo precisa ter som, coloque barulhos de carro de F1 alternados no fundo, com efeitos sonoros da torcida…; poder aproximar
+a visão da pista…; bolas coloridas com a cor de cada equipe…; aumente as fontes…; arrastar tela para cima, baixo ou lados…"
+→ implementado (ver DECISIONS, "Ajustes de jogabilidade pedidos após testar o APK").

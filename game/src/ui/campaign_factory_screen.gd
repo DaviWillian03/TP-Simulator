@@ -4,6 +4,7 @@ extends Control
 ## patrocínios). Cada melhoria custa dinheiro e dias de obra; uma obra por vez em cada estrutura.
 ## Estruturas melhores aceleram a árvore de P&D e aumentam a chance de cada upgrade dar certo.
 
+var _grid: GridContainer
 var campaign: Campaign
 var dev: CarDevelopment
 var _layer: Control
@@ -42,12 +43,18 @@ func _ready() -> void:
 	ScreenKit.campaign_nav(_layer, "factory")
 	var note := UiStyle.g_label("Uma obra por vez em cada estrutura. Estruturas melhores aceleram a árvore de P&D e aumentam a chance de cada upgrade dar certo.", 13, UiStyle.G_TEXT_2)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	ScreenKit.place(note, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 96), Vector2(520, 0))
-
-	var spots := [Vector2(44, 150), Vector2(662, 150), Vector2(44, 414), Vector2(662, 414)]
-	for i in CarDevelopment.STRUCT_ORDER.size():
-		_build_card(CarDevelopment.STRUCT_ORDER[i], spots[i])
+	# nota + grade 2×2 numa coluna que rola (com a letra maior, não cabe tudo na tela)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", UiStyle.SP_M)
+	col.add_child(note)
+	_grid = GridContainer.new()
+	_grid.columns = 2
+	_grid.add_theme_constant_override("h_separation", 20)
+	_grid.add_theme_constant_override("v_separation", 14)
+	col.add_child(_grid)
+	ScreenKit.scroll_column(col, _layer, Vector2(44, 150), Vector2(1280 - 88, 720 - 150 - 8))
+	for id: String in CarDevelopment.STRUCT_ORDER:
+		_build_card(id)
 	_toasts = ToastFeed.new()
 	_toasts.custom_minimum_size = Vector2(400, 0)
 	ScreenKit.place(_toasts, _layer, Control.PRESET_TOP_LEFT, Vector2(680, 100), Vector2(400, 0))
@@ -74,14 +81,14 @@ func _rich(bbcode: String, size: int) -> RichTextLabel:
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	r.add_theme_font_override("normal_font", UiStyle.G_SEMI)
 	r.add_theme_font_override("bold_font", UiStyle.G_BLACK)
-	r.add_theme_font_size_override("normal_font_size", size)
-	r.add_theme_font_size_override("bold_font_size", size)
+	r.add_theme_font_size_override("normal_font_size", UiStyle.fs(size))
+	r.add_theme_font_size_override("bold_font_size", UiStyle.fs(size))
 	r.add_theme_color_override("default_color", UiStyle.G_TEXT)
 	r.text = bbcode
 	return r
 
 
-func _build_card(id: String, at: Vector2) -> void:
+func _build_card(id: String) -> void:
 	var st := CarDevelopment.structure(id)
 	var lv := dev.level_of(id)
 	var work := dev.work_of(id)
@@ -89,7 +96,9 @@ func _build_card(id: String, at: Vector2) -> void:
 	var color := Color(st["color"])
 	var card := PanelContainer.new()
 	card.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.06), 22, 22, 16))
-	ScreenKit.place(card, _layer, Control.PRESET_TOP_LEFT, at, Vector2(574, 252))
+	card.custom_minimum_size = Vector2(586, 252)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_grid.add_child(card)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	card.add_child(v)
@@ -150,7 +159,7 @@ func _build_card(id: String, at: Vector2) -> void:
 		foot.add_child(cost)
 		var go := CutButton.new()
 		go.custom_minimum_size = Vector2(190, 48)
-		go.add_theme_font_size_override("font_size", 16)
+		go.add_theme_font_size_override("font_size", UiStyle.fs(16))
 		go.text = "MELHORAR"
 		if info["reason"] == "max":
 			go.text = "NÍVEL MÁXIMO"

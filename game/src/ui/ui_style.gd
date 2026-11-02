@@ -40,7 +40,7 @@ static func body_font() -> FontVariation:
 static func make_theme() -> Theme:
 	var t := Theme.new()
 	t.default_font = body_font()
-	t.default_font_size = 16
+	t.default_font_size = fs(16)
 	for type: String in ["Button", "OptionButton"]:
 		t.set_stylebox("normal", type, outline_box(Color(0, 0, 0, 0), INK))
 		t.set_stylebox("hover", type, outline_box(PAPER_2, INK))
@@ -99,7 +99,7 @@ static func rule(thickness: int = RULE_MID, vertical: bool = false) -> ColorRect
 static func label(text: String, size: int = 16, color: Color = INK, heavy: bool = false) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_font_size_override("font_size", fs(size))
 	l.add_theme_color_override("font_color", color)
 	if heavy:
 		l.add_theme_font_override("font", HEAVY_FONT)
@@ -154,7 +154,7 @@ static func compact(b: Button, font_size: int = 13) -> Button:
 		base.content_margin_left = 3
 		base.content_margin_right = 3
 		b.add_theme_stylebox_override(state, base)
-	b.add_theme_font_size_override("font_size", font_size)
+	b.add_theme_font_size_override("font_size", fs(font_size))
 	return b
 
 
@@ -283,7 +283,18 @@ const FS_TITLE := 34
 const FS_H2 := 24
 const FS_BODY := 16
 const FS_SMALL := 14
-const FS_CAPTION := 12  ## menor texto permitido nas telas novas
+const FS_CAPTION := 12  ## menor texto permitido nas telas novas (antes da escala)
+## Escala global do texto (pedido do usuário: letras maiores no celular). Textos até 22 px
+## crescem 20%; acima disso (títulos) ganham só o mesmo acréscimo fixo, para não estourar o layout.
+const TEXT_SCALE := 1.2
+const _BIG_FROM := 22
+
+
+## Tamanho de fonte já com a escala global. Toda tela passa por aqui.
+static func fs(size: int) -> int:
+	if size <= _BIG_FROM:
+		return roundi(size * TEXT_SCALE)
+	return size + roundi(_BIG_FROM * (TEXT_SCALE - 1.0))
 
 static var _g_caption_font: FontVariation
 
@@ -291,7 +302,7 @@ static var _g_caption_font: FontVariation
 static func make_garage_theme() -> Theme:
 	var t := Theme.new()
 	t.default_font = G_SEMI
-	t.default_font_size = FS_BODY
+	t.default_font_size = fs(FS_BODY)
 	t.set_color("font_color", "Label", G_TEXT)
 	for type: String in ["Button"]:
 		t.set_stylebox("normal", type, g_box(G_SURFACE, R_PILL))
@@ -333,7 +344,7 @@ static func g_box(fill: Color, radius: int = R_TILE, margin_h: int = SP_L, margi
 static func g_label(text: String, size: int = FS_BODY, color: Color = G_TEXT, weight: String = "semi") -> Label:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_font_size_override("font_size", fs(size))
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_font_override("font", {"black": G_BLACK, "bold": G_BOLD}.get(weight, G_SEMI))
 	return l

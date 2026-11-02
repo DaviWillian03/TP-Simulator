@@ -24,7 +24,8 @@ Tudo que vem de fora do projeto, com origem e licença. Atualizar ao adicionar q
 - Sem logos oficiais nem fotos: cores das equipes são só valores hexadecimais aproximados.
 
 Arte própria (sem terceiros): carro ilustrado `game/assets/cars/*.svg` (tools/make_car_art.py) e
-ícones `game/assets/icons/*.svg` (tools/make_icons.py).
+ícones `game/assets/icons/*.svg` (tools/make_icons.py) e sons da corrida `game/assets/audio/*.wav`
+(síntese em tools/make_sounds.py, sem gravações de terceiros).
 
 Logos pessoais das equipes: o usuário forneceu um zip (formula1.com/en/teams, versões brancas dos
 símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `game/local/emblems/`

@@ -16,6 +16,7 @@ var sim: RaceSim
 var weekend: WeekendSim = null  ## Grande Prêmio em andamento (null = corrida rápida)
 var time_scale := 2.0
 var paused := false
+var _audio: RaceAudio
 
 var _layer: Control
 var _track_holder: Panel
@@ -57,6 +58,11 @@ func _ready() -> void:
 		sim.control.deploy_sc("teste de captura")
 		sim.advance(40.0)
 	_build_ui()
+	_audio = RaceAudio.new()
+	add_child(_audio)
+	_audio.setup(sim)
+	_audio.time_scale = time_scale
+	_audio.set_paused(paused)
 	if Session.debug_view_only:  # (capturas: só o 3D, base dos mockups de interface)
 		_track_view.reparent(self)
 		_track_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -132,6 +138,22 @@ func _build_ui() -> void:
 	_radio.answered.connect(func(id: int, option: int) -> void:
 		sim.radio.answer(id, option)
 		_refresh_ui())
+	# zoom da pista: botões + e − (além da pinça com dois dedos e da roda do mouse)
+	var zoom := VBoxContainer.new()
+	zoom.add_theme_constant_override("separation", 10)
+	zoom.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	zoom.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	zoom.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	zoom.offset_right = -14
+	zoom.offset_bottom = -14
+	_track_holder.add_child(zoom)
+	for z: Array in [["plus", "Aproximar", 0.7], ["minus", "Afastar", 1.43]]:
+		var zb := ScreenKit.round_button(z[0], UiStyle.TOUCH_MAIN, z[1])
+		var f: float = z[2]
+		for st: String in ["normal", "hover"]:  # fundo escuro: o cenário da pista é claro
+			zb.add_theme_stylebox_override(st, UiStyle.g_box(Color(0.05, 0.06, 0.08, 0.82), UiStyle.TOUCH_MAIN / 2, 0, 0))
+		zb.pressed.connect(func() -> void: _track_view.zoom_by(f))
+		zoom.add_child(zb)
 	_drawer = DataDrawer.new()
 	_drawer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_drawer.visible = false
@@ -194,7 +216,10 @@ func _build_top_bar() -> void:
 	_pause_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	ScreenKit._selectable_styles(_pause_btn, 20)
 	_pause_btn.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_SURFACE, 20, 10, 0))
-	_pause_btn.toggled.connect(func(on: bool) -> void: paused = on)
+	_pause_btn.toggled.connect(func(on: bool) -> void:
+		paused = on
+		if _audio != null:
+			_audio.set_paused(on))
 	_pause_btn.button_pressed = Session.debug_pause
 	bar.add_child(_pause_btn)
 	_speed_seg = ScreenKit.segmented(SPEEDS.map(func(s: float) -> Array: return [s, "%d×" % int(s)]), time_scale, set_time_scale)
@@ -204,6 +229,14 @@ func _build_top_bar() -> void:
 		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	bar.add_child(_speed_seg)
 
+	# som da corrida: liga/desliga (vale até fechar o jogo)
+	var snd := ScreenKit.round_button("mute" if RaceAudio.muted else "sound", 40, "Som")
+	snd.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	snd.pressed.connect(func() -> void:
+		_audio.set_muted(not RaceAudio.muted)
+		snd.icon = load("res://assets/icons/%s.svg" % ("mute" if RaceAudio.muted else "sound")))
+	bar.add_child(snd)
+
 	var data := Button.new()
 	data.text = "Dados"
 	data.focus_mode = Control.FOCUS_NONE
@@ -211,7 +244,7 @@ func _build_top_bar() -> void:
 	data.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 		data.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_SURFACE_HOVER if s != "pressed" else UiStyle.G_SURFACE_PRESS, 20, 16, 0))
-	data.add_theme_font_size_override("font_size", 14)
+	data.add_theme_font_size_override("font_size", UiStyle.fs(14))
 	data.pressed.connect(func() -> void:
 		_drawer.visible = not _drawer.visible
 		_drawer.refresh())
@@ -249,6 +282,8 @@ func set_time_scale(s: float) -> void:
 	if _tap != null:
 		s = 1.0
 	time_scale = s
+	if _audio != null:
+		_audio.time_scale = s
 	if _pit != null:
 		_pit.current_scale = s
 	_sync_speed()
@@ -467,7 +502,7 @@ func _build_results() -> Control:
 	head.add_child(UiStyle.g_label(sim.track.grand_prix.to_upper(), 20, UiStyle.RED, "black"))
 	v.add_child(head)
 
-	var scroll := ScrollContainer.new()
+	var scroll := DragScroll.new()
 	scroll.custom_minimum_size = Vector2(900, 380)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	v.add_child(scroll)

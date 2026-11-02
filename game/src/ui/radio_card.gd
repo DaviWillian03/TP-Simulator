@@ -70,7 +70,7 @@ func show_message(m: Dictionary) -> void:
 			b.add_theme_stylebox_override(state, UiStyle.g_box(UiStyle.G_INK if first else Color("#e3e6eb"), 12, 8, 0))
 		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 			b.add_theme_color_override(k, Color.WHITE if first else UiStyle.G_INK)
-		b.add_theme_font_size_override("font_size", 14)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(14))
 		ScreenKit.press_feedback(b)
 		b.pressed.connect(func() -> void: answered.emit(_message_id, i))
 		_answers.add_child(b)

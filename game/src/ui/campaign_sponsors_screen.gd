@@ -64,7 +64,10 @@ func _ready() -> void:
 	_pips = InfluencePips.new()
 	(_pips as InfluencePips).level = campaign.dev.influence()
 	im.add_child(_pips)
-	im.add_child(UiStyle.g_label("marcas até o nível %d · sobe com a fábrica" % campaign.dev.influence(), 12, UiStyle.G_TEXT_2, "bold"))
+	var inf_note := UiStyle.g_label("marcas até o nível %d · sobe com a fábrica" % campaign.dev.influence(), 12, UiStyle.G_TEXT_2, "bold")
+	inf_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	inf_note.custom_minimum_size = Vector2(180, 0)
+	im.add_child(inf_note)
 	ir.add_child(im)
 	iv.add_child(ir)
 	ScreenKit.place(inf, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 150), Vector2(300, 96))
@@ -93,7 +96,7 @@ func _ready() -> void:
 		pin.focus_mode = Control.FOCUS_NONE
 		pin.custom_minimum_size = Vector2(34, 34)
 		pin.add_theme_font_override("font", UiStyle.G_BLACK)
-		pin.add_theme_font_size_override("font_size", 15)
+		pin.add_theme_font_size_override("font_size", UiStyle.fs(15))
 		pin.pressed.connect(_on_zone.bind(z["id"]))
 		_layer.add_child(pin)
 		var pos: Array = z["pin"]
@@ -101,7 +104,7 @@ func _ready() -> void:
 		_pins[z["id"]] = pin
 	_right = VBoxContainer.new()
 	_right.add_theme_constant_override("separation", 6)
-	ScreenKit.place(_right, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 150), Vector2(596, 0))
+	ScreenKit.scroll_column(_right, _layer, Vector2(1280 - 44 - 596, 150), Vector2(596, 720 - 150 - 8))
 	_toasts = ToastFeed.new()
 	_toasts.custom_minimum_size = Vector2(420, 0)
 	ScreenKit.place(_toasts, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 520), Vector2(420, 0))
@@ -262,7 +265,9 @@ func _offer_row(o: Dictionary) -> Control:
 	t.add_theme_constant_override("separation", -2)
 	t.add_child(UiStyle.g_label(String(o["category"]), 15, UiStyle.G_TEXT, "black"))
 	var bonus := "sem bônus" if float(o["bonus"]) <= 0.0 else "+ US$ %s mi por pódio" % _money(float(o["bonus"]))
-	t.add_child(UiStyle.g_label("%d ano%s · %s" % [int(o["years"]), "" if int(o["years"]) == 1 else "s", bonus], 12, UiStyle.G_TEXT_2, "bold"))
+	var terms := UiStyle.g_label("%d ano%s · %s" % [int(o["years"]), "" if int(o["years"]) == 1 else "s", bonus], 12, UiStyle.G_TEXT_2, "bold")
+	terms.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # quebra a linha em vez de alargar a coluna
+	t.add_child(terms)
 	h.add_child(t)
 	var v := VBoxContainer.new()
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -285,14 +290,16 @@ func _offer_row(o: Dictionary) -> Control:
 		more.add_theme_color_override(k, UiStyle.G_INK)
 	more.add_theme_color_override("font_disabled_color", UiStyle.G_TEXT_OFF)
 	more.add_theme_font_override("font", UiStyle.G_BLACK)
-	more.add_theme_font_size_override("font_size", 12)
+	more.add_theme_font_size_override("font_size", UiStyle.fs(12))
+	more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	more.pressed.connect(_on_ask_more.bind(o["key"]))
 	ScreenKit.press_feedback(more)
 	h.add_child(more)
 	var ok := CutButton.new()
 	ok.text = "ACEITAR"
 	ok.custom_minimum_size = Vector2(120, UiStyle.TOUCH_MIN)
-	ok.add_theme_font_size_override("font_size", 13)
+	ok.add_theme_font_size_override("font_size", UiStyle.fs(13))
+	ok.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	ok.pressed.connect(_on_accept.bind(o["key"]))
 	h.add_child(ok)
 	return p
@@ -337,7 +344,7 @@ func _contract_card(zone_id: String) -> Control:
 	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 		end.add_theme_color_override(k, UiStyle.G_INK)
 	end.add_theme_font_override("font", UiStyle.G_BLACK)
-	end.add_theme_font_size_override("font_size", 13)
+	end.add_theme_font_size_override("font_size", UiStyle.fs(13))
 	end.pressed.connect(_on_terminate.bind(zone_id))
 	ScreenKit.press_feedback(end)
 	v.add_child(end)

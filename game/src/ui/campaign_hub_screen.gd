@@ -51,7 +51,7 @@ func _ready() -> void:
 	news_btn.custom_minimum_size = Vector2(0, 44)
 	for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
 		news_btn.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 22, 18, 0))
-	news_btn.add_theme_font_size_override("font_size", 14)
+	news_btn.add_theme_font_size_override("font_size", UiStyle.fs(14))
 	news_btn.add_theme_color_override("font_color", UiStyle.G_TEXT)
 	news_btn.pressed.connect(_open_news)
 	ScreenKit.press_feedback(news_btn)
@@ -64,7 +64,7 @@ func _ready() -> void:
 	# coluna esquerda
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", UiStyle.SP_M)
-	ScreenKit.place(left, layer, Control.PRESET_TOP_LEFT, Vector2(44, 152), Vector2(560, 0))
+	ScreenKit.scroll_column(left, layer, Vector2(44, 152), Vector2(620, 720 - 152 - 12))
 	left.clip_contents = false
 	left.add_child(_event_card())
 	left.add_child(_objective_card(color))
@@ -76,13 +76,20 @@ func _ready() -> void:
 	tv.add_theme_constant_override("separation", 0)
 	table.add_child(tv)
 	tv.add_child(UiStyle.g_caption("Construtores · após %d de %d" % [campaign.round, Campaign.calendar().size()]))
+	# todas as equipes; a lista rola arrastando o dedo
+	var list_scroll := DragScroll.new()
+	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	list_scroll.custom_minimum_size = Vector2(0, 270)
+	tv.add_child(list_scroll)
+	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation", 0)
+	list_scroll.add_child(list)
 	var rows := campaign.team_standings()
 	for i in rows.size():
 		var mine: bool = rows[i][0] == campaign.player_team
-		if i >= 6 and not mine:
-			continue
-		tv.add_child(_standing_row(i + 1, rows[i][0], int(rows[i][1]), mine))
-	ScreenKit.place(table, layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 96), Vector2(400, 0))
+		list.add_child(_standing_row(i + 1, rows[i][0], int(rows[i][1]), mine))
+	ScreenKit.place(table, layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 152), Vector2(400, 0))
 
 	var car := CarHero.new()
 	layer.add_child(car)
@@ -161,7 +168,7 @@ func _event_card() -> Control:
 	var go := CutButton.new()
 	go.text = "JOGAR O FIM DE SEMANA" if ready else "AVANÇAR ATÉ O EVENTO"
 	go.custom_minimum_size = Vector2(290, UiStyle.TOUCH_MAIN)
-	go.add_theme_font_size_override("font_size", 17)
+	go.add_theme_font_size_override("font_size", UiStyle.fs(17))
 	go.pressed.connect(_on_advance)
 	acts.add_child(go)
 	if not ready:

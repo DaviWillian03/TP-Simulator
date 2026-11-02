@@ -65,7 +65,7 @@ func _ready() -> void:
 
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", UiStyle.SP_M)
-	ScreenKit.place(left, layer, Control.PRESET_TOP_LEFT, Vector2(44, 156), Vector2(700, 0))
+	ScreenKit.scroll_column(left, layer, Vector2(44, 156), Vector2(700, 720 - 156 - 8))
 	left.add_child(_final_card() if weekend.is_over() else _next_card())
 	if not weekend.is_over():
 		left.add_child(_forecast_row())
@@ -121,7 +121,7 @@ func _next_card() -> Control:
 	var play := CutButton.new()
 	play.text = "JOGAR"
 	play.custom_minimum_size = Vector2(150, UiStyle.TOUCH_MAIN)
-	play.add_theme_font_size_override("font_size", 19)
+	play.add_theme_font_size_override("font_size", UiStyle.fs(19))
 	play.pressed.connect(Session.play_session)
 	acts.add_child(play)
 	var sim := ScreenKit.light_button("SIMULAR")
@@ -239,10 +239,16 @@ func _show_program(driver_id: String) -> void:
 func _program_editor(driver_id: String) -> VBoxContainer:
 	var editor := VBoxContainer.new()
 	editor.add_theme_constant_override("separation", UiStyle.SP_S)
+	# blocos do programa: a faixa desliza para o lado quando há muitos
+	var strip := DragScroll.new()
+	strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	strip.custom_minimum_size = Vector2(0, 52)
+	editor.add_child(strip)
 	var chips := HBoxContainer.new()
 	chips.add_theme_constant_override("separation", 10)
 	chips.custom_minimum_size = Vector2(0, 52)
-	editor.add_child(chips)
+	strip.add_child(chips)
 	var add := HBoxContainer.new()
 	add.add_theme_constant_override("separation", 10)
 	for id: String in ["aero", "mech", "race", "quali"]:
@@ -257,7 +263,7 @@ func _program_editor(driver_id: String) -> VBoxContainer:
 			st.set_border_width_all(2)
 			b.add_theme_stylebox_override(s, st)
 		b.add_theme_color_override("font_color", UiStyle.G_TEXT_2)
-		b.add_theme_font_size_override("font_size", UiStyle.FS_SMALL + 1)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(UiStyle.FS_SMALL + 1))
 		b.pressed.connect(_add_block.bind(driver_id, id))
 		ScreenKit.press_feedback(b)
 		add.add_child(b)
@@ -294,13 +300,12 @@ func _refresh_program(driver_id: String) -> void:
 		b.text = "%s  %d min" % [PracticeSession.BLOCKS[prog[i]]["name"], int(PracticeSession.BLOCKS[prog[i]]["minutes"])]
 		b.focus_mode = Control.FOCUS_NONE
 		b.custom_minimum_size = Vector2(0, 52)
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.tooltip_text = "Tocar para tirar do programa"
 		for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 			b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_LIGHT if s in ["normal", "hover"] else UiStyle.G_LIGHT_PRESS, 14, 8, 0))
 		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 			b.add_theme_color_override(k, UiStyle.G_INK)
-		b.add_theme_font_size_override("font_size", UiStyle.FS_SMALL)
+		b.add_theme_font_size_override("font_size", UiStyle.fs(UiStyle.FS_SMALL))
 		b.pressed.connect(_remove_block.bind(driver_id, i))
 		ScreenKit.press_feedback(b)
 		chips.add_child(b)
