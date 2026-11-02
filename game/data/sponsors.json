@@ -1,0 +1,33 @@
+{
+ "_notas": "PROVISÓRIO. Marcas reais só como TEXTO (sem logos, sem tabaco/apostas). Valor por corrida (US$ mi) = base do nível da marca × valor da zona × sorte. Influência (1-5) libera marcas até o nível igual.",
+ "tier_base": [0.25, 0.5, 0.9, 1.5, 2.4],
+ "zones": [
+  {"id": "rear_wing", "name": "Asa traseira", "mult": 1.0, "pin": [0.985, 0.30]},
+  {"id": "sidepods", "name": "Laterais", "mult": 0.9, "pin": [0.59, 0.62]},
+  {"id": "nose", "name": "Bico", "mult": 0.7, "pin": [0.13, 0.72]},
+  {"id": "halo", "name": "Halo", "mult": 0.5, "pin": [0.455, 0.40]},
+  {"id": "front_wing", "name": "Asa dianteira", "mult": 0.6, "pin": [0.075, 0.90]}
+ ],
+ "podium_bonus_options": [0.0, 0.2, 0.3],
+ "ask_more_gain": 0.15,
+ "ask_more_base_chance": 0.35,
+ "ask_more_per_influence": 0.05,
+ "terminate_races_per_year": 11,
+ "brands": [
+  {"name": "Ipiranga", "category": "Energia", "tier": 1}, {"name": "Havaianas", "category": "Moda", "tier": 1},
+  {"name": "Natura", "category": "Beleza", "tier": 1}, {"name": "Embraco", "category": "Indústria", "tier": 1},
+  {"name": "Randon", "category": "Logística", "tier": 1},
+  {"name": "Puma", "category": "Moda", "tier": 2}, {"name": "Levi's", "category": "Moda", "tier": 2},
+  {"name": "Dell", "category": "Tecnologia", "tier": 2}, {"name": "Pepsi", "category": "Bebidas", "tier": 2},
+  {"name": "Logitech", "category": "Tecnologia", "tier": 2}, {"name": "Heineken", "category": "Bebidas", "tier": 2},
+  {"name": "DHL", "category": "Logística", "tier": 3}, {"name": "Shell", "category": "Energia", "tier": 3},
+  {"name": "Santander", "category": "Banco", "tier": 3}, {"name": "Oracle", "category": "Tecnologia", "tier": 3},
+  {"name": "SAP", "category": "Tecnologia", "tier": 3}, {"name": "Petrobras", "category": "Energia", "tier": 3},
+  {"name": "Emirates", "category": "Aviação", "tier": 4}, {"name": "Qatar Airways", "category": "Aviação", "tier": 4},
+  {"name": "Visa", "category": "Pagamentos", "tier": 4}, {"name": "Mastercard", "category": "Pagamentos", "tier": 4},
+  {"name": "Cisco", "category": "Tecnologia", "tier": 4}, {"name": "HSBC", "category": "Banco", "tier": 4},
+  {"name": "Rolex", "category": "Relógios", "tier": 5}, {"name": "TAG Heuer", "category": "Relógios", "tier": 5},
+  {"name": "LVMH", "category": "Luxo", "tier": 5}, {"name": "AWS", "category": "Tecnologia", "tier": 5},
+  {"name": "Qualcomm", "category": "Tecnologia", "tier": 5}
+ ]
+}

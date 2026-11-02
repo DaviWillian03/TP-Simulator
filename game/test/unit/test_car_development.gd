@@ -146,13 +146,14 @@ func test_nivel_maximo_e_falta_de_caixa() -> void:
 	assert_eq(camp.dev.upgrade_info("wind", 10.0)["reason"], "cash")
 
 
-func test_fabrica_afeta_patrocinio_e_custo_por_corrida() -> void:
-	var sponsor := camp.sponsor_per_race()
+func test_fabrica_afeta_ofertas_de_patrocinio_e_custo_por_corrida() -> void:
 	var cost := camp.cost_per_race()
+	var mult := camp.dev.sponsor_mult()
+	var infl := camp.dev.influence()
 	camp.dev.levels["media"] = camp.dev.level_of("media") + 1
-	assert_gt(camp.sponsor_per_race(), sponsor)
+	assert_gt(camp.dev.sponsor_mult(), mult, "ofertas valem mais")
+	assert_gt(camp.dev.influence(), infl, "marcas de nível mais alto")
 	assert_gt(camp.cost_per_race(), cost - 0.0001)
-	assert_eq(camp.dev.influence(), camp.dev.level_of("media"))
 
 
 func test_simulador_aumenta_o_ganho_dos_treinos() -> void:

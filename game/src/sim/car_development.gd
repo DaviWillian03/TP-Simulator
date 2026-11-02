@@ -163,7 +163,7 @@ static func effect_text(struct_id: String, level: int) -> String:
 			return "[b]%d[/b] projetos ao mesmo tempo\npeças com defeito: [b]%d%%[/b]" % [int(st["slots"][i]), int(st["defect_pct"][i])]
 		_:
 			var m: Array = st["sponsor_mult"]
-			return "patrocínio [b]×%s[/b]\ninfluência [b]%d[/b]" % [("%.1f" % (float(m[i]) / float(m[0]))).replace(".", ","), int(st["influence"][i])]
+			return "marcas até o nível [b]%d[/b] (influência)\nofertas com [b]×%s[/b] de valor" % [int(st["influence"][i]), ("%.1f" % (float(m[i]) / float(m[0]))).replace(".", ",")]
 
 
 ## Texto curto do efeito de um nó.
@@ -212,6 +212,7 @@ func start_upgrade(camp: Campaign, struct_id: String) -> bool:
 	if not info["ok"]:
 		return false
 	camp.budget_musd -= float(info["cost"])
+	camp.record("works", float(info["cost"]))
 	works.append({"struct": struct_id, "to": int(info["to"]), "days_left": int(info["days"]), "days_total": int(info["days"])})
 	_log("Obra iniciada: %s (nível %d)." % [structure(struct_id)["name"], int(info["to"])])
 	return true
@@ -329,6 +330,7 @@ func start_project(camp: Campaign, car: String, id: String) -> bool:
 	if not pi["ok"]:
 		return false
 	camp.budget_musd -= float(pi["cost"])
+	camp.record("rd", float(pi["cost"]))
 	projects.append({"car": car, "id": id, "days_left": int(pi["days"]), "days_total": int(pi["days"]), "cost": float(pi["cost"])})
 	return true
 
@@ -338,6 +340,7 @@ func cancel_project(camp: Campaign, car: String, id: String) -> bool:
 	if p.is_empty():
 		return false
 	camp.budget_musd += float(p["cost"]) * 0.5  # cancelar devolve metade do dinheiro
+	camp.record("rd", -float(p["cost"]) * 0.5)
 	projects.erase(p)
 	return true
 
@@ -381,6 +384,7 @@ func _resolve(camp: Campaign, p: Dictionary) -> String:
 	var tag := "(2027) " if p["car"] == "next" else ""
 	if rng.randf() < defect_chance():
 		camp.budget_musd += float(p["cost"]) * 0.5
+		camp.record("rd", -float(p["cost"]) * 0.5)
 		return "%sFalha na produção: %s. A peça saiu com defeito (metade do dinheiro devolvida)." % [tag, name]
 	if rng.randf() < success_chance(info["dept"]):
 		(done[p["car"]] as Dictionary)[p["id"]] = "full"

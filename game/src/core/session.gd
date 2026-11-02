@@ -12,7 +12,7 @@ extends Node
 ##   --weather=dry          sem chuva · --incidents=<0..n> multiplicador de incidentes
 ##   --screenshot=<arquivo.png> --frames=<n>   salva a tela após n quadros e fecha o jogo
 ##   --campaign / --creator / --hub   entrada da campanha, criação da equipe, sede (campanha salva)
-##   --car / --factory / --staff      árvore de P&D, fábrica e pessoal da campanha salva (+ --fresh --demo --team=<id>)
+##   --car / --factory / --staff / --sponsors / --finance     árvore de P&D, fábrica e pessoal da campanha salva (+ --fresh --demo --team=<id>)
 ##   --gp                   abre a configuração do Grande Prêmio
 ##   --weekend [--skip=<n>] abre o fim de semana (com --circuit/--team), simulando n sessões
 ##   --play                 abre a sessão atual do fim de semana (depois do --skip)
@@ -27,6 +27,8 @@ const CAMPAIGN_ENTRY_SCENE := "res://src/ui/campaign_entry_screen.tscn"
 const TEAM_CREATOR_SCENE := "res://src/ui/team_creator_screen.tscn"
 const CAMPAIGN_HUB_SCENE := "res://src/ui/campaign_hub_screen.tscn"
 const CAMPAIGN_STANDINGS_SCENE := "res://src/ui/campaign_standings_screen.tscn"
+const CAMPAIGN_SPONSORS_SCENE := "res://src/ui/campaign_sponsors_screen.tscn"
+const CAMPAIGN_FINANCE_SCENE := "res://src/ui/campaign_finance_screen.tscn"
 const CAMPAIGN_STAFF_SCENE := "res://src/ui/campaign_staff_screen.tscn"
 const CAMPAIGN_CAR_SCENE := "res://src/ui/campaign_car_screen.tscn"
 const CAMPAIGN_FACTORY_SCENE := "res://src/ui/campaign_factory_screen.tscn"
@@ -103,7 +105,7 @@ func _ready() -> void:
 			if c2.mode == "created":
 				TeamEmblems.register_custom(c2.team())
 			open_campaign_standings.call_deferred()
-	elif args.has("car") or args.has("factory") or args.has("staff"):  # (capturas) árvore de P&D / fábrica da campanha salva
+	elif args.has("car") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance"):  # (capturas) árvore de P&D / fábrica da campanha salva
 		var c4 := Campaign.load_saved()
 		if args.has("fresh"):  # (captura) campanha nova da equipe --team, com --demo = P&D e obras de exemplo
 			c4 = Campaign.new_real(player_team)
@@ -122,7 +124,11 @@ func _ready() -> void:
 			player_team = c4.player_team
 			if c4.mode == "created":
 				TeamEmblems.register_custom(c4.team())
-			if args.has("staff"):
+			if args.has("sponsors"):
+				open_campaign_sponsors.call_deferred()
+			elif args.has("finance"):
+				open_campaign_finance.call_deferred()
+			elif args.has("staff"):
 				open_campaign_staff.call_deferred()
 			elif args.has("car"):
 				open_campaign_car.call_deferred()
@@ -237,6 +243,14 @@ func open_campaign_hub() -> void:
 
 func open_campaign_standings() -> void:
 	get_tree().change_scene_to_file(CAMPAIGN_STANDINGS_SCENE)
+
+
+func open_campaign_sponsors() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_SPONSORS_SCENE)
+
+
+func open_campaign_finance() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_FINANCE_SCENE)
 
 
 func open_campaign_staff() -> void:

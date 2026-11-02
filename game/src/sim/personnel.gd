@@ -285,6 +285,7 @@ func sign(camp: Campaign, id: String, salary: float, years: int, replace_id: Str
 	var fee := float(ok["buyout"])
 	if fee > 0.0:
 		camp.budget_musd -= fee
+		camp.record("contracts", fee)
 	pending[id] = {"salary": salary, "until": camp.season + years, "role": p["role"]}
 	dismissed.erase(id)
 	var msg := "%s contratado para %d (US$ %s mi/ano)." % [p["name"], camp.season + 1, ("%.1f" % salary).replace(".", ",")]
@@ -300,6 +301,7 @@ func dismiss(camp: Campaign, id: String) -> float:
 	var years := maxi(int(c.get("until", camp.season)) - camp.season, 0)
 	var fee := snappedf(float(c.get("salary", 0.0)) * years * BUYOUT_SHARE, 0.1)
 	camp.budget_musd -= fee
+	camp.record("contracts", fee)
 	dismissed.append(id)
 	pending.erase(id)
 	_log("%s será dispensado na virada (multa US$ %s mi)." % [person(id, camp)["name"], ("%.1f" % fee).replace(".", ",")])

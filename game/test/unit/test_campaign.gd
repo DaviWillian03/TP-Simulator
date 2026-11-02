@@ -151,7 +151,7 @@ func test_caixa_acompanha_patrocinio_e_custos() -> void:
 	c.detail = "advanced"  # no essencial o diretor técnico também gasta com projetos de P&D
 	var before := c.budget_musd
 	_played(c, 1)
-	assert_almost_eq(c.budget_musd, before + c.sponsor_per_race() - c.cost_per_race(), 0.001)
+	assert_almost_eq(c.budget_musd, before + c.sponsor_per_race() + float(c.ledger.get("bonus", 0.0)) - c.cost_per_race(), 0.001)
 
 
 func test_falencia_com_caixa_negativo() -> void:

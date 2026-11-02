@@ -38,6 +38,9 @@ var history: Array = []  ## [{round, circuit, results: [ids]}]
 
 var dev := CarDevelopment.new()  ## árvore de P&D e fábrica
 var personnel := Personnel.new()  ## contratos de pilotos e técnicos
+var sponsors := Sponsorship.new()  ## patrocínios por zona do carro
+var ledger: Dictionary = {}  ## categoria -> total da temporada (US$ mi): sponsors, bonus, prize, ops, payroll, upkeep, rd, works, contracts, debt
+var cash_log: Array = []  ## [{r: rodada, cash}] caixa depois de cada rodada
 var base_rating := 0.0  ## nota do carro da equipe sem os upgrades
 var rival_carry: Dictionary = {}  ## id da equipe da IA -> bônus herdado das temporadas anteriores
 var _file_ratings: Dictionary = {}  ## id -> nota do carro nos dados (sem evolução)
@@ -178,12 +181,45 @@ func _init_dev(initial_level: int) -> void:
 	_init_rivals()
 	dev = CarDevelopment.new()
 	personnel = Personnel.new()
+	sponsors = Sponsorship.new()
+	ledger = {}
 	dev.set_all_levels(initial_level)
 	dev.seed_base = season
 	base_rating = float(team().get("car_rating", 75))
 	personnel.setup(self)
 	sync_factory_level()
+	sponsors.setup(self, _base_sponsor_target())
+	cash_log = [{"r": 0, "cash": budget_musd}]
 	refresh_rating()
+
+
+## Patrocínio base por corrida da origem (real: padrão; criada: da origem). Os contratos iniciais somam isto.
+func _base_sponsor_target() -> float:
+	return float(origin.get("sponsor_per_race_musd", 2.0)) if mode == "created" else float(origins_data()["finance"]["sponsor_default"])
+
+
+## Lança um valor no livro-caixa da temporada (positivo = quantia da categoria; devoluções entram negativas).
+func record(category: String, amount: float) -> void:
+	ledger[category] = float(ledger.get(category, 0.0)) + amount
+
+
+func income_total() -> float:
+	return float(ledger.get("sponsors", 0.0)) + float(ledger.get("bonus", 0.0)) + float(ledger.get("prize", 0.0))
+
+
+func expense_total() -> float:
+	var t := 0.0
+	for k: String in ["ops", "payroll", "upkeep", "rd", "works", "contracts", "debt"]:
+		t += float(ledger.get(k, 0.0))
+	return t
+
+
+## Caixa esperado no fim da temporada: receitas e custos fixos das rodadas que faltam + prêmio da posição atual.
+func projected_cash_end() -> float:
+	var left := maxi(calendar().size() - round, 0)
+	var pool: Array = origins_data()["finance"]["prize_pool"]
+	var prize := float(pool[mini(team_position(player_team), pool.size()) - 1])
+	return budget_musd + left * (sponsor_per_race() - cost_per_race()) + prize
 
 
 func _dev_tick(n: int) -> void:
@@ -239,7 +275,7 @@ func to_dict() -> Dictionary:
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
-		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers}
+		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log}
 
 
 static func from_dict(d: Dictionary) -> Campaign:
@@ -278,6 +314,11 @@ static func from_dict(d: Dictionary) -> Campaign:
 			dr["rating"] = int(dr["rating"])
 	if d.has("personnel"):
 		c.personnel = Personnel.from_dict(d["personnel"])
+	if d.has("sponsors"):
+		c.sponsors = Sponsorship.from_dict(d["sponsors"])
+	c.ledger = d.get("ledger", {})
+	if d.has("cash_log"):
+		c.cash_log = d["cash_log"]
 	if d.has("dev"):
 		c.dev = CarDevelopment.from_dict(d["dev"])
 		c.sync_factory_level()
@@ -340,12 +381,24 @@ func record_weekend(w: WeekendSim) -> void:
 				best_finish = mini(best_finish, i + 1)
 				break
 	history.append({"round": round + 1, "circuit": w.circuit.get("id", ""), "results": race})
-	budget_musd += sponsor_per_race() - cost_per_race()
+	var podiums := 0
+	for i in mini(3, race.size()):
+		if team_of(race[i]) == player_team:
+			podiums += 1
+	var bonus := podiums * sponsors.bonus_per_podium()
+	var f: Dictionary = origins_data()["finance"]
+	record("sponsors", sponsor_per_race())
+	record("bonus", bonus)
+	record("ops", float(f["cost_base"]))
+	record("payroll", personnel.payroll_per_race(self))
+	record("upkeep", dev.upkeep_per_race())
+	budget_musd += sponsor_per_race() + bonus - cost_per_race()
 	var pos := team_position(player_team)
 	var gap := season_goal() - pos  # >= 0: dentro da meta
 	var drift: float = origins_data()["board"]["drift_per_race"]
 	trust = clampf(trust + (drift if gap >= 0 else float(gap) * drift * 0.5) * _difficulty_factor(), 0.0, 100.0)
 	round += 1
+	cash_log.append({"r": round, "cash": budget_musd})
 	var new_day := _day_of(calendar()[round - 1]["date"]) + 1
 	_dev_tick(new_day - day)
 	day = new_day
@@ -460,8 +513,7 @@ func cost_per_race() -> float:
 
 
 func sponsor_per_race() -> float:
-	var base: float = float(origin.get("sponsor_per_race_musd", 2.0)) if mode == "created" else float(origins_data()["finance"]["sponsor_default"])
-	return base * dev.sponsor_mult()
+	return sponsors.per_race_total()
 
 
 func _difficulty_factor() -> float:
@@ -492,9 +544,11 @@ func close_season() -> Dictionary:
 	var pool: Array = f["prize_pool"]
 	var prize := float(pool[mini(pos, pool.size()) - 1])
 	budget_musd += prize
+	record("prize", prize)
 	var service := minf(debt_musd, float(f["debt_service_musd"]))
 	debt_musd -= service
 	budget_musd -= service
+	record("debt", service)
 	var goal := season_goal()
 	var met := pos <= goal
 	if met:
@@ -520,6 +574,9 @@ func close_season() -> Dictionary:
 ## Começa a próxima temporada (mesmo grid: o mercado de pilotos chega na camada de contratos).
 func start_next_season() -> void:
 	personnel.rollover(self)
+	sponsors.expire(self)
+	ledger = {}
+	cash_log = [{"r": 0, "cash": budget_musd}]
 	var cfg: Dictionary = origins_data()["rivals"]
 	for t: Dictionary in _teams:  # a IA guarda parte do que desenvolveu neste ano
 		if t["id"] != player_team:

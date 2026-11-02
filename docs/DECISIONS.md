@@ -279,3 +279,15 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - **Marcas reais só em texto, sem logos**, categorias seguras (sem tabaco/apostas).
 - **Finanças = resumo claro**: receitas × despesas da temporada, projeção do caixa, histórico das temporadas.
   Empréstimo e teto de gastos ficam para depois (P12).
+
+### Finanças e Patrocínios implementados (mockups v11 aprovados)
+- `Sponsorship` (sem tela, `data/sponsors.json`, 28 marcas reais só em texto): patrocínio inicial escalado para o
+  valor base da campanha (equilíbrio preservado); ofertas por zona mudam todo mês (3 marcas de nível ≤ influência);
+  "pedir mais" 1× por oferta (chance 35% + 5%×influência de subir 15%, senão a marca desiste); rescindir paga multa
+  (meia temporada por ano restante); contratos vencem na virada.
+- Livro-caixa (`Campaign.ledger`): patrocínios, bônus por pódio, prêmio, operação, folha, manutenção, P&D, obras,
+  contratos/multas e dívida; histórico do caixa por rodada (`cash_log`) e projeção do fim da temporada.
+- Abas da sede: Início · Campeonatos · Pessoal · Carro · Fábrica · Patrocínios · Finanças.
+- Efeito do marketing mudou: a fábrica sobe a influência (nível das marcas) e o valor das ofertas (×), não multiplica mais o
+  patrocínio já contratado. Balanceamento: com folha de pagamento e manutenção, o saldo por corrida fica ligeiramente
+  negativo para a maioria — o prêmio do fim da temporada fecha a conta (PROVISÓRIO).
