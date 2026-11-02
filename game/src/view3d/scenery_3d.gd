@@ -53,7 +53,6 @@ func _terrain() -> void:
 	for p in t3.center:
 		avg += p.y
 	avg /= t3.n
-	var heights := PackedFloat32Array()
 	var verts := PackedVector3Array()
 	for gz in GRID + 1:
 		for gx in GRID + 1:
@@ -341,7 +340,7 @@ func _track_lights() -> void:
 	var cols: Array[Color] = []
 	var i := 0
 	while i < t3.n:
-		var side := 1.0 if (i / 12) % 2 == 0 else -1.0
+		var side := 1.0 if (i % 24) < 12 else -1.0
 		var p := t3.center[i] + t3.right[i] * side * (Track3D.WIDTH / 2.0 + 6.0)
 		xforms.append(Transform3D(Basis(), p + Vector3.UP * 6.0))
 		cols.append(Color.WHITE)

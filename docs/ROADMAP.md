@@ -42,8 +42,10 @@ Cada marco termina jogável e testado. Itens vêm de `docs/DECISIONS.md`.
   evolução da pista, tráfego, erros, bandeira vermelha, chuva), sprint (~1/3, sem regra dos 2
   compostos, pontos 8..1), grid vindo da classificação, pontos e `WeekendSim` (formatos normal,
   sprint e só a corrida; clima Realista/Seco/Chuva/Variável com previsão por dia).
-- ⬜ Telas: configuração do GP, painel do fim de semana (programas dos treinos), treino ao vivo,
-  classificação ao vivo; corrida e sprint usando o grid e o acerto.
+- ✅ Telas (`src/ui/`): configuração do GP (m3-a), painel do fim de semana com o editor de
+  programas (m3-b), classificação ao vivo (m3-c), treino ao vivo (mesma estrutura da
+  classificação — sem mockup próprio) e corrida/sprint com o grid e o acerto, coluna de pontos e
+  "Continuar". Capturas em `docs/screenshots/m3-*.png`. 84 testes.
 - ⬜ 3D nos 22 circuitos (relevo e cenário de cada pista).
 - ⬜ Realismo com modelos/texturas CC0 (aguarda liberar kenney.nl e polyhaven.com na rede).
 

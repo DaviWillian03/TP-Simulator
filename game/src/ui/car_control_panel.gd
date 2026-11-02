@@ -190,7 +190,7 @@ func refresh(race_position: int) -> void:
 	elif car.penalty_pending_s > 0.0:
 		_status.text = "Punição de %d s: cumpre na próxima parada." % int(car.penalty_pending_s)
 		color = UiStyle.RED
-	elif not sim.tyres.rule_satisfied(car.compounds_used):
+	elif not sim.compound_rule_ok(car):
 		_status.text = "Falta usar outro composto seco."
 		color = UiStyle.RED
 	else:

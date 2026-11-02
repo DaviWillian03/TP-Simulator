@@ -71,18 +71,19 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		var prog: Array = p_programs.get(d["id"], _ai_program())
 		programs[d["id"]] = valid_program(prog)
 		_plan[car] = {"queue": programs[d["id"]].duplicate(), "block": "", "block_end": 0.0, "next_lap": INF}
-		_start_next_block(car, rng.randf_range(0.0, 300.0))  # nem todos saem no primeiro minuto
+		_start_next_block(car, rng.randf_range(0.0, 90.0))  # nem todos saem no primeiro minuto
 
 
-## Corta o programa no que cabe nos 60 minutos (descontando a garagem entre blocos).
+## Corta o programa no que cabe nos 60 minutos (soma dos blocos; a garagem entre um bloco e
+## outro sai do tempo do próprio treino e pode encurtar o último bloco).
 static func valid_program(prog: Array) -> Array[String]:
 	var out: Array[String] = []
-	var used := 0.0
+	var used := 0
 	for id: String in prog:
 		if not BLOCKS.has(id):
 			continue
-		var need := float(BLOCKS[id]["minutes"]) * 60.0 + GARAGE_S
-		if used + need > SESSION_S:
+		var need := int(BLOCKS[id]["minutes"])
+		if used + need > int(SESSION_S / 60.0):
 			break
 		out.append(id)
 		used += need
@@ -142,7 +143,9 @@ func _start_next_block(car: CarState, delay: float) -> void:
 		return
 	var id: String = plan["queue"].pop_front()
 	plan["block"] = id
-	plan["block_end"] = minf(SESSION_S, time_s + delay + float(BLOCKS[id]["minutes"]) * 60.0)
+	var full := float(BLOCKS[id]["minutes"]) * 60.0
+	plan["block_end"] = minf(SESSION_S, time_s + delay + full)
+	plan["block_share"] = clampf((plan["block_end"] - time_s - delay) / full, 0.0, 1.0)  # cortado pelo fim do treino
 	car.tyre = "soft" if id == "quali" else "medium"
 	car.tyre_wear = 0.0
 	plan["next_lap"] = time_s + delay + practice_lap_time(car, id) * 1.3  # volta de saída
@@ -177,7 +180,7 @@ func practice_lap_time(car: CarState, block_id: String) -> float:
 func _finish_block(car: CarState, plan: Dictionary) -> void:
 	var id: String = plan["block"]
 	var setup: CarSetup = setups[car.driver["id"]]
-	var gain := rng.randf_range(GAIN_MIN, GAIN_MAX)
+	var gain := rng.randf_range(GAIN_MIN, GAIN_MAX) * float(plan.get("block_share", 1.0))
 	var text := ""
 	var problem_chance := PROBLEM_BASE + (100.0 - float(car.driver["rating"])) * PROBLEM_PER_RATING
 	if weather.wetness > 0.3 and id != "race":

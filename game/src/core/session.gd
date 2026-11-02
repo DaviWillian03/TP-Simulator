@@ -11,9 +11,16 @@ extends Node
 ##   --rain-at=<segundos> [--rain=<0..1>]   força chuva a partir desse instante
 ##   --weather=dry          sem chuva · --incidents=<0..n> multiplicador de incidentes
 ##   --screenshot=<arquivo.png> --frames=<n>   salva a tela após n quadros e fecha o jogo
+##   --gp                   abre a configuração do Grande Prêmio
+##   --weekend [--skip=<n>] abre o fim de semana (com --circuit/--team), simulando n sessões
+##   --play                 abre a sessão atual do fim de semana (depois do --skip)
 
 const TITLE_SCENE := "res://src/ui/title_screen.tscn"
 const RACE_SCENE := "res://src/ui/race_screen.tscn"
+const GP_SETUP_SCENE := "res://src/ui/gp_setup_screen.tscn"
+const WEEKEND_SCENE := "res://src/ui/weekend_screen.tscn"
+const PRACTICE_SCENE := "res://src/ui/practice_screen.tscn"
+const QUALI_SCENE := "res://src/ui/quali_screen.tscn"
 
 var circuit_id := "interlagos"
 var player_team := "mclaren"
@@ -25,6 +32,9 @@ var debug_sc := false  ## --sc: aciona o safety car logo após o --advance
 var debug_open_data := false  ## --data: abre o menu DADOS
 var debug_camera: Dictionary = {}  ## --yaw --pitch --dist --cam=<n> (capturas da vista 3D)
 var sim_overrides: Dictionary = {}  ## opções extras da RaceSim (testes: clima, incidentes)
+var weekend: WeekendSim = null  ## Grande Prêmio em andamento (null = corrida rápida)
+var gp_weather := "realistic"  ## escolhas da configuração do GP
+var gp_format := "full"
 
 var _screenshot_path := ""
 var _screenshot_frames := 0
@@ -60,6 +70,19 @@ func _ready() -> void:
 	if args.has("race"):
 		race_seed = int(args.get("seed", "1"))
 		get_tree().change_scene_to_file.call_deferred(RACE_SCENE)
+	elif args.has("gp"):
+		get_tree().change_scene_to_file.call_deferred(GP_SETUP_SCENE)
+	elif args.has("weekend") or args.has("practice") or args.has("quali") or args.has("play"):
+		var opts := {"player_team": player_team, "duration_pct": duration_pct, "seed": int(args.get("seed", "1")),
+			"weather": args.get("weather", "realistic")}
+		opts.merge(sim_overrides.duplicate(), false)
+		weekend = WeekendSim.new(circuit_id, opts)
+		for i in int(args.get("skip", "0")):
+			weekend.simulate_current()
+		if args.has("practice") or args.has("quali") or args.has("play"):
+			play_session.call_deferred()
+		else:
+			get_tree().change_scene_to_file.call_deferred(WEEKEND_SCENE)
 
 
 func _process(_delta: float) -> void:
@@ -83,4 +106,41 @@ func restart_race() -> void:
 
 
 func go_to_title() -> void:
+	weekend = null
 	get_tree().change_scene_to_file(TITLE_SCENE)
+
+
+# --- Grande Prêmio ----------------------------------------------------------------------
+
+func open_gp_setup() -> void:
+	get_tree().change_scene_to_file(GP_SETUP_SCENE)
+
+
+## Cria o fim de semana com as escolhas da configuração e abre o painel.
+func start_gp() -> void:
+	var opts := {"player_team": player_team, "duration_pct": duration_pct, "weather": gp_weather,
+		"format": gp_format, "seed": randi()}
+	opts.merge(sim_overrides.duplicate(), false)
+	weekend = WeekendSim.new(circuit_id, opts)
+	go_to_weekend()
+
+
+func go_to_weekend() -> void:
+	if weekend == null:
+		go_to_title()
+		return
+	if weekend.race_only and weekend.session_id() == "race":
+		play_session()  # "só a corrida": direto para a largada
+		return
+	get_tree().change_scene_to_file(WEEKEND_SCENE)
+
+
+## Abre a tela da sessão atual do fim de semana (treino, classificação ou corrida).
+func play_session() -> void:
+	var id := weekend.session_id()
+	if weekend.is_practice(id):
+		get_tree().change_scene_to_file(PRACTICE_SCENE)
+	elif weekend.is_quali(id):
+		get_tree().change_scene_to_file(QUALI_SCENE)
+	elif weekend.is_race(id):
+		get_tree().change_scene_to_file(RACE_SCENE)

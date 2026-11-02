@@ -132,3 +132,14 @@ func set_tyre(r: int, c: int, letter: String, color: Color, extra: String) -> vo
 	var box: HBoxContainer = _rows[r]["cells"][c]
 	(box.get_child(0) as TyreBadge).set_compound(letter, color)
 	(box.get_child(1) as Label).text = extra
+
+
+## Linha vermelha grossa embaixo da linha r (ex.: zona de eliminação da classificação).
+## r < 0 tira a linha.
+func set_cut_line(r: int) -> void:
+	for i in _rows.size():
+		var panel: PanelContainer = _rows[i]["panel"]
+		var st: StyleBoxFlat = panel.get_theme_stylebox("panel").duplicate()
+		st.border_color = UiStyle.RED if i == r else UiStyle.INK
+		st.border_width_bottom = 4 if i == r else 1
+		panel.add_theme_stylebox_override("panel", st)

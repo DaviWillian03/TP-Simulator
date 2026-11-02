@@ -1,5 +1,6 @@
 extends Control
-## Tela inicial (estilo revista): logo, modos de jogo (em construção) e corrida rápida.
+## Tela inicial (estilo revista): logo, modos de jogo (Grande Prêmio; os outros em construção)
+## e corrida rápida.
 
 const LOGO := preload("res://assets/branding/logo-light.svg")
 
@@ -49,7 +50,13 @@ func _ready() -> void:
 	# modos de jogo (ainda em construção)
 	var modes := HBoxContainer.new()
 	modes.add_theme_constant_override("separation", 12)
-	for m: String in ["Grande Prêmio", "Campanha", "Corrida Caótica"]:
+	var gp := UiStyle.accent(UiStyle.button("Grande Prêmio ▶"))
+	gp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gp.custom_minimum_size = Vector2(0, 44)
+	gp.add_theme_font_size_override("font_size", 16)
+	gp.pressed.connect(Session.open_gp_setup)
+	modes.add_child(gp)
+	for m: String in ["Campanha", "Corrida Caótica"]:
 		var b := UiStyle.button("%s — em construção" % m)
 		b.disabled = true
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -301,7 +301,7 @@ func _ai_wants_to_go(car: CarState) -> bool:
 	return true
 
 
-func ai_compound(car: CarState) -> String:
+func ai_compound(_car: CarState) -> String:
 	if weather.wetness >= 0.2:
 		return tyres.best_for_wetness(weather.wetness, ["inter", "wet"])
 	return "soft"

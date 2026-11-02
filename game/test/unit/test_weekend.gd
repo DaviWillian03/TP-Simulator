@@ -66,7 +66,8 @@ func test_piloto_reclama_da_area_mais_longe_do_ideal() -> void:
 
 func test_programa_e_cortado_no_que_cabe_em_60_minutos() -> void:
 	var prog := PracticeSession.valid_program(["race", "race", "race", "aero", "xyz"])
-	assert_eq(prog, ["race", "race"] as Array[String], "3×20 min + garagem não cabe em 60 min")
+	assert_eq(prog, ["race", "race", "race"] as Array[String], "3×20 min enchem o treino")
+	assert_eq(PracticeSession.valid_program(PracticeSession.DEFAULT_PROGRAM).size(), 4, "o programa padrão cabe")
 
 
 func test_bloco_de_acerto_aero_melhora_a_aerodinamica() -> void:
@@ -284,3 +285,11 @@ func test_treinos_melhoram_o_acerto_ao_longo_do_fim_de_semana() -> void:
 	for id: String in w.setups:
 		total_after += (w.setups[id] as CarSetup).lap_penalty_s()
 	assert_lt(total_after, total_before * 0.5, "três treinos cortam mais da metade da perda pelo acerto")
+
+
+func test_simular_a_corrida_faz_a_estrategia_parar_tambem_os_carros_do_jogador() -> void:
+	var w := WeekendSim.new("interlagos", {"seed": 6, "player_team": "williams", "duration_pct": 0.25,
+		"weather": "dry", "incident_rate": 0.0, "format": "race_only"})
+	w.simulate_current()
+	for id: String in ["albon", "sainz"]:
+		assert_lt(w.results["race"].find(id), 20, "%s não pode ser desclassificado por falta de parada" % id)

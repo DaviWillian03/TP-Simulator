@@ -21,6 +21,8 @@ das escolhas técnicas.
   StrategyAI (IA); fim de semana: WeekendSim (sessões, previsão, grids, pontos), CarSetup (acerto),
   PracticeSession (programas de blocos), QualiSim (Q1/Q2/Q3). Passo fixo `DT`, semente
   determinística. Regras novas entram aqui, com teste.
+- Telas do GP: `gp_setup_screen`, `weekend_screen`, `practice_screen`, `quali_screen` (peças comuns
+  em `ScreenKit`); o fim de semana ativo fica em `Session.weekend`.
   Módulos que guardam o RaceSim usam `WeakRef` (ciclo de referência vazaria memória).
 - `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). Visual "Paddock"
   (revista): **todas** as cores/fontes/fios vêm de `UiStyle` — nada de cor solta nas telas.
@@ -41,7 +43,10 @@ DISPLAY=:99 godot --resolution 1280x720 -- --race --team=williams --advance=420 
 Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--weather=dry`,
 `--incidents=<mult>`, `--sc` (aciona safety car), `--data` (abre o menu DADOS), `--seed`, `--pct`,
 `--pause` (começa pausado: grid parado), `--circuit=<id>`, câmera 3D `--cam=<n> --yaw --pitch --dist`
-(a câmera vai direto ao alvo nas capturas).
+(a câmera vai direto ao alvo nas capturas). Grande Prêmio: `--gp` (configuração), `--weekend`
+(painel) e `--play` (sessão atual ao vivo), com `--skip=<n>` para simular as n primeiras sessões
+(ex.: `--play --circuit=shanghai --skip=2` abre a sprint); `--advance` vale também no treino e na
+classificação.
 Testes de regras usam `{"weather": "dry", "incident_rate": 0.0}` salvo quando testam clima/incidentes.
 - Captura de tela precisa de display: `Xvfb :99 -screen 0 1280x720x24 &`. Use para conferir
   layout depois de mexer na interface (ler logs não mostra a tela).

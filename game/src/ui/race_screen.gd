@@ -10,6 +10,7 @@ const SPEEDS := [1.0, 2.0, 4.0, 8.0]
 const FAST_TIME := 4.0  ## a partir desta velocidade a câmera 3D vai para a vista geral
 
 var sim: RaceSim
+var weekend: WeekendSim = null  ## Grande Prêmio em andamento (null = corrida rápida)
 var time_scale := 2.0
 var paused := false
 
@@ -30,12 +31,17 @@ var _results_shown := false
 func _ready() -> void:
 	theme = UiStyle.make_theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var options := {"duration_pct": Session.duration_pct, "seed": Session.race_seed, "player_team": Session.player_team}
-	options.merge(Session.sim_overrides, true)
-	sim = RaceSim.new(
-		TrackModel.new(GameData.circuit(Session.circuit_id)),
-		TyreModel.new(GameData.tyres()),
-		GameData.teams(), GameData.drivers(), options)
+	weekend = Session.weekend if Session.weekend != null and Session.weekend.is_race(Session.weekend.session_id()) else null
+	if weekend != null:
+		# Grande Prêmio: grid da classificação, acerto dos treinos, sprint ou corrida
+		sim = weekend.make_race()
+	else:
+		var options := {"duration_pct": Session.duration_pct, "seed": Session.race_seed, "player_team": Session.player_team}
+		options.merge(Session.sim_overrides, true)
+		sim = RaceSim.new(
+			TrackModel.new(GameData.circuit(Session.circuit_id)),
+			TyreModel.new(GameData.tyres()),
+			GameData.teams(), GameData.drivers(), options)
 	if Session.debug_advance_s > 0.0:
 		sim.advance(Session.debug_advance_s)
 	if Session.debug_sc:
@@ -162,7 +168,7 @@ func _build_masthead() -> Control:
 	var bar := HBoxContainer.new()
 	bar.custom_minimum_size = Vector2(0, 58)
 	bar.add_theme_constant_override("separation", 14)
-	var title := UiStyle.label(sim.track.grand_prix.to_upper(), 36, UiStyle.INK, true)
+	var title := UiStyle.label(("SPRINT · " if sim.sprint else "") + sim.track.grand_prix.to_upper(), 36, UiStyle.INK, true)
 	title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	bar.add_child(title)
 	_meta = UiStyle.caption("")
@@ -324,6 +330,13 @@ func _notification(what: int) -> void:
 
 # --- resultado final -----------------------------------------------------------------
 
+## Grande Prêmio: registra o resultado e os pontos e volta ao painel do fim de semana.
+func _continue_weekend() -> void:
+	weekend.finish_race(sim)
+	Session.go_to_weekend()
+
+
+
 func _build_results() -> Control:
 	var shade := ColorRect.new()
 	shade.color = Color(UiStyle.INK, 0.45)
@@ -343,7 +356,7 @@ func _build_results() -> Control:
 	v.add_theme_constant_override("separation", 8)
 	panel.add_child(v)
 	var head := HBoxContainer.new()
-	head.add_child(UiStyle.label("RESULTADO", 30, UiStyle.INK, true))
+	head.add_child(UiStyle.label("RESULTADO DA SPRINT" if sim.sprint else "RESULTADO", 30, UiStyle.INK, true))
 	head.add_child(UiStyle.hspacer())
 	head.add_child(UiStyle.label(sim.track.grand_prix.to_upper(), 20, UiStyle.RED, true))
 	v.add_child(head)
@@ -363,6 +376,7 @@ func _build_results() -> Control:
 		{"title": "Tempo / dif.", "width": 210, "align": "right"},
 		{"title": "Paradas", "width": 62, "align": "right"},
 		{"title": "Melhor volta", "width": 104, "align": "right"},
+		{"title": "Pts", "width": 38, "align": "right"},
 	], sim.cars.size())
 	var order := sim.standings()
 	for i in order.size():
@@ -390,13 +404,21 @@ func _build_results() -> Control:
 		table.set_text(i, 3, gap)
 		table.set_text(i, 4, str(car.pit_stops))
 		table.set_text(i, 5, best)
+		var pts := 0 if out else RaceSim.points_for(i + 1, sim.sprint)
+		table.set_text(i, 6, str(pts) if pts > 0 else "")
 
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
-	var again := UiStyle.accent(UiStyle.button("Correr de novo"))
-	again.custom_minimum_size = Vector2(170, 40)
-	again.pressed.connect(Session.restart_race)
-	buttons.add_child(again)
+	if weekend != null:
+		var cont := UiStyle.accent(UiStyle.button("Continuar"))
+		cont.custom_minimum_size = Vector2(170, 40)
+		cont.pressed.connect(_continue_weekend)
+		buttons.add_child(cont)
+	else:
+		var again := UiStyle.accent(UiStyle.button("Correr de novo"))
+		again.custom_minimum_size = Vector2(170, 40)
+		again.pressed.connect(Session.restart_race)
+		buttons.add_child(again)
 	var menu := UiStyle.button("Menu")
 	menu.custom_minimum_size = Vector2(100, 40)
 	menu.pressed.connect(Session.go_to_title)

@@ -213,7 +213,8 @@ func simulate_current() -> void:
 		q.run_to_end()
 		finish_quali(q)
 	elif is_race(id):
-		var sim := make_race({"radio": false})
+		# simulando, a estratégia da equipe decide também pelos carros do jogador
+		var sim := make_race({"radio": false, "player_team": ""})
 		sim.run_to_end()
 		finish_race(sim)
 

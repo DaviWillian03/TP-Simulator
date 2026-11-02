@@ -193,10 +193,10 @@ func _build_pit_building(w: float) -> void:
 	var roof := Materials3D.flat(Color("#3f4247"), 0.95)
 	var bays := teams.size() * 2
 	for k in bays:
-		var f := float((k - bays / 2) * 3) / t3.n  # 3 amostras = 12 m por vão
+		var f := float((k - (bays >> 1)) * 3) / t3.n  # 3 amostras = 12 m por vão
 		var b := t3.basis_at(f)
 		var base := t3.point_at(f) - b.x * (w + 31.0)
-		var team: Dictionary = teams[k / 2]
+		var team: Dictionary = teams[k >> 1]
 		var stripe := Materials3D.flat(Color(team["color"]), 0.5)
 		# (deslocamento lateral a partir do centro do prédio, altura, tamanho, material)
 		for part: Array in [

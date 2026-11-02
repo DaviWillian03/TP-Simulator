@@ -161,7 +161,7 @@ func wall(offset: float, height: float, mask: Callable, col_a: Color, col_b: Col
 		var j := (i + 1) % n
 		var a := center[i] + right[i] * offset
 		var b := center[j] + right[j] * offset
-		var col := col_a if (i / 2) % 2 == 0 else col_b
+		var col := col_a if (i % 4) < 2 else col_b
 		var nrm := -right[i] * signf(offset)
 		for v in [a, b, b + Vector3.UP * height, a, b + Vector3.UP * height, a + Vector3.UP * height]:
 			st.set_color(col)
