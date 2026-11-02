@@ -509,7 +509,7 @@ func _build_results() -> Control:
 		table.set_text(i, 3, gap)
 		table.set_text(i, 4, str(car.pit_stops))
 		table.set_text(i, 5, best)
-		var pts := 0 if out else RaceSim.points_for(i + 1, sim.sprint)
+		var pts := 0 if out else (weekend.points_for(i + 1, sim.sprint) if weekend != null else RaceSim.points_for(i + 1, sim.sprint))
 		table.set_text(i, 6, str(pts) if pts > 0 else "")
 
 	var buttons := HBoxContainer.new()

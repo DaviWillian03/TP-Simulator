@@ -5,6 +5,7 @@ extends Control
 ## Abas: Carro (árvore de P&D) e Fábrica já existem; Pessoal (contratos) existe; Finanças é camada futura (apagada).
 
 var campaign: Campaign
+var _layer: Control
 var _hero: PanelContainer
 var _date: Label
 var _count_days: Label
@@ -44,6 +45,17 @@ func _ready() -> void:
 	chips.add_child(date_box)
 	chips.add_child(_chip("Caixa", "US$ %d mi" % int(campaign.budget_musd), 16))
 	chips.add_child(_chip("Diretoria", campaign.trust_label(), 16))
+	var news_btn := Button.new()
+	news_btn.text = "NOTÍCIAS" + ("  ●" if not campaign.events.unseen.is_empty() else "")
+	news_btn.focus_mode = Control.FOCUS_NONE
+	news_btn.custom_minimum_size = Vector2(0, 44)
+	for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		news_btn.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 22, 18, 0))
+	news_btn.add_theme_font_size_override("font_size", 14)
+	news_btn.add_theme_color_override("font_color", UiStyle.G_TEXT)
+	news_btn.pressed.connect(_open_news)
+	ScreenKit.press_feedback(news_btn)
+	chips.add_child(news_btn)
 	ScreenKit.place(chips, layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 26))
 
 	# abas
@@ -92,6 +104,8 @@ func _ready() -> void:
 	car.set_team(campaign.player_team, first, c2 if c2.get_luminance() > 0.35 else Color.WHITE, team)
 	layer.modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
+	_layer = layer
+	_show_next_event.call_deferred()
 
 
 func _chip(caption: String, value: String, size: int) -> PanelContainer:
@@ -128,7 +142,7 @@ func _event_card() -> Control:
 	v.add_child(UiStyle.g_caption("O fim de semana começa agora" if ready else "Próximo evento · em %d dia%s" % [days, "" if days == 1 else "s"], UiStyle.G_INK_2))
 	v.add_child(UiStyle.g_label(String(r["grand_prix"]).to_upper(), 38, UiStyle.G_INK, "black"))
 	var date: String = r["date"]
-	var weekend := "fim de semana sprint" if r.get("sprint", false) else "fim de semana normal"
+	var weekend := "fim de semana sprint" if campaign.regs.is_sprint(r["id"]) else "fim de semana normal"
 	v.add_child(UiStyle.g_label("%s · RD %d de %d · %s" % [circuit.get("short_name", ""), int(r["round"]), Campaign.calendar().size(), weekend], UiStyle.FS_BODY, UiStyle.G_INK_2))
 	var facts := HBoxContainer.new()
 	facts.add_theme_constant_override("separation", 10)
@@ -279,3 +293,25 @@ func _standing_row(pos: int, team_id: String, pts: int, mine: bool) -> Control:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		Session.go_to_title()
+
+
+# --- eventos inesperados ------------------------------------------------------------------------
+
+## Mostra, um de cada vez, os eventos que aconteceram desde a última visita (consequência já aplicada).
+func _show_next_event() -> void:
+	if campaign.events.unseen.is_empty() or not is_inside_tree():
+		return
+	var item: Dictionary = campaign.events.unseen.pop_back()  # a mais antiga primeiro
+	var card := EventCard.new()
+	card.setup(item)
+	card.dismissed.connect(func() -> void:
+		campaign.save()
+		_show_next_event.call_deferred())
+	_layer.add_child(card)
+
+
+func _open_news() -> void:
+	var sheet := NewsSheet.new()
+	sheet.setup(campaign)
+	sheet.closed.connect(func() -> void: campaign.events.unseen.clear())
+	_layer.add_child(sheet)

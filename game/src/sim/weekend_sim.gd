@@ -37,6 +37,8 @@ var duration_pct := 1.0
 var weather_mode := "realistic"
 var race_only := false
 var sprint_weekend := false
+var points_race: Array = RaceSim.RACE_POINTS  ## tabela de pontos da corrida (campanha: do regulamento)
+var points_sprint: Array = RaceSim.SPRINT_POINTS
 var seed_value := 1
 var incident_rate := 1.0
 var campaign := false  ## fim de semana de uma campanha (volta para a sede ao terminar)
@@ -70,7 +72,10 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	campaign = bool(options.get("campaign", false))
 	seed_value = int(options.get("seed", 1))
 	rng.seed = seed_value
-	sprint_weekend = bool(circuit.get("sprint", false))
+	sprint_weekend = bool(options.get("sprint", circuit.get("sprint", false)))  # campanha: o Conselho pode mudar quais GPs têm sprint
+	points_race = options.get("points_race", RaceSim.RACE_POINTS)
+	points_sprint = options.get("points_sprint", RaceSim.SPRINT_POINTS)
+	tyres.min_dry_compounds = int(options.get("min_dry_compounds", tyres.min_dry_compounds))
 	if race_only:
 		sessions = ["race"]
 	else:
@@ -198,13 +203,19 @@ func finish_quali(q: QualiSim) -> void:
 	_next()
 
 
+## Pontos da posição pela tabela do regulamento deste fim de semana.
+func points_for(position: int, is_sprint_race: bool) -> int:
+	var table: Array = points_sprint if is_sprint_race else points_race
+	return int(table[position - 1]) if position >= 1 and position <= table.size() else 0
+
+
 func finish_race(sim: RaceSim) -> void:
 	var order := sim.standings()
 	_store(order)
 	for i in order.size():
 		var car := order[i]
 		if not (car.retired or car.disqualified):
-			points[car.driver["id"]] += RaceSim.points_for(i + 1, sim.sprint)
+			points[car.driver["id"]] += points_for(i + 1, sim.sprint)
 	_next()
 
 

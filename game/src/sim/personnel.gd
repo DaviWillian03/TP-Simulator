@@ -210,7 +210,9 @@ func ask_for(id: String, camp: Campaign) -> float:
 	var p := person(id, camp)
 	if p.is_empty():
 		return 0.0
-	return driver_ask(float(p["rating"])) if p["kind"] == "driver" else staff_ask(float(p["skill"]))
+	if p["kind"] != "driver":
+		return staff_ask(float(p["skill"]))
+	return snappedf(driver_ask(float(p["rating"])) * float(camp.events.ask_mult.get(id, 1.0)), 0.1)
 
 
 ## Multa para tirar a pessoa da equipe atual (0 se está livre ou se o contrato vence esta temporada).

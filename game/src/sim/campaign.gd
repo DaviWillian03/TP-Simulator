@@ -39,6 +39,8 @@ var history: Array = []  ## [{round, circuit, results: [ids]}]
 var dev := CarDevelopment.new()  ## árvore de P&D e fábrica
 var personnel := Personnel.new()  ## contratos de pilotos e técnicos
 var sponsors := Sponsorship.new()  ## patrocínios por zona do carro
+var regs := Regulations.new()  ## regulamento e Conselho de regras
+var events := CampaignEvents.new()  ## eventos inesperados
 var ledger: Dictionary = {}  ## categoria -> total da temporada (US$ mi): sponsors, bonus, prize, ops, payroll, upkeep, rd, works, contracts, debt
 var cash_log: Array = []  ## [{r: rodada, cash}] caixa depois de cada rodada
 var base_rating := 0.0  ## nota do carro da equipe sem os upgrades
@@ -182,6 +184,9 @@ func _init_dev(initial_level: int) -> void:
 	dev = CarDevelopment.new()
 	personnel = Personnel.new()
 	sponsors = Sponsorship.new()
+	regs = Regulations.new()
+	regs.setup()
+	events = CampaignEvents.new()
 	ledger = {}
 	dev.set_all_levels(initial_level)
 	dev.seed_base = season
@@ -204,12 +209,12 @@ func record(category: String, amount: float) -> void:
 
 
 func income_total() -> float:
-	return float(ledger.get("sponsors", 0.0)) + float(ledger.get("bonus", 0.0)) + float(ledger.get("prize", 0.0))
+	return float(ledger.get("sponsors", 0.0)) + float(ledger.get("bonus", 0.0)) + float(ledger.get("prize", 0.0)) + float(ledger.get("events_in", 0.0))
 
 
 func expense_total() -> float:
 	var t := 0.0
-	for k: String in ["ops", "payroll", "upkeep", "rd", "works", "contracts", "debt"]:
+	for k: String in ["ops", "payroll", "upkeep", "rd", "works", "contracts", "events", "debt"]:
 		t += float(ledger.get(k, 0.0))
 	return t
 
@@ -222,10 +227,21 @@ func projected_cash_end() -> float:
 	return budget_musd + left * (sponsor_per_race() - cost_per_race()) + prize
 
 
-func _dev_tick(n: int) -> void:
+func _dev_tick(n: int, last_day: int = -1) -> void:
 	if n > 0:
+		var end_day := day if last_day < 0 else last_day
+		for i in n:
+			events.tick_day(self, end_day - n + 1 + i)
 		dev.tick(self, n)
 		refresh_rating()
+		_skip_cancelled()
+
+
+## Rodadas canceladas por eventos são puladas: não há fim de semana, pontos nem patrocínio.
+func _skip_cancelled() -> void:
+	var n := calendar().size()
+	while round < n and events.cancelled.has(round):
+		round += 1
 
 
 func is_valid() -> bool:
@@ -275,7 +291,7 @@ func to_dict() -> Dictionary:
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
-		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log}
+		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict()}
 
 
 static func from_dict(d: Dictionary) -> Campaign:
@@ -316,6 +332,10 @@ static func from_dict(d: Dictionary) -> Campaign:
 		c.personnel = Personnel.from_dict(d["personnel"])
 	if d.has("sponsors"):
 		c.sponsors = Sponsorship.from_dict(d["sponsors"])
+	if d.has("regs"):
+		c.regs = Regulations.from_dict(d["regs"])
+	if d.has("events"):
+		c.events = CampaignEvents.from_dict(d["events"])
 	c.ledger = d.get("ledger", {})
 	if d.has("cash_log"):
 		c.cash_log = d["cash_log"]
@@ -360,7 +380,10 @@ func next_round() -> Dictionary:
 
 ## Opções do fim de semana da próxima rodada (grid da campanha).
 func weekend_options(extra: Dictionary = {}) -> Dictionary:
-	var o := {"player_team": player_team, "teams": _teams, "drivers": _drivers, "seed": season * 100 + round + 1, "campaign": true}
+	var o := {"player_team": player_team, "teams": _teams, "drivers": _drivers, "seed": season * 100 + round + 1, "campaign": true,
+		"points_race": regs.points_race, "points_sprint": regs.points_sprint, "min_dry_compounds": regs.min_dry_compounds}
+	if not season_over():
+		o["sprint"] = regs.is_sprint(next_round()["id"])
 	o.merge(extra, true)
 	return o
 
@@ -399,9 +422,11 @@ func record_weekend(w: WeekendSim) -> void:
 	trust = clampf(trust + (drift if gap >= 0 else float(gap) * drift * 0.5) * _difficulty_factor(), 0.0, 100.0)
 	round += 1
 	cash_log.append({"r": round, "cash": budget_musd})
+	events.on_race_recorded(self)
 	var new_day := _day_of(calendar()[round - 1]["date"]) + 1
-	_dev_tick(new_day - day)
+	_dev_tick(new_day - day, new_day)
 	day = new_day
+	_skip_cancelled()
 	if budget_musd < 0.0:
 		state = "bankrupt"
 	elif trust <= 0.0:
@@ -573,7 +598,11 @@ func close_season() -> Dictionary:
 
 ## Começa a próxima temporada (mesmo grid: o mercado de pilotos chega na camada de contratos).
 func start_next_season() -> void:
+	events.reset_for_new_season(self)  # lesionados voltam ao carro e o calendário cancelado zera antes do mercado
 	personnel.rollover(self)
+	var council := regs.apply_passed(self)
+	for msg: String in council:
+		events._add(self, {"day": day, "cat": "calendar", "id": "council", "title": "CONSELHO DE REGRAS", "text": msg, "chips": []})
 	for d: Dictionary in _drivers:  # jovens evoluem em direção ao potencial; veteranos perdem ritmo
 		DriverStats.evolve(d, season + 1, 0)
 	sponsors.expire(self)

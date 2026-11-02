@@ -131,7 +131,7 @@ func offers_for(camp: Campaign, zone_id: String) -> Array[Dictionary]:
 		if withdrawn.has(key):
 			continue
 		var luck := rng.randf_range(0.9, 1.15)
-		var per_race := snappedf(float(data()["tier_base"][int(brand["tier"]) - 1]) * float(z["mult"]) * luck * camp.dev.sponsor_mult(), 0.05)
+		var per_race := snappedf(float(data()["tier_base"][int(brand["tier"]) - 1]) * float(z["mult"]) * luck * camp.dev.sponsor_mult() * camp.events.market_multiplier(camp.day), 0.05)
 		if boosted.has(key):
 			per_race = float(boosted[key])
 		var frac: float = data()["podium_bonus_options"][rng.randi() % data()["podium_bonus_options"].size()]

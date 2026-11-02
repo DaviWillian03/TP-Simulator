@@ -1,0 +1,20 @@
+{
+ "_notas": "PROVISÓRIO. Propostas do Conselho de regras (uma por tipo a cada fim de temporada). favors: quem tende a votar SIM (top = equipes fortes, low = equipes fracas). Valem na temporada seguinte.",
+ "sprint_priority": ["shanghai", "miami", "montreal", "silverstone", "zandvoort", "singapore", "austin", "interlagos", "suzuka", "lusail", "spa", "baku", "mexico", "lasvegas"],
+ "proposals": [
+  {"id": "points_top12", "kind": "points", "title": "PONTUAÇÃO · TOP 12 PONTUAM", "favors": "low",
+   "desc": "Os 12 primeiros marcam ponto (25-18-15-12-10-8-6-5-4-3-2-1). Beneficia as equipes do meio do grid.",
+   "points_race": [25, 18, 15, 12, 10, 8, 6, 5, 4, 3, 2, 1]},
+  {"id": "points_winner", "kind": "points", "title": "PONTUAÇÃO · VITÓRIA VALE MAIS", "favors": "top",
+   "desc": "A vitória passa a valer 30 pontos (30-20-15-12-10-8-6-4-2-1). Premia quem vence, não só quem pontua sempre.",
+   "points_race": [30, 20, 15, 12, 10, 8, 6, 4, 2, 1]},
+  {"id": "sprints_more", "kind": "sprint", "title": "MAIS CORRIDAS SPRINT · +2 FINS DE SEMANA", "favors": "top",
+   "desc": "Mais dois fins de semana sprint: mais pontos em jogo, mais custo de pneus e peças.", "sprint_delta": 2},
+  {"id": "sprints_fewer", "kind": "sprint", "title": "MENOS CORRIDAS SPRINT · −2 FINS DE SEMANA", "favors": "low",
+   "desc": "Dois fins de semana sprint a menos: menos desgaste e custo, menos pontos em disputa.", "sprint_delta": -2},
+  {"id": "tyres_free", "kind": "tyres", "title": "PNEUS · LIBERAR O COMPOSTO OBRIGATÓRIO", "favors": "low",
+   "desc": "Acaba a regra dos 2 compostos secos: dá para correr com um só se a estratégia aguentar.", "min_dry_compounds": 1},
+  {"id": "tyres_three", "kind": "tyres", "title": "PNEUS · EXIGIR 3 COMPOSTOS SECOS", "favors": "top",
+   "desc": "Passam a ser obrigatórios 3 compostos secos diferentes: pelo menos duas paradas.", "min_dry_compounds": 3}
+ ]
+}

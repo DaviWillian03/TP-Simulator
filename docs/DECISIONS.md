@@ -325,3 +325,13 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - **Conselho de regras (1ª versão)**: pontuação, corridas sprint e regra de pneus; valem na temporada seguinte.
 - **Votação**: todas as equipes votam (IA pelo próprio interesse); o jogador só vota, **sem lobby**; maioria simples
   (empate barra a proposta).
+
+### Eventos inesperados e Conselho de regras implementados (mockups v13 aprovados)
+- `CampaignEvents` (`data/events.json`): sorteio por dia (raros ≈1/60 dias, normais ≈1/28, frequentes ≈1/14), 10 eventos em 4 categorias,
+  consequência automática + notícia. Lesão troca o titular por um reserva da F2/F3 no grid (volta depois das corridas de afastamento),
+  crise reduz ritmo/regularidade por rodadas, corrida cancelada é pulada no calendário, incêndio atrasa projetos e custa caixa,
+  lote defeituoso perde um projeto, patrocinador sai sem multa, avanço adianta um projeto, crise econômica reduz ofertas, apoio do país-sede soma caixa.
+- `Regulations` (`data/rules.json`): pontuação, número de fins de semana sprint e compostos obrigatórios; 3 propostas por fim de temporada, todas as
+  equipes votam (IA por força do carro + 15% de ruído), jogador só vota, maioria simples, empate barra; valem na temporada seguinte e entram nos
+  fins de semana (`points_race`, `sprint`, `min_dry_compounds`).
+- Telas: cartão de evento na sede (`EventCard`), lista e frequência (`NewsSheet`, botão Notícias), `campaign_council_screen` (aba Conselho, botão no relatório).

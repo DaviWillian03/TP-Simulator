@@ -67,6 +67,7 @@ Cada marco termina jogável e testado. Itens vêm de `docs/DECISIONS.md`.
   técnico e engenheiros, mercado, negociação, folha de pagamento e virada com a IA renovando/contratando.
 - ✅ Finanças e Patrocínios (2026-11-02): 5 zonas do carro, ofertas mensais por influência, bônus por pódio,
   livro-caixa (receitas × despesas), projeção do caixa e histórico. `Sponsorship`, telas Patrocínios e Finanças.
+- ✅ Eventos inesperados e Conselho de regras (2026-11-02): 10 eventos automáticos e votação de pontuação, sprints e pneus.
 - ⬜ Camadas seguintes: estúdio de design, academia, teto de gastos, conselho,
   eventos, F2/F3/F4 simuladas, dados reais de pilotos/técnicos.
 

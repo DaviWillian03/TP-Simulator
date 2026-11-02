@@ -113,6 +113,12 @@ func _ready() -> void:
 	go.custom_minimum_size = Vector2(380, UiStyle.TOUCH_MAIN + 4)
 	go.pressed.connect(Session.finish_season_report)
 	ScreenKit.place(go, layer, Control.PRESET_BOTTOM_RIGHT, Vector2(-44, -30))
+	if not bad:
+		var council := ScreenKit.light_button("CONSELHO DE REGRAS")
+		council.custom_minimum_size = Vector2(300, UiStyle.TOUCH_MAIN + 4)
+		council.add_theme_font_size_override("font_size", 16)
+		council.pressed.connect(Session.open_campaign_council)
+		ScreenKit.place(council, layer, Control.PRESET_BOTTOM_RIGHT, Vector2(-44 - 380 - 16, -30))
 	layer.modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
 

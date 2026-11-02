@@ -2,9 +2,9 @@ extends Control
 ## Finanças — resumo claro (mockup v11-1): receitas × despesas da temporada, caixa por rodada com projeção,
 ## saldo por corrida e histórico das temporadas. Os números vêm do livro-caixa da campanha (`Campaign.ledger`).
 
-const INCOME_ROWS := [["sponsors", "Patrocínios"], ["bonus", "Bônus de resultado"], ["prize", "Prêmio do campeonato"]]
+const INCOME_ROWS := [["sponsors", "Patrocínios"], ["bonus", "Bônus de resultado"], ["prize", "Prêmio do campeonato"], ["events_in", "Apoio e eventos"]]
 const EXPENSE_ROWS := [["ops", "Corridas e operação"], ["payroll", "Folha de pagamento"], ["upkeep", "Manutenção da fábrica"],
-	["rd", "P&D (projetos)"], ["works", "Obras da fábrica"], ["contracts", "Contratos e multas"], ["debt", "Dívida"]]
+	["rd", "P&D (projetos)"], ["works", "Obras da fábrica"], ["contracts", "Contratos e multas"], ["events", "Eventos inesperados"], ["debt", "Dívida"]]
 
 var campaign: Campaign
 
@@ -118,7 +118,7 @@ func _income() -> Control:
 		top = maxf(top, float(campaign.ledger.get(r[0], 0.0)))
 	for r: Array in INCOME_ROWS:
 		var amount := float(campaign.ledger.get(r[0], 0.0))
-		if amount > 0.0 or r[0] != "prize":
+		if amount > 0.0 or r[0] in ["sponsors", "bonus"]:
 			v.add_child(_row(r[1], amount, top, Color("#3ec9a6")))
 	v.add_child(_total("Receitas até agora", campaign.income_total(), Color("#7fe0b1")))
 	return v
@@ -132,7 +132,7 @@ func _expenses() -> Control:
 		top = maxf(top, float(campaign.ledger.get(r[0], 0.0)))
 	for r: Array in EXPENSE_ROWS:
 		var amount := float(campaign.ledger.get(r[0], 0.0))
-		if amount <= 0.0 and r[0] == "debt":
+		if amount <= 0.0 and r[0] in ["debt", "events"]:
 			continue
 		var color := Color("#ff6a5a") if r[0] in ["ops", "payroll", "upkeep"] else Color("#ffd24a")
 		v.add_child(_row(r[1], amount, top, color))

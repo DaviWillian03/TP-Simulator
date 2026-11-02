@@ -28,6 +28,7 @@ const TEAM_CREATOR_SCENE := "res://src/ui/team_creator_screen.tscn"
 const CAMPAIGN_HUB_SCENE := "res://src/ui/campaign_hub_screen.tscn"
 const CAMPAIGN_STANDINGS_SCENE := "res://src/ui/campaign_standings_screen.tscn"
 const CAMPAIGN_SPONSORS_SCENE := "res://src/ui/campaign_sponsors_screen.tscn"
+const CAMPAIGN_COUNCIL_SCENE := "res://src/ui/campaign_council_screen.tscn"
 const CAMPAIGN_FINANCE_SCENE := "res://src/ui/campaign_finance_screen.tscn"
 const CAMPAIGN_STAFF_SCENE := "res://src/ui/campaign_staff_screen.tscn"
 const CAMPAIGN_CAR_SCENE := "res://src/ui/campaign_car_screen.tscn"
@@ -107,7 +108,7 @@ func _ready() -> void:
 			if c2.mode == "created":
 				TeamEmblems.register_custom(c2.team())
 			open_campaign_standings.call_deferred()
-	elif args.has("car") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance"):  # (capturas) árvore de P&D / fábrica da campanha salva
+	elif args.has("car") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance") or args.has("council"):  # (capturas) árvore de P&D / fábrica da campanha salva
 		var c4 := Campaign.load_saved()
 		if args.has("fresh"):  # (captura) campanha nova da equipe --team, com --demo = P&D e obras de exemplo
 			c4 = Campaign.new_real(player_team)
@@ -126,7 +127,11 @@ func _ready() -> void:
 			player_team = c4.player_team
 			if c4.mode == "created":
 				TeamEmblems.register_custom(c4.team())
-			if args.has("sponsors"):
+			if args.has("council"):
+				if args.has("endseason"):
+					c4.round = 22  # (captura) abre a votação do fim de temporada
+				open_campaign_council.call_deferred()
+			elif args.has("sponsors"):
 				open_campaign_sponsors.call_deferred()
 			elif args.has("finance"):
 				open_campaign_finance.call_deferred()
@@ -159,6 +164,12 @@ func _ready() -> void:
 			play_session.call_deferred()
 	elif args.has("hub"):
 		var c := Campaign.load_saved()
+		if args.has("fresh"):  # (captura) campanha nova da equipe --team; --event=<id> aplica um evento de exemplo
+			c = Campaign.new_real(player_team)
+		if c != null and args.has("event"):
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 7
+			c.events._add(c, c.events._apply(c, CampaignEvents.event_def(args["event"]), rng, c.day))
 		if c != null:
 			start_campaign.call_deferred(c)
 	elif args.has("gp"):
@@ -249,6 +260,10 @@ func open_campaign_standings() -> void:
 
 func open_campaign_sponsors() -> void:
 	get_tree().change_scene_to_file(CAMPAIGN_SPONSORS_SCENE)
+
+
+func open_campaign_council() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_COUNCIL_SCENE)
 
 
 func open_campaign_finance() -> void:
