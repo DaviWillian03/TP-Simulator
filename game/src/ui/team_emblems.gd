@@ -34,7 +34,7 @@ static func get_texture(team_id: String) -> Texture2D:
 	if tex == null:
 		for ext: String in ["png", "svg", "webp", "jpg"]:
 			if ResourceLoader.exists(LOCAL_DIR + team_id + "." + ext):
-				tex = load(LOCAL_DIR + team_id + "." + ext)
+				tex = _framed(team_id, load(LOCAL_DIR + team_id + "." + ext))
 				break
 	if tex == null:
 		var path := BUILTIN_DIR + team_id + ".svg"
@@ -56,6 +56,7 @@ static func _load_imported(team_id: String) -> Texture2D:
 ## Limpa o cache (após importar ou remover imagens).
 static func clear_cache() -> void:
 	_cache.clear()
+	_custom.clear()
 
 
 ## TextureRect pronto para usar numa linha da interface.
@@ -67,3 +68,66 @@ static func make_rect(team_id: String, px: int) -> TextureRect:
 	r.custom_minimum_size = Vector2(px, px)
 	r.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return r
+
+
+# --- logos pessoais (pasta local): quadradinho na cor da equipe ---------------------------
+
+const FRAME_PX := 128
+const FRAME_RADIUS := 26
+const FRAME_PAD := 0.17
+const FRAME_PAD_WIDE := 0.08
+
+
+## Logos brancas (as da navegação da F1) somem em fundo claro e ficam minúsculas quando são
+## largas. Compomos cada uma sobre um quadrado arredondado na cor da equipe (ou da cor de
+## destaque, se a principal for clara), como na transmissão. Imagens coloridas ficam como estão.
+static func _framed(team_id: String, tex: Texture2D) -> Texture2D:
+	var img := tex.get_image() if tex != null else null
+	if img == null or img.is_empty() or not _is_white_logo(img):
+		return tex
+	img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	var team := GameData.team_by_id(GameData.teams(), team_id)
+	var bg := _frame_color(team)
+	var out := Image.create(FRAME_PX, FRAME_PX, false, Image.FORMAT_RGBA8)
+	var r := float(FRAME_RADIUS)
+	for y in FRAME_PX:
+		for x in FRAME_PX:
+			var dx := maxf(maxf(r - x, x - (FRAME_PX - 1 - r)), 0.0)
+			var dy := maxf(maxf(r - y, y - (FRAME_PX - 1 - r)), 0.0)
+			var d := sqrt(dx * dx + dy * dy)
+			out.set_pixel(x, y, Color(bg, clampf(r + 0.5 - d, 0.0, 1.0)))
+	var bb := img.get_used_rect()
+	if bb.size.x > 0 and bb.size.y > 0:
+		img = img.get_region(bb)
+	var wide := float(img.get_width()) / maxf(img.get_height(), 1.0) > 1.6  # logos largas: menos margem
+	var box := int(FRAME_PX * (1.0 - 2.0 * (FRAME_PAD_WIDE if wide else FRAME_PAD)))
+	var k := float(box) / maxf(img.get_width(), img.get_height())
+	img.resize(maxi(1, roundi(img.get_width() * k)), maxi(1, roundi(img.get_height() * k)), Image.INTERPOLATE_LANCZOS)
+	out.blend_rect(img, Rect2i(Vector2i.ZERO, img.get_size()), Vector2i((FRAME_PX - img.get_width()) / 2, (FRAME_PX - img.get_height()) / 2))
+	out.generate_mipmaps()
+	return ImageTexture.create_from_image(out)
+
+
+static func _frame_color(team: Dictionary) -> Color:
+	for key: String in ["color", "color2"]:
+		var c := Color(team.get(key, "#555555"))
+		if c.get_luminance() < 0.5:
+			return c
+	return Color("#1b1d22")
+
+
+## A maior parte dos pixels visíveis é quase branca e sem cor?
+static func _is_white_logo(img: Image) -> bool:
+	var src := img.duplicate()
+	src.decompress()
+	var seen := 0
+	var white := 0
+	for y in range(0, src.get_height(), 8):
+		for x in range(0, src.get_width(), 8):
+			var c: Color = src.get_pixel(x, y)
+			if c.a > 0.5:
+				seen += 1
+				if c.get_luminance() > 0.85 and (maxf(c.r, maxf(c.g, c.b)) - minf(c.r, minf(c.g, c.b))) < 0.08:
+					white += 1
+	return seen > 0 and float(white) / seen > 0.6

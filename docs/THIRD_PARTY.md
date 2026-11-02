@@ -25,3 +25,8 @@ Tudo que vem de fora do projeto, com origem e licença. Atualizar ao adicionar q
 
 Arte própria (sem terceiros): carro ilustrado `game/assets/cars/*.svg` (tools/make_car_art.py) e
 ícones `game/assets/icons/*.svg` (tools/make_icons.py).
+
+Logos pessoais das equipes: o usuário forneceu um zip (formula1.com/en/teams, versões brancas dos
+símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `game/local/emblems/`
+(ignorada pelo git) e **não entram no repositório**; `tools/prepare_logos.py` as padroniza e
+`TeamEmblems` as compõe sobre um quadrado na cor da equipe.
