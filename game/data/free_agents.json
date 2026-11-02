@@ -1,0 +1,13 @@
+{
+ "_notas": "PROVISÓRIO. Pilotos de outras categorias no radar da F1 como agentes livres (nomes reais, notas estimadas — substituir na pesquisa de atributos).",
+ "drivers": [
+  {"id": "pato_oward", "name": "Pato O'Ward", "nationality": "México", "category": "IndyCar", "rating": 83},
+  {"id": "alex_palou", "name": "Álex Palou", "nationality": "Espanha", "category": "IndyCar", "rating": 85},
+  {"id": "colton_herta", "name": "Colton Herta", "nationality": "EUA", "category": "IndyCar", "rating": 80},
+  {"id": "felix_rosenqvist", "name": "Felix Rosenqvist", "nationality": "Suécia", "category": "IndyCar", "rating": 79},
+  {"id": "mick_schumacher", "name": "Mick Schumacher", "nationality": "Alemanha", "category": "WEC", "rating": 76},
+  {"id": "antonio_giovinazzi", "name": "Antonio Giovinazzi", "nationality": "Itália", "category": "WEC", "rating": 75},
+  {"id": "stoffel_vandoorne", "name": "Stoffel Vandoorne", "nationality": "Bélgica", "category": "Fórmula E", "rating": 77},
+  {"id": "nyck_de_vries", "name": "Nyck de Vries", "nationality": "Holanda", "category": "Fórmula E", "rating": 76}
+ ]
+}

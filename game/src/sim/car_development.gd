@@ -24,6 +24,7 @@ var projects: Array = []  ## [{car, id, days_left, days_total, cost}]
 var works: Array = []  ## [{struct, to, days_left, days_total}] (uma obra por estrutura)
 var carry := 0.0  ## bônus herdado do carro anterior
 var focus := "balanced"  ## modo Essencial: "balanced", "aero", "chassis", "durability", "engine"
+var staff_mod: Dictionary = {}  ## efeitos dos técnicos (Personnel.staff_effects), publicados pela campanha
 var auto_spent := 0.0  ## gasto automático no mês atual
 var auto_spent_next := 0.0
 var auto_month := -1
@@ -249,7 +250,7 @@ func failure_mult() -> float:
 
 
 func days_mult(dept: String) -> float:
-	var m := 1.0 - effect_sum_both("eff", dept)
+	var m := 1.0 - effect_sum_both("eff", dept) - float(staff_mod.get(dept + ".days", 0.0))
 	if dept == "aero":
 		m -= float(structure("wind")["days_pct"][level_of("wind") - 1]) / 100.0
 	return clampf(m, 0.4, 1.0)
@@ -265,7 +266,7 @@ func success_chance(dept: String) -> float:
 	var base := float(factory_data()["base_success_pct"])
 	# aerodinâmica: túnel de vento; os demais departamentos: fábrica de peças e qualidade
 	var fac: float = float(structure("wind" if dept == "aero" else "parts")["success_pct"][level_of("wind" if dept == "aero" else "parts") - 1])
-	return clampf((base + fac + effect_sum_both("qual", dept)) / 100.0, 0.05, 0.98)
+	return clampf((base + fac + effect_sum_both("qual", dept) + float(staff_mod.get(dept + ".success", 0.0))) / 100.0, 0.05, 0.98)
 
 
 func dept_available(dept: String, camp: Campaign) -> bool:

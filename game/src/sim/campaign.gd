@@ -37,6 +37,7 @@ var team_points: Dictionary = {}  ## id da equipe -> pontos na temporada
 var history: Array = []  ## [{round, circuit, results: [ids]}]
 
 var dev := CarDevelopment.new()  ## árvore de P&D e fábrica
+var personnel := Personnel.new()  ## contratos de pilotos e técnicos
 var base_rating := 0.0  ## nota do carro da equipe sem os upgrades
 var rival_carry: Dictionary = {}  ## id da equipe da IA -> bônus herdado das temporadas anteriores
 var _file_ratings: Dictionary = {}  ## id -> nota do carro nos dados (sem evolução)
@@ -135,6 +136,7 @@ func refresh_rating() -> void:
 			t["car_rating"] = base_rating + dev.rating_bonus()
 			t["failure_mult"] = dev.failure_mult()
 			t["practice_gain_mult"] = dev.practice_gain_mult()
+			dev.staff_mod = personnel.staff_effects(self)
 		else:  # equipes da IA também desenvolvem o carro ao longo da temporada
 			t["car_rating"] = float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0)) + rival_gain(t["id"])
 
@@ -175,9 +177,11 @@ func _init_rivals() -> void:
 func _init_dev(initial_level: int) -> void:
 	_init_rivals()
 	dev = CarDevelopment.new()
+	personnel = Personnel.new()
 	dev.set_all_levels(initial_level)
 	dev.seed_base = season
 	base_rating = float(team().get("car_rating", 75))
+	personnel.setup(self)
 	sync_factory_level()
 	refresh_rating()
 
@@ -235,7 +239,7 @@ func to_dict() -> Dictionary:
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
-		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry}
+		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers}
 
 
 static func from_dict(d: Dictionary) -> Campaign:
@@ -267,6 +271,13 @@ static func from_dict(d: Dictionary) -> Campaign:
 	c._build_grid()
 	c.rival_carry = d.get("rival_carry", {})
 	c._init_dev(maxi(1, c.factory_level))
+	if d.has("drivers_grid"):  # grid de pilotos como ficou após as viradas (contratos)
+		c._drivers = d["drivers_grid"]
+		for dr: Dictionary in c._drivers:
+			dr["number"] = int(dr["number"])
+			dr["rating"] = int(dr["rating"])
+	if d.has("personnel"):
+		c.personnel = Personnel.from_dict(d["personnel"])
 	if d.has("dev"):
 		c.dev = CarDevelopment.from_dict(d["dev"])
 		c.sync_factory_level()
@@ -445,7 +456,7 @@ func season_goal() -> int:
 
 func cost_per_race() -> float:
 	var f: Dictionary = origins_data()["finance"]
-	return float(f["cost_base"]) + dev.upkeep_per_race()
+	return float(f["cost_base"]) + dev.upkeep_per_race() + personnel.payroll_per_race(self)
 
 
 func sponsor_per_race() -> float:
@@ -508,6 +519,7 @@ func close_season() -> Dictionary:
 
 ## Começa a próxima temporada (mesmo grid: o mercado de pilotos chega na camada de contratos).
 func start_next_season() -> void:
+	personnel.rollover(self)
 	var cfg: Dictionary = origins_data()["rivals"]
 	for t: Dictionary in _teams:  # a IA guarda parte do que desenvolveu neste ano
 		if t["id"] != player_team:

@@ -2,7 +2,7 @@ extends Control
 ## Sede da campanha — direção Garagem (mockup design/mockups/v6-1-campanha-sede.html).
 ## Topo: data, caixa e humor da diretoria. Destaque: o próximo evento (avançar o tempo e jogar).
 ## Abaixo: objetivo e paciência da diretoria, finanças simples. À direita: construtores e o carro.
-## Abas: Carro (árvore de P&D) e Fábrica já existem; Pilotos e Finanças são camadas futuras (apagadas).
+## Abas: Carro (árvore de P&D) e Fábrica já existem; Pessoal (contratos) existe; Finanças é camada futura (apagada).
 
 var campaign: Campaign
 var _hero: PanelContainer

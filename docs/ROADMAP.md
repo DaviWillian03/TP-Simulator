@@ -63,8 +63,10 @@ Cada marco termina jogável e testado. Itens vêm de `docs/DECISIONS.md`.
   demissão, falência e virada de temporada. Valores PROVISÓRIOS em `campaign_origins.json`.
 - ✅ P&D (2026-11-02): árvore estilo F1 2017 (4 departamentos, 92 nós, carro atual × ano seguinte,
   Essencial/Avançado) e Fábrica (4 estruturas, níveis 1–5). `CarDevelopment`, telas Carro e Fábrica.
-- ⬜ Camadas seguintes (ordem do roadmap abaixo): finanças, pessoal e contratos, patrocínios,
-  estúdio de design, academia, teto de gastos, conselho, eventos, F2/F3/F4.
+- ✅ IA rival (as outras equipes desenvolvem o carro) e Pessoal (2026-11-02): contratos de pilotos, diretor
+  técnico e engenheiros, mercado, negociação, folha de pagamento e virada com a IA renovando/contratando.
+- ⬜ Camadas seguintes: finanças e patrocínios, estúdio de design, academia, teto de gastos, conselho,
+  eventos, F2/F3/F4 simuladas, dados reais de pilotos/técnicos.
 
 ## Marco 5+ — Campanha (em camadas jogáveis)
 Finanças e temporada → pessoal/pilotos e contratos → P&D (Essencial/Avançado) → fábrica →
@@ -97,11 +99,10 @@ Ordem sugerida por impacto. Itens vêm de `docs/IDEAS.md` (#1–#6) e das mensag
    (ritmo, regularidade, ultrapassagem, chuva, potencial), idade/altura/peso/conquistas, dirigentes técnicos,
    engenheiros, história e estrutura reais da equipe, e pesquisa de 2026 para trocar os valores PROVISÓRIOS.
 2. **Corrida Caótica** (#2): modo inteiro (Roleta do Caos) — a tela inicial mostra "em desenvolvimento".
-3. **Campanha — camadas que faltam** (#4, #5): Pilotos/pessoal e contratos (agentes livres, outras equipes,
-   novos pilotos), Finanças e aba de patrocínios (negociar por influência), estúdio de design do carro e editor
+3. **Campanha — camadas que faltam** (#4, #5): Finanças e aba de patrocínios (negociar por influência), estúdio de design do carro e editor
    de logo completos, academia de pilotos, teto de gastos e restrição de túnel de vento, conselho de regras
    (pontuação, motor, chassi, pneus…), eventos inesperados, F2/F3/F4 simuladas ao fundo, mercado de pilotos na virada.
-4. **IA rival que joga o mesmo jogo**: as outras equipes não desenvolvem o carro (o jogador acaba ultrapassando).
+4. **IA rival**: já desenvolve o carro e troca pilotos na virada; falta a IA contratar técnicos, pagar teto de gastos e reagir a regras.
 5. **Modo Edição e importação** (#3): pacote .zip com validação (nomes, fotos, pinturas, logos, atributos,
    circuitos) e importador no celular (seletor de arquivos do Android).
 6. **Cenários 3D** (#1): conferir o cenário e o relevo dos 22 circuitos (chão de Xangai, escala dos pinheiros,

@@ -1,0 +1,327 @@
+{
+ "_notas": "FICTÍCIO e PROVISÓRIO. Gerado por tools/make_staff_pool.py (semente fixa). Funções: director, aero, chassis, durability, engine.",
+ "people": [
+  {
+   "id": "staff_callum_calloway",
+   "name": "Callum Calloway",
+   "nationality": "Reino Unido",
+   "role": "director",
+   "skill": 77
+  },
+  {
+   "id": "staff_harriet_calloway",
+   "name": "Harriet Calloway",
+   "nationality": "Reino Unido",
+   "role": "director",
+   "skill": 84
+  },
+  {
+   "id": "staff_daichi_nakano",
+   "name": "Daichi Nakano",
+   "nationality": "Japão",
+   "role": "director",
+   "skill": 91
+  },
+  {
+   "id": "staff_alvaro_ibarra",
+   "name": "Álvaro Ibarra",
+   "nationality": "Espanha",
+   "role": "director",
+   "skill": 60
+  },
+  {
+   "id": "staff_bianca_veloso",
+   "name": "Bianca Veloso",
+   "nationality": "Brasil",
+   "role": "director",
+   "skill": 52
+  },
+  {
+   "id": "staff_julien_lefevre",
+   "name": "Julien Lefèvre",
+   "nationality": "França",
+   "role": "director",
+   "skill": 45
+  },
+  {
+   "id": "staff_irene_salazar",
+   "name": "Irene Salazar",
+   "nationality": "Espanha",
+   "role": "director",
+   "skill": 58
+  },
+  {
+   "id": "staff_kenji_ishikawa",
+   "name": "Kenji Ishikawa",
+   "nationality": "Japão",
+   "role": "director",
+   "skill": 67
+  },
+  {
+   "id": "staff_rina_nakano",
+   "name": "Rina Nakano",
+   "nationality": "Japão",
+   "role": "aero",
+   "skill": 85
+  },
+  {
+   "id": "staff_rhys_ashdown",
+   "name": "Rhys Ashdown",
+   "nationality": "Reino Unido",
+   "role": "aero",
+   "skill": 50
+  },
+  {
+   "id": "staff_etienne_lefevre",
+   "name": "Étienne Lefèvre",
+   "nationality": "França",
+   "role": "aero",
+   "skill": 54
+  },
+  {
+   "id": "staff_julien_roussel",
+   "name": "Julien Roussel",
+   "nationality": "França",
+   "role": "aero",
+   "skill": 68
+  },
+  {
+   "id": "staff_magnus_lund",
+   "name": "Magnus Lund",
+   "nationality": "Noruega",
+   "role": "aero",
+   "skill": 50
+  },
+  {
+   "id": "staff_javier_ibarra",
+   "name": "Javier Ibarra",
+   "nationality": "Espanha",
+   "role": "aero",
+   "skill": 77
+  },
+  {
+   "id": "staff_marta_cortes",
+   "name": "Marta Cortés",
+   "nationality": "Espanha",
+   "role": "aero",
+   "skill": 61
+  },
+  {
+   "id": "staff_daichi_hayashi",
+   "name": "Daichi Hayashi",
+   "nationality": "Japão",
+   "role": "aero",
+   "skill": 77
+  },
+  {
+   "id": "staff_bianca_quintal",
+   "name": "Bianca Quintal",
+   "nationality": "Brasil",
+   "role": "aero",
+   "skill": 53
+  },
+  {
+   "id": "staff_tiago_furtado",
+   "name": "Tiago Furtado",
+   "nationality": "Brasil",
+   "role": "aero",
+   "skill": 87
+  },
+  {
+   "id": "staff_rhys_calloway",
+   "name": "Rhys Calloway",
+   "nationality": "Reino Unido",
+   "role": "chassis",
+   "skill": 72
+  },
+  {
+   "id": "staff_lucia_ibarra",
+   "name": "Lucía Ibarra",
+   "nationality": "Espanha",
+   "role": "chassis",
+   "skill": 59
+  },
+  {
+   "id": "staff_rhys_hargreaves",
+   "name": "Rhys Hargreaves",
+   "nationality": "Reino Unido",
+   "role": "chassis",
+   "skill": 74
+  },
+  {
+   "id": "staff_irene_cortes",
+   "name": "Irene Cortés",
+   "nationality": "Espanha",
+   "role": "chassis",
+   "skill": 61
+  },
+  {
+   "id": "staff_rina_ishikawa",
+   "name": "Rina Ishikawa",
+   "nationality": "Japão",
+   "role": "chassis",
+   "skill": 80
+  },
+  {
+   "id": "staff_marta_ibarra",
+   "name": "Marta Ibarra",
+   "nationality": "Espanha",
+   "role": "chassis",
+   "skill": 57
+  },
+  {
+   "id": "staff_etienne_delorme",
+   "name": "Étienne Delorme",
+   "nationality": "França",
+   "role": "chassis",
+   "skill": 47
+  },
+  {
+   "id": "staff_katrin_lindner",
+   "name": "Katrin Lindner",
+   "nationality": "Alemanha",
+   "role": "chassis",
+   "skill": 74
+  },
+  {
+   "id": "staff_andres_montoya",
+   "name": "Andrés Montoya",
+   "nationality": "Espanha",
+   "role": "chassis",
+   "skill": 61
+  },
+  {
+   "id": "staff_camila_arruda",
+   "name": "Camila Arruda",
+   "nationality": "Brasil",
+   "role": "chassis",
+   "skill": 74
+  },
+  {
+   "id": "staff_nigel_hargreaves",
+   "name": "Nigel Hargreaves",
+   "nationality": "Reino Unido",
+   "role": "durability",
+   "skill": 90
+  },
+  {
+   "id": "staff_margaux_vasseur",
+   "name": "Margaux Vasseur",
+   "nationality": "França",
+   "role": "durability",
+   "skill": 72
+  },
+  {
+   "id": "staff_javier_navarro",
+   "name": "Javier Navarro",
+   "nationality": "Espanha",
+   "role": "durability",
+   "skill": 62
+  },
+  {
+   "id": "staff_andres_calderon",
+   "name": "Andrés Calderón",
+   "nationality": "Espanha",
+   "role": "durability",
+   "skill": 57
+  },
+  {
+   "id": "staff_yuna_hayashi",
+   "name": "Yuna Hayashi",
+   "nationality": "Japão",
+   "role": "durability",
+   "skill": 45
+  },
+  {
+   "id": "staff_oliver_thorne",
+   "name": "Oliver Thorne",
+   "nationality": "Reino Unido",
+   "role": "durability",
+   "skill": 82
+  },
+  {
+   "id": "staff_imogen_pemberton",
+   "name": "Imogen Pemberton",
+   "nationality": "Reino Unido",
+   "role": "durability",
+   "skill": 60
+  },
+  {
+   "id": "staff_imogen_whitlock",
+   "name": "Imogen Whitlock",
+   "nationality": "Reino Unido",
+   "role": "durability",
+   "skill": 79
+  },
+  {
+   "id": "staff_ines_roussel",
+   "name": "Inès Roussel",
+   "nationality": "França",
+   "role": "durability",
+   "skill": 67
+  },
+  {
+   "id": "staff_lukas_falk",
+   "name": "Lukas Falk",
+   "nationality": "Alemanha",
+   "role": "durability",
+   "skill": 87
+  },
+  {
+   "id": "staff_irene_navarro",
+   "name": "Irene Navarro",
+   "nationality": "Espanha",
+   "role": "engine",
+   "skill": 53
+  },
+  {
+   "id": "staff_chiara_moretti",
+   "name": "Chiara Moretti",
+   "nationality": "Itália",
+   "role": "engine",
+   "skill": 53
+  },
+  {
+   "id": "staff_helena_lindner",
+   "name": "Helena Lindner",
+   "nationality": "Alemanha",
+   "role": "engine",
+   "skill": 64
+  },
+  {
+   "id": "staff_aiko_morita",
+   "name": "Aiko Morita",
+   "nationality": "Japão",
+   "role": "engine",
+   "skill": 78
+  },
+  {
+   "id": "staff_chiara_ferrante",
+   "name": "Chiara Ferrante",
+   "nationality": "Itália",
+   "role": "engine",
+   "skill": 51
+  },
+  {
+   "id": "staff_haruto_takeda",
+   "name": "Haruto Takeda",
+   "nationality": "Japão",
+   "role": "engine",
+   "skill": 67
+  },
+  {
+   "id": "staff_ingrid_solheim",
+   "name": "Ingrid Solheim",
+   "nationality": "Noruega",
+   "role": "engine",
+   "skill": 77
+  },
+  {
+   "id": "staff_andres_navarro",
+   "name": "Andrés Navarro",
+   "nationality": "Espanha",
+   "role": "engine",
+   "skill": 64
+  }
+ ]
+}

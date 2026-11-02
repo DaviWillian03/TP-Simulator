@@ -636,15 +636,15 @@ static func popover(screen: Control, anchor: Control, title: String, options: Ar
 	return catcher
 
 
-## Abas da sede da campanha (Início · Campeonatos · Pilotos · Carro · Fábrica · Finanças).
-## active: "hub", "standings", "car" ou "factory". Pilotos e Finanças ainda são camadas futuras.
+## Abas da sede da campanha (Início · Campeonatos · Pessoal · Carro · Fábrica · Finanças).
+## active: "hub", "standings", "staff", "car" ou "factory". Finanças ainda é camada futura.
 static func campaign_nav(layer: Control, active: String, y: float = 88.0) -> PanelContainer:
 	var nav := PanelContainer.new()
 	nav.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE, 26, 4, 4))
 	var nh := HBoxContainer.new()
 	nh.add_theme_constant_override("separation", 4)
 	nav.add_child(nh)
-	var items := [["Início", "hub"], ["Campeonatos", "standings"], ["Pilotos", ""], ["Carro", "car"], ["Fábrica", "factory"], ["Finanças", ""]]
+	var items := [["Início", "hub"], ["Campeonatos", "standings"], ["Pessoal", "staff"], ["Carro", "car"], ["Fábrica", "factory"], ["Finanças", ""]]
 	for t: Array in items:
 		var on: bool = t[1] == active
 		var b := Button.new()
@@ -663,6 +663,8 @@ static func campaign_nav(layer: Control, active: String, y: float = 88.0) -> Pan
 					b.pressed.connect(Session.open_campaign_hub)
 				"standings":
 					b.pressed.connect(Session.open_campaign_standings)
+				"staff":
+					b.pressed.connect(Session.open_campaign_staff)
 				"car":
 					b.pressed.connect(Session.open_campaign_car)
 				"factory":

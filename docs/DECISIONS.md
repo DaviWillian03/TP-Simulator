@@ -261,3 +261,13 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   livres. Contrato simples: salário + duração → aceita / recusa / contraproposta.
 - Mockups v10 (`v10-1-pessoal`, `v10-2-negociacao`) aguardando aprovação. Técnicos de exemplo são fictícios; salários
   e notas PROVISÓRIOS. A aba "Pilotos" da sede passa a se chamar "Pessoal".
+
+### Pessoal e contratos implementados (mockups v10 aprovados)
+- `Personnel` (sem tela): contratos de pilotos e técnicos, mercado (livres, F2/F3, outras equipes, agentes livres reais
+  PROVISÓRIOS em `free_agents.json`, técnicos FICTÍCIOS em `staff_pool.json` via `tools/make_staff_pool.py`), salário
+  pedido por nota, avaliação aceita/contraproposta/recusa (apelo da equipe pelo ranking do carro), multa de 50% do salário
+  restante para tirar alguém de outra equipe, assinaturas valem na virada. Folha entra no custo por corrida.
+- Virada: a IA renova (≈70% + nota−75), dispensa e contrata (equipes melhores escolhem primeiro); o jogador recebe os
+  contratos; vaga de piloto vazia é preenchida automaticamente (melhor custo-benefício). Grid sempre com 2 pilotos por equipe.
+- Técnicos: diretor técnico reduz dias de todos os projetos e engenheiros melhoram dias e acerto do departamento.
+- Tela `campaign_staff_screen` (aba Pessoal; captura `--staff --fresh --team=<id>`).
