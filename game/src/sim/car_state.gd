@@ -45,6 +45,13 @@ var pit_service_done := false
 var pit_stationary_s := 2.4
 var pit_stops := 0
 var ai_pit_wear := 0.7  ## desgaste em que a IA decide parar (varia por carro)
+var plan: Dictionary = {}  ## plano da parada (PitStop.make_plan); vazio = parada padrão
+var wing_step := 0  ## ajuste da asa dianteira (−1..+2) em vigor
+var tyre_stock: Dictionary = {}  ## composto -> {"new": n, "used": n}; vazio = estoque ilimitado (IA)
+var box_hold_s := 0.0  ## tempo que ainda fica parado no box
+var box_wait_s := 0.0  ## parte desse tempo que é fila (box ocupado pelo companheiro)
+var box_tapped := false  ## o jogador já tocou no mini-jogo desta parada
+var pit_defer_laps := -1  ## volta (voltas completas) em que o pedido de box volta a valer; -1 = sem adiamento
 
 # ordens de equipe e rádio
 var team_order := TeamOrder.FREE
@@ -58,6 +65,7 @@ var damage_wing := 0.0  ## 0..1 (reparável no box trocando a asa)
 var damage_floor := 0.0  ## 0..1 (não reparável)
 var repair_wing := false  ## trocar a asa na próxima parada
 var penalty_pending_s := 0.0  ## punição de tempo ainda não cumprida
+var investigation: Dictionary = {}  ## {until_s, secs, reason, guilty}; vazio = sem investigação
 var penalties_total_s := 0.0
 var drive_through := false
 var license_points := 0

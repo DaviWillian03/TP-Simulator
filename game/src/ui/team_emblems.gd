@@ -12,6 +12,7 @@ const IMPORT_DIR := "user://import/emblems/"
 const LOCAL_DIR := "res://local/emblems/"
 const BUILTIN_DIR := "res://assets/emblems/"
 
+static var use_local := true  ## false nos testes: ignora game/local/emblems (depende de quem roda)
 static var _cache: Dictionary = {}
 static var _custom: Dictionary = {}  ## emblemas gerados (equipe criada na campanha)
 
@@ -31,7 +32,7 @@ static func get_texture(team_id: String) -> Texture2D:
 	if _custom.has(team_id):
 		return _custom[team_id]
 	var tex: Texture2D = _load_imported(team_id)
-	if tex == null:
+	if tex == null and use_local:
 		for ext: String in ["png", "svg", "webp", "jpg"]:
 			if ResourceLoader.exists(LOCAL_DIR + team_id + "." + ext):
 				tex = _framed(team_id, load(LOCAL_DIR + team_id + "." + ext))

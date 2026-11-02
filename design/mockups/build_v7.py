@@ -43,7 +43,7 @@ CSS = V.G_CSS + """
 .tr .n{flex:1;font-weight:900;letter-spacing:.3px;white-space:nowrap;overflow:hidden}.tr .g{width:54px;text-align:right;color:#a8b0bd;font-size:13px;font-variant-numeric:tabular-nums}
 .tr .ty{width:20px;height:20px;border-radius:50%;border:3px solid var(--t);background:#0b0c0f;color:#fff;font-size:9px;font-weight:900;display:grid;place-items:center;flex:none;box-sizing:border-box}
 .tr .w{width:34px;text-align:right;font-size:12px;color:#a8b0bd}.tr .w.hot{color:#ffb4a8;font-weight:900}
-.tr img{flex:none}.tr.me{background:rgba(24,104,219,.25)}.tr.me .n{color:#fff}.tr.out{opacity:.45}
+.tr img{flex:none}.tr.focus{box-shadow:inset 4px 0 0 #f3f4f6;background:rgba(243,244,246,.12)}.tr.me{background:rgba(24,104,219,.25)}.tr.me .n{color:#fff}.tr.out{opacity:.45}
 .tr .tag{font-size:10px;font-weight:900;background:#E10600;color:#fff;border-radius:5px;padding:1px 5px;letter-spacing:.5px}
 .tr .tag.b{background:rgba(255,255,255,.15)}
 .ctl{position:absolute;top:464px;width:430px;height:244px;border-radius:20px;background:rgba(255,255,255,.06);padding:12px 14px}
@@ -104,7 +104,9 @@ def tyre(c, size=20, pct=None):
 
 ICON_FL = '<svg class="fi" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c77dff" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 8.5V13l3 2M9 2h6"/></svg>'
 ICON_INV = '<svg class="fi" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2.5L22.5 21h-21z" fill="#ffd24a"/><path d="M12 9v6M12 17.6v.5" stroke="#11141a" stroke-width="2.6" stroke-linecap="round"/></svg>'
+ICON_CAM = '<svg class="fi" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f3f4f6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg>'
 ICON_PEN = '<svg class="fi" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5" fill="#E10600"/><path d="M12 6.5v7M12 16.6v.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>'
+FOCUS = "ALBON"  # piloto em foco na câmera (tocar na linha da torre)
 FLAGS = {"PIASTRI": ICON_FL, "VERSTAPPEN": ICON_INV, "ALONSO": ICON_PEN, "ALBON": ICON_PEN}
 
 
@@ -143,10 +145,11 @@ def tower(rows, mode="interval"):
             g = f"+{gap:.1f}" if mode == "leader" else f"+{gap - prev:.1f}"
         prev = gap
         tg = f'<span class="tag{" b" if tag == "BOX" else ""}">{tag}</span>' if tag else ""
+        focus_cls = " focus" if name == FOCUS else ""
         tail = (f'<span class="tlife"><i style="width:{life}%;background:{life_color(life)}"></i></span>' if mine
                 else f'<span class="age">{age}v</span>')
-        out += (f'<div class="tr{" me" if mine else ""}"><span class="p" style="background:{col};color:{fg}">{i + 1}</span>'
-                f'<img src="{V.EMB.format(tid)}" width="22"><span class="n">{name}{FLAGS.get(name, "")}</span>{tg}<span class="g">{g}</span>{tyre(tyr)}{tail}</div>')
+        out += (f'<div class="tr{" me" if mine else ""}{focus_cls}"><span class="p" style="background:{col};color:{fg}">{i + 1}</span>'
+                f'<img src="{V.EMB.format(tid)}" width="22"><span class="n">{name}{FLAGS.get(name, "")}{ICON_CAM if name == FOCUS else ""}</span>{tg}<span class="g">{g}</span>{tyre(tyr)}{tail}</div>')
     return out
 
 
@@ -184,7 +187,7 @@ def corrida(popover=False):
 <div class="tk"><span>+2</span><span>+4</span><span>+6</span><span>+8</span><span>+10</span></div><p>Sem chuva prevista nas próximas 10 voltas.</p></div>
 {POPOVER if popover else ""}<div class="card radio" style="{"display:none" if popover else ""}"><div class="cap" style="display:flex;align-items:center;gap:10px">{av("albon", 34)}RÁDIO · ALBON</div><div class="q">“Os pneus estão caindo. Paro agora?”</div>
 <div class="opts"><span class="h">Parar agora</span><span>Mais 3 voltas</span><span>Decido eu</span></div><div class="t"><span>Sem resposta, o piloto decide sozinho</span><span>12 s</span></div></div>
-<div class="card camc"><span class="on">Seguir ALB</span><span>Seguir SAI</span><span>Líder</span><span>Geral</span></div></div>
+</div>
 <div class="tower">{tower_head("interval")}{tower(ROWS, "interval")}</div>
 {ctl(16, me[0], 3, "M", "Médio · 5 voltas", 31, 12, "Normal", "Equilíbrio", "Liberado", "M", "Punição de 5 s: cumpra no box ou soma ao tempo final.", "+4.1 s", "1.8 s")}
 {ctl(482, me[1], 2, "M", "Médio · 5 voltas", 31, 24, "Normal", "Equilíbrio", "Liberado", "H", "Falta usar outro composto seco.", "+5.0 s", "4.1 s")}

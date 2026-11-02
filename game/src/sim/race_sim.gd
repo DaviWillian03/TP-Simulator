@@ -24,6 +24,7 @@ signal radio_message(message: Dictionary)
 @warning_ignore("unused_signal")  # emitido por RaceControl/RadioSystem
 signal radio_answered(message: Dictionary)
 signal car_finished(car: CarState, position: int)
+signal pit_box_stop(car: CarState, hold_s: float)  ## carro parou no box (a tela pode abrir o mini-jogo)
 signal race_finished
 
 const DT := 0.1  ## segundos de corrida por passo
@@ -76,6 +77,7 @@ var fastest_lap_car: CarState = null
 var overtakes_count := 0
 var rng := RandomNumberGenerator.new()
 
+var team_box_free_at: Dictionary = {}  ## id da equipe -> instante em que o box fica livre
 var _accum := 0.0
 var _mode_timer := 0.0
 var _finish_count := 0
@@ -110,6 +112,9 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		car.driver = d
 		car.team = GameData.team_by_id(teams, d["team"])
 		car.is_player = car.team["id"] == player_team
+		if car.is_player:
+			var stocks: Dictionary = options.get("tyre_stock", {})
+			car.tyre_stock = (stocks[d["id"]] as Dictionary).duplicate(true) if stocks.has(d["id"]) else PitStop.default_stock()
 		var setups: Dictionary = options.get("setups", {})
 		if setups.has(d["id"]):
 			(setups[d["id"]] as CarSetup).apply_to(car)
@@ -137,6 +142,8 @@ func _setup_grid(grid_ids: Array = []) -> void:
 		if weather.wetness >= 0.2:
 			car.tyre = tyres.best_for_wetness(weather.wetness, ["inter", "wet"])
 		car.compounds_used = [car.tyre]
+		if car.is_player and PitStop.take_set(car, car.tyre, false):
+			car.tyre_wear = PitStop.USED_SET_WEAR  # sem jogo novo: larga com um usado
 		car.pit_compound = "hard" if car.tyre != "hard" else "medium"
 		car.ai_pit_wear = rng.randf_range(0.66, 0.76)
 		car.lap_noise = rng.randfn(0.0, LAP_NOISE_SIGMA)
@@ -252,6 +259,55 @@ func request_pit(car: CarState, compound: String) -> void:
 		return
 	car.pit_compound = compound
 	car.pit_requested = true
+	if not car.plan.is_empty():
+		car.plan["compound"] = compound
+
+
+## Plano completo da parada (tela do box). Devolve false se faltar o jogo de pneus escolhido.
+func set_pit_plan(car: CarState, plan: Dictionary) -> bool:
+	if car.finished or car.in_pit or car.retired:
+		return false
+	if not PitStop.has_set(car, plan["compound"], plan.get("use_used", false)):
+		return false
+	car.plan = plan.duplicate()
+	car.pit_compound = plan["compound"]
+	car.repair_wing = bool(plan.get("repair_wing", false))
+	car.pit_requested = true
+	car.pit_defer_laps = -1
+	return true
+
+
+## Segura o pedido de box por n voltas (parada dupla: o outro carro entra primeiro).
+func defer_pit(car: CarState, laps: int) -> void:
+	if car.in_pit:
+		return
+	car.pit_requested = false
+	car.pit_defer_laps = car.laps_done + laps
+
+
+## Segundos até o carro chegar à entrada do pit lane (0 se já está no box).
+func pit_entry_eta_s(car: CarState) -> float:
+	if car.in_pit:
+		return 0.0
+	var ahead := fposmod(track.pit_entry_frac * track.length_m - fposmod(car.distance, track.length_m), track.length_m)
+	return ahead / (track.length_m / _lap_time(car, false))
+
+
+## Quanto o carro esperaria na fila do box se entrasse agora (o box ocupado pelo companheiro).
+func box_queue_wait_s(car: CarState) -> float:
+	var arrive := time_s + pit_entry_eta_s(car) + 8.0  # ~8 s de pit lane até o box
+	return maxf(0.0, float(team_box_free_at.get(car.team["id"], 0.0)) - arrive)
+
+
+## Mini-jogo: toque do jogador com o carro parado (accuracy 1 = perfeito). Vale uma vez por parada.
+func pit_tap(car: CarState, accuracy: float) -> float:
+	if not car.in_pit or car.box_hold_s <= 0.0 or car.box_tapped:
+		return 0.0
+	car.box_tapped = true
+	var d := PitStop.tap_delta(accuracy)
+	car.box_hold_s = maxf(0.4, car.box_hold_s + d)
+	car.pit_stationary_s += d
+	return d
 
 
 func cancel_pit(car: CarState) -> void:
@@ -331,7 +387,13 @@ func step() -> void:
 	for car in order:
 		if car.drive_through and not car.pit_requested:
 			car.pit_requested = true
-		if car.in_pit:
+		if car.in_pit and car.box_hold_s > 0.0:
+			car.speed = 0.0
+			car.box_hold_s -= DT
+			if car.box_hold_s <= 0.0:
+				car.box_hold_s = 0.0
+				_service_car(car)
+		elif car.in_pit:
 			car.speed = car.pit_speed
 		elif car.stall_s > 0.0:
 			car.speed = 0.0
@@ -396,6 +458,7 @@ func _lap_time(car: CarState, with_traffic: bool) -> float:
 	t -= weather.rubber * RUBBER_GAIN_S
 	t += FUEL_START_S * (1.0 - clampf(car.distance / race_distance(), 0.0, 1.0))
 	t += PACE_TIME[car.pace_mode]
+	t -= PitStop.WING_LAP_S * car.wing_step
 	if car.energy_mode != CarState.EnergyMode.DEPLOY or car.battery > 0.0:
 		t += ENERGY_TIME[car.energy_mode]
 	t += car.damage_wing * RaceControl.WING_PENALTY_S + car.damage_floor * RaceControl.FLOOR_PENALTY_S
@@ -484,6 +547,7 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 	var lap_part := moved / track.length_m
 	var wear: float = tyres.wear_per_lap(car.tyre) * wear_multiplier() * PACE_WEAR[car.pace_mode]
 	wear *= tyres.wet_wear_multiplier(car.tyre, weather.wetness)
+	wear *= 1.0 + PitStop.WING_WEAR * car.wing_step
 	if control.is_neutralized():
 		wear *= 0.5
 	car.tyre_wear += wear * lap_part * car.wear_factor
@@ -509,8 +573,8 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 		if car.finished:
 			return
 
-	if car.in_pit and not car.pit_service_done and _crossed(prev, now, track.pit_box_frac):
-		_service_car(car)
+	if car.in_pit and not car.pit_service_done and car.box_hold_s <= 0.0 and _crossed(prev, now, track.pit_box_frac):
+		_begin_service(car)
 	elif car.in_pit and car.pit_service_done and _crossed(prev, now, track.pit_exit_frac):
 		car.in_pit = false
 		car.pit_requested = false
@@ -519,25 +583,42 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 func _enter_pit(car: CarState) -> void:
 	car.in_pit = true
 	car.pit_service_done = false
+	car.box_hold_s = 0.0
+	car.box_tapped = false
 	var stationary := 0.0
-	if car.drive_through:
-		stationary = 0.0  # passa pelo pit lane sem parar
-	else:
-		stationary = 2.4 + absf(rng.randfn(0.0, 0.3))
+	if not car.drive_through:  # drive-through passa pelo pit lane sem parar
+		var plan := car.plan if not car.plan.is_empty() else PitStop.make_plan(car.pit_compound)
+		if not car.is_player and car.damage_wing > 0.15:
+			plan["repair_wing"] = true
+		if car.repair_wing:
+			plan["repair_wing"] = true
+		if not car.is_player:
+			plan["serve_penalty"] = true
+		car.plan = plan
+		stationary = float(PitStop.estimate(car, plan)["total"]) + absf(rng.randfn(0.0, 0.3))
 		if rng.randf() < 0.05:
 			stationary += rng.randf_range(2.0, 5.0)  # parada lenta
-		if not car.is_player and car.damage_wing > 0.15:
-			car.repair_wing = true
-		if car.repair_wing:
-			stationary += RaceControl.WING_CHANGE_S
-		stationary += car.penalty_pending_s  # cumpre a punição de tempo parado no box
 	car.pit_stationary_s = stationary
-	# tempo do pit lane é fixo (limite de velocidade): calculado com o ritmo de bandeira verde,
-	# por isso parar sob safety car/VSC custa menos em relação a quem fica na pista
+	# o pit lane tem limite de velocidade: o tempo andando é fixo (ritmo de bandeira verde), por
+	# isso parar sob safety car/VSC custa menos. A parte parada (2,4 s padrão) acontece no box.
 	var normal_speed := track.length_m / _lap_time(car, false)
 	var lane := track.pit_lane_length_m()
-	var lane_time := lane / normal_speed + track.pit_lane_loss_s + (stationary - 2.4)
-	car.pit_speed = lane / lane_time
+	var lane_time := lane / normal_speed + track.pit_lane_loss_s - PitStop.BASE_S
+	car.pit_speed = lane / maxf(lane_time, 1.0)
+
+
+## O carro chegou ao box: espera a vez (se o companheiro ocupa o box) e fica parado.
+func _begin_service(car: CarState) -> void:
+	if car.drive_through:
+		_service_car(car)
+		return
+	var team_id: String = car.team["id"]
+	var wait := maxf(0.0, float(team_box_free_at.get(team_id, 0.0)) - time_s)
+	car.box_wait_s = wait
+	car.box_hold_s = wait + car.pit_stationary_s
+	team_box_free_at[team_id] = time_s + car.box_hold_s + PitStop.QUEUE_GAP_S
+	car.speed = 0.0
+	pit_box_stop.emit(car, car.box_hold_s)
 
 
 func _service_car(car: CarState) -> void:
@@ -546,13 +627,21 @@ func _service_car(car: CarState) -> void:
 		car.drive_through = false
 		pit_stop.emit(car, "", 0.0)
 		return
-	car.penalty_pending_s = 0.0
-	if car.repair_wing:
+	var plan := car.plan if not car.plan.is_empty() else PitStop.make_plan(car.pit_compound)
+	if plan.get("serve_penalty", true):
+		car.penalty_pending_s = 0.0  # cumpriu a punição de tempo parado no box
+	if car.repair_wing or plan.get("repair_wing", false):
 		car.damage_wing = 0.0
 		car.repair_wing = false
+	if plan.get("repair_floor", false):
+		car.damage_floor *= 0.5
+	if car.is_player:
+		car.wing_step = int(plan.get("wing_step", car.wing_step))
+	var used := PitStop.take_set(car, car.pit_compound, plan.get("use_used", false))
 	car.tyre = car.pit_compound
-	car.tyre_wear = 0.0
+	car.tyre_wear = PitStop.USED_SET_WEAR if used else 0.0
 	car.tyre_laps = 0
+	car.plan = {}
 	if not car.compounds_used.has(car.tyre):
 		car.compounds_used.append(car.tyre)
 	car.pit_stops += 1
@@ -562,6 +651,9 @@ func _service_car(car: CarState) -> void:
 
 func _complete_lap(car: CarState, lap_number: int, cross_time: float) -> void:
 	car.laps_done = lap_number
+	if car.pit_defer_laps >= 0 and lap_number >= car.pit_defer_laps:
+		car.pit_defer_laps = -1
+		car.pit_requested = true  # fim do adiamento: o box volta a valer
 	car.last_lap_time = cross_time - car.lap_start_time
 	car.lap_start_time = cross_time
 	car.lap_times.append(car.last_lap_time)
@@ -625,7 +717,7 @@ func free_tyre_change() -> void:
 		if tyres.is_dry(best):
 			compound = car.pit_compound if car.is_player and tyres.is_dry(car.pit_compound) else StrategyAI.choose_compound(self, car, remaining)
 		car.tyre = compound
-		car.tyre_wear = 0.0
+		car.tyre_wear = PitStop.USED_SET_WEAR if PitStop.take_set(car, compound, false) else 0.0
 		car.tyre_laps = 0
 		if not car.compounds_used.has(compound):
 			car.compounds_used.append(compound)

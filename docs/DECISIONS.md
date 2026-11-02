@@ -188,3 +188,8 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   (1–2 voltas); o veredito mantém a chance atual de punição (50%) ou arquiva sem punição.
 - **Punição de tempo no box por escolha**: na tela do box o jogador decide cumprir a punição parado
   agora (soma ao tempo parado) ou levá-la ao fim (soma ao tempo final). Drive-through segue como está.
+- **Cor da equipe como ambiente** (ideia do usuário): todos os menus, inclusive a corrida, passam a ter o
+  fundo tingido pela cor da equipe gerenciada (paredes, painéis e pista). Um único ponto no `UiStyle`
+  (cor ativa da equipe) controla; aplicado na migração da tela de corrida e das demais.
+- **Câmera pela torre**: tocar na linha de um piloto segue o carro dele na pista; tocar de novo volta à
+  vista geral. Os botões "Seguir ALB/SAI/Líder/Geral" sobre a pista saem.

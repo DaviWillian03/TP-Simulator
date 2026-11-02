@@ -5,6 +5,15 @@ const TEAM := "haas"
 var _path := TeamEmblems.IMPORT_DIR + TEAM + ".png"
 
 
+func before_all() -> void:
+	TeamEmblems.use_local = false  # o resultado não pode depender das logos pessoais de quem roda
+
+
+func after_all() -> void:
+	TeamEmblems.use_local = true
+	TeamEmblems.clear_cache()
+
+
 func after_each() -> void:
 	if FileAccess.file_exists(_path):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(_path))

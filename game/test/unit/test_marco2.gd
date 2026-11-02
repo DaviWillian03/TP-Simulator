@@ -141,9 +141,9 @@ func test_parar_sob_safety_car_custa_menos() -> void:
 	while not b.in_pit:
 		sc.step()
 	var lane := green.track.pit_lane_length_m()
-	# tempo no pit lane sem a parte sorteada (tempo parado), para comparar só o efeito da bandeira
-	var core_a := lane / a.pit_speed - a.pit_stationary_s
-	var core_b := lane / b.pit_speed - b.pit_stationary_s
+	# tempo andando no pit lane (o tempo parado é no box, separado): só o efeito da bandeira
+	var core_a := lane / a.pit_speed
+	var core_b := lane / b.pit_speed
 	assert_almost_eq(core_b, core_a, core_a * 0.05, "tempo no pit lane não muda com a bandeira")
 	var track_green := lane / (green.track.length_m / green.ideal_pace(a))
 	var track_sc := lane / sc.control.flag_speed(b, sc.track.length_m / sc.ideal_pace(b))

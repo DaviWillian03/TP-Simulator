@@ -9,6 +9,8 @@ enum Flag { GREEN, SC, VSC, RED }
 
 const INCIDENT_PER_LAP := 0.0013  ## chance base de rodada/batida por carro por volta
 const FAILURE_PER_LAP := 0.0004  ## chance base de quebra por carro por volta
+const INVESTIGATION_MIN_S := 45.0  ## investigação dura de ~45 s a ~2 min
+const INVESTIGATION_MAX_S := 120.0
 const CONTACT_CHANCE := 0.003  ## chance de toque numa tentativa de ultrapassagem (há centenas por corrida)
 const PIT_SPEEDING_CHANCE := 0.015
 const SC_PACE := 1.6  ## fila atrás do safety car: volta ~60% mais lenta
@@ -74,7 +76,23 @@ func flag_speed(car: CarState, green_speed: float) -> float:
 
 # --- avanço por passo ----------------------------------------------------------------
 
+## Resolve as investigações vencidas: punição (círculo vermelho na torre) ou arquivamento.
+func _resolve_investigations() -> void:
+	for car in sim.cars:
+		if car.investigation.is_empty() or sim.time_s < float(car.investigation["until_s"]):
+			continue
+		var inv: Dictionary = car.investigation
+		car.investigation = {}
+		if car.retired:
+			continue
+		if inv["guilty"]:
+			give_penalty(car, float(inv["secs"]), String(inv["reason"]))
+		else:
+			sim.incident.emit(car, "cleared", "%s: sem punição, investigação arquivada" % car.display_name())
+
+
 func step(dt: float, running: Array[CarState]) -> void:
+	_resolve_investigations()
 	if flag == Flag.VSC:
 		vsc_time_left -= dt
 		if vsc_time_left <= 0.0:
@@ -175,9 +193,13 @@ func check_contact(att: CarState, def: CarState) -> bool:
 	var victim := att if sim.rng.randf() < 0.6 else def
 	victim.damage_wing = minf(1.0, victim.damage_wing + sim.rng.randf_range(0.25, 0.6))
 	sim.incident.emit(att, "contact", "Toque entre %s e %s!" % [att.display_name(), def.display_name()])
-	if sim.rng.randf() < 0.5:
+	# o causador fica sob investigação; o veredito sai depois (a chance de punição segue 50%)
+	if att.investigation.is_empty():
+		var guilty := sim.rng.randf() < 0.5
 		var secs := 5.0 if sim.rng.randf() < 0.7 else 10.0
-		give_penalty(att, secs, "causou colisão com %s" % def.display_name())
+		att.investigation = {"until_s": sim.time_s + sim.rng.randf_range(INVESTIGATION_MIN_S, INVESTIGATION_MAX_S),
+			"secs": secs, "reason": "causou colisão com %s" % def.display_name(), "guilty": guilty}
+		sim.incident.emit(att, "investigation", "%s sob investigação por toque com %s" % [att.display_name(), def.display_name()])
 	return true
 
 
