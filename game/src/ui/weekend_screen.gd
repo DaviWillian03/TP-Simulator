@@ -173,7 +173,13 @@ func _final_card() -> Control:
 	card.add_child(v)
 	v.add_child(UiStyle.g_caption("Fim de semana encerrado", UiStyle.G_INK_2))
 	var winner_id: String = weekend.results["race"][0]
-	v.add_child(UiStyle.g_label("VENCEDOR: %s" % _driver_name(winner_id).to_upper(), 34, UiStyle.G_INK, "black"))
+	var win_row := HBoxContainer.new()
+	win_row.add_theme_constant_override("separation", UiStyle.SP_M)
+	for d: Dictionary in weekend.drivers:
+		if d["id"] == winner_id:
+			win_row.add_child(DriverPhotos.make_avatar(d, UiStyle.team_color(String(d["team"])), 52))
+	win_row.add_child(UiStyle.g_label("VENCEDOR: %s" % _driver_name(winner_id).to_upper(), 34, UiStyle.G_INK, "black"))
+	v.add_child(win_row)
 	for d: Dictionary in weekend.drivers:
 		if d["team"] == weekend.player_team:
 			var pos: int = weekend.results["race"].find(d["id"]) + 1
@@ -318,8 +324,9 @@ func _car_card(d: Dictionary) -> Control:
 	card.add_child(v)
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", UiStyle.SP_M)
-	top.add_child(TeamEmblems.make_rect(d["team"], 28))
+	top.add_child(DriverPhotos.make_avatar(d, color, 44))
 	top.add_child(UiStyle.g_label(d["name"], 21, UiStyle.G_TEXT, "black"))
+	top.add_child(TeamEmblems.make_rect(d["team"], 24))
 	var sp := Control.new()
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(sp)

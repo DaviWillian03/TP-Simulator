@@ -107,6 +107,7 @@ func _plate(d: Dictionary, color: Color) -> HBoxContainer:
 	n.add_theme_color_override("font_outline_color", color.lightened(0.25))
 	n.add_theme_constant_override("outline_size", 3)
 	h.add_child(n)
+	h.add_child(DriverPhotos.make_avatar(d, color, 64))
 	var v := VBoxContainer.new()
 	v.alignment = BoxContainer.ALIGNMENT_END
 	v.add_theme_constant_override("separation", -2)

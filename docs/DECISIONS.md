@@ -207,3 +207,9 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   volta ao que era antes; o companheiro na parada dupla usa o mesmo composto, jogo novo; pista seca deixa
   intermediário/chuva apagados (ainda escolhíveis).
 - Flags de captura: `--pit` (abre a tela do box) e `--tap` (leva um carro ao box e abre o mini-jogo).
+
+## Rostos e ambiente nos menus (decisão do usuário: "Rostos + ambiente nos menus")
+- Rostos (só locais, `game/local/drivers/`; sem foto, iniciais na cor da equipe): placas da tela inicial,
+  cartões dos pilotos no painel do fim de semana, vencedor do GP, cartões da corrida, rádio, box e resultado.
+- Ambiente na cor da equipe: já vem de `ScreenKit.garage_page` em todas as telas Garagem (início, GP, fim de
+  semana, treino, campanha, corrida, box). Classificação ao vivo ainda é Paddock; ganha o ambiente ao migrar.
