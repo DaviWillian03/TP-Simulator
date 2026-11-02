@@ -316,3 +316,12 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   chefe oficial (Briatore assume as funções, Steve Nielsen é diretor-geral). Diretores técnicos só onde há fonte recente
   (Waché, Fallows, Elliott (CTO da Alpine), Chester); o resto fica "—".
 - Nota técnica: o `WebFetch` não resolve esses sites; a pesquisa foi feita com `curl` no terminal (a rota de rede é outra).
+
+## Eventos inesperados e Conselho de regras — respostas do usuário (2026-11-02), mockups v13 aguardando aprovação
+- **Eventos (4 tipos)**: pilotos (lesão, crise emocional, proposta de outra equipe), calendário (corrida cancelada), equipe e
+  fábrica (incêndio, peças com defeito, patrocinador sai) e mercado/finanças (crise econômica, apoio do país-sede).
+  Tom sóbrio; criminal/escandaloso só com personagens fictícios. Frequência configurável (desligados/raros/normais/frequentes).
+- **Resposta: consequência automática com aviso** (sem escolhas): cartão ao avançar o tempo + lista de notícias na sede.
+- **Conselho de regras (1ª versão)**: pontuação, corridas sprint e regra de pneus; valem na temporada seguinte.
+- **Votação**: todas as equipes votam (IA pelo próprio interesse); o jogador só vota, **sem lobby**; maioria simples
+  (empate barra a proposta).
