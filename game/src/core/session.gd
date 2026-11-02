@@ -25,6 +25,8 @@ const QUALI_SCENE := "res://src/ui/quali_screen.tscn"
 const CAMPAIGN_ENTRY_SCENE := "res://src/ui/campaign_entry_screen.tscn"
 const TEAM_CREATOR_SCENE := "res://src/ui/team_creator_screen.tscn"
 const CAMPAIGN_HUB_SCENE := "res://src/ui/campaign_hub_screen.tscn"
+const CAMPAIGN_STANDINGS_SCENE := "res://src/ui/campaign_standings_screen.tscn"
+const CAMPAIGN_REPORT_SCENE := "res://src/ui/campaign_report_screen.tscn"
 
 var circuit_id := "interlagos"
 var player_team := "mclaren"
@@ -85,6 +87,26 @@ func _ready() -> void:
 		get_tree().change_scene_to_file.call_deferred(CAMPAIGN_ENTRY_SCENE)
 	elif args.has("creator"):
 		get_tree().change_scene_to_file.call_deferred(TEAM_CREATOR_SCENE)
+	elif args.has("standings"):
+		var c2 := Campaign.load_saved()
+		if c2 != null:
+			campaign = c2
+			player_team = c2.player_team
+			if c2.mode == "created":
+				TeamEmblems.register_custom(c2.team())
+			open_campaign_standings.call_deferred()
+	elif args.has("report"):
+		var c3 := Campaign.load_saved()
+		if c3 != null:
+			campaign = c3
+			player_team = c3.player_team
+			if c3.mode == "created":
+				TeamEmblems.register_custom(c3.team())
+			if args.get("report", "") == "fired":
+				c3.trust = 0.0  # (captura) a confiança zerada vira demissão
+			c3.round = 22
+			c3.close_season()
+			open_campaign_report.call_deferred()
 	elif args.has("camp-race"):  # (capturas) corrida da próxima rodada da campanha salva
 		campaign = Campaign.load_saved()
 		if campaign != null:
@@ -174,6 +196,31 @@ func start_campaign(c: Campaign) -> void:
 	get_tree().change_scene_to_file(CAMPAIGN_HUB_SCENE)
 
 
+func open_campaign_hub() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_HUB_SCENE)
+
+
+func open_campaign_standings() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_STANDINGS_SCENE)
+
+
+## Fim da temporada: a sede leva ao relatório da diretoria.
+func open_campaign_report() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_REPORT_SCENE)
+
+
+## Novo ano (ou fim da campanha, se demitido/falido): grava e volta para a sede ou para a entrada.
+func finish_season_report() -> void:
+	if campaign.state != "active":
+		DirAccess.remove_absolute(Campaign.SAVE_PATH)  # campanha encerrada: o arquivo sai
+		campaign = null
+		open_campaign()
+		return
+	campaign.start_next_season()
+	campaign.save()
+	open_campaign_hub()
+
+
 ## Fim de semana da próxima rodada da campanha.
 func play_campaign_round() -> void:
 	var r := campaign.next_round()
@@ -190,7 +237,10 @@ func finish_campaign_weekend() -> void:
 		campaign.record_weekend(weekend)
 		campaign.save()
 	weekend = null
-	get_tree().change_scene_to_file(CAMPAIGN_HUB_SCENE)
+	if campaign.season_over() or campaign.state != "active":
+		open_campaign_report()
+	else:
+		open_campaign_hub()
 
 
 func go_to_weekend() -> void:

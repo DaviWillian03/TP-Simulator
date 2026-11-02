@@ -161,3 +161,9 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   longo prazo, nível Essencial/Avançado, dificuldade da IA) + temporada simples em seguida.
 - **Entrada** (múltipla escolha): **equipe real ou criada**; a equipe real entra junto.
 - **Grid** (múltipla escolha): a equipe criada é a **12ª equipe — 24 carros**.
+- **Temporada da campanha** (mockups aprovados): sede com tempo em dias, campeonatos e relatório da
+  diretoria. Meta = posição final nos construtores (origem ou nível do carro; sobe 1 posição quando
+  cumprida). Demissão com a confiança zerada; falência com o caixa negativo. Finanças só no básico
+  (contratos, patrocínios e P&D ficam nas próximas camadas).
+- **Logos oficiais** (usuário joga só no celular pessoal): ficam fora do repositório; o usuário envia
+  as imagens, o Claude padroniza e devolve um zip para `game/local/emblems/` (ignorada pelo git).

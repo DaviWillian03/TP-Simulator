@@ -1,25 +1,179 @@
 {
  "_notas": "Origens da equipe criada (proposta P10 aprovada). Valores de dinheiro, fábrica, nota do carro e dívida são PROVISÓRIOS até o balanceamento da campanha.",
  "origins": [
-  {"id": "garage", "name": "Equipe de garagem", "desc": "Pouco dinheiro, fábrica mínima e motor comprado. Diretoria paciente.",
-   "budget_musd": 45, "debt_musd": 0, "factory_level": 1, "own_engine": false, "car_rating": 74, "board_patience": 5, "morale": 4,
-   "difficulty": "Difícil", "complexity": "Pouco complexa", "icon": "flag", "scores": {"money": 1, "factory": 1, "engine": 0, "patience": 5}},
-  {"id": "investor", "name": "Projeto de investidor", "desc": "Muito dinheiro e fábrica média, mas metas agressivas: pode ser demitido.",
-   "budget_musd": 160, "debt_musd": 0, "factory_level": 3, "own_engine": false, "car_rating": 79, "board_patience": 1, "morale": 4,
-   "difficulty": "Média", "complexity": "Pressão alta", "icon": "bolt", "scores": {"money": 4, "factory": 3, "engine": 0, "patience": 1}},
-  {"id": "manufacturer", "name": "Montadora estreante", "desc": "Dinheiro alto e motor próprio desde o início. A marca exige resultado rápido.",
-   "budget_musd": 190, "debt_musd": 0, "factory_level": 3, "own_engine": true, "car_rating": 78, "board_patience": 2, "morale": 4,
-   "difficulty": "Média", "complexity": "Mais complexa", "icon": "globe", "scores": {"money": 4, "factory": 3, "engine": 5, "patience": 2}},
-  {"id": "rescue", "name": "Resgate de equipe falida", "desc": "Estrutura razoável, mas dívidas e pessoal desmotivado. Recupere antes de vencer.",
-   "budget_musd": 80, "debt_musd": 60, "factory_level": 3, "own_engine": false, "car_rating": 77, "board_patience": 3, "morale": 2,
-   "difficulty": "Difícil", "complexity": "Complexa", "icon": "swap", "scores": {"money": 2, "factory": 3, "engine": 0, "patience": 3}}
+  {
+   "id": "garage",
+   "name": "Equipe de garagem",
+   "desc": "Pouco dinheiro, fábrica mínima e motor comprado. Diretoria paciente.",
+   "budget_musd": 45,
+   "debt_musd": 0,
+   "factory_level": 1,
+   "own_engine": false,
+   "car_rating": 74,
+   "board_patience": 5,
+   "morale": 4,
+   "difficulty": "Difícil",
+   "complexity": "Pouco complexa",
+   "icon": "flag",
+   "scores": {
+    "money": 1,
+    "factory": 1,
+    "engine": 0,
+    "patience": 5
+   },
+   "season_goal": 10,
+   "sponsor_per_race_musd": 1.6
+  },
+  {
+   "id": "investor",
+   "name": "Projeto de investidor",
+   "desc": "Muito dinheiro e fábrica média, mas metas agressivas: pode ser demitido.",
+   "budget_musd": 160,
+   "debt_musd": 0,
+   "factory_level": 3,
+   "own_engine": false,
+   "car_rating": 79,
+   "board_patience": 1,
+   "morale": 4,
+   "difficulty": "Média",
+   "complexity": "Pressão alta",
+   "icon": "bolt",
+   "scores": {
+    "money": 4,
+    "factory": 3,
+    "engine": 0,
+    "patience": 1
+   },
+   "season_goal": 6,
+   "sponsor_per_race_musd": 3.2
+  },
+  {
+   "id": "manufacturer",
+   "name": "Montadora estreante",
+   "desc": "Dinheiro alto e motor próprio desde o início. A marca exige resultado rápido.",
+   "budget_musd": 190,
+   "debt_musd": 0,
+   "factory_level": 3,
+   "own_engine": true,
+   "car_rating": 78,
+   "board_patience": 2,
+   "morale": 4,
+   "difficulty": "Média",
+   "complexity": "Mais complexa",
+   "icon": "globe",
+   "scores": {
+    "money": 4,
+    "factory": 3,
+    "engine": 5,
+    "patience": 2
+   },
+   "season_goal": 8,
+   "sponsor_per_race_musd": 3.6
+  },
+  {
+   "id": "rescue",
+   "name": "Resgate de equipe falida",
+   "desc": "Estrutura razoável, mas dívidas e pessoal desmotivado. Recupere antes de vencer.",
+   "budget_musd": 80,
+   "debt_musd": 60,
+   "factory_level": 3,
+   "own_engine": false,
+   "car_rating": 77,
+   "board_patience": 3,
+   "morale": 2,
+   "difficulty": "Difícil",
+   "complexity": "Complexa",
+   "icon": "swap",
+   "scores": {
+    "money": 2,
+    "factory": 3,
+    "engine": 0,
+    "patience": 3
+   },
+   "season_goal": 9,
+   "sponsor_per_race_musd": 2.4
+  }
  ],
  "objectives": [
-  {"id": "champion", "name": "Campeão em %d temporadas", "seasons": 5},
-  {"id": "win", "name": "Vencer uma corrida"},
-  {"id": "top5", "name": "Chegar ao top 5"},
-  {"id": "survive", "name": "Só sobreviver"}
+  {
+   "id": "champion",
+   "name": "Campeão em %d temporadas",
+   "seasons": 5
+  },
+  {
+   "id": "win",
+   "name": "Vencer uma corrida"
+  },
+  {
+   "id": "top5",
+   "name": "Chegar ao top 5"
+  },
+  {
+   "id": "survive",
+   "name": "Só sobreviver"
+  }
  ],
- "engine_suppliers": ["Mercedes", "Ferrari", "Honda", "Red Bull Ford", "Audi"],
- "countries": ["Brasil", "Argentina", "México", "Estados Unidos", "Canadá", "Reino Unido", "Itália", "França", "Alemanha", "Espanha", "Portugal", "Países Baixos", "Suíça", "Áustria", "Japão", "China", "Austrália", "Emirados Árabes", "Arábia Saudita", "Índia"]
+ "engine_suppliers": [
+  "Mercedes",
+  "Ferrari",
+  "Honda",
+  "Red Bull Ford",
+  "Audi"
+ ],
+ "countries": [
+  "Brasil",
+  "Argentina",
+  "México",
+  "Estados Unidos",
+  "Canadá",
+  "Reino Unido",
+  "Itália",
+  "França",
+  "Alemanha",
+  "Espanha",
+  "Portugal",
+  "Países Baixos",
+  "Suíça",
+  "Áustria",
+  "Japão",
+  "China",
+  "Austrália",
+  "Emirados Árabes",
+  "Arábia Saudita",
+  "Índia"
+ ],
+ "finance": {
+  "_notas": "PROVISÓRIO. Prêmio por posição final dos construtores (US$ mi), custo por rodada = base + nível da fábrica × fator.",
+  "prize_pool": [
+   100,
+   92,
+   85,
+   78,
+   70,
+   62,
+   54,
+   46,
+   38,
+   30,
+   22,
+   14
+  ],
+  "cost_base": 0.8,
+  "cost_per_factory": 0.7,
+  "sponsor_default": 3.0,
+  "debt_service_musd": 10
+ },
+ "board": {
+  "_notas": "PROVISÓRIO. Confiança 0-100: começa em 45 + 7×paciência; cumprir a meta soma 12; falhar tira (6−paciência)×3 por posição abaixo da meta, vezes o fator da dificuldade.",
+  "start_base": 45,
+  "start_per_patience": 7,
+  "met_bonus": 12,
+  "fail_per_pos": 3,
+  "difficulty": {
+   "easy": 0.6,
+   "normal": 1.0,
+   "hard": 1.4
+  },
+  "drift_per_race": 0.35
+ }
 }

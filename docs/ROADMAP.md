@@ -57,8 +57,10 @@ Cada marco termina jogável e testado. Itens vêm de `docs/DECISIONS.md`.
   identidade com carro e emblema gerados, motor e objetivos, pilotos reais da F2/F3), equipe
   criada como 12ª do grid (24 carros; classificação corta 7+7), salvar/carregar
   (`user://campaign.json`), sede mínima com a próxima rodada e o campeonato de construtores.
-- ⬜ Temporada completa: sede com mockup próprio, calendário em dias e "avançar até o próximo
-  evento", classificação de pilotos, objetivos da diretoria, virada de temporada.
+- ✅ Temporada completa (mockups v6): calendário em dias com "avançar até o evento", fim de
+  semana jogável ou simulado, campeonatos de construtores e pilotos, meta da diretoria por origem
+  (ou pelo nível do carro) com confiança, caixa simples (patrocínio − custos + prêmio final),
+  demissão, falência e virada de temporada. Valores PROVISÓRIOS em `campaign_origins.json`.
 - ⬜ Camadas seguintes (ordem do roadmap abaixo): finanças, pessoal e contratos, P&D, fábrica,
   patrocínios, estúdio de design, academia, teto de gastos, conselho, eventos, F2/F3/F4.
 

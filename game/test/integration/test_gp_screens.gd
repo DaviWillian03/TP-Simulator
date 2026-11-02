@@ -174,3 +174,28 @@ func test_origem_montadora_trava_o_motor_proprio() -> void:
 	assert_eq(screen.spec["engine"], "own")
 	var enabled: Array = screen._content.find_children("*", "Button", true, false).filter(func(b: Button) -> bool: return b.toggle_mode and not b.disabled and String(b.text).contains("cliente"))
 	assert_eq(enabled.size(), 0, "fornecedores desabilitados para a montadora")
+
+
+func test_sede_avanca_o_tempo_e_leva_ao_fim_de_semana() -> void:
+	var c := Campaign.new_real("williams")
+	Session.campaign = c
+	var screen: Control = await _open("res://src/ui/campaign_hub_screen.tscn")
+	var days := c.days_to_event()
+	assert_gt(days, 0)
+	screen._on_one_day()  # recarrega a sede com 1 dia a menos
+	assert_eq(c.days_to_event(), days - 1)
+	c.advance_to_event()
+	assert_true(c.event_ready())
+	Session.campaign = null
+
+
+func test_relatorio_fecha_a_temporada_uma_unica_vez() -> void:
+	var c := Campaign.new_real("mclaren")
+	c.round = 22
+	Session.campaign = c
+	var screen: Control = await _open("res://src/ui/campaign_report_screen.tscn")
+	assert_eq(c.seasons.size(), 1)
+	assert_eq(screen.report["season"], 2026)
+	var again: Control = await _open("res://src/ui/campaign_report_screen.tscn")
+	assert_eq(c.seasons.size(), 1, "reabrir o relatório não fecha a temporada de novo")
+	Session.campaign = null
