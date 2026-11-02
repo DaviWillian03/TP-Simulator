@@ -303,3 +303,16 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   entram: as buscas e o acesso a páginas de estatísticas na nuvem não deram fonte confiável (nada inventado).
 - Os valores dos atributos são **estimativa do projeto** (resultados 2024–2025 e reputação), não dados oficiais.
 - **Ficha do piloto implementada** (mockup v12 aprovado): toque num piloto (seu ou do mercado) abre a ficha; "Negociar/Renovar" leva à folha de contrato; técnicos vão direto à negociação. Captura: `--staff --fresh --team=<id> --profile=<id>`.
+
+### Dados reais pesquisados (2026-11-02, sites liberados pelo usuário)
+- Retrato de **02/11/2026 (após o GP do México, 20 rodadas)** em `tools/research/snapshot_2026-11-02.json`, com fontes: Wikipedia
+  (carreira e títulos), RacingNews365 (altura e peso; chefes de equipe), PlanetF1 (alturas de 10 pilotos e nascimentos conferem),
+  ESPN (pontos de pilotos e construtores). Bearman: PlanetF1 (1,88 m) × RacingNews365 (1,84 m) em conflito -> altura vazia.
+- **Notas dos carros recalibradas pela temporada real**: 74 + 19×raiz(pontos/líder): Mercedes 93, Ferrari 91, Red Bull 88,8,
+  McLaren 88,5, Racing Bulls 81,9, Alpine 80,3, Haas 78,2, Audi 77,9, Williams 76,6, Aston Martin 76, Cadillac 74.
+- **Atributos dos pilotos**: base estimada (reputação, 2024-2025) ajustada pelo desempenho de 2026 contra o companheiro (até ±5);
+  Antonelli (campeão de 2026, 9 vitórias) tratado à parte. Continua estimativa, não dado oficial.
+- Chefes de equipe: Stella, Wolff, Mekies, Vasseur, Vowles, Permane, Newey (Aston Martin), Komatsu, Wheatley, Lowdon; Alpine sem
+  chefe oficial (Briatore assume as funções, Steve Nielsen é diretor-geral). Diretores técnicos só onde há fonte recente
+  (Waché, Fallows, Elliott (CTO da Alpine), Chester); o resto fica "—".
+- Nota técnica: o `WebFetch` não resolve esses sites; a pesquisa foi feita com `curl` no terminal (a rota de rede é outra).

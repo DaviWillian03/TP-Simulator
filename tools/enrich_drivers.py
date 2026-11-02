@@ -1,13 +1,19 @@
 """Acrescenta atributos e dados biográficos aos pilotos de game/data/drivers_2026.json (reprodutível).
-- birth, titles: fatos públicos (data de nascimento; títulos mundiais até o fim de 2025).
-- attrs (0-100): pace, quali, consistency, racecraft, wet, tyres e potential: ESTIMATIVA do projeto a partir dos
-  resultados de 2024-2025 e da reputação (PROVISÓRIO; substituir após a pesquisa em sites especializados).
+- birth: conferido com a PlanetF1. height_cm/weight_kg: RacingNews365 (altura de 10 pilotos conferida com a PlanetF1; Bearman
+  tem fontes em conflito -> null). career (largadas, vitórias, pódios, poles, voltas mais rápidas, títulos): Wikipedia,
+  retrato de 02/11/2026 (após o GP do México). Ver tools/research/snapshot_2026-11-02.json.
+- attrs (0-100): pace, quali, consistency, racecraft, wet, tyres e potential: ESTIMATIVA do projeto (reputação e 2024-2025),
+  AJUSTADA pelo desempenho de 2026: quem faz mais pontos que o companheiro ganha ritmo/classificação/regularidade
+  (até +-5); Antonelli (campeão, 9 vitórias) é tratado à parte. Continua sendo estimativa, não dado oficial.
 - rating = média ponderada dos atributos (nota geral usada em todo o jogo).
 Altura, peso, vitórias, pódios e poles ficam fora até serem confirmados em fonte confiável (nada inventado).
 Uso: python tools/enrich_drivers.py
 """
 import json
 import pathlib
+
+SNAP = json.loads((pathlib.Path(__file__).resolve().parent / "research" / "snapshot_2026-11-02.json").read_text(encoding="utf-8"))
+TEAM_OF = {}  # preenchido a partir do arquivo de pilotos
 
 P = pathlib.Path(__file__).resolve().parent.parent / "game" / "data" / "drivers_2026.json"
 WEIGHTS = {"pace": 0.30, "quali": 0.15, "consistency": 0.15, "racecraft": 0.20, "wet": 0.10, "tyres": 0.10}
@@ -38,16 +44,34 @@ T = {
 }
 
 d = json.loads(P.read_text(encoding="utf-8"))
+team_total = {}
+for drv in d["drivers"]:
+    team_total[drv["team"]] = team_total.get(drv["team"], 0) + SNAP["driver_points"][drv["id"]]
+OVERRIDE = {"antonelli": (93, 94, 88, 88, 88, 85, 95)}  # campeão de 2026, 9 vitórias e 7 poles em 20 rodadas
 for drv in d["drivers"]:
     birth, titles, pace, quali, cons, race, wet, tyres, pot = T[drv["id"]]
+    if drv["id"] in OVERRIDE:
+        pace, quali, cons, race, wet, tyres, pot = OVERRIDE[drv["id"]]
+    elif team_total[drv["team"]] >= 20:
+        share = SNAP["driver_points"][drv["id"]] / team_total[drv["team"]]
+        adj = max(-5.0, min(5.0, (share - 0.5) * 16.0))
+        pace = round(pace + adj)
+        quali = round(quali + adj * 0.6)
+        cons = round(cons + adj * 0.4)
+    pace, quali, cons, race, wet, tyres = [max(50, min(99, v)) for v in (pace, quali, cons, race, wet, tyres)]
     attrs = {"pace": pace, "quali": quali, "consistency": cons, "racecraft": race, "wet": wet, "tyres": tyres}
     drv["birth"] = birth
-    drv["titles"] = titles
+    c = SNAP["career"][drv["id"]]
+    drv["titles"] = c["titles"]
+    drv["career"] = {"starts": c["starts"], "wins": c["wins"], "podiums": c["podiums"], "poles": c["poles"], "fastest_laps": c["fastest_laps"]}
+    hw = SNAP["height_weight"][drv["id"]]
+    drv["height_cm"] = hw["height_cm"]
+    drv["weight_kg"] = hw["weight_kg"]
     drv["attrs"] = attrs
     drv["potential"] = pot
     drv["rating"] = round(sum(attrs[k] * w for k, w in WEIGHTS.items()))
-d["_notas"] = ("Grid oficial de 2026. birth/titles: fatos públicos até o fim de 2025. attrs/potential: ESTIMATIVA do projeto "
-               "(PROVISÓRIO, tools/enrich_drivers.py). rating = média ponderada dos atributos. Altura, peso, vitórias e pódios "
-               "entram só com fonte confirmada.")
+d["_notas"] = ("Grid oficial de 2026. birth/height/weight/career/titles: pesquisa de 02/11/2026 (tools/research/snapshot_2026-11-02.json, "
+               "fontes citadas lá). attrs/potential: ESTIMATIVA do projeto ajustada pelo desempenho de 2026 (tools/enrich_drivers.py). "
+               "rating = média ponderada dos atributos.")
 P.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
 print("ok", [(x["id"], x["rating"]) for x in d["drivers"]][:6])

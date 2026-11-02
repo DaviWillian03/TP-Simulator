@@ -106,7 +106,7 @@ func setup(camp: Campaign, id: String) -> void:
 	if birth.length() == 10:
 		birth_txt = "%s/%s/%s · %d anos" % [birth.substr(8, 2), birth.substr(5, 2), birth.substr(0, 4), age]
 	for kv: Array in [["Nascimento", birth_txt], ["Nacionalidade", String(p["nationality"])],
-			["Títulos mundiais", str(int(p["titles"])) if p.has("titles") else "—"], ["Altura · peso", "—"], ["Vitórias · pódios · poles", "—"],
+			["Títulos mundiais", str(int(p["titles"])) if p.has("titles") else "—"], ["Altura · peso", _body(p)], ["Largadas · vitórias", _starts_wins(p)], ["Pódios · poles", _podiums_poles(p)],
 			["Potencial", str(int(p["potential"])) if p.has("potential") else "—"]]:
 		right.add_child(_kv(kv[0], kv[1]))
 	cols.add_child(right)
@@ -136,6 +136,22 @@ func setup(camp: Campaign, id: String) -> void:
 		queue_free())
 	btns.add_child(go)
 	v.add_child(btns)
+
+
+func _body(p: Dictionary) -> String:
+	if p.get("height_cm", null) == null or p.get("weight_kg", null) == null:
+		return "—" if p.get("height_cm", null) == null and p.get("weight_kg", null) == null else (("%.2f m" % (float(p["height_cm"]) / 100.0)).replace(".", ",") if p.get("height_cm", null) != null else "%d kg" % int(p["weight_kg"]))
+	return "%s m · %d kg" % [("%.2f" % (float(p["height_cm"]) / 100.0)).replace(".", ","), int(p["weight_kg"])]
+
+
+func _starts_wins(p: Dictionary) -> String:
+	var c: Dictionary = p.get("career", {})
+	return "%d · %d" % [int(c["starts"]), int(c["wins"])] if not c.is_empty() else "—"
+
+
+func _podiums_poles(p: Dictionary) -> String:
+	var c: Dictionary = p.get("career", {})
+	return "%d · %d" % [int(c["podiums"]), int(c["poles"])] if not c.is_empty() else "—"
 
 
 func _tag(text: String, kind: String) -> PanelContainer:

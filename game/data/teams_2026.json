@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "_notas": "Nomes reais por decisão do usuário (docs/DECISIONS.md); sem logos oficiais. 'car_rating' é PROVISÓRIO (0-100) até a pesquisa de atributos. 'emblem' = emblema ORIGINAL (forma + sigla) gerado por tools/make_emblems.py; logos reais só por importação pessoal (user://import/emblems/<id>.png). principal/technical_director/debut/constructors_titles: só dados confirmados; null = a verificar.",
+ "_notas": "Nomes reais por decisão do usuário; sem logos oficiais. car_rating = função dos pontos de construtores de 2026 após 20 rodadas (pesquisa 02/11/2026). principal/technical_director/debut/constructors_titles: só dados com fonte; null = a verificar. 'emblem' = emblema ORIGINAL.",
  "teams": [
   {
    "id": "mclaren",
@@ -8,7 +8,7 @@
    "power_unit": "Mercedes",
    "color": "#FF8000",
    "color2": "#1A1A1A",
-   "car_rating": 93,
+   "car_rating": 88.5,
    "emblem": {
     "shape": "chevron",
     "text": "Mc"
@@ -16,7 +16,8 @@
    "principal": "Andrea Stella",
    "technical_director": null,
    "debut": 1966,
-   "constructors_titles": 10
+   "constructors_titles": 10,
+   "points_2026": 365
   },
   {
    "id": "mercedes",
@@ -24,15 +25,16 @@
    "power_unit": "Mercedes",
    "color": "#27F4D2",
    "color2": "#111111",
-   "car_rating": 92,
+   "car_rating": 93.0,
    "emblem": {
     "shape": "ring",
     "text": "Me"
    },
    "principal": "Toto Wolff",
-   "technical_director": "James Allison",
+   "technical_director": null,
    "debut": 2010,
-   "constructors_titles": 8
+   "constructors_titles": 8,
+   "points_2026": 630
   },
   {
    "id": "ferrari",
@@ -40,7 +42,7 @@
    "power_unit": "Ferrari",
    "color": "#E8002D",
    "color2": "#FFE600",
-   "car_rating": 90,
+   "car_rating": 91.0,
    "emblem": {
     "shape": "shield",
     "text": "F"
@@ -48,7 +50,8 @@
    "principal": "Frédéric Vasseur",
    "technical_director": null,
    "debut": 1950,
-   "constructors_titles": 16
+   "constructors_titles": 16,
+   "points_2026": 504
   },
   {
    "id": "redbull",
@@ -56,7 +59,7 @@
    "power_unit": "Red Bull Ford",
    "color": "#3671C6",
    "color2": "#FFD100",
-   "car_rating": 90,
+   "car_rating": 88.8,
    "emblem": {
     "shape": "diamond",
     "text": "R"
@@ -64,7 +67,8 @@
    "principal": "Laurent Mekies",
    "technical_director": "Pierre Waché",
    "debut": 2005,
-   "constructors_titles": 6
+   "constructors_titles": 6,
+   "points_2026": 382
   },
   {
    "id": "williams",
@@ -72,15 +76,16 @@
    "power_unit": "Mercedes",
    "color": "#1868DB",
    "color2": "#FFFFFF",
-   "car_rating": 85,
+   "car_rating": 76.6,
    "emblem": {
     "shape": "square",
     "text": "W"
    },
    "principal": "James Vowles",
-   "technical_director": "Pat Fry",
+   "technical_director": null,
    "debut": 1978,
-   "constructors_titles": 9
+   "constructors_titles": 9,
+   "points_2026": 12
   },
   {
    "id": "racingbulls",
@@ -88,15 +93,16 @@
    "power_unit": "Red Bull Ford",
    "color": "#6692FF",
    "color2": "#FFFFFF",
-   "car_rating": 83,
+   "car_rating": 81.9,
    "emblem": {
     "shape": "hex",
     "text": "RB"
    },
    "principal": "Alan Permane",
-   "technical_director": null,
+   "technical_director": "Dan Fallows",
    "debut": 2006,
-   "constructors_titles": 0
+   "constructors_titles": 0,
+   "points_2026": 108
   },
   {
    "id": "astonmartin",
@@ -104,15 +110,16 @@
    "power_unit": "Honda",
    "color": "#229971",
    "color2": "#CEDC00",
-   "car_rating": 83,
+   "car_rating": 76.0,
    "emblem": {
     "shape": "pill",
     "text": "AM"
    },
-   "principal": null,
+   "principal": "Adrian Newey",
    "technical_director": null,
    "debut": 2021,
-   "constructors_titles": 0
+   "constructors_titles": 0,
+   "points_2026": 7
   },
   {
    "id": "haas",
@@ -120,7 +127,7 @@
    "power_unit": "Ferrari",
    "color": "#DEE1E2",
    "color2": "#E10600",
-   "car_rating": 82,
+   "car_rating": 78.2,
    "emblem": {
     "shape": "square",
     "text": "H"
@@ -128,7 +135,8 @@
    "principal": "Ayao Komatsu",
    "technical_director": null,
    "debut": 2016,
-   "constructors_titles": 0
+   "constructors_titles": 0,
+   "points_2026": 31
   },
   {
    "id": "alpine",
@@ -136,15 +144,16 @@
    "power_unit": "Mercedes",
    "color": "#0093CC",
    "color2": "#FF87BC",
-   "car_rating": 81,
+   "car_rating": 80.3,
    "emblem": {
     "shape": "peak",
     "text": ""
    },
    "principal": null,
-   "technical_director": null,
+   "technical_director": "Mike Elliott",
    "debut": 2021,
-   "constructors_titles": null
+   "constructors_titles": null,
+   "points_2026": 69
   },
   {
    "id": "audi",
@@ -152,7 +161,7 @@
    "power_unit": "Audi",
    "color": "#8E9296",
    "color2": "#F50537",
-   "car_rating": 81,
+   "car_rating": 77.9,
    "emblem": {
     "shape": "hex",
     "text": "Au"
@@ -160,7 +169,8 @@
    "principal": "Jonathan Wheatley",
    "technical_director": null,
    "debut": 2026,
-   "constructors_titles": 0
+   "constructors_titles": 0,
+   "points_2026": 27
   },
   {
    "id": "cadillac",
@@ -168,7 +178,7 @@
    "power_unit": "Ferrari",
    "color": "#2B2B2B",
    "color2": "#F2F2F2",
-   "car_rating": 78,
+   "car_rating": 74.0,
    "emblem": {
     "shape": "octagon",
     "text": "C"
@@ -176,7 +186,8 @@
    "principal": "Graeme Lowdon",
    "technical_director": "Nick Chester",
    "debut": 2026,
-   "constructors_titles": 0
+   "constructors_titles": 0,
+   "points_2026": 0
   }
  ]
 }

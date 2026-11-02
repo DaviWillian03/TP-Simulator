@@ -97,9 +97,8 @@ F2/F3/F4 simuladas ao fundo → Modo Edição e importação (.zip).
 
 ## O que falta para o jogo ficar pronto (auditoria dos pedidos do usuário, 2026-11-02)
 Ordem sugerida por impacto. Itens vêm de `docs/IDEAS.md` (#1–#6) e das mensagens da sessão.
-1. **Dados reais** (#3, #4) — em parte: pilotos têm 6 atributos + potencial (estimativa), nascimento e títulos; equipes têm
-   chefe, diretor técnico (confirmados), estreia e títulos. Faltam altura, peso, vitórias/pódios/poles, dirigentes de várias
-   equipes e a pesquisa profunda (liberar `planetf1.com`, `racingnews365.com`, `wikipedia.org`, `espn.com` na nuvem).
+1. **Dados reais** (#3, #4) — feito em 02/11/2026: altura, peso, carreira, títulos, chefes de equipe e notas dos carros pela
+   temporada real. Falta: diretores técnicos de várias equipes, história/estrutura de cada equipe, biografia de F2/F3, atualizar a cada GP.
 2. **Corrida Caótica** (#2): modo inteiro (Roleta do Caos) — a tela inicial mostra "em desenvolvimento".
 3. **Campanha — camadas que faltam** (#4, #5): estúdio de design do carro e editor
    de logo completos, academia de pilotos, empréstimo, teto de gastos e restrição de túnel de vento, conselho de regras

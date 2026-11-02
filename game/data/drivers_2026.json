@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "_notas": "Grid oficial de 2026. birth/titles: fatos públicos até o fim de 2025. attrs/potential: ESTIMATIVA do projeto (PROVISÓRIO, tools/enrich_drivers.py). rating = média ponderada dos atributos. Altura, peso, vitórias e pódios entram só com fonte confirmada.",
+ "_notas": "Grid oficial de 2026. birth/height/weight/career/titles: pesquisa de 02/11/2026 (tools/research/snapshot_2026-11-02.json, fontes citadas lá). attrs/potential: ESTIMATIVA do projeto ajustada pelo desempenho de 2026 (tools/enrich_drivers.py). rating = média ponderada dos atributos.",
  "drivers": [
   {
    "id": "norris",
@@ -9,18 +9,27 @@
    "number": 1,
    "nationality": "Reino Unido",
    "team": "mclaren",
-   "rating": 91,
+   "rating": 92,
    "birth": "1999-11-13",
    "titles": 1,
    "attrs": {
-    "pace": 94,
-    "quali": 94,
-    "consistency": 86,
+    "pace": 96,
+    "quali": 95,
+    "consistency": 87,
     "racecraft": 90,
     "wet": 88,
     "tyres": 88
    },
-   "potential": 95
+   "potential": 95,
+   "career": {
+    "starts": 170,
+    "wins": 13,
+    "podiums": 49,
+    "poles": 19,
+    "fastest_laps": 20
+   },
+   "height_cm": 170,
+   "weight_kg": 68
   },
   {
    "id": "piastri",
@@ -29,18 +38,27 @@
    "number": 81,
    "nationality": "Austrália",
    "team": "mclaren",
-   "rating": 91,
+   "rating": 90,
    "birth": "2001-04-06",
    "titles": 0,
    "attrs": {
-    "pace": 93,
-    "quali": 92,
-    "consistency": 92,
+    "pace": 91,
+    "quali": 91,
+    "consistency": 91,
     "racecraft": 92,
     "wet": 86,
     "tyres": 88
    },
-   "potential": 94
+   "potential": 94,
+   "career": {
+    "starts": 87,
+    "wins": 9,
+    "podiums": 28,
+    "poles": 6,
+    "fastest_laps": 9
+   },
+   "height_cm": 178,
+   "weight_kg": 68
   },
   {
    "id": "russell",
@@ -49,18 +67,27 @@
    "number": 63,
    "nationality": "Reino Unido",
    "team": "mercedes",
-   "rating": 91,
+   "rating": 90,
    "birth": "1998-02-15",
    "titles": 0,
    "attrs": {
-    "pace": 93,
-    "quali": 95,
-    "consistency": 90,
+    "pace": 91,
+    "quali": 94,
+    "consistency": 89,
     "racecraft": 89,
     "wet": 90,
     "tyres": 85
    },
-   "potential": 93
+   "potential": 93,
+   "career": {
+    "starts": 171,
+    "wins": 8,
+    "podiums": 32,
+    "poles": 12,
+    "fastest_laps": 13
+   },
+   "height_cm": 185,
+   "weight_kg": 70
   },
   {
    "id": "antonelli",
@@ -69,18 +96,27 @@
    "number": 12,
    "nationality": "Itália",
    "team": "mercedes",
-   "rating": 85,
+   "rating": 90,
    "birth": "2006-08-25",
-   "titles": 0,
+   "titles": 1,
    "attrs": {
-    "pace": 88,
-    "quali": 88,
-    "consistency": 78,
-    "racecraft": 84,
-    "wet": 86,
-    "tyres": 80
+    "pace": 93,
+    "quali": 94,
+    "consistency": 88,
+    "racecraft": 88,
+    "wet": 88,
+    "tyres": 85
    },
-   "potential": 94
+   "potential": 95,
+   "career": {
+    "starts": 43,
+    "wins": 9,
+    "podiums": 19,
+    "poles": 7,
+    "fastest_laps": 10
+   },
+   "height_cm": 172,
+   "weight_kg": 70
   },
   {
    "id": "leclerc",
@@ -100,7 +136,16 @@
     "wet": 91,
     "tyres": 80
    },
-   "potential": 94
+   "potential": 94,
+   "career": {
+    "starts": 190,
+    "wins": 9,
+    "podiums": 56,
+    "poles": 27,
+    "fastest_laps": 15
+   },
+   "height_cm": 180,
+   "weight_kg": 69
   },
   {
    "id": "hamilton",
@@ -120,7 +165,16 @@
     "wet": 96,
     "tyres": 90
    },
-   "potential": 90
+   "potential": 90,
+   "career": {
+    "starts": 399,
+    "wins": 106,
+    "podiums": 209,
+    "poles": 105,
+    "fastest_laps": 70
+   },
+   "height_cm": 174,
+   "weight_kg": 73
   },
   {
    "id": "verstappen",
@@ -129,18 +183,27 @@
    "number": 3,
    "nationality": "Países Baixos",
    "team": "redbull",
-   "rating": 95,
+   "rating": 96,
    "birth": "1997-09-30",
    "titles": 4,
    "attrs": {
-    "pace": 97,
-    "quali": 97,
-    "consistency": 92,
+    "pace": 99,
+    "quali": 99,
+    "consistency": 93,
     "racecraft": 96,
     "wet": 95,
     "tyres": 88
    },
-   "potential": 97
+   "potential": 97,
+   "career": {
+    "starts": 252,
+    "wins": 74,
+    "podiums": 138,
+    "poles": 50,
+    "fastest_laps": 38
+   },
+   "height_cm": 181,
+   "weight_kg": 72
   },
   {
    "id": "hadjar",
@@ -149,18 +212,27 @@
    "number": 6,
    "nationality": "França",
    "team": "redbull",
-   "rating": 82,
+   "rating": 81,
    "birth": "2004-09-28",
    "titles": 0,
    "attrs": {
-    "pace": 85,
-    "quali": 84,
-    "consistency": 76,
+    "pace": 82,
+    "quali": 82,
+    "consistency": 75,
     "racecraft": 82,
     "wet": 80,
     "tyres": 80
    },
-   "potential": 90
+   "potential": 90,
+   "career": {
+    "starts": 39,
+    "wins": 0,
+    "podiums": 3,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 167,
+   "weight_kg": 65
   },
   {
    "id": "albon",
@@ -180,7 +252,16 @@
     "wet": 84,
     "tyres": 88
    },
-   "potential": 87
+   "potential": 87,
+   "career": {
+    "starts": 146,
+    "wins": 0,
+    "podiums": 2,
+    "poles": 0,
+    "fastest_laps": 1
+   },
+   "height_cm": 186,
+   "weight_kg": 74
   },
   {
    "id": "sainz",
@@ -200,7 +281,16 @@
     "wet": 85,
     "tyres": 86
    },
-   "potential": 88
+   "potential": 88,
+   "career": {
+    "starts": 248,
+    "wins": 4,
+    "podiums": 29,
+    "poles": 6,
+    "fastest_laps": 4
+   },
+   "height_cm": 178,
+   "weight_kg": 64
   },
   {
    "id": "lawson",
@@ -209,18 +299,27 @@
    "number": 30,
    "nationality": "Nova Zelândia",
    "team": "racingbulls",
-   "rating": 80,
+   "rating": 81,
    "birth": "2002-02-11",
    "titles": 0,
    "attrs": {
-    "pace": 82,
-    "quali": 82,
-    "consistency": 76,
+    "pace": 85,
+    "quali": 84,
+    "consistency": 77,
     "racecraft": 80,
     "wet": 78,
     "tyres": 78
    },
-   "potential": 86
+   "potential": 86,
+   "career": {
+    "starts": 54,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 174,
+   "weight_kg": 72
   },
   {
    "id": "lindblad",
@@ -229,18 +328,27 @@
    "number": 41,
    "nationality": "Reino Unido",
    "team": "racingbulls",
-   "rating": 78,
+   "rating": 77,
    "birth": "2007-08-08",
    "titles": 0,
    "attrs": {
-    "pace": 81,
-    "quali": 80,
-    "consistency": 72,
+    "pace": 78,
+    "quali": 78,
+    "consistency": 71,
     "racecraft": 78,
     "wet": 78,
     "tyres": 76
    },
-   "potential": 90
+   "potential": 90,
+   "career": {
+    "starts": 18,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 173,
+   "weight_kg": 68
   },
   {
    "id": "alonso",
@@ -260,7 +368,16 @@
     "wet": 93,
     "tyres": 92
    },
-   "potential": 88
+   "potential": 88,
+   "career": {
+    "starts": 444,
+    "wins": 32,
+    "podiums": 106,
+    "poles": 22,
+    "fastest_laps": 26
+   },
+   "height_cm": 171,
+   "weight_kg": 68
   },
   {
    "id": "stroll",
@@ -280,7 +397,16 @@
     "wet": 82,
     "tyres": 78
    },
-   "potential": 80
+   "potential": 80,
+   "career": {
+    "starts": 208,
+    "wins": 0,
+    "podiums": 3,
+    "poles": 1,
+    "fastest_laps": 0
+   },
+   "height_cm": 182,
+   "weight_kg": 70
   },
   {
    "id": "ocon",
@@ -289,18 +415,27 @@
    "number": 31,
    "nationality": "França",
    "team": "haas",
-   "rating": 83,
+   "rating": 81,
    "birth": "1996-09-17",
    "titles": 0,
    "attrs": {
-    "pace": 83,
-    "quali": 84,
-    "consistency": 82,
+    "pace": 79,
+    "quali": 81,
+    "consistency": 80,
     "racecraft": 84,
     "wet": 82,
     "tyres": 82
    },
-   "potential": 84
+   "potential": 84,
+   "career": {
+    "starts": 198,
+    "wins": 1,
+    "podiums": 4,
+    "poles": 0,
+    "fastest_laps": 1
+   },
+   "height_cm": 186,
+   "weight_kg": 66
   },
   {
    "id": "bearman",
@@ -309,18 +444,27 @@
    "number": 87,
    "nationality": "Reino Unido",
    "team": "haas",
-   "rating": 82,
+   "rating": 84,
    "birth": "2005-05-08",
    "titles": 0,
    "attrs": {
-    "pace": 84,
-    "quali": 83,
-    "consistency": 78,
+    "pace": 88,
+    "quali": 86,
+    "consistency": 80,
     "racecraft": 83,
     "wet": 80,
     "tyres": 80
    },
-   "potential": 90
+   "potential": 90,
+   "career": {
+    "starts": 46,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": null,
+   "weight_kg": 68
   },
   {
    "id": "gasly",
@@ -329,18 +473,27 @@
    "number": 10,
    "nationality": "França",
    "team": "alpine",
-   "rating": 85,
+   "rating": 86,
    "birth": "1996-02-07",
    "titles": 0,
    "attrs": {
-    "pace": 86,
-    "quali": 85,
-    "consistency": 84,
+    "pace": 88,
+    "quali": 86,
+    "consistency": 85,
     "racecraft": 85,
     "wet": 86,
     "tyres": 84
    },
-   "potential": 86
+   "potential": 86,
+   "career": {
+    "starts": 196,
+    "wins": 1,
+    "podiums": 5,
+    "poles": 1,
+    "fastest_laps": 3
+   },
+   "height_cm": 177,
+   "weight_kg": 70
   },
   {
    "id": "colapinto",
@@ -349,18 +502,27 @@
    "number": 43,
    "nationality": "Argentina",
    "team": "alpine",
-   "rating": 79,
+   "rating": 78,
    "birth": "2003-05-27",
    "titles": 0,
    "attrs": {
-    "pace": 81,
-    "quali": 80,
-    "consistency": 74,
+    "pace": 79,
+    "quali": 79,
+    "consistency": 73,
     "racecraft": 80,
     "wet": 76,
     "tyres": 76
    },
-   "potential": 86
+   "potential": 86,
+   "career": {
+    "starts": 45,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 174,
+   "weight_kg": 71
   },
   {
    "id": "hulkenberg",
@@ -380,7 +542,16 @@
     "wet": 84,
     "tyres": 84
    },
-   "potential": 84
+   "potential": 84,
+   "career": {
+    "starts": 268,
+    "wins": 0,
+    "podiums": 1,
+    "poles": 1,
+    "fastest_laps": 2
+   },
+   "height_cm": 184,
+   "weight_kg": 78
   },
   {
    "id": "bortoleto",
@@ -400,7 +571,16 @@
     "wet": 78,
     "tyres": 78
    },
-   "potential": 90
+   "potential": 90,
+   "career": {
+    "starts": 42,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 184,
+   "weight_kg": 71
   },
   {
    "id": "perez",
@@ -420,7 +600,16 @@
     "wet": 82,
     "tyres": 86
    },
-   "potential": 82
+   "potential": 82,
+   "career": {
+    "starts": 300,
+    "wins": 6,
+    "podiums": 39,
+    "poles": 3,
+    "fastest_laps": 12
+   },
+   "height_cm": 173,
+   "weight_kg": 63
   },
   {
    "id": "bottas",
@@ -440,7 +629,16 @@
     "wet": 80,
     "tyres": 84
    },
-   "potential": 82
+   "potential": 82,
+   "career": {
+    "starts": 265,
+    "wins": 10,
+    "podiums": 67,
+    "poles": 20,
+    "fastest_laps": 19
+   },
+   "height_cm": 173,
+   "weight_kg": 69
   }
  ]
 }

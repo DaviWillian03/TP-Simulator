@@ -1,0 +1,331 @@
+{
+ "_notas": "Pesquisa de 2026-11-02 (após o GP do México). Fontes: stats de carreira = Wikipedia \"List of Formula One drivers\" (https://en.wikipedia.org/wiki/List_of_Formula_One_drivers); altura/peso = RacingNews365 (https://racingnews365.com/height-weight-f1-drivers), alturas de 10 pilotos conferem com PlanetF1 (https://www.planetf1.com/news/f1-2026-driver-height-weight); Bearman: PlanetF1 diz 1,88 m e RacingNews365 1,84 m (conflito) -> altura nula; nascimentos conferem com PlanetF1 (https://www.planetf1.com/news/f1-driver-ages); pontos = ESPN (https://www.espn.com/f1/standings); chefes de equipe = RacingNews365 (https://racingnews365.com/f1-2026-meet-the-11-team-principals). Títulos: coluna \"Drivers' Championships\" da Wikipedia (Antonelli: 1, campeão de 2026 segundo a RacingNews365).",
+ "height_weight": {
+  "albon": {
+   "height_cm": 186,
+   "weight_kg": 74
+  },
+  "ocon": {
+   "height_cm": 186,
+   "weight_kg": 66
+  },
+  "russell": {
+   "height_cm": 185,
+   "weight_kg": 70
+  },
+  "bearman": {
+   "height_cm": null,
+   "weight_kg": 68
+  },
+  "bortoleto": {
+   "height_cm": 184,
+   "weight_kg": 71
+  },
+  "hulkenberg": {
+   "height_cm": 184,
+   "weight_kg": 78
+  },
+  "stroll": {
+   "height_cm": 182,
+   "weight_kg": 70
+  },
+  "verstappen": {
+   "height_cm": 181,
+   "weight_kg": 72
+  },
+  "leclerc": {
+   "height_cm": 180,
+   "weight_kg": 69
+  },
+  "piastri": {
+   "height_cm": 178,
+   "weight_kg": 68
+  },
+  "sainz": {
+   "height_cm": 178,
+   "weight_kg": 64
+  },
+  "gasly": {
+   "height_cm": 177,
+   "weight_kg": 70
+  },
+  "colapinto": {
+   "height_cm": 174,
+   "weight_kg": 71
+  },
+  "hamilton": {
+   "height_cm": 174,
+   "weight_kg": 73
+  },
+  "lawson": {
+   "height_cm": 174,
+   "weight_kg": 72
+  },
+  "bottas": {
+   "height_cm": 173,
+   "weight_kg": 69
+  },
+  "lindblad": {
+   "height_cm": 173,
+   "weight_kg": 68
+  },
+  "perez": {
+   "height_cm": 173,
+   "weight_kg": 63
+  },
+  "antonelli": {
+   "height_cm": 172,
+   "weight_kg": 70
+  },
+  "alonso": {
+   "height_cm": 171,
+   "weight_kg": 68
+  },
+  "norris": {
+   "height_cm": 170,
+   "weight_kg": 68
+  },
+  "hadjar": {
+   "height_cm": 167,
+   "weight_kg": 65
+  }
+ },
+ "career": {
+  "verstappen": {
+   "entries": 252,
+   "starts": 252,
+   "poles": 50,
+   "wins": 74,
+   "podiums": 138,
+   "fastest_laps": 38,
+   "titles": 4
+  },
+  "norris": {
+   "entries": 171,
+   "starts": 170,
+   "poles": 19,
+   "wins": 13,
+   "podiums": 49,
+   "fastest_laps": 20,
+   "titles": 1
+  },
+  "piastri": {
+   "entries": 89,
+   "starts": 87,
+   "poles": 6,
+   "wins": 9,
+   "podiums": 28,
+   "fastest_laps": 9,
+   "titles": 0
+  },
+  "russell": {
+   "entries": 171,
+   "starts": 171,
+   "poles": 12,
+   "wins": 8,
+   "podiums": 32,
+   "fastest_laps": 13,
+   "titles": 0
+  },
+  "antonelli": {
+   "entries": 43,
+   "starts": 43,
+   "poles": 7,
+   "wins": 9,
+   "podiums": 19,
+   "fastest_laps": 10,
+   "titles": 1
+  },
+  "leclerc": {
+   "entries": 192,
+   "starts": 190,
+   "poles": 27,
+   "wins": 9,
+   "podiums": 56,
+   "fastest_laps": 15,
+   "titles": 0
+  },
+  "hamilton": {
+   "entries": 399,
+   "starts": 399,
+   "poles": 105,
+   "wins": 106,
+   "podiums": 209,
+   "fastest_laps": 70,
+   "titles": 7
+  },
+  "hadjar": {
+   "entries": 40,
+   "starts": 39,
+   "poles": 0,
+   "wins": 0,
+   "podiums": 3,
+   "fastest_laps": 0,
+   "titles": 0
+  },
+  "albon": {
+   "entries": 149,
+   "starts": 146,
+   "poles": 0,
+   "wins": 0,
+   "podiums": 2,
+   "fastest_laps": 1,
+   "titles": 0
+  },
+  "sainz": {
+   "entries": 252,
+   "starts": 248,
+   "poles": 6,
+   "wins": 4,
+   "podiums": 29,
+   "fastest_laps": 4,
+   "titles": 0
+  },
+  "lawson": {
+   "entries": 54,
+   "starts": 54,
+   "poles": 0,
+   "wins": 0,
+   "podiums": 0,
+   "fastest_laps": 0,
+   "titles": 0
+  },
+  "lindblad": {
+   "entries": 19,
+   "starts": 18,
+   "poles": 0,
+   "wins": 0,
+   "podiums": 0,
+   "fastest_laps": 0,
+   "titles": 0
+  },
+  "alonso": {
+   "entries": 447,
+   "starts": 444,
+   "poles": 22,
+   "wins": 32,
+   "podiums": 106,
+   "fastest_laps": 26,
+   "titles": 2
+  },
+  "stroll": {
+   "entries": 212,
+   "starts": 208,
+   "poles": 1,
+   "wins": 0,
+   "podiums": 3,
+   "fastest_laps": 0,
+   "titles": 0
+  },
+  "ocon": {
+   "entries": 199,
+   "starts": 198,
+   "poles": 0,
+   "wins": 1,
+   "podiums": 4,
+   "fastest_laps": 1,
+   "titles": 0
+  },
+  "bearman": {
+   "entries": 46,
+   "starts": 46,
+   "poles": 0,
+   "wins": 0,
+   "podiums": 0,
+   "fastest_laps": 0,
+   "titles": 0
+  },
+  "gasly": {
+   "entries": 197,
+   "starts": 196,
+   "poles": 1,
+   "wins": 1,
+   "podiums": 5,
+   "fastest_laps": 3,
+   "titles": 0
+  },
+  "colapinto": {
+   "entries": 46,
+   "starts": 45,
+   "poles": 0,
+   "wins": 0,
+   "podiums": 0,
+   "fastest_laps": 0,
+   "titles": 0
+  },
+  "hulkenberg": {
+   "entries": 273,
+   "starts": 268,
+   "poles": 1,
+   "wins": 0,
+   "podiums": 1,
+   "fastest_laps": 2,
+   "titles": 0
+  },
+  "bortoleto": {
+   "entries": 43,
+   "starts": 42,
+   "poles": 0,
+   "wins": 0,
+   "podiums": 0,
+   "fastest_laps": 0,
+   "titles": 0
+  },
+  "perez": {
+   "entries": 304,
+   "starts": 300,
+   "poles": 3,
+   "wins": 6,
+   "podiums": 39,
+   "fastest_laps": 12,
+   "titles": 0
+  },
+  "bottas": {
+   "entries": 266,
+   "starts": 265,
+   "poles": 20,
+   "wins": 10,
+   "podiums": 67,
+   "fastest_laps": 19,
+   "titles": 0
+  }
+ },
+ "driver_points": {
+  "antonelli": 380,
+  "verstappen": 261,
+  "hamilton": 259,
+  "russell": 250,
+  "leclerc": 245,
+  "norris": 221,
+  "piastri": 144,
+  "hadjar": 107,
+  "lawson": 83,
+  "gasly": 42,
+  "lindblad": 38,
+  "colapinto": 27,
+  "bearman": 23,
+  "bortoleto": 14,
+  "hulkenberg": 13,
+  "ocon": 7,
+  "alonso": 7,
+  "sainz": 7,
+  "albon": 5,
+  "stroll": 0,
+  "bottas": 0,
+  "perez": 0
+ },
+ "team_points": {
+  "mercedes": 630,
+  "ferrari": 504,
+  "redbull": 382,
+  "mclaren": 365,
+  "racingbulls": 108,
+  "alpine": 69,
+  "haas": 31,
+  "audi": 27,
+  "williams": 12,
+  "astonmartin": 7,
+  "cadillac": 0
+ },
+ "rounds_done": 20
+}

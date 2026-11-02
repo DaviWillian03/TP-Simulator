@@ -111,7 +111,7 @@ func person(id: String, camp: Campaign = null) -> Dictionary:
 			if d["id"] == id:
 				var out := {"id": id, "name": d["name"], "nationality": d["nationality"], "kind": "driver", "role": "driver", "rating": int(d["rating"]),
 					"category": "F1", "number": int(d["number"]), "code": d["code"]}
-				for k: String in ["attrs", "birth", "titles", "potential"]:
+				for k: String in ["attrs", "birth", "titles", "potential", "height_cm", "weight_kg", "career"]:
 					if d.has(k):
 						out[k] = d[k]
 				return out
@@ -128,7 +128,7 @@ func person(id: String, camp: Campaign = null) -> Dictionary:
 		var e: Dictionary = _ex[id]
 		var out2 := {"id": id, "name": e["name"], "nationality": e["nationality"], "kind": "driver", "role": "driver", "rating": int(e["rating"]),
 			"category": "F1", "number": int(e["number"]), "code": e["code"]}
-		for k: String in ["attrs", "birth", "titles", "potential"]:
+		for k: String in ["attrs", "birth", "titles", "potential", "height_cm", "weight_kg", "career"]:
 			if e.has(k):
 				out2[k] = e[k]
 		return out2
@@ -422,7 +422,7 @@ func _release_to_pool(camp: Campaign, d: Dictionary) -> void:
 			is_feeder = true
 	if not is_feeder and not _free_agent_ids().has(d["id"]):
 		var e := {"name": d["name"], "nationality": d["nationality"], "rating": int(d["rating"]), "number": int(d["number"]), "code": d["code"]}
-		for k: String in ["attrs", "birth", "titles", "potential"]:
+		for k: String in ["attrs", "birth", "titles", "potential", "height_cm", "weight_kg", "career"]:
 			if d.has(k):
 				e[k] = d[k]
 		_ex[d["id"]] = e

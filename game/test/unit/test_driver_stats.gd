@@ -105,3 +105,20 @@ func test_campanha_evolui_o_grid_na_virada() -> void:
 		if before.has(d["id"]) and int(d["rating"]) != int(before[d["id"]]):
 			changed += 1
 	assert_gt(changed, 0, "alguém muda de nota na virada")
+
+
+func test_dados_pesquisados_de_2026_estao_nos_pilotos_e_equipes() -> void:
+	for d: Dictionary in GameData.drivers():
+		assert_true(d.has("career"), d["id"])
+		assert_gte(int(d["career"]["starts"]), int(d["career"]["wins"]))
+		assert_gte(int(d["career"]["podiums"]), int(d["career"]["wins"]))
+		if d.get("height_cm", null) != null:
+			assert_between(int(d["height_cm"]), 160, 195, d["id"])
+		assert_between(int(d["weight_kg"]), 55, 85, d["id"])
+	assert_eq(_driver("bearman")["height_cm"], null, "fontes em conflito")
+	assert_eq(int(_driver("antonelli")["titles"]), 1)
+	assert_eq(int(_driver("hamilton")["career"]["wins"]), 106)
+	var mercedes := GameData.team_by_id(GameData.teams(), "mercedes")
+	var cad := GameData.team_by_id(GameData.teams(), "cadillac")
+	assert_gt(float(mercedes["car_rating"]), float(cad["car_rating"]) + 15.0)
+	assert_eq(GameData.team_by_id(GameData.teams(), "astonmartin")["principal"], "Adrian Newey")
