@@ -109,8 +109,12 @@ func person(id: String, camp: Campaign = null) -> Dictionary:
 	if camp != null:
 		for d: Dictionary in camp.drivers():
 			if d["id"] == id:
-				return {"id": id, "name": d["name"], "nationality": d["nationality"], "kind": "driver", "role": "driver", "rating": int(d["rating"]),
+				var out := {"id": id, "name": d["name"], "nationality": d["nationality"], "kind": "driver", "role": "driver", "rating": int(d["rating"]),
 					"category": "F1", "number": int(d["number"]), "code": d["code"]}
+				for k: String in ["attrs", "birth", "titles", "potential"]:
+					if d.has(k):
+						out[k] = d[k]
+				return out
 	for p: Dictionary in staff_pool():
 		if p["id"] == id:
 			return {"id": id, "name": p["name"], "nationality": p["nationality"], "kind": "staff", "role": p["role"], "skill": int(p["skill"]), "rating": int(p["skill"]), "category": "Técnico"}

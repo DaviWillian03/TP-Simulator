@@ -574,6 +574,8 @@ func close_season() -> Dictionary:
 ## Começa a próxima temporada (mesmo grid: o mercado de pilotos chega na camada de contratos).
 func start_next_season() -> void:
 	personnel.rollover(self)
+	for d: Dictionary in _drivers:  # jovens evoluem em direção ao potencial; veteranos perdem ritmo
+		DriverStats.evolve(d, season + 1, 0)
 	sponsors.expire(self)
 	ledger = {}
 	cash_log = [{"r": 0, "cash": budget_musd}]

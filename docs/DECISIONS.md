@@ -291,3 +291,15 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - Efeito do marketing mudou: a fábrica sobe a influência (nível das marcas) e o valor das ofertas (×), não multiplica mais o
   patrocínio já contratado. Balanceamento: com folha de pagamento e manutenção, o saldo por corrida fica ligeiramente
   negativo para a maioria — o prêmio do fim da temporada fecha a conta (PROVISÓRIO).
+
+## Dados reais — atributos dos pilotos (respostas do usuário, 2026-11-02)
+- **6 atributos + potencial** (0–100): ritmo, classificação, regularidade, ultrapassagem/defesa, chuva, gestão de pneus.
+  A nota geral é a média ponderada (30/15/15/20/10/10). Entram na simulação: ritmo (volta), classificação (volta lançada),
+  regularidade (erros, incidentes, problemas no treino), ultrapassagem (vantagem na disputa), chuva (perda de tempo
+  molhado), pneus (desgaste); idade/potencial mudam as notas na virada da campanha (jovens sobem, > 33 anos caem).
+  F2/F3 e agentes livres sem atributos usam a nota geral.
+- **Dados verificados**: nascimento e títulos mundiais até 2025; equipes: chefe de equipe, diretor técnico (só os
+  confirmados), estreia e títulos de construtores; o resto é null ("—"). **Altura, peso, vitórias e pódios** ainda não
+  entram: as buscas e o acesso a páginas de estatísticas na nuvem não deram fonte confiável (nada inventado).
+- Os valores dos atributos são **estimativa do projeto** (resultados 2024–2025 e reputação), não dados oficiais.
+- Aguarda: mockup da ficha do piloto (Pessoal e mercado).

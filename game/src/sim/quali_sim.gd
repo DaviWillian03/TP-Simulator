@@ -220,7 +220,10 @@ func can_go_out(car: CarState) -> bool:
 # --- tempo de volta ---------------------------------------------------------------------
 
 func _lap_base(car: CarState) -> float:
-	return RaceSim.base_lap_time(track, car.team, car.driver) + weather.wetness * RaceSim.WET_TRACK_S
+	# classificação: o atributo "quali" troca o ritmo de corrida na volta lançada
+	var quali_gain := (DriverStats.attr(car.driver, "quali") - DriverStats.attr(car.driver, "pace")) * DriverStats.QUALI_K
+	var wet_skill := 1.0 + (80.0 - DriverStats.attr(car.driver, "wet")) * DriverStats.WET_K
+	return RaceSim.base_lap_time(track, car.team, car.driver) - quali_gain + weather.wetness * RaceSim.WET_TRACK_S * clampf(wet_skill, 0.7, 1.4)
 
 
 ## Tempo da volta lançada que está começando agora (com a sorte da volta).
@@ -251,7 +254,7 @@ func track_evolution_s() -> float:
 func _finish_flying_lap(car: CarState) -> void:
 	var t: float = flying_time[car]
 	var valid := true
-	var mistake := MISTAKE_BASE + (100.0 - float(car.driver["rating"])) * MISTAKE_PER_RATING
+	var mistake := MISTAKE_BASE + (100.0 - DriverStats.attr(car.driver, "consistency")) * MISTAKE_PER_RATING
 	mistake += weather.wetness * 0.08
 	if rng.randf() < mistake * incident_rate:
 		if rng.randf() < TRACK_LIMITS_SHARE:

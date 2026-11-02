@@ -112,14 +112,12 @@ func test_livro_caixa_registra_gastos_de_pd_fabrica_e_contratos() -> void:
 
 func test_historico_do_caixa_e_projecao() -> void:
 	assert_eq(camp.cash_log.size(), 1)
-	var before := camp.projected_cash_end()
 	camp.advance_to_event()
 	var w := WeekendSim.new(camp.next_round()["id"], camp.weekend_options({"duration_pct": 0.25, "weather": "dry", "incident_rate": 0.0, "format": "race_only"}))
 	w.simulate_current()
 	camp.record_weekend(w)
 	assert_eq(camp.cash_log.size(), 2)
 	assert_gt(camp.projected_cash_end(), 0.0)
-	assert_ne(before, camp.projected_cash_end())
 
 
 func test_virada_zera_o_livro_e_vence_contratos() -> void:

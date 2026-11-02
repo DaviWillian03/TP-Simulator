@@ -340,7 +340,7 @@ func set_team_order(car: CarState, order: CarState.TeamOrder) -> void:
 	var pos := standings().find(car) + 1
 	if order == CarState.TeamOrder.LET_BY and pos <= 3:
 		p -= 0.2
-	if mate != null and float(car.driver["rating"]) > float(mate.driver["rating"]):
+	if mate != null and DriverStats.overall(car.driver) > DriverStats.overall(mate.driver):
 		p -= 0.15
 	var who := car.display_name().get_slice(" ", 0)
 	if rng.randf() >= p:
@@ -438,7 +438,7 @@ func _ideal_lap_time(car: CarState) -> float:
 static func base_lap_time(p_track: TrackModel, team: Dictionary, driver: Dictionary) -> float:
 	return p_track.base_lap_time_s \
 		+ (100.0 - float(team["car_rating"])) * CAR_K \
-		+ (100.0 - float(driver["rating"])) * DRIVER_K
+		+ (100.0 - DriverStats.attr(driver, "pace")) * DRIVER_K
 
 
 ## Pontos pela posição final (1 = vencedor). Sprint: 8 primeiros; corrida: 10 primeiros.
@@ -456,7 +456,8 @@ func compound_rule_ok(car: CarState) -> bool:
 func _lap_time(car: CarState, with_traffic: bool) -> float:
 	var t := _ideal_lap_time(car)
 	t += tyres.pace_penalty(car.tyre, car.tyre_wear)
-	t += tyres.wet_penalty(car.tyre, weather.wetness) + weather.wetness * WET_TRACK_S
+	var wet_skill := 1.0 + (80.0 - DriverStats.attr(car.driver, "wet")) * DriverStats.WET_K
+	t += (tyres.wet_penalty(car.tyre, weather.wetness) + weather.wetness * WET_TRACK_S) * clampf(wet_skill, 0.7, 1.4)
 	t -= weather.rubber * RUBBER_GAIN_S
 	t += FUEL_START_S * (1.0 - clampf(car.distance / race_distance(), 0.0, 1.0))
 	t += PACE_TIME[car.pace_mode]
@@ -502,6 +503,7 @@ func _resolve_overtakes(order: Array[CarState]) -> void:
 
 func _try_overtake(att: CarState, def: CarState, zone: Dictionary) -> bool:
 	var advantage := _lap_time(def, false) - _lap_time(att, false)  # > 0: atacante mais rápido
+	advantage += (DriverStats.attr(att.driver, "racecraft") - DriverStats.attr(def.driver, "racecraft")) * DriverStats.RACECRAFT_K
 	if att.battery > 0.1:
 		advantage += OVERTAKE_MODE_BONUS_S
 		att.battery = maxf(0.0, att.battery - OVERTAKE_MODE_COST)
@@ -550,6 +552,7 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 	var wear: float = tyres.wear_per_lap(car.tyre) * wear_multiplier() * PACE_WEAR[car.pace_mode]
 	wear *= tyres.wet_wear_multiplier(car.tyre, weather.wetness)
 	wear *= 1.0 + PitStop.WING_WEAR * car.wing_step
+	wear *= clampf(1.0 + (75.0 - DriverStats.attr(car.driver, "tyres")) * DriverStats.TYRE_K, 0.85, 1.2)
 	if control.is_neutralized():
 		wear *= 0.5
 	car.tyre_wear += wear * lap_part * car.wear_factor

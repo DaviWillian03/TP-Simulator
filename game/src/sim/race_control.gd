@@ -128,7 +128,7 @@ func incident_rate_per_lap(car: CarState) -> float:
 	r *= 1.0 + car.damage_wing
 	if car.laps_done == 0:
 		r *= 3.0  # largada
-	r *= clampf(1.0 + (90.0 - float(car.driver["rating"])) * 0.03, 0.6, 1.6)
+	r *= clampf(1.0 + (90.0 - DriverStats.attr(car.driver, "consistency")) * 0.03, 0.6, 1.6)
 	return r
 
 

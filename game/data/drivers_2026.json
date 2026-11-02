@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "_notas": "Grid oficial de 2026 (confirmado por busca em 2026-11-01). 'rating' é PROVISÓRIO (0-100); dados biográficos (idade, altura, peso, conquistas) entram após a pesquisa.",
+ "_notas": "Grid oficial de 2026. birth/titles: fatos públicos até o fim de 2025. attrs/potential: ESTIMATIVA do projeto (PROVISÓRIO, tools/enrich_drivers.py). rating = média ponderada dos atributos. Altura, peso, vitórias e pódios entram só com fonte confirmada.",
  "drivers": [
   {
    "id": "norris",
@@ -9,7 +9,18 @@
    "number": 1,
    "nationality": "Reino Unido",
    "team": "mclaren",
-   "rating": 94
+   "rating": 91,
+   "birth": "1999-11-13",
+   "titles": 1,
+   "attrs": {
+    "pace": 94,
+    "quali": 94,
+    "consistency": 86,
+    "racecraft": 90,
+    "wet": 88,
+    "tyres": 88
+   },
+   "potential": 95
   },
   {
    "id": "piastri",
@@ -18,7 +29,18 @@
    "number": 81,
    "nationality": "Austrália",
    "team": "mclaren",
-   "rating": 92
+   "rating": 91,
+   "birth": "2001-04-06",
+   "titles": 0,
+   "attrs": {
+    "pace": 93,
+    "quali": 92,
+    "consistency": 92,
+    "racecraft": 92,
+    "wet": 86,
+    "tyres": 88
+   },
+   "potential": 94
   },
   {
    "id": "russell",
@@ -27,7 +49,18 @@
    "number": 63,
    "nationality": "Reino Unido",
    "team": "mercedes",
-   "rating": 92
+   "rating": 91,
+   "birth": "1998-02-15",
+   "titles": 0,
+   "attrs": {
+    "pace": 93,
+    "quali": 95,
+    "consistency": 90,
+    "racecraft": 89,
+    "wet": 90,
+    "tyres": 85
+   },
+   "potential": 93
   },
   {
    "id": "antonelli",
@@ -36,7 +69,18 @@
    "number": 12,
    "nationality": "Itália",
    "team": "mercedes",
-   "rating": 87
+   "rating": 85,
+   "birth": "2006-08-25",
+   "titles": 0,
+   "attrs": {
+    "pace": 88,
+    "quali": 88,
+    "consistency": 78,
+    "racecraft": 84,
+    "wet": 86,
+    "tyres": 80
+   },
+   "potential": 94
   },
   {
    "id": "leclerc",
@@ -45,7 +89,18 @@
    "number": 16,
    "nationality": "Mônaco",
    "team": "ferrari",
-   "rating": 93
+   "rating": 90,
+   "birth": "1997-10-16",
+   "titles": 0,
+   "attrs": {
+    "pace": 94,
+    "quali": 97,
+    "consistency": 82,
+    "racecraft": 90,
+    "wet": 91,
+    "tyres": 80
+   },
+   "potential": 94
   },
   {
    "id": "hamilton",
@@ -54,7 +109,18 @@
    "number": 44,
    "nationality": "Reino Unido",
    "team": "ferrari",
-   "rating": 90
+   "rating": 91,
+   "birth": "1985-01-07",
+   "titles": 7,
+   "attrs": {
+    "pace": 91,
+    "quali": 90,
+    "consistency": 86,
+    "racecraft": 92,
+    "wet": 96,
+    "tyres": 90
+   },
+   "potential": 90
   },
   {
    "id": "verstappen",
@@ -63,7 +129,18 @@
    "number": 3,
    "nationality": "Países Baixos",
    "team": "redbull",
-   "rating": 96
+   "rating": 95,
+   "birth": "1997-09-30",
+   "titles": 4,
+   "attrs": {
+    "pace": 97,
+    "quali": 97,
+    "consistency": 92,
+    "racecraft": 96,
+    "wet": 95,
+    "tyres": 88
+   },
+   "potential": 97
   },
   {
    "id": "hadjar",
@@ -72,7 +149,18 @@
    "number": 6,
    "nationality": "França",
    "team": "redbull",
-   "rating": 85
+   "rating": 82,
+   "birth": "2004-09-28",
+   "titles": 0,
+   "attrs": {
+    "pace": 85,
+    "quali": 84,
+    "consistency": 76,
+    "racecraft": 82,
+    "wet": 80,
+    "tyres": 80
+   },
+   "potential": 90
   },
   {
    "id": "albon",
@@ -81,7 +169,18 @@
    "number": 23,
    "nationality": "Tailândia",
    "team": "williams",
-   "rating": 86
+   "rating": 86,
+   "birth": "1996-03-23",
+   "titles": 0,
+   "attrs": {
+    "pace": 87,
+    "quali": 85,
+    "consistency": 86,
+    "racecraft": 86,
+    "wet": 84,
+    "tyres": 88
+   },
+   "potential": 87
   },
   {
    "id": "sainz",
@@ -90,7 +189,18 @@
    "number": 55,
    "nationality": "Espanha",
    "team": "williams",
-   "rating": 88
+   "rating": 88,
+   "birth": "1994-09-01",
+   "titles": 0,
+   "attrs": {
+    "pace": 89,
+    "quali": 91,
+    "consistency": 87,
+    "racecraft": 86,
+    "wet": 85,
+    "tyres": 86
+   },
+   "potential": 88
   },
   {
    "id": "lawson",
@@ -99,7 +209,18 @@
    "number": 30,
    "nationality": "Nova Zelândia",
    "team": "racingbulls",
-   "rating": 82
+   "rating": 80,
+   "birth": "2002-02-11",
+   "titles": 0,
+   "attrs": {
+    "pace": 82,
+    "quali": 82,
+    "consistency": 76,
+    "racecraft": 80,
+    "wet": 78,
+    "tyres": 78
+   },
+   "potential": 86
   },
   {
    "id": "lindblad",
@@ -108,7 +229,18 @@
    "number": 41,
    "nationality": "Reino Unido",
    "team": "racingbulls",
-   "rating": 80
+   "rating": 78,
+   "birth": "2007-08-08",
+   "titles": 0,
+   "attrs": {
+    "pace": 81,
+    "quali": 80,
+    "consistency": 72,
+    "racecraft": 78,
+    "wet": 78,
+    "tyres": 76
+   },
+   "potential": 90
   },
   {
    "id": "alonso",
@@ -117,7 +249,18 @@
    "number": 14,
    "nationality": "Espanha",
    "team": "astonmartin",
-   "rating": 89
+   "rating": 92,
+   "birth": "1981-07-29",
+   "titles": 2,
+   "attrs": {
+    "pace": 90,
+    "quali": 90,
+    "consistency": 90,
+    "racecraft": 95,
+    "wet": 93,
+    "tyres": 92
+   },
+   "potential": 88
   },
   {
    "id": "stroll",
@@ -126,7 +269,18 @@
    "number": 18,
    "nationality": "Canadá",
    "team": "astonmartin",
-   "rating": 80
+   "rating": 78,
+   "birth": "1998-10-29",
+   "titles": 0,
+   "attrs": {
+    "pace": 79,
+    "quali": 76,
+    "consistency": 76,
+    "racecraft": 76,
+    "wet": 82,
+    "tyres": 78
+   },
+   "potential": 80
   },
   {
    "id": "ocon",
@@ -135,7 +289,18 @@
    "number": 31,
    "nationality": "França",
    "team": "haas",
-   "rating": 83
+   "rating": 83,
+   "birth": "1996-09-17",
+   "titles": 0,
+   "attrs": {
+    "pace": 83,
+    "quali": 84,
+    "consistency": 82,
+    "racecraft": 84,
+    "wet": 82,
+    "tyres": 82
+   },
+   "potential": 84
   },
   {
    "id": "bearman",
@@ -144,7 +309,18 @@
    "number": 87,
    "nationality": "Reino Unido",
    "team": "haas",
-   "rating": 84
+   "rating": 82,
+   "birth": "2005-05-08",
+   "titles": 0,
+   "attrs": {
+    "pace": 84,
+    "quali": 83,
+    "consistency": 78,
+    "racecraft": 83,
+    "wet": 80,
+    "tyres": 80
+   },
+   "potential": 90
   },
   {
    "id": "gasly",
@@ -153,7 +329,18 @@
    "number": 10,
    "nationality": "França",
    "team": "alpine",
-   "rating": 86
+   "rating": 85,
+   "birth": "1996-02-07",
+   "titles": 0,
+   "attrs": {
+    "pace": 86,
+    "quali": 85,
+    "consistency": 84,
+    "racecraft": 85,
+    "wet": 86,
+    "tyres": 84
+   },
+   "potential": 86
   },
   {
    "id": "colapinto",
@@ -162,7 +349,18 @@
    "number": 43,
    "nationality": "Argentina",
    "team": "alpine",
-   "rating": 81
+   "rating": 79,
+   "birth": "2003-05-27",
+   "titles": 0,
+   "attrs": {
+    "pace": 81,
+    "quali": 80,
+    "consistency": 74,
+    "racecraft": 80,
+    "wet": 76,
+    "tyres": 76
+   },
+   "potential": 86
   },
   {
    "id": "hulkenberg",
@@ -171,7 +369,18 @@
    "number": 27,
    "nationality": "Alemanha",
    "team": "audi",
-   "rating": 84
+   "rating": 84,
+   "birth": "1987-08-19",
+   "titles": 0,
+   "attrs": {
+    "pace": 84,
+    "quali": 88,
+    "consistency": 86,
+    "racecraft": 82,
+    "wet": 84,
+    "tyres": 84
+   },
+   "potential": 84
   },
   {
    "id": "bortoleto",
@@ -180,7 +389,18 @@
    "number": 5,
    "nationality": "Brasil",
    "team": "audi",
-   "rating": 84
+   "rating": 81,
+   "birth": "2004-10-14",
+   "titles": 0,
+   "attrs": {
+    "pace": 84,
+    "quali": 83,
+    "consistency": 76,
+    "racecraft": 82,
+    "wet": 78,
+    "tyres": 78
+   },
+   "potential": 90
   },
   {
    "id": "perez",
@@ -189,7 +409,18 @@
    "number": 11,
    "nationality": "México",
    "team": "cadillac",
-   "rating": 83
+   "rating": 82,
+   "birth": "1990-01-26",
+   "titles": 0,
+   "attrs": {
+    "pace": 82,
+    "quali": 80,
+    "consistency": 76,
+    "racecraft": 84,
+    "wet": 82,
+    "tyres": 86
+   },
+   "potential": 82
   },
   {
    "id": "bottas",
@@ -198,7 +429,18 @@
    "number": 77,
    "nationality": "Finlândia",
    "team": "cadillac",
-   "rating": 83
+   "rating": 82,
+   "birth": "1989-08-28",
+   "titles": 0,
+   "attrs": {
+    "pace": 82,
+    "quali": 82,
+    "consistency": 84,
+    "racecraft": 80,
+    "wet": 80,
+    "tyres": 84
+   },
+   "potential": 82
   }
  ]
 }
