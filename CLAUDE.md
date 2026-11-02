@@ -30,8 +30,8 @@ das escolhas técnicas.
 - `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). **Todas** as
   cores/fontes/raios/espaços vêm de `UiStyle` — nada de cor solta nas telas. Direção atual:
   **Garagem** (seção "Garagem" do UiStyle + peças em `ScreenKit`, `GarageBackdrop`, `CutButton`,
-  `CarHero`); migradas: tela inicial, configuração do GP, painel do fim de semana e treino ao vivo
-  (`TimingTable` com estilo "garage"). Classificação, resultados e corrida ainda Paddock (legado).
+  `CarHero`); migradas: tudo (tela inicial, GP, fim de semana, treino, classificação, corrida, box e campanha)
+  (`TimingTable` com estilo "garage"). Todas as telas jogáveis já são Garagem (corrida, box, classificação, resultados e campanha).
   Mínimos: texto 12 px, alvo de toque 44 px (ação principal 56). Emblemas sempre via
   `TeamEmblems` (prioridade: `user://import/emblems/`, depois `game/local/emblems/` — ignorada
   pelo git, para logos pessoais —, depois os originais).

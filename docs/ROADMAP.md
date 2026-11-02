@@ -96,21 +96,45 @@ F2/F3/F4 simuladas ao fundo → Modo Edição e importação (.zip).
 - Rostos dos pilotos e logos das equipes (só locais, `game/local/`). Cor da equipe como ambiente.
 - Desgaste de pneus balanceado (1 parada em corridas de 25%).
 
-## O que falta para o jogo ficar pronto (auditoria dos pedidos do usuário, 2026-11-02)
-Ordem sugerida por impacto. Itens vêm de `docs/IDEAS.md` (#1–#6) e das mensagens da sessão.
-1. **Dados reais** (#3, #4) — feito em 02/11/2026: altura, peso, carreira, títulos, chefes de equipe e notas dos carros pela
-   temporada real. Falta: diretores técnicos de várias equipes, história/estrutura de cada equipe, biografia de F2/F3, atualizar a cada GP.
-2. **Corrida Caótica** (#2): modo inteiro (Roleta do Caos) — a tela inicial mostra "em desenvolvimento".
-3. **Campanha — camadas que faltam** (#4, #5): estúdio de design do carro e editor
-   de logo completos, academia de pilotos, empréstimo, teto de gastos e restrição de túnel de vento, conselho de regras
-   (pontuação, motor, chassi, pneus…), eventos inesperados, F2/F3/F4 simuladas ao fundo, mercado de pilotos na virada.
-4. **IA rival**: já desenvolve o carro e troca pilotos na virada; falta a IA contratar técnicos, pagar teto de gastos e reagir a regras.
-5. **Modo Edição e importação** (#3): pacote .zip com validação (nomes, fotos, pinturas, logos, atributos,
-   circuitos) e importador no celular (seletor de arquivos do Android).
-6. **Cenários 3D** (#1): conferir o cenário e o relevo dos 22 circuitos (chão de Xangai, escala dos pinheiros,
-   materiais) e trocar por modelos/texturas CC0 quando kenney.nl/polyhaven.com forem liberados.
-7. **Android**: instalar o SDK (liberar `dl.google.com`), gerar o APK de teste e validar toque e desempenho.
-8. **Balanceamento geral**: custos e efeitos de P&D/fábrica, finanças, calibração por circuito, simulação de
-   várias temporadas; `tests` de economia.
-9. **Acabamento**: som/efeitos (P7 foi recusada), tela de configurações, tutorial/ajuda, salvar vários
-   slots de campanha, ícone e tela de abertura final, textos revisados.
+## O que falta para o jogo ficar completo (revisão geral, 2026-11-02)
+Revisão de todos os pedidos (`docs/IDEAS.md` #1–#6, propostas aprovadas P1–P14, decisões e mensagens da sessão) contra o que existe.
+Já feito: corrida completa e GP (treinos, classificação, sprint), Garagem em todas as telas, box com mini-jogo, campanha com temporada,
+P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, conselho, dados reais de 2026 e fichas de pilotos.
+
+### A. Modos de jogo
+1. **Corrida Caótica** (#2, P8 aprovada: Roleta do Caos completa): nada implementado; a tela inicial mostra "em desenvolvimento".
+
+### B. Campanha — o que ainda falta
+2. **Estúdio de design do carro** (#4, P9): pinturas em camadas, acabamentos, posição dos patrocinadores no carro (hoje só as zonas),
+   capacete, até 3 pinturas especiais por temporada, lançamento do carro, editor de logo da equipe criada, atalho "gerar pintura".
+3. **Academia de pilotos** (P11) e **pilotos novos ao longo dos anos**: hoje o mercado só encolhe (ninguém se aposenta, ninguém novo entra).
+   Falta aposentadoria por idade, geração de pilotos fictícios (regens), formação própria e F2/F3/F4 simuladas ao fundo (#27).
+4. **Teto de gastos e limite de túnel de vento** (P12) e **empréstimo** (Finanças só tem o resumo).
+5. **Conselho — regras técnicas** (#5, P13): motor (V6/V8…), chassi, aerodinâmica ativa, reabastecimento, calendário e os "anos de virada"
+   que embaralham as notas. A 1ª versão só tem pontuação, sprints e pneus; o lobby foi dispensado pelo usuário.
+6. **Eventos**: catálogo de 10; faltam mais eventos (cancelamento/adiamento por país, acidentes de carreira, crises de fábrica, mudanças de
+   dirigentes) e eventos com efeito em equipes da IA. O usuário escolheu consequência automática (sem escolhas).
+7. **Pessoal**: só técnicos e engenheiros; faltam outros cargos "da sua equipe" (#4: dirigentes, engenheiros de corrida), dirigentes reais por
+   equipe e a IA trocar técnicos. **Demissão**: o "demitido pode receber proposta de outra equipe" (#17) ainda não existe (só "nova campanha").
+8. **Histórico da campanha** (campeões por ano, regras de cada ano, eventos marcantes) e a aba "Histórico" dos campeonatos.
+9. **Equipe criada**: cargos fictícios existem só como técnicos; faltam logo/identidade editáveis além de formas, e objetivos de longo prazo
+   com acompanhamento.
+
+### C. Dados e conteúdo
+10. **Dados reais restantes**: diretores técnicos da maioria das equipes, história/estrutura por equipe, biografia de F2/F3 e dos técnicos reais,
+    atualização a cada GP; atributos são estimativa do projeto (resultados 2024–26). Balancear pela temporada de 2026 (notas dos carros).
+11. **Modo Edição e importação** (#3): pacote `.zip` com validação (nomes, fotos, pinturas, logos, atributos, circuitos) e importador no celular com o
+    seletor de arquivos do Android. Hoje logos e fotos entram por pasta local (`game/local/`).
+
+### D. Corrida, 3D e experiência
+12. **Cenários 3D** (#1): conferir relevo e cenário dos 22 circuitos (chão de Xangai, escala dos pinheiros, materiais) e trocar por modelos/texturas CC0
+    quando kenney.nl/polyhaven.com forem liberados. Pop-ups do **campeonato mundial** durante a corrida (#1) só existem para eventos da corrida.
+13. **Revisão de jogabilidade no aparelho**: toque, tamanho dos alvos, legibilidade da corrida e do box, desempenho do 3D no celular.
+
+### E. Plataforma e qualidade
+14. **Android**: instalar o SDK (liberar `dl.google.com`), gerar o APK de teste (preset e `scripts/build-apk.sh` prontos) e validar em aparelho.
+15. **Testes mais rápidos**: a suíte tem ~262 testes e leva ~8 min em sequência (arquivos pesados: campanha, corrida, eventos). Plano: rodar os
+    arquivos em paralelo (`scripts/run-tests.sh`), reduzir as corridas simuladas dentro dos testes e separar os testes lentos.
+16. **Balanceamento de economia** (simular várias temporadas em lote: caixa, P&D, folha, patrocínio) e de eventos; pesos de IA.
+17. **Acabamento**: tela de configurações, tutorial/ajuda, vários slots de campanha, versão do save (migração), tela de abertura e ícone finais,
+    revisão de textos, `docs/THIRD_PARTY.md` completo. (Som segue fora do escopo: P7 foi recusada.)
