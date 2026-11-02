@@ -222,3 +222,17 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - Resultado medido (`tools/race_report.gd --weather=dry`, 4 sementes, Interlagos): 25% → quase todos 1 parada;
   50% → 1–2; 100% → 2 (às vezes 3 com SC). Ferramenta ganhou `--weather=dry`.
 - Rever depois com a pesquisa de atributos e circuitos de alto desgaste (`tyre_wear_factor`).
+
+## P&D (árvore do carro) e Fábrica — respostas do usuário (2026-11-02), mockups v9 aguardando aprovação
+- Referência: árvore do F1 2017 (Codemasters): 4 departamentos (Motor, Aerodinâmica, Chassi, Durabilidade), cada um
+  com 4 categorias em braços (as duas últimas sempre "Eficiência do departamento" e "Controle de qualidade") e nós
+  menor (hexágono) / importante (quadrado) / definitiva (quadrado grande). Motor só desenvolve com motor próprio.
+- **Moeda: dinheiro do orçamento** (sem Pontos de Recurso). Cada nó tem custo em US$ mi.
+- **Tempo: dias de calendário**, com limite de projetos simultâneos definido pela fábrica.
+- **Carro do ano seguinte: duas abas (carro atual / próximo), mesma reserva de dinheiro e de projetos.**
+- **Fábrica: 4 estruturas** com níveis 1–5: Túnel de vento e CFD · Simulador e centro de dados · Fábrica de peças e
+  controle de qualidade · Marketing, mídia e patrocínios. Uma obra por vez em cada estrutura.
+- Modo Essencial (diretor técnico escolhe os projetos dentro de um teto de gasto) × Avançado (jogador escolhe),
+  trocável a qualquer momento (decisão anterior #31).
+- Efeito na pista (PROVISÓRIO): nós somam à nota do carro (`car_rating`); durabilidade reduz falhas. Valores de custo,
+  prazo, nota e níveis dos mockups são exemplos.
