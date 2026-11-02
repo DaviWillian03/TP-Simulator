@@ -1,249 +1,247 @@
 extends Control
-## Configuração do Grande Prêmio (mockup m3-a): calendário 2026 à esquerda; à direita o
-## traçado e os dados do circuito escolhido, a equipe, a duração, o clima e o formato.
+## Configuração do Grande Prêmio — direção Garagem (mockup design/mockups/v3-1-garagem-gp.html).
+##
+## Destaque: o circuito escolhido (traçado iluminado, nome e números grandes). Embaixo, o
+## calendário como carrossel de cartões; à direita, as condições em controles grandes e a ação
+## principal. As escolhas ficam no Session e são preservadas ao voltar.
 
-const WEATHER := [["realistic", "Realista"], ["dry", "Seco"], ["rain", "Chuva"], ["variable", "Variável"]]
-const FORMATS := [["full", "Fim de semana completo"], ["race_only", "Só a corrida"]]
+const WEATHER := [["realistic", "Realista", "globe"], ["dry", "Seco", "sun"], ["rain", "Chuva", "rain"], ["variable", "Variável", "mixed"]]
+const FORMATS := [["full", "Fim de semana"], ["race_only", "Só a corrida"]]
+const MONTHS := ["", "JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"]
 
 var _calendar: Array = []
-var _row_group := ButtonGroup.new()
-var _team_group := ButtonGroup.new()
-var _dur_group := ButtonGroup.new()
-var _weather_group := ButtonGroup.new()
-var _format_group := ButtonGroup.new()
+var _page: Dictionary
+var _rows: Dictionary = {}  # id do circuito -> cartão (Button) do carrossel
+var _card_group := ButtonGroup.new()
+var _scroll: ScrollContainer
 var _outline: TrackOutline
+var _badge_box: HBoxContainer
 var _gp_title: Label
 var _gp_sub: Label
-var _gp_info: Label
-var _rows: Dictionary = {}  # id do circuito -> Button
+var _stats: GridContainer
+var _laps: Label
+var _team_pill: PanelContainer
+var _go: CutButton
 
 
 func _ready() -> void:
 	_calendar = GameData.load_json(GameData.DATA_DIR + "calendar_2026.json")["rounds"]
-	var root := ScreenKit.page(self)
-	var head := ScreenKit.masthead(root, "Grande Prêmio", "Escolha o fim de semana · temporada 2026", "%d GPs" % _calendar.size())
-	var back := UiStyle.compact(UiStyle.button("Menu"), 13)
-	back.custom_minimum_size = Vector2(70, 34)
-	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	back.pressed.connect(Session.go_to_title)
-	head["bar"].add_child(back)
-	head["bar"].move_child(back, 2)
+	_page = ScreenKit.garage_page(self, Session.player_team)
+	var bd: GarageBackdrop = _page["backdrop"]
+	bd.floor_ratio = 1.0
+	bd.show_lamps = false
+	bd.cone_x = -1.0
+	bd.glow_center = Vector2(0.52, 0.42)
+	bd.glow_radius = Vector2(0.40, 0.48)
+	bd.set_glow(UiStyle.team_color(Session.player_team), 0.28)
+	var layer: Control = _page["layer"]
 
-	var body := HBoxContainer.new()
-	body.add_theme_constant_override("separation", 18)
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(body)
-	body.add_child(_build_calendar())
-	body.add_child(_build_options())
+	# cabeçalho
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", UiStyle.SP_L)
+	var back := ScreenKit.round_button("back", 52, "Voltar")
+	back.pressed.connect(Session.go_to_title)
+	head.add_child(back)
+	var titles := VBoxContainer.new()
+	titles.add_theme_constant_override("separation", -2)
+	titles.add_child(UiStyle.g_caption("Grande Prêmio · temporada 2026"))
+	titles.add_child(UiStyle.g_label("ESCOLHA O FIM DE SEMANA", 30, UiStyle.G_TEXT, "black"))
+	head.add_child(titles)
+	ScreenKit.place(head, layer, Control.PRESET_TOP_LEFT, Vector2(44, 26))
+
+	# destaque: traçado iluminado
+	_outline = TrackOutline.new()
+	_outline.line_color = Color("#f4f7ff")
+	_outline.line_width = 9.0
+	_outline.glow_color = Color("#6eaaff", 0.9)
+	_outline.grid = true
+	_outline.start_dot = true
+	_outline.pad = 30.0
+	ScreenKit.place(_outline, layer, Control.PRESET_TOP_LEFT, Vector2(370, 102), Vector2(480, 400))
+
+	var info := VBoxContainer.new()
+	info.add_theme_constant_override("separation", UiStyle.SP_S)
+	_badge_box = HBoxContainer.new()
+	info.add_child(_badge_box)
+	_gp_title = UiStyle.g_label("", UiStyle.FS_DISPLAY, UiStyle.G_TEXT, "black")
+	_gp_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_gp_title.custom_minimum_size = Vector2(430, 0)
+	_gp_title.add_theme_constant_override("line_spacing", -8)
+	info.add_child(_gp_title)
+	_gp_sub = UiStyle.g_label("", UiStyle.FS_BODY, UiStyle.G_TEXT_2)
+	info.add_child(_gp_sub)
+	ScreenKit.place(info, layer, Control.PRESET_TOP_LEFT, Vector2(44, 132), Vector2(430, 0))
+	_stats = GridContainer.new()
+	_stats.columns = 2
+	_stats.add_theme_constant_override("h_separation", 30)
+	_stats.add_theme_constant_override("v_separation", 18)
+	ScreenKit.place(_stats, layer, Control.PRESET_TOP_LEFT, Vector2(44, 372), Vector2(400, 0))
+
+	# condições
+	var panel := VBoxContainer.new()
+	panel.add_theme_constant_override("separation", UiStyle.SP_S)
+	ScreenKit.place(panel, layer, Control.PRESET_TOP_RIGHT, Vector2(-40, 92), Vector2(360, 0))
+	panel.add_child(UiStyle.g_caption("Sua equipe"))
+	var team_row := HBoxContainer.new()
+	team_row.add_theme_constant_override("separation", UiStyle.SP_S)
+	_team_pill = ScreenKit.team_pill(Session.player_team)
+	team_row.add_child(_team_pill)
+	var swap := ScreenKit.round_button("swap", UiStyle.TOUCH_MIN + 4, "Trocar equipe")
+	swap.pressed.connect(func() -> void: ScreenKit.open_team_picker(self, _on_team_changed))
+	team_row.add_child(swap)
+	panel.add_child(team_row)
+	panel.add_child(_gap(4))
+	panel.add_child(UiStyle.g_caption("Duração da corrida"))
+	panel.add_child(ScreenKit.segmented([[0.25, "25%"], [0.5, "50%"], [1.0, "100%"]], Session.duration_pct, func(v: float) -> void:
+		Session.duration_pct = v
+		_refresh_laps()))
+	_laps = UiStyle.g_label("", UiStyle.FS_SMALL, UiStyle.G_TEXT_2)
+	panel.add_child(_laps)
+	panel.add_child(UiStyle.g_caption("Clima"))
+	panel.add_child(ScreenKit.choice_tiles(WEATHER, Session.gp_weather, func(v: String) -> void: Session.gp_weather = v))
+	panel.add_child(_gap(4))
+	panel.add_child(UiStyle.g_caption("Formato"))
+	panel.add_child(ScreenKit.segmented(FORMATS, Session.gp_format, func(v: String) -> void:
+		Session.gp_format = v
+		_refresh_cta()))
+	panel.add_child(_gap(6))
+	_go = CutButton.new()
+	_go.pressed.connect(Session.start_gp)
+	panel.add_child(_go)
+	_refresh_cta()
+
+	# calendário em carrossel
+	_scroll = ScrollContainer.new()
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	layer.add_child(_scroll)
+	_scroll.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	_scroll.offset_left = 0
+	_scroll.offset_top = -124
+	_scroll.offset_bottom = -16
+	var cards := HBoxContainer.new()
+	cards.add_theme_constant_override("separation", UiStyle.SP_M)
+	_scroll.add_child(cards)
+	var start_pad := Control.new()
+	start_pad.custom_minimum_size = Vector2(UiStyle.SP_XXL - UiStyle.SP_M, 0)
+	cards.add_child(start_pad)
+	for r: Dictionary in _calendar:
+		cards.add_child(_card(r))
+	var end_pad := Control.new()
+	end_pad.custom_minimum_size = Vector2(120, 0)
+	cards.add_child(end_pad)
+	var fade := TextureRect.new()  # indica que o carrossel continua
+	var g := Gradient.new()
+	g.colors = PackedColorArray([Color(UiStyle.G_BG, 0.0), UiStyle.G_BG])
+	var gt := GradientTexture2D.new()
+	gt.gradient = g
+	fade.texture = gt
+	fade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ScreenKit.place(fade, layer, Control.PRESET_BOTTOM_RIGHT, Vector2.ZERO, Vector2(150, 140))
+	var fade_l := TextureRect.new()
+	fade_l.texture = gt
+	fade_l.flip_h = true
+	fade_l.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	fade_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ScreenKit.place(fade_l, layer, Control.PRESET_BOTTOM_LEFT, Vector2.ZERO, Vector2(60, 140))
+
 	_select(Session.circuit_id if _rows.has(Session.circuit_id) else _calendar[0]["id"])
+	_center_selected.call_deferred()
+	layer.modulate = Color(1, 1, 1, 0)
+	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
+
+
+func _gap(h: float) -> Control:
+	var c := Control.new()
+	c.custom_minimum_size = Vector2(0, h)
+	return c
 
 
 # --- calendário -------------------------------------------------------------------------
 
-func _build_calendar() -> Control:
-	var sheet := PanelContainer.new()
-	sheet.add_theme_stylebox_override("panel", UiStyle.sheet_box())
-	sheet.custom_minimum_size = Vector2(470, 0)
+func _card(r: Dictionary) -> Button:
+	var circuit := GameData.circuit(r["id"])
+	var b := Button.new()
+	b.toggle_mode = true
+	b.button_group = _card_group
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(176, 108)
+	var light := UiStyle.g_box(UiStyle.G_LIGHT, UiStyle.R_TILE, 14, 10)
+	light.border_width_top = 4
+	light.border_color = UiStyle.team_color(Session.player_team)
+	b.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_SURFACE, UiStyle.R_TILE, 14, 10))
+	b.add_theme_stylebox_override("hover", UiStyle.g_box(UiStyle.G_SURFACE_HOVER, UiStyle.R_TILE, 14, 10))
+	b.add_theme_stylebox_override("pressed", light)
+	b.add_theme_stylebox_override("hover_pressed", light)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 0)
-	sheet.add_child(v)
-	var header := PanelContainer.new()
-	header.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.INK, 0, 0))
-	header.add_child(_row_cells(["RD", "GRANDE PRÊMIO", "CIRCUITO", "DATA"], UiStyle.PAPER, true))
-	v.add_child(header)
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	v.add_child(scroll)
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 0)
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-	for r: Dictionary in _calendar:
-		var circuit := GameData.circuit(r["id"])
-		var b := Button.new()
-		b.toggle_mode = true
-		b.button_group = _row_group
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(0, 25)
-		b.add_theme_stylebox_override("normal", UiStyle.row_box(UiStyle.PAPER))
-		b.add_theme_stylebox_override("hover", UiStyle.row_box(UiStyle.PAPER_2))
-		b.add_theme_stylebox_override("pressed", UiStyle.row_box(UiStyle.INK))
-		b.add_theme_stylebox_override("hover_pressed", UiStyle.row_box(UiStyle.INK))
-		var date: String = r["date"]
-		var cells := _row_cells([str(int(r["round"])), r["grand_prix"], circuit.get("city", circuit.get("short_name", "")),
-			"%s/%s" % [date.substr(8, 2), date.substr(5, 2)]], UiStyle.INK, false, r)
-		cells.set_anchors_preset(Control.PRESET_FULL_RECT)
-		b.add_child(cells)
-		b.set_meta("cells", cells)
-		b.toggled.connect(func(on: bool) -> void:
-			_paint_row(cells, UiStyle.PAPER if on else UiStyle.INK)
-			if on:
-				_select(r["id"]))
-		_rows[r["id"]] = b
-		list.add_child(b)
-	return sheet
-
-
-func _row_cells(texts: Array, color: Color, header: bool, r: Dictionary = {}) -> HBoxContainer:
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 0)
-	h.custom_minimum_size = Vector2(0, 24)
-	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var widths := [34, 0, 116, 62]
-	for i in texts.size():
-		if i > 0:
-			h.add_child(UiStyle.vsep(Color("#3d3d3d") if header else UiStyle.RULE))
-		var m := MarginContainer.new()
-		m.add_theme_constant_override("margin_left", 6)
-		m.add_theme_constant_override("margin_right", 6)
-		m.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		if widths[i] > 0:
-			m.custom_minimum_size = Vector2(widths[i], 0)
-		else:
-			m.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var cell := HBoxContainer.new()
-		cell.add_theme_constant_override("separation", 6)
-		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var l: Label = UiStyle.caption(texts[i], color) if header else UiStyle.label(texts[i], 13, color, i < 2)
-		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		if i == 2:
-			l.clip_text = true  # cidade: corta se for longa (o nome do GP mantém a largura natural)
-			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if i == 0 and not header:
-			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if i == 3:
-			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(v)
+	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	v.offset_left = 14
+	v.offset_top = 10
+	var date: String = r["date"]
+	var cap := UiStyle.g_caption("RD %d · %s %s" % [int(r["round"]), date.substr(8, 2), MONTHS[int(date.substr(5, 2))]])
+	var city := UiStyle.g_label(circuit.get("city", circuit.get("short_name", "")), 17, UiStyle.G_TEXT, "black")
+	city.custom_minimum_size = Vector2(150, 0)
+	city.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	v.add_child(cap)
+	v.add_child(city)
+	var chips := HBoxContainer.new()
+	chips.add_theme_constant_override("separation", 4)
+	if r.get("sprint", false):
+		chips.add_child(_chip("Sprint", UiStyle.RED, Color.WHITE))
+	if r.get("night", false):
+		chips.add_child(_chip("Noite", Color("#26324a"), Color("#ffd36b")))
+	v.add_child(chips)
+	var mini := TrackOutline.new()
+	mini.line_color = Color("#c9d0db")
+	mini.line_width = 3.0
+	mini.pad = 4.0
+	mini.set_circuit(circuit)
+	b.add_child(mini)
+	mini.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
+	mini.custom_minimum_size = Vector2(62, 50)
+	mini.offset_left = -72
+	mini.offset_top = -58
+	mini.offset_right = -10
+	mini.offset_bottom = -8
+	for l: Label in [cap, city]:
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		cell.add_child(l)
-		if i == 1 and not header:
-			if r.get("sprint", false):
-				cell.add_child(_tag("Sprint", UiStyle.RED, Color.WHITE))
-			if r.get("night", false):
-				cell.add_child(_tag("Noite", UiStyle.INK, Color("#f5c400")))
-		m.add_child(cell)
-		h.add_child(m)
-	return h
+	var paint := func() -> void:
+		var on := b.button_pressed
+		city.add_theme_color_override("font_color", UiStyle.G_INK if on else UiStyle.G_TEXT)
+		cap.add_theme_color_override("font_color", UiStyle.G_INK_2 if on else UiStyle.G_TEXT_3)
+		mini.line_color = UiStyle.G_INK if on else Color("#c9d0db")
+		mini.queue_redraw()
+	b.toggled.connect(func(on: bool) -> void:
+		paint.call()
+		if on:
+			_select(r["id"]))
+	paint.call()
+	ScreenKit.press_feedback(b)
+	_rows[r["id"]] = b
+	return b
 
 
-func _tag(text: String, bg: Color, fg: Color) -> PanelContainer:
+func _chip(text: String, bg: Color, fg: Color) -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UiStyle.box(bg, 4, 0))
-	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	p.add_theme_stylebox_override("panel", UiStyle.g_box(bg, 9, 7, 1))
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var l := UiStyle.label(text.to_upper(), 9, fg, true)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var l := UiStyle.g_caption(text, fg)
+	l.add_theme_font_size_override("font_size", 11)
 	p.add_child(l)
 	return p
 
 
-## Na linha escolhida o texto fica claro (fundo de tinta); as etiquetas mantêm as cores.
-func _paint_row(cells: HBoxContainer, color: Color) -> void:
-	for m in cells.get_children():
-		if m is MarginContainer:
-			var l: Label = m.get_child(0).get_child(0)
-			l.add_theme_color_override("font_color", color)
+func _center_selected() -> void:
+	var b: Button = _rows.get(Session.circuit_id)
+	if b:
+		_scroll.scroll_horizontal = int(maxf(0.0, b.position.x - _scroll.size.x / 2.0 + b.size.x / 2.0))
 
 
-# --- opções -----------------------------------------------------------------------------
-
-func _build_options() -> Control:
-	var v := VBoxContainer.new()
-	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	v.add_theme_constant_override("separation", 10)
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 16)
-	var frame := ScreenKit.card()
-	frame.custom_minimum_size = Vector2(312, 206)
-	_outline = TrackOutline.new()
-	frame.add_child(_outline)
-	top.add_child(frame)
-	var info := VBoxContainer.new()
-	info.alignment = BoxContainer.ALIGNMENT_CENTER
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.add_theme_constant_override("separation", 4)
-	_gp_title = UiStyle.label("", 28, UiStyle.INK, true)
-	_gp_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info.add_child(_gp_title)
-	_gp_sub = UiStyle.caption("")
-	info.add_child(_gp_sub)
-	_gp_info = UiStyle.label("", 14)
-	_gp_info.add_theme_constant_override("line_spacing", 6)
-	info.add_child(_gp_info)
-	top.add_child(info)
-	v.add_child(top)
-
-	v.add_child(UiStyle.caption("Sua equipe", UiStyle.MUTED))
-	var grid := GridContainer.new()
-	grid.columns = 4
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 8)
-	for t: Dictionary in GameData.teams():
-		var b := UiStyle.button(t["name"], true, _team_group)
-		b.icon = TeamEmblems.get_texture(t["id"])
-		b.expand_icon = false
-		b.add_theme_constant_override("icon_max_width", 20)
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.add_theme_font_size_override("font_size", 13)
-		b.clip_text = true
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size = Vector2(0, 34)
-		b.set_meta("id", t["id"])
-		b.button_pressed = t["id"] == Session.player_team
-		grid.add_child(b)
-	v.add_child(grid)
-
-	var row1 := HBoxContainer.new()
-	row1.add_theme_constant_override("separation", 6)
-	row1.add_child(_cap("Duração"))
-	for pct: float in [0.25, 0.5, 1.0]:
-		var b := _choice("%d%%" % roundi(pct * 100), _dur_group, pct, is_equal_approx(pct, Session.duration_pct))
-		row1.add_child(b)
-	row1.add_child(_gap(18))
-	row1.add_child(_cap("Clima"))
-	for w: Array in WEATHER:
-		row1.add_child(_choice(w[1], _weather_group, w[0], w[0] == Session.gp_weather))
-	v.add_child(row1)
-
-	var row2 := HBoxContainer.new()
-	row2.add_theme_constant_override("separation", 6)
-	row2.add_child(_cap("Formato"))
-	for f: Array in FORMATS:
-		row2.add_child(_choice(f[1], _format_group, f[0], f[0] == Session.gp_format))
-	row2.add_child(UiStyle.hspacer())
-	var go := UiStyle.accent(UiStyle.button("Começar ▶"))
-	go.custom_minimum_size = Vector2(194, 48)
-	go.add_theme_font_size_override("font_size", 20)
-	go.pressed.connect(_on_start)
-	row2.add_child(go)
-	v.add_child(row2)
-	return v
-
-
-func _cap(text: String) -> Label:
-	var l := UiStyle.caption(text, UiStyle.MUTED)
-	l.custom_minimum_size = Vector2(70, 0)
-	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	return l
-
-
-func _gap(w: float) -> Control:
-	var c := Control.new()
-	c.custom_minimum_size = Vector2(w, 0)
-	return c
-
-
-func _choice(text: String, group: ButtonGroup, value: Variant, pressed: bool) -> Button:
-	var b := UiStyle.button(text, true, group)
-	b.set_meta("value", value)
-	b.button_pressed = pressed
-	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	b.add_theme_font_size_override("font_size", 13)
-	return b
-
+# --- circuito escolhido -----------------------------------------------------------------
 
 func _select(circuit_id: String) -> void:
 	Session.circuit_id = circuit_id
@@ -252,30 +250,53 @@ func _select(circuit_id: String) -> void:
 		b.button_pressed = true
 		return  # o sinal "toggled" chama _select de novo
 	var c := GameData.circuit(circuit_id)
+	var r: Dictionary = {}
+	for x: Dictionary in _calendar:
+		if x["id"] == circuit_id:
+			r = x
 	_outline.set_circuit(c)
-	_gp_title.text = String(c["grand_prix"]).to_upper()
-	_gp_sub.text = ("%s · %s" % [c["name"], c["short_name"]]).to_upper()
-	var diff := float(c["overtaking_difficulty"])
-	var ov := "fácil" if diff < 0.3 else ("média" if diff < 0.6 else "difícil")
+	for ch in _badge_box.get_children():
+		ch.queue_free()
+	var date: String = r.get("date", "")
+	_badge_box.add_child(ScreenKit.badge("RD %d · %s %s" % [int(r.get("round", 0)), date.substr(8, 2), MONTHS[int(date.substr(5, 2))]],
+		UiStyle.team_color(Session.player_team), "flag"))
+	var title := String(c["grand_prix"]).to_upper()
+	_gp_title.text = title
+	_gp_title.add_theme_font_size_override("font_size", UiStyle.FS_DISPLAY if title.length() <= 16 else 40)
 	var fmt := "fim de semana sprint" if c.get("sprint", false) else "fim de semana normal"
 	if c.get("night", false):
-		fmt += " · corrida noturna"
-	_gp_info.text = "%s km · %d voltas\nUltrapassagem: %s · Chuva: %d%% de chance\nFormato: %s" % [
-		String.num(float(c["length_m"]) / 1000.0, 3).replace(".", ","), int(c["laps"]), ov,
-		roundi(float(c["rain_probability"]) * 100), fmt]
+		fmt += " · noturna"
+	_gp_sub.text = "%s\n%s, %s · %s" % [c["name"], c["short_name"], c.get("country", ""), fmt]
+	for ch in _stats.get_children():
+		ch.queue_free()
+	var diff := float(c["overtaking_difficulty"])
+	var ov := "FÁCIL" if diff < 0.3 else ("MÉDIA" if diff < 0.6 else "DIFÍCIL")
+	_stats.add_child(ScreenKit.stat(String.num(float(c["length_m"]) / 1000.0, 3).replace(".", ","), "km"))
+	_stats.add_child(ScreenKit.stat(str(int(c["laps"])), "voltas"))
+	_stats.add_child(ScreenKit.stat("%d%%" % roundi(float(c["rain_probability"]) * 100), "chance de chuva"))
+	_stats.add_child(ScreenKit.stat(ov, "ultrapassagem"))
+	_refresh_laps()
 
 
-func _on_start() -> void:
-	var team := _team_group.get_pressed_button()
-	if team:
-		Session.player_team = team.get_meta("id")
-	if _dur_group.get_pressed_button():
-		Session.duration_pct = _dur_group.get_pressed_button().get_meta("value")
-	if _weather_group.get_pressed_button():
-		Session.gp_weather = _weather_group.get_pressed_button().get_meta("value")
-	if _format_group.get_pressed_button():
-		Session.gp_format = _format_group.get_pressed_button().get_meta("value")
-	Session.start_gp()
+func _refresh_laps() -> void:
+	var laps := int(GameData.circuit(Session.circuit_id).get("laps", 0))
+	_laps.text = "%d voltas na corrida" % maxi(3, roundi(laps * Session.duration_pct))
+
+
+func _refresh_cta() -> void:
+	_go.text = "COMEÇAR CORRIDA" if Session.gp_format == "race_only" else "COMEÇAR FIM DE SEMANA"
+
+
+func _on_team_changed(team_id: String) -> void:
+	ScreenKit.update_team_pill(_team_pill, team_id)
+	var color := UiStyle.team_color(team_id)
+	(_page["backdrop"] as GarageBackdrop).set_glow(color, 0.28)
+	for b: Button in _rows.values():
+		var st: StyleBoxFlat = b.get_theme_stylebox("pressed").duplicate()
+		st.border_color = color
+		b.add_theme_stylebox_override("pressed", st)
+		b.add_theme_stylebox_override("hover_pressed", st)
+	_select(Session.circuit_id)
 
 
 func _notification(what: int) -> void:

@@ -1,10 +1,12 @@
 class_name UiStyle
 extends RefCounted
-## Tokens visuais da direção "Paddock" — estilo revista impressa
-## (escolhida pelo usuário em design/mockups/03-paddock.html).
+## Fonte central do estilo do jogo. Mudar cor, fonte, raio ou espaçamento = mudar aqui.
 ##
-## Papel claro, tinta preta, um único vermelho de destaque, letras pesadas e fios grossos
-## separando as áreas. Mudar cor, fonte ou espessura do jogo = mudar aqui.
+## Em migração (2026-11-02): a direção **Garagem** (design/mockups/v3-1-*) substitui a Paddock.
+## Já migradas: tela inicial e configuração do GP (seção "Garagem", no fim do arquivo).
+## As demais telas ainda usam os tokens Paddock abaixo (legado) até serem refeitas.
+
+# === Paddock (legado: telas ainda não migradas) ======================================
 
 # --- cores ---------------------------------------------------------------------------
 const PAPER := Color("#efe9de")  ## fundo (papel)
@@ -236,3 +238,119 @@ static func format_time(seconds: float) -> String:
 		return "—"
 	var m := floori(seconds / 60.0)
 	return "%d:%06.3f" % [m, seconds - m * 60]
+
+
+# === Garagem (direção atual) ===========================================================
+# Ambiente escuro de box, o carro da equipe sob a luz; a cor da equipe tinge os destaques.
+# Vermelho = marca e ação principal; cor da equipe = seleção; cinzas claros = conteúdo.
+
+const G_BG := Color("#0b0c0f")
+const G_WALL_TOP := Color("#1b1e24")
+const G_WALL_BOTTOM := Color("#111318")
+const G_FLOOR_TOP := Color("#181a1f")
+const G_FLOOR_BOTTOM := Color("#0a0b0d")
+const G_SURFACE := Color(1, 1, 1, 0.06)  ## peça sobre o fundo (botões secundários, cartões)
+const G_SURFACE_HOVER := Color(1, 1, 1, 0.10)
+const G_SURFACE_PRESS := Color(1, 1, 1, 0.16)
+const G_LIGHT := Color("#f3f4f6")  ## destaque claro: ação principal e item selecionado
+const G_LIGHT_PRESS := Color("#d6d9df")
+const G_TEXT := Color("#eef0f3")
+const G_TEXT_2 := Color("#a8b0bd")  ## descrição
+const G_TEXT_3 := Color("#8f98a7")  ## legenda em caixa alta
+const G_TEXT_OFF := Color("#6c7380")  ## indisponível
+const G_INK := Color("#11141a")  ## texto sobre o claro
+const G_INK_2 := Color("#4b5260")
+const G_RED_PRESS := Color("#b30500")
+const G_OFF := Color(1, 1, 1, 0.04)  ## fundo de controle desabilitado
+
+const R_TILE := 16  ## blocos de modo, cartões
+const R_CHIP := 14  ## opções em bloco (clima)
+const R_PILL := 26  ## pílulas e segmentados (meia altura)
+const SP_XS := 4
+const SP_S := 8
+const SP_M := 12
+const SP_L := 16
+const SP_XL := 24
+const SP_XXL := 44  ## margem lateral das telas
+const TOUCH_MIN := 44  ## menor alvo de toque (px na referência 1280×720)
+const TOUCH_MAIN := 56  ## ação principal
+
+const G_BLACK := preload("res://assets/fonts/TitilliumWeb-Black.ttf")
+const G_BOLD := preload("res://assets/fonts/TitilliumWeb-Bold.ttf")
+const G_SEMI := preload("res://assets/fonts/TitilliumWeb-SemiBold.ttf")
+const FS_DISPLAY := 50
+const FS_TITLE := 34
+const FS_H2 := 24
+const FS_BODY := 16
+const FS_SMALL := 14
+const FS_CAPTION := 12  ## menor texto permitido nas telas novas
+
+static var _g_caption_font: FontVariation
+
+
+static func make_garage_theme() -> Theme:
+	var t := Theme.new()
+	t.default_font = G_SEMI
+	t.default_font_size = FS_BODY
+	t.set_color("font_color", "Label", G_TEXT)
+	for type: String in ["Button"]:
+		t.set_stylebox("normal", type, g_box(G_SURFACE, R_PILL))
+		t.set_stylebox("hover", type, g_box(G_SURFACE_HOVER, R_PILL))
+		t.set_stylebox("pressed", type, g_box(G_SURFACE_PRESS, R_PILL))
+		t.set_stylebox("hover_pressed", type, g_box(G_SURFACE_PRESS, R_PILL))
+		t.set_stylebox("disabled", type, g_box(G_OFF, R_PILL))
+		t.set_stylebox("focus", type, StyleBoxEmpty.new())
+		t.set_color("font_color", type, G_TEXT)
+		t.set_color("font_hover_color", type, G_TEXT)
+		t.set_color("font_pressed_color", type, G_TEXT)
+		t.set_color("font_hover_pressed_color", type, G_TEXT)
+		t.set_color("font_disabled_color", type, G_TEXT_OFF)
+		t.set_font("font", type, G_BOLD)
+	t.set_stylebox("panel", "PanelContainer", StyleBoxEmpty.new())
+	var bar := g_box(Color(1, 1, 1, 0.08), 3, 0, 0)
+	t.set_stylebox("scroll", "HScrollBar", bar)
+	t.set_stylebox("scroll", "VScrollBar", bar)
+	for state: String in ["grabber", "grabber_highlight", "grabber_pressed"]:
+		t.set_stylebox(state, "HScrollBar", g_box(Color(1, 1, 1, 0.3), 3, 0, 0))
+		t.set_stylebox(state, "VScrollBar", g_box(Color(1, 1, 1, 0.3), 3, 0, 0))
+	return t
+
+
+## Caixa arredondada sem contorno.
+static func g_box(fill: Color, radius: int = R_TILE, margin_h: int = SP_L, margin_v: int = SP_S) -> StyleBoxFlat:
+	var b := StyleBoxFlat.new()
+	b.bg_color = fill
+	b.set_corner_radius_all(radius)
+	b.content_margin_left = margin_h
+	b.content_margin_right = margin_h
+	b.content_margin_top = margin_v
+	b.content_margin_bottom = margin_v
+	b.anti_aliasing = true
+	return b
+
+
+## Texto da Garagem. weight: "black" (títulos, números), "bold" (nomes, botões), "semi" (texto).
+static func g_label(text: String, size: int = FS_BODY, color: Color = G_TEXT, weight: String = "semi") -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", color)
+	l.add_theme_font_override("font", {"black": G_BLACK, "bold": G_BOLD}.get(weight, G_SEMI))
+	return l
+
+
+## Legenda em caixa alta com espaçamento (nunca menor que FS_CAPTION).
+static func g_caption(text: String, color: Color = G_TEXT_3) -> Label:
+	if _g_caption_font == null:
+		_g_caption_font = FontVariation.new()
+		_g_caption_font.base_font = G_BOLD
+		_g_caption_font.spacing_glyph = 3
+	var l := g_label(text.to_upper(), FS_CAPTION, color)
+	l.add_theme_font_override("font", _g_caption_font)
+	return l
+
+
+## Cor da equipe (destaques de seleção, brilho atrás do carro).
+static func team_color(team_id: String) -> Color:
+	var t := GameData.team_by_id(GameData.teams(), team_id)
+	return Color(t.get("color", "#1868DB"))

@@ -96,3 +96,49 @@ func test_corrida_do_gp_larga_com_o_grid_da_classificacao() -> void:
 	for car: CarState in screen.sim.cars:
 		if car.driver["id"] == "albon":
 			assert_almost_eq(car.setup_penalty_s, setup.lap_penalty_s(), 0.0001, "acerto dos treinos vale na corrida")
+
+
+# --- direção Garagem: tela inicial e configuração ---------------------------------------
+
+func test_tela_inicial_troca_a_equipe_pela_folha() -> void:
+	var before := Session.player_team
+	var screen: Control = await _open("res://src/ui/title_screen.tscn")
+	screen._open_team_picker()
+	await wait_process_frames(1)
+	var sheet: Node = screen.get_child(screen.get_child_count() - 1)
+	var cards := sheet.find_children("*", "Button", true, false).filter(func(b: Button) -> bool: return b.toggle_mode)
+	assert_eq(cards.size(), 11, "uma opção por equipe")
+	(cards[2] as Button).pressed.emit()  # Ferrari (terceira equipe nos dados)
+	assert_eq(Session.player_team, "ferrari")
+	await wait_process_frames(1)
+	var names: Array = screen._team_pill.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)
+	assert_has(names, "Ferrari", "a pílula mostra a nova equipe")
+	Session.player_team = before
+
+
+func test_corrida_rapida_guarda_a_duracao_escolhida() -> void:
+	var before := Session.duration_pct
+	var screen: Control = await _open("res://src/ui/title_screen.tscn")
+	screen._open_quick_race()
+	await wait_process_frames(1)
+	var sheet: Node = screen.get_child(screen.get_child_count() - 1)
+	for b: Button in sheet.find_children("*", "Button", true, false):
+		if b.has_meta("value") and is_equal_approx(float(b.get_meta("value")), 0.5):
+			b.pressed.emit()
+	assert_almost_eq(Session.duration_pct, 0.5, 0.001)
+	Session.duration_pct = before
+
+
+func test_configuracao_preserva_as_escolhas_do_session() -> void:
+	Session.gp_weather = "rain"
+	Session.gp_format = "race_only"
+	var screen: Control = await _open("res://src/ui/gp_setup_screen.tscn")
+	var pressed: Array = []
+	for b: Button in screen.find_children("*", "Button", true, false):
+		if b.has_meta("value") and b.button_pressed:
+			pressed.append(b.get_meta("value"))
+	assert_has(pressed, "rain")
+	assert_has(pressed, "race_only")
+	assert_eq(screen._go.text, "COMEÇAR CORRIDA", "o botão diz o que vai acontecer")
+	Session.gp_weather = "realistic"
+	Session.gp_format = "full"

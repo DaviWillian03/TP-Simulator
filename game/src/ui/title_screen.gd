@@ -1,150 +1,162 @@
 extends Control
-## Tela inicial (estilo revista): logo, modos de jogo (Grande Prêmio; os outros em construção)
-## e corrida rápida.
+## Tela inicial — direção Garagem (mockup design/mockups/v3-1-garagem-inicio.html).
+##
+## O carro da sua equipe sob a luz é o destaque; à esquerda, os modos em blocos de tamanhos
+## diferentes (Grande Prêmio é a ação principal). Modos ainda não implementados aparecem como
+## texto apagado com cadeado, sem parecer tocáveis. Equipe e corrida rápida abrem folhas.
 
-const LOGO := preload("res://assets/branding/logo-light.svg")
+const LOGO := preload("res://assets/branding/logo.svg")
 
-var _team_group := ButtonGroup.new()
-var _duration_group := ButtonGroup.new()
-var _team_info: Label
+var _page: Dictionary
+var _team_pill: PanelContainer
+var _car: CarHero
+var _plates: HBoxContainer
+var _quick_tile: Button
+var _gp_tile: Button
 
 
 func _ready() -> void:
-	theme = UiStyle.make_theme()
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var bg := ColorRect.new()
-	bg.color = UiStyle.PAPER
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	_page = ScreenKit.garage_page(self, Session.player_team)
+	var layer: Control = _page["layer"]
 
-	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 40
-	root.offset_top = 22
-	root.offset_right = -40
-	root.offset_bottom = -18
-	root.add_theme_constant_override("separation", 10)
-	add_child(root)
-
-	# cabeçalho: logo + edição
-	var mast := HBoxContainer.new()
 	var logo := TextureRect.new()
 	logo.texture = LOGO
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
-	logo.custom_minimum_size = Vector2(360, 140)
-	mast.add_child(logo)
-	mast.add_child(UiStyle.hspacer())
-	var edition := VBoxContainer.new()
-	edition.alignment = BoxContainer.ALIGNMENT_END
-	var season := UiStyle.label("TEMPORADA 2026", 40, UiStyle.RED, true)
-	season.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	edition.add_child(season)
-	var sub := UiStyle.caption("Gestão de automobilismo · 11 equipes · 22 pilotos")
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	edition.add_child(sub)
-	mast.add_child(edition)
-	root.add_child(mast)
-	root.add_child(UiStyle.rule(UiStyle.RULE_THICK))
+	ScreenKit.place(logo, layer, Control.PRESET_TOP_LEFT, Vector2(52, 32), Vector2(190, 76))
+	ScreenKit.place(UiStyle.g_caption("Temporada 2026 · 22 Grandes Prêmios"), layer, Control.PRESET_TOP_LEFT, Vector2(56, 118))
 
-	# modos de jogo (ainda em construção)
-	var modes := HBoxContainer.new()
-	modes.add_theme_constant_override("separation", 12)
-	var gp := UiStyle.accent(UiStyle.button("Grande Prêmio ▶"))
-	gp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	gp.custom_minimum_size = Vector2(0, 44)
-	gp.add_theme_font_size_override("font_size", 16)
-	gp.pressed.connect(Session.open_gp_setup)
-	modes.add_child(gp)
-	for m: String in ["Campanha", "Corrida Caótica"]:
-		var b := UiStyle.button("%s — em construção" % m)
-		b.disabled = true
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size = Vector2(0, 44)
-		modes.add_child(b)
-	root.add_child(modes)
-	root.add_child(UiStyle.rule(UiStyle.RULE_MID))
+	var modes := VBoxContainer.new()
+	modes.add_theme_constant_override("separation", UiStyle.SP_M)
+	ScreenKit.place(modes, layer, Control.PRESET_TOP_LEFT, Vector2(52, 166), Vector2(392, 0))
+	_gp_tile = ScreenKit.mode_tile("Grande Prêmio", "Treinos, classificação, sprint e corrida", "main")
+	_gp_tile.pressed.connect(Session.open_gp_setup)
+	modes.add_child(_gp_tile)
+	_quick_tile = ScreenKit.mode_tile("Corrida rápida", "", "alt")
+	_quick_tile.pressed.connect(_open_quick_race)
+	modes.add_child(_quick_tile)
+	var locked := VBoxContainer.new()
+	locked.add_theme_constant_override("separation", 0)
+	locked.add_child(ScreenKit.locked_row("Campanha"))
+	locked.add_child(ScreenKit.locked_row("Corrida Caótica"))
+	modes.add_child(locked)
 
-	# corrida rápida
-	var head := HBoxContainer.new()
-	head.add_child(UiStyle.label("CORRIDA RÁPIDA", 28, UiStyle.INK, true))
-	var where := UiStyle.caption("GP de São Paulo · Interlagos")
-	where.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	head.add_child(where)
-	root.add_child(head)
-	root.add_child(UiStyle.caption("Escolha sua equipe", UiStyle.MUTED))
+	var team_row := HBoxContainer.new()
+	team_row.add_theme_constant_override("separation", UiStyle.SP_M)
+	_team_pill = ScreenKit.team_pill(Session.player_team)
+	team_row.add_child(_team_pill)
+	var swap := ScreenKit.round_button("swap", UiStyle.TOUCH_MIN + 4, "Trocar equipe")
+	swap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	swap.pressed.connect(_open_team_picker)
+	team_row.add_child(swap)
+	ScreenKit.place(team_row, layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 38))
 
-	var grid := GridContainer.new()
-	grid.columns = 4
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 8)
-	root.add_child(grid)
-	for t: Dictionary in GameData.teams():
-		var b := UiStyle.button(t["name"], true, _team_group)
-		b.icon = TeamEmblems.get_texture(t["id"])
-		b.expand_icon = false
-		b.add_theme_constant_override("icon_max_width", 24)
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.add_theme_font_override("font", UiStyle.HEAVY_FONT)
-		b.add_theme_font_size_override("font_size", 14)
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size = Vector2(0, 50)
-		b.set_meta("team_id", t["id"])
-		b.button_pressed = t["id"] == Session.player_team
-		grid.add_child(b)
+	_car = CarHero.new()  # posição por proporção: centro em 69% da largura, rodas em 73% da altura
+	layer.add_child(_car)
+	_car.custom_minimum_size = Vector2(820, 230)
+	_car.anchor_left = 0.69
+	_car.anchor_right = 0.69
+	_car.anchor_top = 0.736
+	_car.anchor_bottom = 0.736
+	_car.offset_left = -410
+	_car.offset_right = 410
+	_car.offset_top = -230
+	_car.offset_bottom = 0
+	_plates = HBoxContainer.new()
+	_plates.add_theme_constant_override("separation", UiStyle.SP_XXL)
+	ScreenKit.place(_plates, layer, Control.PRESET_BOTTOM_RIGHT, Vector2(-56, -36))
+	_apply_team()
 
-	_team_info = UiStyle.label("", 20, UiStyle.INK, true)
-	root.add_child(_team_info)
-	_team_group.pressed.connect(func(_b: BaseButton) -> void: _update_team_info())
-	_update_team_info()
-
-	var push_down := Control.new()
-	push_down.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(push_down)
-	root.add_child(UiStyle.rule(UiStyle.RULE_MID))
-	var bottom := HBoxContainer.new()
-	bottom.add_theme_constant_override("separation", 8)
-	var dur := UiStyle.caption("Duração", UiStyle.MUTED)
-	dur.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bottom.add_child(dur)
-	var laps := int(GameData.circuit(Session.circuit_id)["laps"])
-	for pct: float in [0.25, 0.5, 1.0]:
-		var b := UiStyle.button("%d%% · %d voltas" % [roundi(pct * 100), maxi(3, roundi(laps * pct))], true, _duration_group)
-		b.set_meta("pct", pct)
-		b.custom_minimum_size = Vector2(150, 44)
-		b.button_pressed = is_equal_approx(pct, Session.duration_pct)
-		bottom.add_child(b)
-	bottom.add_child(UiStyle.hspacer())
-	var go := UiStyle.accent(UiStyle.button("Largar ▶"))
-	go.custom_minimum_size = Vector2(220, 52)
-	go.add_theme_font_size_override("font_size", 20)
-	go.pressed.connect(_on_start)
-	bottom.add_child(go)
-	root.add_child(bottom)
-	var foot := UiStyle.caption("Primeiro marco jogável · emblemas originais — logos reais podem ser importados pelo jogador", UiStyle.MUTED)
-	root.add_child(foot)
+	layer.modulate = Color(1, 1, 1, 0)
+	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
+	match Session.debug_ui:  # (capturas de tela das folhas)
+		"team":
+			_open_team_picker()
+		"quick":
+			_open_quick_race()
 
 
-## Mostra os pilotos e o motor da equipe selecionada.
-func _update_team_info() -> void:
-	var btn := _team_group.get_pressed_button()
-	if btn == null:
-		_team_info.text = ""
-		return
-	var team_id: String = btn.get_meta("team_id")
-	var names: Array[String] = []
+## Atualiza tudo o que depende da equipe: pílula, carro, números dos pilotos e brilho.
+func _apply_team() -> void:
+	var team_id := Session.player_team
+	var color := UiStyle.team_color(team_id)
+	ScreenKit.update_team_pill(_team_pill, team_id)
+	(_page["backdrop"] as GarageBackdrop).set_glow(color)
+	var drivers: Array[Dictionary] = []
 	for d: Dictionary in GameData.drivers():
 		if d["team"] == team_id:
-			names.append("#%d %s" % [int(d["number"]), d["name"]])
+			drivers.append(d)
 	var team := GameData.team_by_id(GameData.teams(), team_id)
-	_team_info.text = "Seus pilotos: %s   ·   Motor %s" % ["  e  ".join(names), team["power_unit"]]
+	var c2 := Color(team.get("color2", "#ffffff"))
+	_car.set_team(team_id, int(drivers[0]["number"]) if drivers.size() > 0 else 0, c2 if c2.get_luminance() > 0.35 else Color.WHITE)
+	for c in _plates.get_children():
+		c.queue_free()
+	for d in drivers:
+		_plates.add_child(_plate(d, color))
+	var circuit := GameData.circuit(Session.circuit_id)
+	(_quick_tile.get_child(0).get_child(0).get_child(1) as Label).text = "%s · direto para a largada" % circuit.get("short_name", "")
 
 
-func _on_start() -> void:
-	var team_btn := _team_group.get_pressed_button()
-	var dur_btn := _duration_group.get_pressed_button()
-	if team_btn:
-		Session.player_team = team_btn.get_meta("team_id")
-	if dur_btn:
-		Session.duration_pct = dur_btn.get_meta("pct")
-	Session.start_race()
+func _plate(d: Dictionary, color: Color) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", UiStyle.SP_M)
+	var n := UiStyle.g_label(str(int(d["number"])), 62, Color(0, 0, 0, 0), "black")
+	n.add_theme_color_override("font_outline_color", color.lightened(0.25))
+	n.add_theme_constant_override("outline_size", 3)
+	h.add_child(n)
+	var v := VBoxContainer.new()
+	v.alignment = BoxContainer.ALIGNMENT_END
+	v.add_theme_constant_override("separation", -2)
+	v.add_child(UiStyle.g_caption(String(d["nationality"])))
+	v.add_child(UiStyle.g_label(d["name"], 20, UiStyle.G_TEXT, "black"))
+	var pad := Control.new()
+	pad.custom_minimum_size = Vector2(0, 8)
+	v.add_child(pad)
+	h.add_child(v)
+	return h
+
+
+# --- folhas -----------------------------------------------------------------------------
+
+func _open_team_picker() -> void:
+	ScreenKit.open_team_picker(self, func(_id: String) -> void: _apply_team())
+
+
+func _open_quick_race() -> void:
+	var circuit := GameData.circuit(Session.circuit_id)
+	var s := ScreenKit.sheet("Corrida rápida", 720)
+	var body: VBoxContainer = s["body"]
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiStyle.SP_XL)
+	var trk := TrackOutline.new()
+	trk.line_color = UiStyle.G_TEXT
+	trk.line_width = 5.0
+	trk.glow_color = Color(UiStyle.team_color(Session.player_team), 0.6)
+	trk.start_dot = true
+	trk.custom_minimum_size = Vector2(220, 170)
+	trk.set_circuit(circuit)
+	row.add_child(trk)
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.alignment = BoxContainer.ALIGNMENT_CENTER
+	info.add_theme_constant_override("separation", UiStyle.SP_S)
+	info.add_child(UiStyle.g_caption(circuit.get("country", "")))
+	info.add_child(UiStyle.g_label(String(circuit.get("grand_prix", "")).to_upper(), UiStyle.FS_TITLE, UiStyle.G_TEXT, "black"))
+	info.add_child(UiStyle.g_label("%s · largada imediata, sem treinos" % circuit.get("short_name", ""), UiStyle.FS_BODY, UiStyle.G_TEXT_2))
+	var laps_label := UiStyle.g_label("", UiStyle.FS_SMALL, UiStyle.G_TEXT_2)
+	var laps := int(circuit.get("laps", 0))
+	var refresh := func() -> void:
+		laps_label.text = "%d voltas" % maxi(3, roundi(laps * Session.duration_pct))
+	info.add_child(UiStyle.g_caption("Duração", UiStyle.G_TEXT_3))
+	info.add_child(ScreenKit.segmented([[0.25, "25%"], [0.5, "50%"], [1.0, "100%"]], Session.duration_pct, func(v: float) -> void:
+		Session.duration_pct = v
+		refresh.call()))
+	info.add_child(laps_label)
+	refresh.call()
+	row.add_child(info)
+	body.add_child(row)
+	var go := CutButton.new()
+	go.text = "LARGAR"
+	go.pressed.connect(Session.start_race)
+	body.add_child(go)
+	add_child(s["root"])

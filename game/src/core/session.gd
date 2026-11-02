@@ -30,6 +30,7 @@ var debug_advance_s := 0.0
 var debug_pause := false  ## --pause: começa pausado (capturas do grid parado)
 var debug_sc := false  ## --sc: aciona o safety car logo após o --advance
 var debug_open_data := false  ## --data: abre o menu DADOS
+var debug_ui := ""  ## --ui=team|quick (abre a folha na tela inicial) · --ui=gallery (estados dos componentes)
 var debug_view_only := false  ## --view-only: só o cenário 3D em tela cheia (base para mockups)
 var debug_camera: Dictionary = {}  ## --yaw --pitch --dist --cam=<n> (capturas da vista 3D)
 var sim_overrides: Dictionary = {}  ## opções extras da RaceSim (testes: clima, incidentes)
@@ -65,6 +66,9 @@ func _ready() -> void:
 	debug_sc = args.has("sc")
 	debug_open_data = args.has("data")
 	debug_view_only = args.has("view-only")
+	debug_ui = args.get("ui", "")
+	if debug_ui == "gallery":
+		get_tree().change_scene_to_file.call_deferred("res://src/ui/dev/ui_gallery.tscn")
 	if args.has("incidents"):
 		sim_overrides["incident_rate"] = float(args["incidents"])
 	_screenshot_path = args.get("screenshot", "")

@@ -24,12 +24,17 @@ das escolhas técnicas.
 - Telas do GP: `gp_setup_screen`, `weekend_screen`, `practice_screen`, `quali_screen` (peças comuns
   em `ScreenKit`); o fim de semana ativo fica em `Session.weekend`.
   Módulos que guardam o RaceSim usam `WeakRef` (ciclo de referência vazaria memória).
-- `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). Visual "Paddock"
-  (revista): **todas** as cores/fontes/fios vêm de `UiStyle` — nada de cor solta nas telas.
-  Emblemas via `TeamEmblems` (imagem em `user://import/emblems/<id>.png` tem prioridade).
+- `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). **Todas** as
+  cores/fontes/raios/espaços vêm de `UiStyle` — nada de cor solta nas telas. Direção atual:
+  **Garagem** (seção "Garagem" do UiStyle + peças em `ScreenKit`, `GarageBackdrop`, `CutButton`,
+  `CarHero`); migradas: tela inicial e configuração do GP. Demais telas ainda Paddock (legado).
+  Mínimos: texto 12 px, alvo de toque 44 px (ação principal 56). Emblemas sempre via
+  `TeamEmblems` (prioridade: `user://import/emblems/`, depois `game/local/emblems/` — ignorada
+  pelo git, para logos pessoais —, depois os originais).
 - `src/core/session.gd` — autoload `Session` (escolhas do menu + opções de desenvolvimento).
 - `test/unit`, `test/integration` — GUT. `tools/race_report.gd` — relatório de corridas simuladas.
-- Raiz: `tools/make_logo.py` (logo), `tools/make_emblems.py` (emblemas), `tools/geojson_to_track.py`.
+- Raiz: `tools/make_logo.py` (logo), `tools/make_emblems.py` (emblemas), `tools/make_car_art.py`
+  (carro ilustrado por equipe), `tools/make_icons.py` (ícones), `tools/geojson_to_track.py`.
 - `design/mockups/` — mockups HTML (gerador `build.py`). **Tela nova = mockup primeiro**, usuário
   aprova, depois Godot, depois captura de tela comparando com o mockup.
 
@@ -46,7 +51,8 @@ Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--
 (a câmera vai direto ao alvo nas capturas). Grande Prêmio: `--gp` (configuração), `--weekend`
 (painel) e `--play` (sessão atual ao vivo), com `--skip=<n>` para simular as n primeiras sessões
 (ex.: `--play --circuit=shanghai --skip=2` abre a sprint); `--advance` vale também no treino e na
-classificação.
+classificação. Capturas de interface: `--ui=team|quick` (folhas da tela inicial), `--ui=gallery`
+(estados dos componentes), `--view-only` (só o 3D, base de mockups).
 Testes de regras usam `{"weather": "dry", "incident_rate": 0.0}` salvo quando testam clima/incidentes.
 - Captura de tela precisa de display: `Xvfb :99 -screen 0 1280x720x24 &`. Use para conferir
   layout depois de mexer na interface (ler logs não mostra a tela).

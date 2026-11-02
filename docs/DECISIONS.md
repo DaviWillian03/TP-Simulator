@@ -140,3 +140,14 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - **Tempo acelerado no 3D** (múltipla escolha): continua 3D; no **4× e 8×** a câmera vai sozinha
   para a **vista geral** e volta à câmera anterior no 1×/2×. Se o jogador trocar a câmera enquanto
   acelerado, vale a escolha dele. (Sem mapa 2D: o custo do 3D não depende da velocidade.)
+
+## Reformulação visual — direção Garagem (2026-11-02)
+- Usuário pediu reformulação profunda dos menus (Paddock deixa de ser obrigatória). Três direções
+  em `design/mockups/v3-*` (Garagem, Central da equipe, Largada); escolhida a **Garagem**:
+  ambiente escuro de box, o carro da equipe iluminado como destaque, a cor da equipe tinge os
+  destaques; vermelho = marca e ação principal; fonte Titillium Web (OFL).
+- Implementadas como referência de qualidade: **tela inicial** e **configuração do GP**. As demais
+  telas seguem Paddock até serem migradas (UiStyle tem as duas seções; ver CLAUDE.md).
+- Carro em destaque: ilustração vetorial **original** (`tools/make_car_art.py`), uma por equipe.
+- **Logos oficiais**: usuário pediu; continuam fora do repositório (marcas registradas). Para o
+  APK pessoal: pasta `game/local/emblems/` (ignorada pelo git) ou `user://import/emblems/`.
