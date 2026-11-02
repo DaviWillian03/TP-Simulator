@@ -59,6 +59,7 @@ def ico(name, size=22, color="currentColor", sw=2.2):
         "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
         "bolt": '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
         "swap": '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+        "close": '<path d="M6 6l12 12M18 6L6 18"/>',
     }[name]
     return (f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="{sw}" '
             f'stroke-linecap="round" stroke-linejoin="round">{p}</svg>')
