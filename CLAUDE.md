@@ -18,7 +18,9 @@ das escolhas técnicas.
   marcados PROVISÓRIO até a pesquisa de atributos.
 - `src/sim/` — simulação **sem dependência de tela**: RaceSim (orquestra), TrackModel, TyreModel,
   WeatherModel (clima/radar), RaceControl (incidentes, bandeiras, punições), RadioSystem (rádio),
-  StrategyAI (IA). Passo fixo `DT`, semente determinística. Regras novas entram aqui, com teste.
+  StrategyAI (IA); fim de semana: WeekendSim (sessões, previsão, grids, pontos), CarSetup (acerto),
+  PracticeSession (programas de blocos), QualiSim (Q1/Q2/Q3). Passo fixo `DT`, semente
+  determinística. Regras novas entram aqui, com teste.
   Módulos que guardam o RaceSim usam `WeakRef` (ciclo de referência vazaria memória).
 - `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). Visual "Paddock"
   (revista): **todas** as cores/fontes/fios vêm de `UiStyle` — nada de cor solta nas telas.

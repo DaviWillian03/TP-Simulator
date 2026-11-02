@@ -91,7 +91,7 @@ func on_lap(car: CarState) -> void:
 			[_opt("Box: %s" % sim.tyres.compounds[slick]["name"].to_lower(), "pit", slick), _opt("Mais um pouco", "stay")], 0)
 	elif cls == "slick" and car.tyre_wear >= 0.72:
 		var next := StrategyAI.choose_compound(sim, car, remaining)
-		var pit_is_right := remaining > 3 or not sim.tyres.rule_satisfied(car.compounds_used)
+		var pit_is_right := remaining > 3 or not sim.compound_rule_ok(car)
 		ask(car, "Os pneus acabaram, estou perdendo muito tempo. Box nesta volta?",
 			[_opt("Box: %s" % sim.tyres.compounds[next]["name"].to_lower(), "pit", next), _opt("Mais 2 voltas", "stay")],
 			0 if pit_is_right else 1)
@@ -117,7 +117,7 @@ func on_neutralization(car: CarState) -> void:
 	var best := sim.tyres.best_for_wetness(sim.weather.wetness)
 	var next := best if not sim.tyres.is_dry(best) else StrategyAI.choose_compound(sim, car, remaining)
 	var worth := car.tyre_wear > 0.3 or sim.tyres.tyre_class(best) != sim.tyres.tyre_class(car.tyre) \
-		or not sim.tyres.rule_satisfied(car.compounds_used) or car.damage_wing > 0.15
+		or not sim.compound_rule_ok(car) or car.damage_wing > 0.15
 	var kind := "Safety car" if sim.control.flag == RaceControl.Flag.SC else "Safety car virtual"
 	var m_count := messages.size()
 	_cooldown_until.erase(car.index)

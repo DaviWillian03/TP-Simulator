@@ -32,12 +32,20 @@ Cada marco termina jogável e testado. Itens vêm de `docs/DECISIONS.md`.
 - **Menu DADOS** sem pausar (todos os pilotos, meus pilotos, tempos de volta).
 - Calibração "realista" conferida com `tools/race_report.gd`; 52 testes.
 
-## Marco 3 — Modo Grande Prêmio
-- Fim de semana completo: treinos livres (acerto), classificação Q1/Q2/Q3, corrida, formato
-  sprint nos GPs sprint; sessões puláveis.
-- Configuração livre: circuito, equipe, duração, clima.
-- **Mais circuitos do calendário 2026** (traçados via `tools/geojson_to_track.py`) e
-  **cenários de fundo imersivos por pista e clima** (maior custo de arte).
+## Marco 3 — Modo Grande Prêmio (em andamento)
+- ✅ Calendário 2026 com 22 circuitos (`game/data/circuits`, `calendar_2026.json`).
+- ✅ Mockups aprovados: configuração, fim de semana, classificação (`design/mockups/m3-*.html`).
+- ✅ Protótipo 3D em Interlagos: pista com relevo, cenário, chuva, noite, câmera giratória,
+  pit lane, boxes, brita, barreiras e grid; vista geral automática no 4×/8×.
+- ✅ Simulação do fim de semana (`src/sim/`): `CarSetup` (acerto), `PracticeSession` (programas
+  de blocos; jogar = simular), `QualiSim` (Q1/Q2/Q3 e SQ1/SQ2/SQ3, pneu e momento de sair,
+  evolução da pista, tráfego, erros, bandeira vermelha, chuva), sprint (~1/3, sem regra dos 2
+  compostos, pontos 8..1), grid vindo da classificação, pontos e `WeekendSim` (formatos normal,
+  sprint e só a corrida; clima Realista/Seco/Chuva/Variável com previsão por dia).
+- ⬜ Telas: configuração do GP, painel do fim de semana (programas dos treinos), treino ao vivo,
+  classificação ao vivo; corrida e sprint usando o grid e o acerto.
+- ⬜ 3D nos 22 circuitos (relevo e cenário de cada pista).
+- ⬜ Realismo com modelos/texturas CC0 (aguarda liberar kenney.nl e polyhaven.com na rede).
 
 ## Marco 4 — Corrida Caótica ("Roleta do Caos", P8)
 - Roleta de eventos + cartas de caos + variantes prontas, sobre o mesmo motor de corrida.

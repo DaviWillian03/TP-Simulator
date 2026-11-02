@@ -22,6 +22,8 @@ var last_lap_time := 0.0
 var best_lap_time := INF
 var lap_times := PackedFloat32Array()  ## histórico de tempos de volta (menu DADOS)
 var lap_noise := 0.0  ## variação aleatória do ritmo nesta volta
+var setup_penalty_s := 0.0  ## tempo perdido por volta pelo acerto (CarSetup)
+var wear_factor := 1.0  ## multiplicador de desgaste (simulação de corrida nos treinos)
 
 # pneus e energia
 var tyre := "medium"

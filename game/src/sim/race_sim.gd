@@ -55,6 +55,9 @@ const OVERTAKE_MAX_CHANCE := 0.5
 const OVERTAKE_HARD_TRACK_S := 4.0  ## pistas muito travadas (dificuldade > 0,7) exigem bem mais
 const DEFEND_HARD_S := 0.15  ## "defender forte" exige mais vantagem de quem ataca
 const LET_BY_WINDOW_S := 1.2
+const SPRINT_DISTANCE := 3.0  ## a sprint tem ~1/3 da distância da corrida
+const RACE_POINTS := [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+const SPRINT_POINTS := [8, 7, 6, 5, 4, 3, 2, 1]
 
 var track: TrackModel
 var tyres: TyreModel
@@ -64,6 +67,7 @@ var radio: RadioSystem
 var cars: Array[CarState] = []
 var total_laps := 0
 var duration_pct := 1.0
+var sprint := false
 var time_s := 0.0
 var chequered := false
 var over := false
@@ -81,15 +85,21 @@ var _trace_time := PackedFloat64Array()  # ...e o instante em que foi alcançada
 
 
 ## options: duration_pct (0.25/0.5/1.0), seed (int), player_team (String),
-##          weather ("dry"/"rain"/segmentos/ausente), incident_rate (0 = sem incidentes; 1 = realista),
-##          radio (false = pilotos do jogador não perguntam nem decidem sozinhos)
+##          weather ("dry"/"rain"/"variable"/segmentos/ausente), rain_probability (padrão: do circuito),
+##          incident_rate (0 = sem incidentes; 1 = realista),
+##          radio (false = pilotos do jogador não perguntam nem decidem sozinhos),
+##          grid (Array de ids de piloto na ordem de largada, vindo da classificação),
+##          sprint (true = ~1/3 da distância, sem regra dos 2 compostos),
+##          setups (Dictionary id do piloto -> CarSetup, vindo dos treinos)
 func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array, options: Dictionary = {}) -> void:
 	track = p_track
 	tyres = p_tyres
 	duration_pct = float(options.get("duration_pct", 1.0))
-	total_laps = maxi(3, roundi(track.laps * duration_pct))
+	sprint = bool(options.get("sprint", false))
+	total_laps = maxi(3, roundi(track.laps * duration_pct / (SPRINT_DISTANCE if sprint else 1.0)))
 	rng.seed = int(options.get("seed", 1))
-	weather = WeatherModel.new(track.rain_probability, total_laps * track.base_lap_time_s * 1.05, rng, options)
+	var rain_p := float(options.get("rain_probability", track.rain_probability))
+	weather = WeatherModel.new(rain_p, total_laps * track.base_lap_time_s * 1.05, rng, options)
 	control = RaceControl.new(self, float(options.get("incident_rate", 1.0)))
 	radio = RadioSystem.new(self)
 	radio.enabled = bool(options.get("radio", true))
@@ -100,17 +110,24 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		car.driver = d
 		car.team = GameData.team_by_id(teams, d["team"])
 		car.is_player = car.team["id"] == player_team
+		var setups: Dictionary = options.get("setups", {})
+		if setups.has(d["id"]):
+			(setups[d["id"]] as CarSetup).apply_to(car)
 		cars.append(car)
-	_setup_grid()
+	_setup_grid(options.get("grid", []))
 
 
 # --- largada -------------------------------------------------------------------------
 
-func _setup_grid() -> void:
-	# Classificação simulada: ritmo puro + um pouco de sorte.
+func _setup_grid(grid_ids: Array = []) -> void:
 	var scored: Array = []
 	for car in cars:
-		scored.append([_ideal_lap_time(car) + rng.randfn(0.0, 0.15), car])
+		var pos := grid_ids.find(car.driver["id"])
+		if grid_ids.is_empty():
+			# sem classificação ("só a corrida"): ritmo puro + um pouco de sorte
+			scored.append([_ideal_lap_time(car) + rng.randfn(0.0, 0.15), car])
+		else:
+			scored.append([float(pos if pos >= 0 else 1000 + car.index), car])
 	scored.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
 	for i in scored.size():
 		var car: CarState = scored[i][1]
@@ -349,9 +366,26 @@ func step() -> void:
 
 ## Tempo de volta ideal (sem tráfego, sem aleatoriedade, pneu macio novo, sem combustível).
 func _ideal_lap_time(car: CarState) -> float:
-	return track.base_lap_time_s \
-		+ (100.0 - float(car.team["car_rating"])) * CAR_K \
-		+ (100.0 - float(car.driver["rating"])) * DRIVER_K
+	return base_lap_time(track, car.team, car.driver) + car.setup_penalty_s
+
+
+## Volta ideal sem pneu, combustível nem acerto: pista + carro + piloto.
+## Compartilhada com treinos e classificação para que o carro rápido seja rápido em tudo.
+static func base_lap_time(p_track: TrackModel, team: Dictionary, driver: Dictionary) -> float:
+	return p_track.base_lap_time_s \
+		+ (100.0 - float(team["car_rating"])) * CAR_K \
+		+ (100.0 - float(driver["rating"])) * DRIVER_K
+
+
+## Pontos pela posição final (1 = vencedor). Sprint: 8 primeiros; corrida: 10 primeiros.
+static func points_for(position: int, is_sprint: bool) -> int:
+	var table: Array = SPRINT_POINTS if is_sprint else RACE_POINTS
+	return table[position - 1] if position >= 1 and position <= table.size() else 0
+
+
+## Regra dos 2 compostos secos (só na corrida principal, com pista seca).
+func compound_rule_ok(car: CarState) -> bool:
+	return sprint or tyres.rule_satisfied(car.compounds_used)
 
 
 ## Tempo de volta no estado atual (bandeira verde). with_traffic inclui ruído e ar turbulento.
@@ -452,7 +486,7 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 	wear *= tyres.wet_wear_multiplier(car.tyre, weather.wetness)
 	if control.is_neutralized():
 		wear *= 0.5
-	car.tyre_wear += wear * lap_part
+	car.tyre_wear += wear * lap_part * car.wear_factor
 	var soc: float = ENERGY_SOC[car.energy_mode] + (0.1 if control.is_neutralized() else 0.0)
 	car.battery = clampf(car.battery + soc * lap_part, 0.0, 1.0)
 
@@ -556,7 +590,7 @@ func _finish(car: CarState, cross_time: float) -> void:
 	car.finish_time = cross_time
 	car.in_pit = false
 	car.speed = 0.0
-	if not tyres.rule_satisfied(car.compounds_used):
+	if not compound_rule_ok(car):
 		car.disqualified = true  # regra dos 2 compostos não cumprida
 	_finish_count += 1
 	car_finished.emit(car, _finish_count)

@@ -20,7 +20,8 @@ var time_s := 0.0
 var _noise_seed := 0
 
 
-## options["weather"]: "dry" (sem chuva), "rain" (chuva garantida), um Array de segmentos
+## options["weather"]: "dry" (sem chuva), "rain" (chuva garantida), "variable" (pancadas
+## curtas que vão e voltam), um Array de segmentos
 ## [{start_s, end_s, intensity}] (testes), ou ausente (sorteio pela probabilidade do circuito).
 func _init(rain_probability: float, race_duration_s: float, rng: RandomNumberGenerator, options: Dictionary = {}) -> void:
 	_noise_seed = rng.randi()
@@ -29,6 +30,13 @@ func _init(rain_probability: float, race_duration_s: float, rng: RandomNumberGen
 		segments = w
 	elif w == "dry":
 		segments = []
+	elif w == "variable":
+		# tempo instável: pancadas curtas que vêm e vão (pista muda de seca para úmida e volta)
+		var t := rng.randf_range(0.05, 0.3) * race_duration_s
+		while t < race_duration_s:
+			var length := rng.randf_range(0.06, 0.14) * race_duration_s
+			segments.append({"start_s": t, "end_s": t + length, "intensity": rng.randf_range(0.25, 0.7)})
+			t += length + rng.randf_range(0.15, 0.35) * race_duration_s
 	else:
 		var rains: bool = w == "rain" or rng.randf() < rain_probability
 		if rains:

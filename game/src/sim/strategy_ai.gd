@@ -36,7 +36,7 @@ static func decide_pit(sim: RaceSim, car: CarState) -> void:
 	# 3) desgaste normal e regra dos compostos (só em pista seca)
 	if not sim.tyres.is_dry(car.tyre):
 		return
-	var rule_ok := sim.tyres.rule_satisfied(car.compounds_used)
+	var rule_ok := sim.compound_rule_ok(car)
 	var current_life_left := sim.tyre_laps_left(car)
 	var must_stop_for_rule := not rule_ok and remaining <= 3
 	var tyres_done := car.tyre_wear >= car.ai_pit_wear
@@ -80,7 +80,7 @@ static func on_neutralization(sim: RaceSim, car: CarState) -> void:
 	var best := sim.tyres.best_for_wetness(sim.weather.wetness)
 	var worth := car.tyre_wear > 0.35 or car.damage_wing > 0.15 \
 		or sim.tyres.tyre_class(best) != sim.tyres.tyre_class(car.tyre) \
-		or (not sim.tyres.rule_satisfied(car.compounds_used) and remaining > 3)
+		or (not sim.compound_rule_ok(car) and remaining > 3)
 	if worth:
 		car.pit_compound = best_compound(sim, car, remaining)
 		car.pit_requested = true
@@ -90,7 +90,7 @@ static func on_neutralization(sim: RaceSim, car: CarState) -> void:
 ## (vai precisar de outra parada). Respeita a regra de compostos obrigatórios.
 static func choose_compound(sim: RaceSim, car: CarState, remaining_laps: int) -> String:
 	var candidates := sim.tyres.dry_compounds()
-	if not sim.tyres.rule_satisfied(car.compounds_used):
+	if not sim.compound_rule_ok(car):
 		var filtered: Array[String] = []
 		for c in candidates:
 			if not car.compounds_used.has(c):
