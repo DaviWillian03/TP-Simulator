@@ -14,11 +14,12 @@ func _car_scale() -> float:
 	return clampf(distance / 70.0, 1.2, CAR_SCALE)
 const PIT_OFFSET_M := 15.0
 
-enum CamMode { OVERVIEW, FOLLOW_1, FOLLOW_2, LEADER }
+enum CamMode { OVERVIEW, FOLLOW_1, FOLLOW_2, LEADER, CAR }
 
 var sim: RaceSim
 var t3: Track3D
 var cam_mode := CamMode.OVERVIEW
+var followed: CarState = null  ## carro em foco (CamMode.CAR): escolhido tocando na torre
 var yaw := 0.6
 var snap_camera := false  ## câmera vai direto ao alvo (capturas de tela)
 var pitch := 0.62  ## radianos acima do horizonte
@@ -329,6 +330,22 @@ func _apply_lighting(wetness: float, rain: float) -> void:
 
 # --- câmera ----------------------------------------------------------------------------
 
+## Segue o carro escolhido na torre; tocar no mesmo carro de novo volta à vista geral.
+## Devolve o rótulo da câmera (para o aviso).
+func follow(car: CarState) -> String:
+	_saved_cam = {}
+	if car == null or (cam_mode == CamMode.CAR and followed == car):
+		cam_mode = CamMode.OVERVIEW
+		followed = null
+		distance = _overview_distance()
+		pitch = 0.62
+		return "Visão geral"
+	cam_mode = CamMode.CAR
+	followed = car
+	distance = 140.0
+	return "Seguindo %s" % car.code()
+
+
 func cycle_camera() -> String:
 	_saved_cam = {}  # o jogador escolheu a câmera: vale a escolha dele, mesmo acelerado
 	cam_mode = (cam_mode + 1) % 4 as CamMode
@@ -356,13 +373,14 @@ var _saved_cam: Dictionary = {}
 
 func set_fast_time(on: bool) -> String:
 	if on and _saved_cam.is_empty() and cam_mode != CamMode.OVERVIEW:
-		_saved_cam = {"mode": cam_mode, "distance": distance, "pitch": pitch}
+		_saved_cam = {"mode": cam_mode, "distance": distance, "pitch": pitch, "followed": followed}
 		cam_mode = CamMode.OVERVIEW
 		distance = _overview_distance()
 		pitch = 0.62
 		return "Visão geral (tempo acelerado)"
 	if not on and not _saved_cam.is_empty():
 		cam_mode = _saved_cam["mode"]
+		followed = _saved_cam.get("followed")
 		distance = _saved_cam["distance"]
 		pitch = _saved_cam["pitch"]
 		_saved_cam = {}
@@ -374,7 +392,7 @@ func _cam_label() -> String:
 	match cam_mode:
 		CamMode.OVERVIEW:
 			return "Visão geral"
-		CamMode.FOLLOW_1, CamMode.FOLLOW_2:
+		CamMode.FOLLOW_1, CamMode.FOLLOW_2, CamMode.CAR:
 			var car := _follow_car()
 			return "Seguindo %s" % (car.code() if car != null else "—")
 	return "Seguindo o líder"
@@ -396,6 +414,8 @@ func _follow_car() -> CarState:
 			return players[1] if players.size() > 1 else null
 		CamMode.LEADER:
 			return sim.standings()[0]
+		CamMode.CAR:
+			return followed
 	return null
 
 

@@ -193,3 +193,17 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   (cor ativa da equipe) controla; aplicado na migração da tela de corrida e das demais.
 - **Câmera pela torre**: tocar na linha de um piloto segue o carro dele na pista; tocar de novo volta à
   vista geral. Os botões "Seguir ALB/SAI/Líder/Geral" sobre a pista saem.
+
+## Tela de corrida e tela do box implementadas (Garagem)
+- Corrida na Garagem: barra de topo (velocidade 1×–8×, Dados, selo de bandeira SC/VSC/vermelha, voltas),
+  pista 3D 916×462 com cantos arredondados, dois cartões dos seus carros e torre de 320 px.
+  Fundo na cor da equipe do jogador (também na tela do box).
+- Tocar na linha da torre segue o carro; tocar de novo volta à vista geral. Botões "Seguir…" removidos.
+- Tela do box (`PitScreen`) não pausa a corrida: limita a 1×/2× e restaura a velocidade ao fechar.
+  Nada vale até "Confirmar box". Parada dupla: só este carro · companheiro na volta seguinte · junto (fila).
+- Mini-jogo de toque (`PitTapOverlay`): carro parado = 1×; verde perfeito −0,3 s, fora do verde +0,6 s;
+  sem toque a parada fica neutra (IA e simulações em lote nunca passam por ele).
+- Decidido sem perguntar durante a ausência do usuário (revisar se quiser): ao fechar a tela do box a câmera
+  volta ao que era antes; o companheiro na parada dupla usa o mesmo composto, jogo novo; pista seca deixa
+  intermediário/chuva apagados (ainda escolhíveis).
+- Flags de captura: `--pit` (abre a tela do box) e `--tap` (leva um carro ao box e abre o mini-jogo).

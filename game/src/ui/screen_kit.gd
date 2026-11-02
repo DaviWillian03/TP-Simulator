@@ -590,3 +590,47 @@ static func g_card(fill: Color = UiStyle.G_SURFACE, radius: int = 20, mh: int = 
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", UiStyle.g_box(fill, radius, mh, mv))
 	return p
+
+
+## Popover claro ancorado acima de um botão: lista de opções; fecha tocando fora ou escolhendo.
+## options: [[valor, texto], ...]. on_pick(valor). Devolve a camada (para o chamador guardar).
+static func popover(screen: Control, anchor: Control, title: String, options: Array, selected: Variant, on_pick: Callable) -> Control:
+	var catcher := Control.new()
+	catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
+	catcher.mouse_filter = Control.MOUSE_FILTER_STOP
+	catcher.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed:
+			catcher.queue_free())
+	var panel := PanelContainer.new()
+	var st := UiStyle.g_box(UiStyle.G_LIGHT, 16, 12, 12)
+	st.shadow_color = Color(0, 0, 0, 0.5)
+	st.shadow_size = 14
+	panel.add_theme_stylebox_override("panel", st)
+	panel.custom_minimum_size = Vector2(280, 0)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	panel.add_child(v)
+	v.add_child(UiStyle.g_caption(title, UiStyle.G_INK_2))
+	for o: Array in options:
+		var b := Button.new()
+		b.text = o[1]
+		b.focus_mode = Control.FOCUS_NONE
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
+		var on: bool = o[0] == selected
+		for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
+			b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_INK if on else Color("#e3e6eb"), 12, 14, 0))
+		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
+			b.add_theme_color_override(k, Color.WHITE if on else UiStyle.G_INK)
+		b.add_theme_font_size_override("font_size", UiStyle.FS_BODY)
+		var val: Variant = o[0]
+		b.pressed.connect(func() -> void:
+			on_pick.call(val)
+			catcher.queue_free())
+		v.add_child(b)
+	catcher.add_child(panel)
+	screen.add_child(catcher)
+	var r := anchor.get_global_rect()
+	panel.reset_size()
+	panel.position = Vector2(clampf(r.position.x, 8.0, screen.size.x - 288.0), maxf(8.0, r.position.y - panel.size.y - 8.0))
+	return catcher

@@ -10,6 +10,7 @@ var glow_radius := Vector2(0.46, 0.40)  ## raio do brilho (fração da tela)
 var glow_color := Color("#1868DB")
 var glow_strength := 0.42
 var show_lamps := true
+var tint_strength := 0.14  ## quanto da cor da equipe entra nas paredes e no chão (imersão)
 var cone_x := 0.585  ## centro do cone de luz (fração da largura); < 0 = sem cone
 
 var _glow_tex: GradientTexture2D
@@ -53,13 +54,14 @@ func _build_glow() -> void:
 
 func _draw() -> void:
 	var fy := size.y * floor_ratio
-	_vgrad(Rect2(0, 0, size.x, fy), UiStyle.G_WALL_TOP, UiStyle.G_WALL_BOTTOM)
+	var tint := Color(glow_color.r, glow_color.g, glow_color.b)
+	_vgrad(Rect2(0, 0, size.x, fy), UiStyle.G_WALL_TOP.lerp(tint, tint_strength * 0.7), UiStyle.G_WALL_BOTTOM.lerp(tint, tint_strength))
 	var y := 46.0
 	while y < fy:
 		draw_line(Vector2(0, y), Vector2(size.x, y), Color(1, 1, 1, 0.035), 1.0)
 		y += 46.0
 	if floor_ratio < 1.0:
-		_vgrad(Rect2(0, fy, size.x, size.y - fy), UiStyle.G_FLOOR_TOP, UiStyle.G_FLOOR_BOTTOM)
+		_vgrad(Rect2(0, fy, size.x, size.y - fy), UiStyle.G_FLOOR_TOP.lerp(tint, tint_strength * 0.8), UiStyle.G_FLOOR_BOTTOM.lerp(tint, tint_strength * 0.5))
 	var c := glow_center * size
 	var r := glow_radius * size
 	draw_texture_rect(_glow_tex, Rect2(c - r, r * 2.0), false)

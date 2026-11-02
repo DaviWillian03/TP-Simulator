@@ -1,19 +1,24 @@
 extends Control
-## Tela de corrida: liga a simulação à interface (pista, tabela, painéis e avisos).
+## Tela de corrida — direção Garagem (mockup v7): barra de topo, pista 3D grande com cantos
+## arredondados, dois cartões dos seus carros e a torre de cronometragem à direita.
 ##
-## A cada quadro, avança a simulação pelo tempo real × velocidade escolhida.
-## A tabela e os painéis são atualizados algumas vezes por segundo (não a cada quadro)
-## para economizar bateria no celular.
+## A cada quadro, avança a simulação pelo tempo real × velocidade escolhida. A tabela e os
+## painéis são atualizados algumas vezes por segundo (não a cada quadro) para poupar bateria.
+## "Chamar p/ box" abre a tela do box (PitScreen) sem pausar; durante a parada, o mini-jogo de
+## toque (PitTapOverlay) vale tempo no box.
 
 const UI_REFRESH_S := 0.2
 const SPEEDS := [1.0, 2.0, 4.0, 8.0]
 const FAST_TIME := 4.0  ## a partir desta velocidade a câmera 3D vai para a vista geral
+const PIT_MAX_SCALE := 2.0  ## com a tela do box aberta a corrida roda no máximo a 2×
 
 var sim: RaceSim
 var weekend: WeekendSim = null  ## Grande Prêmio em andamento (null = corrida rápida)
 var time_scale := 2.0
 var paused := false
 
+var _layer: Control
+var _track_holder: Panel
 var _track_view: TrackView3D
 var _standings: StandingsPanel
 var _car_panels: Array[CarControlPanel] = []
@@ -23,14 +28,18 @@ var _radio: RadioCard
 var _drawer: DataDrawer
 var _meta: Label
 var _lap_label: Label
-var _watermark: Label
+var _flag_pill: PanelContainer
+var _flag_label: Label
+var _speed_seg: PanelContainer
+var _pause_btn: Button
 var _refresh_timer := 0.0
 var _results_shown := false
+var _pit: PitScreen = null
+var _tap: PitTapOverlay = null
+var _scale_before_stop := 0.0  ## velocidade antes de a parada forçar 1×
 
 
 func _ready() -> void:
-	theme = UiStyle.make_theme()
-	set_anchors_preset(Control.PRESET_FULL_RECT)
 	weekend = Session.weekend if Session.weekend != null and Session.weekend.is_race(Session.weekend.session_id()) else null
 	if weekend != null:
 		# Grande Prêmio: grid da classificação, acerto dos treinos, sprint ou corrida
@@ -57,58 +66,41 @@ func _ready() -> void:
 	_drawer.visible = Session.debug_open_data
 	_connect_sim_signals()
 	_refresh_ui()
+	if Session.debug_pit or Session.debug_tap:
+		_debug_pit_state()
 	_toasts.push("Luzes apagadas! %d voltas em %s." % [sim.total_laps, sim.track.short_name])
 	if sim.is_over():  # (só acontece quando a corrida foi avançada antes de abrir a tela)
 		_on_race_finished()
 
 
+## Capturas: --pit abre a tela do box; --tap leva o 1º carro ao box e abre o mini-jogo.
+func _debug_pit_state() -> void:
+	var car := _car_panels[0].car
+	if Session.debug_pit:
+		_open_pit(car)
+		return
+	sim.request_pit(car, "hard")
+	var guard := 0
+	while not (car.in_pit and car.box_hold_s > 0.0) and guard < 6000:
+		sim.advance(RaceSim.DT)
+		guard += 1
+	_on_pit_box_stop(car, car.box_hold_s)
+
+
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = UiStyle.PAPER
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
-	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 16
-	root.offset_top = 10
-	root.offset_right = -16
-	root.offset_bottom = -10
-	root.add_theme_constant_override("separation", 0)
-	add_child(root)
-	root.add_child(_build_masthead())
-	root.add_child(UiStyle.rule(UiStyle.RULE_THICK))
+	# fundo da Garagem na cor da equipe que o jogador gerencia (imersão)
+	var page := ScreenKit.garage_page(self, _my_team_id())
+	_layer = page["layer"]
+	_build_top_bar()
 
-	var body := HBoxContainer.new()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 0)
-	root.add_child(body)
-
-	var left := VBoxContainer.new()
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.add_theme_constant_override("separation", 0)
-	body.add_child(left)
-	var map_row := HBoxContainer.new()
-	map_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	map_row.add_theme_constant_override("separation", 0)
-	left.add_child(map_row)
-	var track_holder := Control.new()
-	track_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	track_holder.clip_contents = true
-	map_row.add_child(track_holder)
-	map_row.add_child(UiStyle.rule(UiStyle.RULE_MID, true))
-
-	_watermark = UiStyle.label("", 130, Color(0, 0, 0, 0), true)
-	_watermark.add_theme_color_override("font_outline_color", Color(UiStyle.INK, 0.14))
-	_watermark.add_theme_constant_override("outline_size", 4)
-	_watermark.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_watermark.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_watermark.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_watermark.offset_right = -14
-	_watermark.offset_bottom = 10
-	track_holder.add_child(_watermark)
+	# pista 3D: cantos arredondados (o recorte vale para os filhos)
+	_track_holder = Panel.new()
+	_track_holder.add_theme_stylebox_override("panel", UiStyle.g_box(Color.BLACK, 22, 0, 0))
+	_track_holder.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+	ScreenKit.place(_track_holder, _layer, Control.PRESET_TOP_LEFT, Vector2(16, 58), Vector2(916, 462))
 	_track_view = TrackView3D.new()
 	_track_view.set_anchors_preset(Control.PRESET_FULL_RECT)
-	track_holder.add_child(_track_view)
+	_track_holder.add_child(_track_view)
 	_track_view.setup(sim)
 	if Session.debug_camera.size() > 0:  # (opções de desenvolvimento para capturas)
 		_track_view.yaw = Session.debug_camera.get("yaw", _track_view.yaw)
@@ -119,111 +111,128 @@ func _build_ui() -> void:
 		if Session.debug_camera.has("dist"):
 			_track_view.distance = Session.debug_camera["dist"]
 		_track_view.snap_camera = true  # captura: câmera já no alvo, sem deslizar
+
 	_toasts = ToastFeed.new()
-	_toasts.position = Vector2(6, 12)
+	_toasts.position = Vector2(14, 14)
 	_toasts.custom_minimum_size = Vector2(380, 0)
-	track_holder.add_child(_toasts)
+	_track_holder.add_child(_toasts)
 	_radar = RadarWidget.new()
 	_radar.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_radar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_radar.offset_right = -12
-	_radar.offset_top = 12
-	track_holder.add_child(_radar)
+	_radar.offset_right = -14
+	_radar.offset_top = 14
+	_track_holder.add_child(_radar)
 	_radar.setup(sim)
 	_radio = RadioCard.new()
 	_radio.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_radio.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_radio.offset_left = 8
-	_radio.offset_bottom = -10
-	track_holder.add_child(_radio)
+	_radio.offset_left = 14
+	_radio.offset_bottom = -14
+	_track_holder.add_child(_radio)
 	_radio.answered.connect(func(id: int, option: int) -> void:
 		sim.radio.answer(id, option)
 		_refresh_ui())
 	_drawer = DataDrawer.new()
 	_drawer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_drawer.visible = false
-	track_holder.add_child(_drawer)
+	_track_holder.add_child(_drawer)
 	_drawer.setup(sim)
 	_drawer.closed.connect(func() -> void: _drawer.visible = false)
 
-	left.add_child(UiStyle.rule(UiStyle.RULE_MID))
-	var panels := HBoxContainer.new()
-	panels.add_theme_constant_override("separation", 16)
-	var panels_margin := MarginContainer.new()
-	panels_margin.add_theme_constant_override("margin_top", 10)
-	panels_margin.add_theme_constant_override("margin_right", 14)
-	panels_margin.add_child(panels)
-	left.add_child(panels_margin)
+	# cartões dos seus carros
+	var cards := HBoxContainer.new()
+	cards.add_theme_constant_override("separation", 16)
+	ScreenKit.place(cards, _layer, Control.PRESET_TOP_LEFT, Vector2(16, 530))
 	for car in sim.cars:
 		if car.is_player:
 			var p := CarControlPanel.new()
-			panels.add_child(p)
+			p.custom_minimum_size = Vector2(450, 178)
+			cards.add_child(p)
 			p.setup(sim, car)
+			p.pit_pressed.connect(_open_pit)
+			p.orders_pressed.connect(_open_orders)
 			_car_panels.append(p)
 
-	var tower_margin := MarginContainer.new()
-	tower_margin.add_theme_constant_override("margin_left", 12)
-	tower_margin.add_theme_constant_override("margin_top", 8)
+	# torre: tocar numa linha segue aquele carro; tocar de novo volta à vista geral
 	_standings = StandingsPanel.new()
-	tower_margin.add_child(_standings)
-	body.add_child(tower_margin)
+	ScreenKit.place(_standings, _layer, Control.PRESET_TOP_RIGHT, Vector2(-16, 58), Vector2(320, 650))
 	_standings.setup(sim)
+	_standings.driver_pressed.connect(_on_driver_pressed)
 
 
-func _build_masthead() -> Control:
+func _my_team_id() -> String:
+	for car in sim.cars:
+		if car.is_player:
+			return String(car.team["id"])
+	return Session.player_team
+
+
+func _build_top_bar() -> void:
 	var bar := HBoxContainer.new()
-	bar.custom_minimum_size = Vector2(0, 58)
 	bar.add_theme_constant_override("separation", 14)
-	var title := UiStyle.label(("SPRINT · " if sim.sprint else "") + sim.track.grand_prix.to_upper(), 36, UiStyle.INK, true)
-	title.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	ScreenKit.place(bar, _layer, Control.PRESET_TOP_LEFT, Vector2(16, 6), Vector2(1248, 48))
+	var title := UiStyle.g_label(("SPRINT · " if sim.sprint else "") + sim.track.grand_prix.to_upper(), 24, UiStyle.G_TEXT, "black")
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.add_child(title)
-	_meta = UiStyle.caption("")
-	_meta.add_theme_font_size_override("font_size", 12)
-	_meta.size_flags_vertical = Control.SIZE_SHRINK_END
+	_meta = UiStyle.g_caption("")
+	_meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.add_child(_meta)
-	var speeds := HBoxContainer.new()
-	speeds.add_theme_constant_override("separation", 4)
-	speeds.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var pause := UiStyle.compact(UiStyle.button("II", true), 14)
-	pause.custom_minimum_size = Vector2(38, 34)
-	pause.toggled.connect(func(on: bool) -> void: paused = on)
-	pause.button_pressed = Session.debug_pause
-	speeds.add_child(pause)
-	var group := ButtonGroup.new()
-	for s: float in SPEEDS:
-		var b := UiStyle.compact(UiStyle.button("%d×" % int(s), true, group), 14)
-		b.custom_minimum_size = Vector2(38, 34)
-		b.button_pressed = is_equal_approx(s, time_scale)
-		b.pressed.connect(func() -> void: set_time_scale(s))
-		speeds.add_child(b)
-	bar.add_child(speeds)
-	var cam := UiStyle.compact(UiStyle.button("Câmera"), 13)
-	cam.custom_minimum_size = Vector2(80, 34)
-	cam.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	cam.pressed.connect(func() -> void: _toasts.push("Câmera: " + _track_view.cycle_camera()))
-	bar.add_child(cam)
-	var data := UiStyle.compact(UiStyle.button("Dados"), 13)
-	data.custom_minimum_size = Vector2(70, 34)
+	bar.add_child(UiStyle.hspacer())
+
+	_flag_pill = PanelContainer.new()
+	_flag_pill.visible = false
+	_flag_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_flag_label = UiStyle.g_label("", 14, UiStyle.G_INK, "black")
+	_flag_pill.add_child(_flag_label)
+	bar.add_child(_flag_pill)
+
+	_pause_btn = Button.new()
+	_pause_btn.toggle_mode = true
+	_pause_btn.text = "II"
+	_pause_btn.focus_mode = Control.FOCUS_NONE
+	_pause_btn.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN, 40)
+	_pause_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	ScreenKit._selectable_styles(_pause_btn, 20)
+	_pause_btn.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_SURFACE, 20, 10, 0))
+	_pause_btn.toggled.connect(func(on: bool) -> void: paused = on)
+	_pause_btn.button_pressed = Session.debug_pause
+	bar.add_child(_pause_btn)
+	_speed_seg = ScreenKit.segmented(SPEEDS.map(func(s: float) -> Array: return [s, "%d×" % int(s)]), time_scale, set_time_scale)
+	_speed_seg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	for b: Control in (_speed_seg.get_child(0) as Control).get_children():
+		b.custom_minimum_size = Vector2(46, 34)
+		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	bar.add_child(_speed_seg)
+
+	var data := Button.new()
+	data.text = "Dados"
+	data.focus_mode = Control.FOCUS_NONE
+	data.custom_minimum_size = Vector2(84, 40)
 	data.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		data.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_SURFACE_HOVER if s != "pressed" else UiStyle.G_SURFACE_PRESS, 20, 16, 0))
+	data.add_theme_font_size_override("font_size", 14)
 	data.pressed.connect(func() -> void:
 		_drawer.visible = not _drawer.visible
 		_drawer.refresh())
+	ScreenKit.press_feedback(data)
 	bar.add_child(data)
-	bar.add_child(UiStyle.hspacer())
-	var menu := UiStyle.compact(UiStyle.button("Menu"), 13)
-	menu.custom_minimum_size = Vector2(64, 34)
+
+	_lap_label = UiStyle.g_label("", 30, UiStyle.RED, "black")
+	_lap_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_lap_label.custom_minimum_size = Vector2(96, 0)
+	_lap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	bar.add_child(_lap_label)
+	var menu := ScreenKit.round_button("back", 40, "Menu")
 	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	menu.pressed.connect(Session.go_to_title)
 	bar.add_child(menu)
-	_lap_label = UiStyle.label("", 36, UiStyle.RED, true)
-	_lap_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	bar.add_child(_lap_label)
-	return bar
 
 
 func _connect_sim_signals() -> void:
 	sim.overtake.connect(_on_overtake)
 	sim.pit_stop.connect(_on_pit_stop)
+	sim.pit_box_stop.connect(_on_pit_box_stop)
 	sim.fastest_lap.connect(_on_fastest_lap)
 	sim.race_finished.connect(_on_race_finished)
 	sim.incident.connect(_on_incident)
@@ -234,10 +243,25 @@ func _connect_sim_signals() -> void:
 
 
 func set_time_scale(s: float) -> void:
+	# com o box aberto ou o carro parado a corrida fica em 1×/2× (o jogador precisa agir)
+	if (_pit != null or _tap != null) and s > PIT_MAX_SCALE:
+		s = PIT_MAX_SCALE
+	if _tap != null:
+		s = 1.0
 	time_scale = s
+	if _pit != null:
+		_pit.current_scale = s
+	_sync_speed()
 	var label := _track_view.set_fast_time(s >= FAST_TIME)
 	if label != "":
 		_toasts.push("Câmera: " + label)
+
+
+## Os botões de velocidade acompanham o valor real (ele pode ser limitado pelo box).
+func _sync_speed() -> void:
+	for b: Button in (_speed_seg.get_child(0) as Control).get_children():
+		b.set_pressed_no_signal(is_equal_approx(float(b.get_meta("value")), time_scale))
+		b.disabled = (_pit != null or _tap != null) and float(b.get_meta("value")) > PIT_MAX_SCALE
 
 
 func _process(delta: float) -> void:
@@ -253,6 +277,8 @@ func _refresh_ui() -> void:
 	_lap_label.text = "FIM" if sim.chequered else "%d/%d" % [sim.leader_lap(), sim.total_laps]
 	var rain := sim.weather.rain_label()
 	_meta.text = "%s · %d voltas · %s" % [sim.track.short_name, sim.total_laps, ("pista " + sim.weather.surface_label()) if rain == "sem chuva" else rain]
+	_refresh_flag()
+	_standings.followed = _track_view.followed if _track_view.cam_mode == TrackView3D.CamMode.CAR else null
 	_standings.refresh()
 	_radar.refresh()
 	_drawer.refresh()
@@ -263,12 +289,80 @@ func _refresh_ui() -> void:
 			question = q
 	_radio.show_message(question)
 	var order := sim.standings()
-	var best := 99
 	for p in _car_panels:
-		var pos := order.find(p.car) + 1
-		p.refresh(pos)
-		best = mini(best, pos)
-	_watermark.text = "P%d" % best
+		p.refresh(order.find(p.car) + 1)
+
+
+## Selo de bandeira na barra de topo (some com a pista liberada).
+func _refresh_flag() -> void:
+	var f := sim.control.flag
+	_flag_pill.visible = f != RaceControl.Flag.GREEN
+	if not _flag_pill.visible:
+		return
+	var red := f == RaceControl.Flag.RED
+	var fill := UiStyle.RED if red else Color("#ffd24a")
+	_flag_pill.add_theme_stylebox_override("panel", UiStyle.g_box(fill, 20, 16, 8))
+	_flag_label.add_theme_color_override("font_color", Color.WHITE if red else UiStyle.G_INK)
+	_flag_label.text = {RaceControl.Flag.SC: "SAFETY CAR", RaceControl.Flag.VSC: "VIRTUAL SC", RaceControl.Flag.RED: "BANDEIRA VERMELHA"}[f]
+
+
+# --- câmera pela torre ----------------------------------------------------------------
+
+func _on_driver_pressed(car: CarState) -> void:
+	_toasts.push("Câmera: " + _track_view.follow(car))
+	_refresh_ui()
+
+
+# --- ordens de equipe (popover do botão EQUIPE) ---------------------------------------
+
+func _open_orders(car: CarState, anchor: Control) -> void:
+	var opts := [
+		[CarState.TeamOrder.FREE, "Liberado"],
+		[CarState.TeamOrder.HOLD, "Não brigar com o companheiro"],
+		[CarState.TeamOrder.LET_BY, "Deixar o companheiro passar"],
+	]
+	ScreenKit.popover(self, anchor, "Ordem de equipe · %s" % car.code(), opts, car.team_order,
+		func(o: int) -> void:
+			sim.set_team_order(car, o)
+			_refresh_ui())
+
+
+# --- tela do box -----------------------------------------------------------------------
+
+func _open_pit(car: CarState) -> void:
+	if _pit != null or car.finished or car.retired or car.in_pit:
+		return
+	_pit = PitScreen.new()
+	_pit.current_scale = minf(time_scale, PIT_MAX_SCALE)
+	_pit.setup(sim, car, _track_view, _track_holder)
+	_pit.closed.connect(_on_pit_closed)
+	_pit.speed_requested.connect(set_time_scale)
+	_layer.add_child(_pit)
+	set_time_scale(minf(time_scale, PIT_MAX_SCALE))
+
+
+func _on_pit_closed() -> void:
+	_pit = null
+	_sync_speed()
+	_refresh_ui()
+
+
+## O carro do jogador parou no box: abre o mini-jogo de toque (a corrida fica em 1×).
+func _on_pit_box_stop(car: CarState, hold_s: float) -> void:
+	if not car.is_player or _tap != null or hold_s <= 0.0:
+		return
+	_scale_before_stop = time_scale
+	_tap = PitTapOverlay.new()
+	_tap.setup(sim, car)
+	_tap.finished.connect(_on_tap_finished)
+	_layer.add_child(_tap)
+	set_time_scale(1.0)
+
+
+func _on_tap_finished() -> void:
+	_tap = null
+	set_time_scale(_scale_before_stop if _scale_before_stop > 0.0 else time_scale)
+	_sync_speed()
 
 
 # --- avisos (pop-ups não intrusivos) -------------------------------------------------
@@ -297,7 +391,7 @@ func _on_fastest_lap(car: CarState, lap_time: float) -> void:
 
 
 func _on_incident(car: CarState, kind: String, text: String) -> void:
-	var important := car.is_player or kind in ["crash", "failure", "contact"] or sim.standings().find(car) < 5
+	var important := car.is_player or kind in ["crash", "failure", "contact", "investigation", "cleared"] or sim.standings().find(car) < 5
 	if important:
 		_toasts.push(text, "hot" if car.is_player or kind == "crash" else "note")
 
@@ -326,7 +420,7 @@ func _on_race_finished() -> void:
 		return
 	_results_shown = true
 	_refresh_ui()
-	add_child(_build_results())
+	_layer.add_child(_build_results())
 
 
 func _notification(what: int) -> void:
@@ -342,34 +436,39 @@ func _continue_weekend() -> void:
 	Session.go_to_weekend()
 
 
-
 func _build_results() -> Control:
+	var order := sim.standings()
+	var winner := order[0]
 	var shade := ColorRect.new()
-	shade.color = Color(UiStyle.INK, 0.45)
+	shade.color = Color(0, 0, 0, 0.66)
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	shade.add_child(center)
 	var panel := PanelContainer.new()
-	var style := UiStyle.outline_box(UiStyle.PAPER, UiStyle.INK, UiStyle.RULE_MID)
-	style.content_margin_left = 22
-	style.content_margin_right = 22
-	style.content_margin_top = 14
-	style.content_margin_bottom = 14
-	panel.add_theme_stylebox_override("panel", style)
+	var st := UiStyle.g_box(Color("#17191e"), 22, 26, 20)
+	st.shadow_color = Color(0, 0, 0, 0.45)
+	st.shadow_size = 18
+	panel.add_theme_stylebox_override("panel", st)
 	center.add_child(panel)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 8)
+	v.add_theme_constant_override("separation", 12)
 	panel.add_child(v)
+
 	var head := HBoxContainer.new()
-	head.add_child(UiStyle.label("RESULTADO DA SPRINT" if sim.sprint else "RESULTADO", 30, UiStyle.INK, true))
+	head.add_theme_constant_override("separation", 14)
+	head.add_child(DriverPhotos.make_avatar(winner.driver, winner.team_color(), 56))
+	var titles := VBoxContainer.new()
+	titles.add_theme_constant_override("separation", -2)
+	titles.add_child(UiStyle.g_caption("Resultado da sprint" if sim.sprint else "Resultado final"))
+	titles.add_child(UiStyle.g_label("%s venceu" % winner.display_name(), 24, UiStyle.G_TEXT, "black"))
+	head.add_child(titles)
 	head.add_child(UiStyle.hspacer())
-	head.add_child(UiStyle.label(sim.track.grand_prix.to_upper(), 20, UiStyle.RED, true))
+	head.add_child(UiStyle.g_label(sim.track.grand_prix.to_upper(), 20, UiStyle.RED, "black"))
 	v.add_child(head)
-	v.add_child(UiStyle.rule(UiStyle.RULE_THICK))
 
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(860, 440)
+	scroll.custom_minimum_size = Vector2(900, 380)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	v.add_child(scroll)
 	var table := TimingTable.new()
@@ -383,8 +482,8 @@ func _build_results() -> Control:
 		{"title": "Paradas", "width": 62, "align": "right"},
 		{"title": "Melhor volta", "width": 104, "align": "right"},
 		{"title": "Pts", "width": 38, "align": "right"},
-	], sim.cars.size())
-	var order := sim.standings()
+	], sim.cars.size(), "garage")
+	table.me_color = winner.team_color() if winner.is_player else _my_color()
 	for i in order.size():
 		var car := order[i]
 		var pos := "DSQ" if car.disqualified else ("–" if car.retired else str(i + 1))
@@ -415,19 +514,23 @@ func _build_results() -> Control:
 
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
-	if weekend != null:
-		var cont := UiStyle.accent(UiStyle.button("Continuar"))
-		cont.custom_minimum_size = Vector2(170, 40)
-		cont.pressed.connect(_continue_weekend)
-		buttons.add_child(cont)
-	else:
-		var again := UiStyle.accent(UiStyle.button("Correr de novo"))
-		again.custom_minimum_size = Vector2(170, 40)
-		again.pressed.connect(Session.restart_race)
-		buttons.add_child(again)
-	var menu := UiStyle.button("Menu")
-	menu.custom_minimum_size = Vector2(100, 40)
+	buttons.add_theme_constant_override("separation", 12)
+	var menu := ScreenKit.light_button("Menu")
+	menu.custom_minimum_size = Vector2(130, UiStyle.TOUCH_MAIN)
 	menu.pressed.connect(Session.go_to_title)
 	buttons.add_child(menu)
+	var main := CutButton.new()
+	main.text = "CONTINUAR" if weekend != null else "CORRER DE NOVO"
+	main.custom_minimum_size = Vector2(230, UiStyle.TOUCH_MAIN)
+	main.pressed.connect(_continue_weekend if weekend != null else Session.restart_race)
+	buttons.add_child(main)
 	v.add_child(buttons)
 	return shade
+
+
+func _my_color() -> Color:
+	for car in sim.cars:
+		if car.is_player:
+			return car.team_color()
+	return UiStyle.RED
+

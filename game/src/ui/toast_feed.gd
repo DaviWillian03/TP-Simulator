@@ -13,14 +13,18 @@ func _ready() -> void:
 
 ## kind: "hot" (vermelho cheio, eventos do jogador) ou "note" (contorno de tinta, informativo).
 func push(text: String, kind: String = "note") -> void:
-	var p: PanelContainer
-	if kind == "hot":
-		p = UiStyle.stamp(text, 14)
-	else:
-		p = PanelContainer.new()
-		p.add_theme_stylebox_override("panel", UiStyle.outline_box(UiStyle.PAPER, UiStyle.INK))
-		p.add_child(UiStyle.label(text, 13))
-		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var p := PanelContainer.new()
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if kind == "hot":  # evento que mexe com os seus carros: selo vermelho
+		p.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.RED, 12, 14, 7))
+		var l := UiStyle.g_label(text.to_upper(), 14, Color.WHITE, "black")
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		p.add_child(l)
+	else:  # informativo: cartão escuro
+		p.add_theme_stylebox_override("panel", UiStyle.g_box(Color(0.05, 0.06, 0.08, 0.9), 12, 14, 7))
+		var l := UiStyle.g_label(text, 14, UiStyle.G_TEXT, "bold")
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		p.add_child(l)
 	p.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	add_child(p)
 	while get_child_count() > MAX_VISIBLE:

@@ -36,6 +36,8 @@ var debug_advance_s := 0.0
 var debug_pause := false  ## --pause: começa pausado (capturas do grid parado)
 var debug_sc := false  ## --sc: aciona o safety car logo após o --advance
 var debug_open_data := false  ## --data: abre o menu DADOS
+var debug_pit := false  ## --pit: abre a tela do box na corrida
+var debug_tap := false  ## --tap: leva um carro ao box e abre o mini-jogo de toque
 var debug_ui := ""  ## --ui=team|quick (abre a folha na tela inicial) · --ui=gallery (estados dos componentes)
 var debug_view_only := false  ## --view-only: só o cenário 3D em tela cheia (base para mockups)
 var debug_camera: Dictionary = {}  ## --yaw --pitch --dist --cam=<n> (capturas da vista 3D)
@@ -72,6 +74,8 @@ func _ready() -> void:
 		circuit_id = args["circuit"]
 	debug_sc = args.has("sc")
 	debug_open_data = args.has("data")
+	debug_pit = args.has("pit")
+	debug_tap = args.has("tap")
 	debug_view_only = args.has("view-only")
 	debug_ui = args.get("ui", "")
 	if debug_ui == "gallery":
@@ -148,6 +152,8 @@ func start_race() -> void:
 	race_seed = randi()
 	debug_advance_s = 0.0
 	debug_pause = false
+	debug_pit = false
+	debug_tap = false
 	get_tree().change_scene_to_file(RACE_SCENE)
 
 

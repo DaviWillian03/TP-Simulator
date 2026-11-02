@@ -26,32 +26,170 @@ func test_tela_monta_um_painel_para_cada_carro_do_jogador() -> void:
 		assert_eq(p.car.team["id"], "williams")
 
 
-func test_botao_box_leva_o_carro_ao_box_com_o_pneu_escolhido() -> void:
+func test_chamar_box_abre_a_tela_do_box_sem_pausar() -> void:
 	var panel: CarControlPanel = screen._car_panels[0]
-	var target := "hard" if panel.car.tyre != "hard" else "medium"
-	panel._compound_buttons[target].button_pressed = true
-	panel._box_btn.button_pressed = true  # emite "toggled", como um toque do jogador
-	assert_true(panel.car.pit_requested)
+	panel.pit_pressed.emit(panel.car)
+	assert_not_null(screen._pit, "a tela do box abre")
+	assert_true(screen.time_scale <= RaceScreen_PIT_MAX, "velocidade limitada a 2×")
+	assert_eq(screen._pit.get_parent(), screen._layer)
+	assert_eq(screen._track_view.get_parent(), screen._pit._mini, "a pista vai para a miniatura")
+	screen._pit._cancel()
+	assert_null(screen._pit)
+	assert_eq(screen._track_view.get_parent(), screen._track_holder, "a pista volta ao lugar")
+
+
+const RaceScreen_PIT_MAX := 2.0
+
+
+func test_confirmar_plano_leva_o_carro_ao_box_com_o_pneu_escolhido() -> void:
+	var car: CarState = screen._car_panels[0].car
+	var target := "hard" if car.tyre != "hard" else "medium"
+	screen._open_pit(car)
+	screen._pit._compound = target
+	screen._pit._wing = 1
+	screen._pit._confirm()
+	assert_null(screen._pit, "tela fecha ao confirmar")
+	assert_true(car.pit_requested)
+	assert_eq(car.plan["compound"], target)
 	var steps := 0
-	while panel.car.pit_stops == 0 and steps < 30000:
+	while car.pit_stops == 0 and steps < 30000:
 		screen.sim.step()
 		steps += 1
-	assert_eq(panel.car.pit_stops, 1)
-	assert_eq(panel.car.tyre, target)
-	panel.refresh(1)
-	assert_true(panel._box_btn.button_pressed, "ainda no pit lane: botão continua marcado")
-	while panel.car.in_pit and steps < 40000:
+	assert_eq(car.pit_stops, 1)
+	assert_eq(car.tyre, target)
+	assert_eq(car.wing_step, 1, "ajuste de asa aplicado na parada")
+	assert_eq(PitStop.sets_left(car, target), PitStop.DEFAULT_STOCK[target]["new"] - 1, "gastou um jogo do estoque")
+
+
+func test_cancelar_box_pela_tela() -> void:
+	var car: CarState = screen._car_panels[1].car
+	screen.sim.request_pit(car, "hard")
+	screen._open_pit(car)
+	screen._pit._cancel()
+	assert_false(car.pit_requested)
+	assert_true(car.plan.is_empty())
+
+
+func test_tela_do_box_oferece_punicao_e_custa_tempo() -> void:
+	var car: CarState = screen._car_panels[0].car
+	car.penalty_pending_s = 5.0
+	screen._open_pit(car)
+	assert_true(screen._pit._serve, "cumprir a punição vem marcado")
+	var with_pen: float = screen._pit._estimate_total()
+	screen._pit._serve = false
+	var without: float = screen._pit._estimate_total()
+	assert_almost_eq(with_pen - without, 5.0, 0.01)
+	screen._pit._cancel()
+
+
+func test_parada_dupla_segura_o_companheiro_uma_volta() -> void:
+	var car: CarState = screen._car_panels[0].car
+	var mate: CarState = screen._car_panels[1].car
+	screen._open_pit(car)
+	screen._pit._double = 1
+	screen._pit._confirm()
+	assert_true(car.pit_requested)
+	assert_false(mate.pit_requested, "o companheiro espera")
+	assert_eq(mate.pit_defer_laps, mate.laps_done + 1)
+
+
+func test_minijogo_de_toque_aparece_no_box_e_ajusta_o_tempo() -> void:
+	var car: CarState = screen._car_panels[0].car
+	screen.set_time_scale(4.0)
+	screen.sim.request_pit(car, "hard")
+	var steps := 0
+	while not (car.in_pit and car.box_hold_s > 0.0) and steps < 30000:
 		screen.sim.step()
 		steps += 1
-	panel.refresh(1)
-	assert_false(panel._box_btn.button_pressed, "de volta à pista: botão solta")
+	assert_not_null(screen._tap, "o mini-jogo abre quando o carro para")
+	assert_eq(screen.time_scale, 1.0, "carro parado: 1×")
+	var hold: float = car.box_hold_s
+	screen._tap._t = PitTapOverlay.SWEEP_S * 0.5  # marcador no centro do verde
+	screen._tap._tap()
+	assert_true(car.box_tapped)
+	assert_almost_eq(car.box_hold_s, hold + PitStop.TAP_PERFECT_S, 0.01)
+	while car.in_pit and steps < 40000:
+		screen.sim.step()
+		steps += 1
+	screen._tap._process(1.0)
+	assert_null(screen._tap, "fecha depois da parada")
+	assert_eq(screen.time_scale, 4.0, "volta à velocidade anterior")
 
 
-func test_cancelar_box_antes_da_entrada() -> void:
-	var panel: CarControlPanel = screen._car_panels[1]
-	panel._box_btn.button_pressed = true
-	panel._box_btn.button_pressed = false
-	assert_false(panel.car.pit_requested)
+func test_precisao_do_toque() -> void:
+	assert_eq(PitTapOverlay.accuracy_at(0.5), 1.0)
+	assert_eq(PitTapOverlay.accuracy_at(0.0), 0.0)
+	assert_between(PitTapOverlay.accuracy_at(0.4), 0.0, 1.0)
+
+
+func test_tocar_na_torre_segue_o_carro_e_tocar_de_novo_volta_a_vista_geral() -> void:
+	var car: CarState = screen.sim.cars[7]
+	screen._standings.driver_pressed.emit(car)
+	assert_eq(screen._track_view.cam_mode, TrackView3D.CamMode.CAR)
+	assert_eq(screen._track_view.followed, car)
+	assert_eq(screen._standings.followed, car, "linha em foco na torre")
+	screen._standings.driver_pressed.emit(car)
+	assert_eq(screen._track_view.cam_mode, TrackView3D.CamMode.OVERVIEW)
+	assert_null(screen._standings.followed)
+
+
+func test_torre_alterna_diferenca_para_o_carro_da_frente_e_para_o_lider() -> void:
+	for i in 900:
+		screen.sim.step()
+	var order: Array[CarState] = screen.sim.standings()
+	var st: StandingsPanel = screen._standings
+	st.interval_mode = true
+	st.refresh()
+	var ahead: float = screen.sim.gap_to_leader_s(order[2]) - screen.sim.gap_to_leader_s(order[1])
+	assert_eq((st._rows[2]["gap"] as Label).text, "+%.1f" % ahead)
+	st.interval_mode = false
+	st.refresh()
+	assert_eq((st._rows[2]["gap"] as Label).text, "+%.1f" % screen.sim.gap_to_leader_s(order[2]))
+
+
+func test_icones_de_status_e_abandono_na_torre() -> void:
+	for i in 900:
+		screen.sim.step()
+	var st: StandingsPanel = screen._standings
+	var order: Array[CarState] = screen.sim.standings()
+	var rival: CarState = order[4]
+	rival.investigation = {"until_s": 999.0, "secs": 5, "reason": "teste", "guilty": true}
+	var pen: CarState = order[5]
+	pen.penalty_pending_s = 5.0
+	st.refresh()
+	assert_true(st._rows[4]["icons"]["investigation"].visible, "triângulo amarelo")
+	assert_true(st._rows[5]["icons"]["penalty"].visible, "círculo vermelho")
+	assert_eq(st._rows[order.find(screen.sim.fastest_lap_car)]["icons"]["fastest"].visible, screen.sim.fastest_lap_car != null)
+	# abandono vai para o fim da torre, apagado e com a etiqueta
+	order[0].retired = true
+	order[0].retire_reason = "motor"
+	st.refresh()
+	var last: Dictionary = st._rows[st._rows.size() - 1]
+	assert_eq(st._row_cars[st._rows.size() - 1], order[0])
+	assert_eq((last["tag"] as Label).text, "ABANDONO")
+
+
+func test_rival_mostra_so_idade_do_pneu_e_meu_carro_mostra_barra_de_vida() -> void:
+	screen._refresh_ui()
+	var st: StandingsPanel = screen._standings
+	for i in st._rows.size():
+		var mine := st._row_cars[i].is_player
+		assert_eq(st._rows[i]["life"].visible, mine)
+		assert_eq(st._rows[i]["age"].visible, not mine)
+
+
+func test_ordens_de_equipe_pelo_popover() -> void:
+	var panel: CarControlPanel = screen._car_panels[0]
+	watch_signals(screen.sim)
+	panel.orders_pressed.emit(panel.car, panel._orders_btn)
+	var found := false
+	for b in _all_buttons(screen):
+		if b.text.begins_with("Não brigar"):
+			b.emit_signal("pressed")
+			found = true
+			break
+	assert_true(found, "popover com as ordens")
+	assert_signal_emitted(screen.sim, "team_order_result", "a ordem chegou à simulação (o piloto pode obedecer ou não)")
 
 
 func test_botoes_de_ritmo_mudam_o_modo_do_carro() -> void:
@@ -101,31 +239,35 @@ func test_menu_dados_abre_e_atualiza_as_tres_abas() -> void:
 	assert_ne((cells[1] as Label).text, "", "nome do piloto")
 
 
-func test_faixa_de_status_mostra_safety_car() -> void:
+func test_selo_de_bandeira_mostra_safety_car() -> void:
 	for i in 600:
 		screen.sim.step()
+	assert_false(screen._flag_pill.visible, "pista verde: sem selo")
 	screen.sim.control.deploy_sc("teste")
 	screen._refresh_ui()
-	assert_true(screen._standings._status_panel.visible)
-	assert_string_contains(screen._standings._status.text, "SAFETY CAR")
+	assert_true(screen._flag_pill.visible)
+	assert_eq(screen._flag_label.text, "SAFETY CAR")
 
 
 func test_tempo_acelerado_leva_a_camera_3d_para_a_vista_geral_e_depois_volta() -> void:
 	var view: TrackView3D = screen._track_view
-	view.cycle_camera()  # segue o primeiro carro do jogador
-	assert_eq(view.cam_mode, TrackView3D.CamMode.FOLLOW_1)
+	var car: CarState = screen._car_panels[0].car
+	screen._standings.driver_pressed.emit(car)  # segue o primeiro carro do jogador
+	assert_eq(view.cam_mode, TrackView3D.CamMode.CAR)
 	screen.set_time_scale(8.0)
 	assert_eq(view.cam_mode, TrackView3D.CamMode.OVERVIEW)
 	screen.set_time_scale(4.0)
 	assert_eq(view.cam_mode, TrackView3D.CamMode.OVERVIEW)
 	screen.set_time_scale(1.0)
-	assert_eq(view.cam_mode, TrackView3D.CamMode.FOLLOW_1)
+	assert_eq(view.cam_mode, TrackView3D.CamMode.CAR)
+	assert_eq(view.followed, car)
 	assert_almost_eq(view.distance, 140.0, 0.01)
 
 
 func test_camera_escolhida_no_tempo_acelerado_e_respeitada() -> void:
 	var view: TrackView3D = screen._track_view
+	var car: CarState = screen._car_panels[0].car
 	screen.set_time_scale(8.0)
-	view.cycle_camera()  # jogador escolhe seguir um carro mesmo no 8×
+	screen._standings.driver_pressed.emit(car)  # jogador escolhe seguir um carro mesmo no 8×
 	screen.set_time_scale(2.0)
-	assert_eq(view.cam_mode, TrackView3D.CamMode.FOLLOW_1)
+	assert_eq(view.cam_mode, TrackView3D.CamMode.CAR)

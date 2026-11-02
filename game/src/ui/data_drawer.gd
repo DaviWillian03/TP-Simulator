@@ -2,7 +2,7 @@ class_name DataDrawer
 extends PanelContainer
 ## Menu DADOS: informações completas da corrida, abertas por cima do mapa sem pausar.
 ## Abas: Todos (todos os pilotos), Meus pilotos (detalhes) e Voltas (tempos recentes).
-## Tabelas no estilo "folha de cronometragem" (TimingTable).
+## Tabelas no estilo Garagem (TimingTable "garage"), linhas do jogador na cor da equipe.
 
 signal closed
 
@@ -10,32 +10,25 @@ const LAP_ROWS := 12
 
 var sim: RaceSim
 var _tab := 0
-var _tab_group := ButtonGroup.new()
+var _tabs: PanelContainer
 var _body: VBoxContainer
 var _table: TimingTable
 
 
 func setup(p_sim: RaceSim) -> void:
 	sim = p_sim
-	add_theme_stylebox_override("panel", UiStyle.box(UiStyle.PAPER, 4, 8))
+	add_theme_stylebox_override("panel", UiStyle.g_box(Color(0.05, 0.06, 0.08, 0.96), 22, 18, 14))
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 6)
+	v.add_theme_constant_override("separation", 10)
 	add_child(v)
 	var head := HBoxContainer.new()
-	head.add_child(UiStyle.label("DADOS DA CORRIDA", 22, UiStyle.INK, true))
-	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(10, 0)
-	head.add_child(gap)
-	for i in 3:
-		var b := UiStyle.compact(UiStyle.button(["Todos", "Meus pilotos", "Voltas"][i], true, _tab_group), 13)
-		b.custom_minimum_size = Vector2(0, 32)
-		b.add_theme_font_override("font", UiStyle.HEAVY_FONT)
-		b.button_pressed = i == 0
-		b.pressed.connect(_select.bind(i))
-		head.add_child(b)
+	head.add_theme_constant_override("separation", 14)
+	head.add_child(UiStyle.g_label("DADOS DA CORRIDA", 22, UiStyle.G_TEXT, "black"))
+	var tabs := ScreenKit.segmented([[0, "Todos"], [1, "Meus pilotos"], [2, "Voltas"]], 0, _select)
+	_tabs = tabs
+	head.add_child(tabs)
 	head.add_child(UiStyle.hspacer())
-	var close := UiStyle.compact(UiStyle.button("Fechar ✕"), 13)
-	close.custom_minimum_size = Vector2(90, 32)
+	var close := ScreenKit.round_button("close", UiStyle.TOUCH_MIN, "Fechar")
 	close.pressed.connect(func() -> void: closed.emit())
 	head.add_child(close)
 	v.add_child(head)
@@ -61,6 +54,7 @@ func _build() -> void:
 	_table = TimingTable.new()
 	_table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_child(_table)
+	_table.me_color = _my_color()
 	match _tab:
 		0:
 			_table.setup([
@@ -74,7 +68,7 @@ func _build() -> void:
 				{"title": "Paradas", "width": 58, "align": "right"},
 				{"title": "Punição", "width": 58, "align": "right"},
 				{"title": "Estado", "width": 76},
-			], sim.cars.size())
+			], sim.cars.size(), "garage")
 		1:
 			_table.setup([
 				{"title": "Piloto", "width": 0, "heavy": true},
@@ -85,12 +79,19 @@ func _build() -> void:
 				{"title": "Punições", "width": 70, "align": "right"},
 				{"title": "Licença", "width": 62, "align": "right"},
 				{"title": "Confiança", "width": 76},
-			], 2)
+			], 2, "garage")
 		2:
 			var cols := [{"title": "Volta", "width": 60, "align": "right"}]
 			for car in _focus_cars():
 				cols.append({"title": car.code(), "width": 0, "align": "right", "heavy": car.is_player})
-			_table.setup(cols, LAP_ROWS)
+			_table.setup(cols, LAP_ROWS, "garage")
+
+
+func _my_color() -> Color:
+	for car in sim.cars:
+		if car.is_player:
+			return car.team_color()
+	return UiStyle.RED
 
 
 ## Pilotos do jogador + o líder (para comparar tempos de volta).
