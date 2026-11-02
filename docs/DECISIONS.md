@@ -271,3 +271,11 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   contratos; vaga de piloto vazia é preenchida automaticamente (melhor custo-benefício). Grid sempre com 2 pilotos por equipe.
 - Técnicos: diretor técnico reduz dias de todos os projetos e engenheiros melhoram dias e acerto do departamento.
 - Tela `campaign_staff_screen` (aba Pessoal; captura `--staff --fresh --team=<id>`).
+
+## Finanças e Patrocínios — respostas do usuário (2026-11-02), mockups v11 aguardando aprovação
+- Patrocínio por **zonas do carro com valor** (asa traseira ×1,0 · laterais ×0,9 · bico ×0,7 · asa dianteira ×0,6 ·
+  halo ×0,5): um patrocinador por zona, contrato de 1 a 3 anos, valor por corrida e bônus por pódio.
+- **Marcas fazem ofertas** (mudam todo mês) conforme a influência; o jogador aceita, recusa ou pede mais.
+- **Marcas reais só em texto, sem logos**, categorias seguras (sem tabaco/apostas).
+- **Finanças = resumo claro**: receitas × despesas da temporada, projeção do caixa, histórico das temporadas.
+  Empréstimo e teto de gastos ficam para depois (P12).
