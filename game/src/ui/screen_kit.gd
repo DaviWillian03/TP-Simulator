@@ -496,3 +496,97 @@ static func open_team_picker(screen: Control, on_pick: Callable) -> void:
 			(s["root"] as Control).queue_free())
 		grid.add_child(b)
 	screen.add_child(s["root"])
+
+
+## Barra de porcentagem da Garagem (acerto do carro): trilho escuro, preenchimento na cor da equipe.
+## Devolve {"bar": ProgressBar, "value": Label}.
+static func g_percent_row(parent: Container, title: String, color: Color) -> Dictionary:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiStyle.SP_M)
+	var name_l := UiStyle.g_label(title, UiStyle.FS_SMALL, Color("#c3c9d3"))
+	name_l.custom_minimum_size = Vector2(100, 0)
+	row.add_child(name_l)
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.max_value = 1.0
+	bar.step = 0.001
+	bar.custom_minimum_size = Vector2(0, 9)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bar.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.08), 5, 0, 0))
+	bar.add_theme_stylebox_override("fill", UiStyle.g_box(color.lightened(0.1), 5, 0, 0))
+	row.add_child(bar)
+	var value := UiStyle.g_label("", UiStyle.FS_BODY, UiStyle.G_TEXT, "black")
+	value.custom_minimum_size = Vector2(48, 0)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(value)
+	parent.add_child(row)
+	return {"bar": bar, "value": value}
+
+
+## Indicador de etapas (sessões do fim de semana). items: [[rótulo, letra, estado]] com estado
+## "done" (verde, ✓), "now" (vermelho, com halo) ou "next" (apagado). Não usa só cor: a feita
+## leva ✓ e a atual tem halo e texto em destaque.
+static func step_bar(items: Array) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 0)
+	for i in items.size():
+		var it: Array = items[i]
+		if i > 0:
+			var ln := ColorRect.new()
+			ln.custom_minimum_size = Vector2(0, 3)
+			ln.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			ln.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			ln.color = Color("#2a6b3f") if items[i - 1][2] == "done" else Color(1, 1, 1, 0.08)
+			var m := MarginContainer.new()
+			m.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			m.add_theme_constant_override("margin_left", 12)
+			m.add_theme_constant_override("margin_right", 12)
+			m.add_child(ln)
+			h.add_child(m)
+		var state: String = it[2]
+		var dot := PanelContainer.new()
+		dot.custom_minimum_size = Vector2(34, 34)
+		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var fill: Color = {"done": Color("#2a6b3f"), "now": UiStyle.RED}.get(state, UiStyle.G_SURFACE_HOVER)
+		var st := UiStyle.g_box(fill, 17, 0, 0)
+		if state == "now":
+			st.shadow_color = Color(UiStyle.RED, 0.3)
+			st.shadow_size = 6
+		dot.add_theme_stylebox_override("panel", st)
+		var mark := UiStyle.g_label("✓" if state == "done" else String(it[1]), 13, Color.WHITE if state != "next" else Color("#c3c9d3"), "black")
+		mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		dot.add_child(mark)
+		var cell := HBoxContainer.new()
+		cell.add_theme_constant_override("separation", 10)
+		cell.add_child(dot)
+		var l := UiStyle.g_label(String(it[0]), 15, UiStyle.G_TEXT if state == "now" else UiStyle.G_TEXT_3, "bold")
+		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		cell.add_child(l)
+		h.add_child(cell)
+	return h
+
+
+## Botão secundário sobre um cartão claro (ex.: SIMULAR ao lado de JOGAR).
+static func light_button(text: String) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
+	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		var fill := Color("#e3e6eb") if s in ["normal", "hover"] else Color("#cdd1d8")
+		b.add_theme_stylebox_override(s, UiStyle.g_box(fill, 14, 26, 0))
+	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
+		b.add_theme_color_override(k, UiStyle.G_INK)
+	b.add_theme_font_override("font", UiStyle.G_BLACK)
+	b.add_theme_font_size_override("font_size", 19)
+	press_feedback(b)
+	return b
+
+
+## Cartão escuro (superfície) com margens internas.
+static func g_card(fill: Color = UiStyle.G_SURFACE, radius: int = 20, mh: int = 20, mv: int = 16) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UiStyle.g_box(fill, radius, mh, mv))
+	return p

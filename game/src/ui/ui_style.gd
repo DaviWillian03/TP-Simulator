@@ -3,7 +3,7 @@ extends RefCounted
 ## Fonte central do estilo do jogo. Mudar cor, fonte, raio ou espaçamento = mudar aqui.
 ##
 ## Em migração (2026-11-02): a direção **Garagem** (design/mockups/v3-1-*) substitui a Paddock.
-## Já migradas: tela inicial e configuração do GP (seção "Garagem", no fim do arquivo).
+## Já migradas: tela inicial, configuração do GP, painel do fim de semana e treino ao vivo.
 ## As demais telas ainda usam os tokens Paddock abaixo (legado) até serem refeitas.
 
 # === Paddock (legado: telas ainda não migradas) ======================================

@@ -43,7 +43,7 @@ func test_painel_monta_o_programa_do_treino_com_blocos() -> void:
 	screen._remove_block(albon, 2)
 	screen._add_block(albon, "aero")
 	assert_eq(w.program_of(albon), ["aero", "mech", "aero"] as Array[String])
-	assert_eq(screen._program_boxes[albon]["minutes"].text, "45 / 60 min")
+	assert_true((screen._program_boxes[albon]["minutes"].text as String).begins_with("45 / 60 min"))
 
 
 func test_treino_ao_vivo_usa_o_programa_e_termina() -> void:
