@@ -1,0 +1,75 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>V3 · Central da equipe · início</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:1280px;height:720px;overflow:hidden}.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.scene{background:#edf0f4;color:#0f1a2e;font-family:Barlow;font-weight:500}
+h1,h2,h3,.num{font-family:SairaC;font-weight:800;letter-spacing:.3px}
+.bar{position:absolute;left:0;right:0;top:0;height:76px;display:flex;align-items:center;padding:0 36px;gap:24px}
+.bar img.logo{height:50px}
+.tabs{display:flex;gap:6px;margin-left:24px;background:#dfe4eb;border-radius:24px;padding:4px}
+.tabs span{height:40px;padding:0 18px;border-radius:20px;display:grid;place-items:center;font-size:15px;color:#4a5568;font-weight:500}
+.tabs span.on{background:#fff;color:#0f1a2e;box-shadow:0 1px 2px rgba(15,26,46,.12)}
+.team{margin-left:auto;display:flex;align-items:center;gap:12px;background:#fff;border-radius:30px;padding:6px 16px 6px 8px;box-shadow:0 1px 2px rgba(15,26,46,.1)}
+.team b{font-family:SairaC;font-weight:800;font-size:18px;display:block;line-height:1}.team small{font-size:13px;color:#5b6678}
+.card{position:absolute;background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(15,26,46,.08),0 10px 28px rgba(15,26,46,.07);overflow:hidden}
+.photo{position:absolute;inset:0;background-size:cover;background-position:center}
+.scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,14,28,0) 30%,rgba(8,14,28,.82) 100%)}
+.kick{font-size:13px;letter-spacing:2.5px;font-weight:500}
+.btn{display:inline-flex;align-items:center;gap:10px;height:54px;padding:0 26px;border-radius:28px;font-family:SairaC;font-weight:800;font-size:20px;letter-spacing:.5px}
+.btn.red{background:#E10600;color:#fff}.btn.ghost{background:#eef1f5;color:#0f1a2e}
+.meta{display:flex;gap:8px;margin-top:14px}.meta span{background:rgba(255,255,255,.16);color:#fff;border-radius:16px;padding:6px 12px;font-size:14px}
+.drv{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #edf0f4}
+.drv .no{width:44px;height:44px;border-radius:12px;background:#1868DB;color:#fff;display:grid;place-items:center;font-family:SairaC;font-weight:800;font-size:20px}
+.drv b{display:block;font-size:17px;font-weight:600}.drv small{color:#5b6678;font-size:13px}
+.locked{display:flex;align-items:center;gap:14px;color:#8390a3;padding:0 22px;height:64px}
+.locked b{font-family:SairaC;font-weight:800;font-size:20px;color:#7a879a}.locked small{margin-left:auto;font-size:12px;letter-spacing:2px}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#8390a3}
+/* configuração */
+.steps{display:flex;align-items:center;gap:10px;margin-left:30px}
+.steps span{display:flex;align-items:center;gap:8px;font-size:15px;color:#5b6678}.steps i{font-style:normal;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#dfe4eb;font-family:SairaC;font-weight:800;font-size:15px}
+.steps span.on{color:#0f1a2e}.steps span.on i{background:#0f1a2e;color:#fff}.steps em{width:26px;height:2px;background:#cfd6e0}
+.list{padding:8px 0}.month{font-size:12px;letter-spacing:2.5px;color:#8390a3;padding:12px 20px 6px}
+.rrow{display:flex;align-items:center;gap:12px;height:50px;padding:0 20px;font-size:16px}
+.rrow .n{width:30px;font-family:SairaC;font-weight:800;color:#8390a3;font-size:17px}.rrow .d{margin-left:auto;color:#5b6678;font-size:14px}
+.rrow.on{background:#e8f0fc;box-shadow:inset 4px 0 0 #1868DB}.rrow.on .n{color:#1868DB}
+.chip{font-size:10px;letter-spacing:1.5px;border-radius:8px;padding:2px 7px;font-weight:700;flex:none;white-space:nowrap}.chip.s{background:#E10600;color:#fff}.chip.n{background:#1d2840;color:#ffd36b}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{background:#f4f6f9;border-radius:14px;padding:14px 16px}
+.tile .num{font-size:36px;line-height:1}.tile small{font-size:12px;letter-spacing:2px;color:#5b6678}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#5b6678;margin:18px 0 8px}
+.seg{display:flex;background:#eef1f5;border-radius:14px;padding:4px;gap:4px}.seg span{flex:1;height:44px;border-radius:11px;display:grid;place-items:center;font-size:16px;color:#4a5568}
+.seg span.on{background:#fff;color:#0f1a2e;box-shadow:0 1px 3px rgba(15,26,46,.15);font-weight:600}
+.wx{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.wx span{height:62px;border-radius:12px;background:#eef1f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13px;color:#4a5568}
+.wx span.on{background:#0f1a2e;color:#fff}
+</style></head><body><div class="scene">
+<div class="bar"><img class="logo" src="../../game/assets/branding/logo-light.svg"><div class="tabs"><span class="on">Início</span><span>Grande Prêmio</span><span>Corrida rápida</span></div>
+<div class="team"><img src="../../game/assets/emblems/williams.svg" width="34"><div><b>WILLIAMS</b><small>Motor Mercedes</small></div></div></div>
+<div class="card" style="left:36px;top:92px;width:768px;height:468px"><div class="photo" style="background-image:url(png/3d/clean_grid.png)"></div><div class="scrim"></div>
+<div style="position:absolute;left:36px;bottom:34px;right:36px;color:#fff"><div class="kick">MODO PRINCIPAL · TEMPORADA 2026</div>
+<h1 style="font-size:64px;line-height:.95;margin:8px 0 4px">GRANDE PRÊMIO</h1><div style="font-size:18px;opacity:.9">Escolha entre 22 fins de semana — treinos, classificação, sprint e corrida</div>
+<div style="display:flex;align-items:center;margin-top:18px"><div class="meta" style="margin:0"><span>6 sprints</span><span>Clima dinâmico</span><span>Pista em 3D</span></div>
+<span class="btn red" style="margin-left:auto">JOGAR <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span></div></div></div>
+<div class="card" style="left:824px;top:92px;width:420px;height:232px"><div class="photo" style="background-image:url(png/3d/clean_follow.png);height:128px;bottom:auto"></div>
+<div style="position:absolute;left:22px;right:22px;bottom:18px;display:flex;align-items:flex-end"><div><div class="kick" style="color:#5b6678">CORRIDA RÁPIDA</div><h3 style="font-size:28px;line-height:1.05">INTERLAGOS</h3>
+<div style="font-size:15px;color:#5b6678">18 voltas · largada imediata</div></div><span class="btn ghost" style="margin-left:auto;height:48px">LARGAR</span></div></div>
+<div class="card" style="left:824px;top:340px;width:420px;height:220px;padding:18px 22px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><img src="../../game/assets/emblems/williams.svg" width="30">
+<h3 style="font-size:22px">SEUS PILOTOS</h3></div><div class="drv"><span class="no">23</span><div><b>Alexander Albon</b><small>Tailândia</small></div></div><div class="drv"><span class="no">55</span><div><b>Carlos Sainz</b><small>Espanha</small></div></div></div>
+<div class="card" style="left:36px;top:580px;width:594px;height:64px"><div class="locked"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8390a3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><b>CAMPANHA</b><small>EM DESENVOLVIMENTO</small></div></div>
+<div class="card" style="left:650px;top:580px;width:594px;height:64px"><div class="locked"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8390a3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><b>CORRIDA CAÓTICA</b><small>EM DESENVOLVIMENTO</small></div></div>
+<div class="note" style="left:40px;top:668px">FOTOS: CAPTURAS REAIS DO 3D ATUAL (GODOT) · TAMANHO DOS CARTÕES E ABAS AINDA NÃO EXISTEM NO JOGO</div></div></body></html>

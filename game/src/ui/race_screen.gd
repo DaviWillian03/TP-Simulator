@@ -48,6 +48,12 @@ func _ready() -> void:
 		sim.control.deploy_sc("teste de captura")
 		sim.advance(40.0)
 	_build_ui()
+	if Session.debug_view_only:  # (capturas: só o 3D, base dos mockups de interface)
+		_track_view.reparent(self)
+		_track_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		for c in get_children():
+			if c != _track_view:
+				c.visible = false
 	_drawer.visible = Session.debug_open_data
 	_connect_sim_signals()
 	_refresh_ui()

@@ -1,0 +1,74 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>V3 · Central da equipe · configuração</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:1280px;height:720px;overflow:hidden}.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.scene{background:#edf0f4;color:#0f1a2e;font-family:Barlow;font-weight:500}
+h1,h2,h3,.num{font-family:SairaC;font-weight:800;letter-spacing:.3px}
+.bar{position:absolute;left:0;right:0;top:0;height:76px;display:flex;align-items:center;padding:0 36px;gap:24px}
+.bar img.logo{height:50px}
+.tabs{display:flex;gap:6px;margin-left:24px;background:#dfe4eb;border-radius:24px;padding:4px}
+.tabs span{height:40px;padding:0 18px;border-radius:20px;display:grid;place-items:center;font-size:15px;color:#4a5568;font-weight:500}
+.tabs span.on{background:#fff;color:#0f1a2e;box-shadow:0 1px 2px rgba(15,26,46,.12)}
+.team{margin-left:auto;display:flex;align-items:center;gap:12px;background:#fff;border-radius:30px;padding:6px 16px 6px 8px;box-shadow:0 1px 2px rgba(15,26,46,.1)}
+.team b{font-family:SairaC;font-weight:800;font-size:18px;display:block;line-height:1}.team small{font-size:13px;color:#5b6678}
+.card{position:absolute;background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(15,26,46,.08),0 10px 28px rgba(15,26,46,.07);overflow:hidden}
+.photo{position:absolute;inset:0;background-size:cover;background-position:center}
+.scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,14,28,0) 30%,rgba(8,14,28,.82) 100%)}
+.kick{font-size:13px;letter-spacing:2.5px;font-weight:500}
+.btn{display:inline-flex;align-items:center;gap:10px;height:54px;padding:0 26px;border-radius:28px;font-family:SairaC;font-weight:800;font-size:20px;letter-spacing:.5px}
+.btn.red{background:#E10600;color:#fff}.btn.ghost{background:#eef1f5;color:#0f1a2e}
+.meta{display:flex;gap:8px;margin-top:14px}.meta span{background:rgba(255,255,255,.16);color:#fff;border-radius:16px;padding:6px 12px;font-size:14px}
+.drv{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #edf0f4}
+.drv .no{width:44px;height:44px;border-radius:12px;background:#1868DB;color:#fff;display:grid;place-items:center;font-family:SairaC;font-weight:800;font-size:20px}
+.drv b{display:block;font-size:17px;font-weight:600}.drv small{color:#5b6678;font-size:13px}
+.locked{display:flex;align-items:center;gap:14px;color:#8390a3;padding:0 22px;height:64px}
+.locked b{font-family:SairaC;font-weight:800;font-size:20px;color:#7a879a}.locked small{margin-left:auto;font-size:12px;letter-spacing:2px}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#8390a3}
+/* configuração */
+.steps{display:flex;align-items:center;gap:10px;margin-left:30px}
+.steps span{display:flex;align-items:center;gap:8px;font-size:15px;color:#5b6678}.steps i{font-style:normal;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#dfe4eb;font-family:SairaC;font-weight:800;font-size:15px}
+.steps span.on{color:#0f1a2e}.steps span.on i{background:#0f1a2e;color:#fff}.steps em{width:26px;height:2px;background:#cfd6e0}
+.list{padding:8px 0}.month{font-size:12px;letter-spacing:2.5px;color:#8390a3;padding:12px 20px 6px}
+.rrow{display:flex;align-items:center;gap:12px;height:50px;padding:0 20px;font-size:16px}
+.rrow .n{width:30px;font-family:SairaC;font-weight:800;color:#8390a3;font-size:17px}.rrow .d{margin-left:auto;color:#5b6678;font-size:14px}
+.rrow.on{background:#e8f0fc;box-shadow:inset 4px 0 0 #1868DB}.rrow.on .n{color:#1868DB}
+.chip{font-size:10px;letter-spacing:1.5px;border-radius:8px;padding:2px 7px;font-weight:700;flex:none;white-space:nowrap}.chip.s{background:#E10600;color:#fff}.chip.n{background:#1d2840;color:#ffd36b}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{background:#f4f6f9;border-radius:14px;padding:14px 16px}
+.tile .num{font-size:36px;line-height:1}.tile small{font-size:12px;letter-spacing:2px;color:#5b6678}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#5b6678;margin:18px 0 8px}
+.seg{display:flex;background:#eef1f5;border-radius:14px;padding:4px;gap:4px}.seg span{flex:1;height:44px;border-radius:11px;display:grid;place-items:center;font-size:16px;color:#4a5568}
+.seg span.on{background:#fff;color:#0f1a2e;box-shadow:0 1px 3px rgba(15,26,46,.15);font-weight:600}
+.wx{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.wx span{height:62px;border-radius:12px;background:#eef1f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13px;color:#4a5568}
+.wx span.on{background:#0f1a2e;color:#fff}
+</style></head><body><div class="scene">
+<div class="bar"><span style="width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 1px 2px rgba(15,26,46,.1)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f1a2e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
+<h2 style="font-size:30px">GRANDE PRÊMIO</h2><div class="steps"><span class="on"><i>1</i>Circuito</span><em></em><span class="on"><i>2</i>Equipe</span><em></em><span class="on"><i>3</i>Condições</span></div>
+<div class="team"><img src="../../game/assets/emblems/williams.svg" width="34"><div><b>WILLIAMS</b><small>Albon · Sainz</small></div><span style="margin-left:6px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5b6678" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></span></div></div>
+<div class="card" style="left:36px;top:92px;width:360px;height:596px"><div class="list"><div class="month">SETEMBRO</div><div class="rrow"><span class="n">14</span><span>GP de Madri</span><span class="d">13 Set</span></div><div class="rrow"><span class="n">15</span><span>GP do Azerbaijão</span><span class="d">26 Set</span></div><div class="month">OUTUBRO</div><div class="rrow"><span class="n">16</span><span>GP de Singapura</span><span class="chip s">SPRINT</span><span class="chip n">NOITE</span><span class="d">11 Out</span></div><div class="rrow"><span class="n">17</span><span>GP dos Estados Unidos</span><span class="d">25 Out</span></div><div class="month">NOVEMBRO</div><div class="rrow"><span class="n">18</span><span>GP da Cidade do México</span><span class="d">01 Nov</span></div><div class="rrow on"><span class="n">19</span><span>GP de São Paulo</span><span class="d">08 Nov</span></div><div class="rrow"><span class="n">20</span><span>GP de Las Vegas</span><span class="chip n">NOITE</span><span class="d">21 Nov</span></div><div class="rrow"><span class="n">21</span><span>GP do Catar</span><span class="chip n">NOITE</span><span class="d">29 Nov</span></div></div></div>
+<div class="card" style="left:412px;top:92px;width:448px;height:596px;padding:22px 24px">
+<div class="kick" style="color:#1868DB">RD 19 · 08 DE NOVEMBRO</div><h2 style="font-size:40px;line-height:1;margin:4px 0 2px">GP DE SÃO PAULO</h2>
+<div style="color:#5b6678;font-size:16px">Autódromo José Carlos Pace · Brasil</div>
+<div style="margin:10px auto 8px;width:300px"><svg width="300" height="250" viewBox="0 0 300 250"><circle cx="94.50946807498335" cy="172.47292796650487" r="8" fill="#E10600"/><polygon points="94.5,172.5 106.7,219.7 108.0,224.7 109.3,227.5 112.2,231.9 113.7,233.1 115.9,234.0 118.0,234.0 120.4,233.5 121.6,232.9 125.4,229.4 129.1,225.2 130.6,224.1 132.5,223.5 134.4,223.4 137.2,224.3 143.1,227.9 147.8,229.8 151.3,230.7 154.5,231.2 157.4,231.3 161.7,230.8 165.0,230.1 169.1,228.6 172.9,226.4 176.6,223.5 179.6,220.3 182.0,216.9 183.8,213.7 185.3,210.1 191.1,191.0 193.6,181.3 197.8,165.0 202.9,144.2 211.9,110.0 215.1,97.6 217.4,89.0 218.5,85.0 218.8,82.4 218.6,80.0 218.0,78.4 216.7,76.5 214.4,74.9 211.7,73.8 207.8,72.9 196.1,70.6 191.5,70.1 188.6,70.3 185.2,70.8 181.9,71.8 179.0,73.5 176.2,75.1 173.5,77.4 170.8,80.3 167.2,84.9 155.3,101.0 148.3,110.9 142.4,119.4 135.9,127.9 132.4,132.7 129.8,136.3 127.9,138.3 125.9,139.6 122.9,140.6 119.7,141.0 114.9,140.9 111.7,140.4 109.1,139.6 106.8,138.5 102.9,136.4 101.0,134.7 99.7,133.0 98.4,130.5 97.5,127.1 96.3,122.2 95.3,117.6 94.0,109.3 93.7,105.9 93.8,102.4 94.6,99.7 96.0,98.4 96.9,97.9 98.1,97.5 99.7,97.3 101.3,97.7 103.1,98.4 107.8,102.0 109.7,103.2 111.2,103.8 112.8,104.1 114.3,104.2 115.9,104.0 118.1,103.2 120.7,101.1 122.1,98.9 122.9,96.5 123.1,94.5 122.7,92.1 121.9,90.3 119.8,87.3 118.0,85.4 111.5,79.1 108.1,75.2 105.8,71.8 104.2,67.2 102.8,61.5 102.3,58.1 101.9,55.0 102.2,52.4 103.2,50.7 104.0,49.7 105.3,49.2 106.4,49.0 107.8,49.2 109.5,49.9 117.4,58.9 124.3,66.5 125.5,67.5 128.0,69.3 130.4,70.3 132.3,70.9 134.7,71.3 137.0,71.5 139.5,71.5 143.5,71.0 146.6,70.0 149.9,68.1 153.2,65.4 155.0,63.0 157.0,60.2 162.3,51.9 168.1,42.2 174.7,31.5 175.1,30.3 175.2,28.8 174.8,27.3 174.0,25.8 172.6,24.4 169.1,22.6 164.1,20.8 153.9,16.9 151.9,16.4 149.4,16.0 144.3,16.6 139.8,17.3 129.9,19.4 126.7,20.5 120.2,23.2 117.0,24.7 109.4,28.8 106.4,30.8 103.8,33.1 101.1,35.6 99.0,38.1 97.1,41.1 95.4,44.8 93.9,48.8 91.8,57.1 89.4,67.4 87.8,77.1 85.1,87.5 83.3,95.3 81.8,100.7 81.3,104.7 81.2,110.0 81.4,116.4 82.1,121.1 83.3,126.6 85.4,134.6 91.4,159.8" fill="none" stroke="#0f1a2e" stroke-width="8" stroke-linejoin="round"/></svg></div><div class="tiles"><div class="tile"><div class="num">4,309</div><small>KM</small></div><div class="tile"><div class="num">71</div><small>VOLTAS</small></div><div class="tile"><div class="num">35%</div><small>CHANCE DE CHUVA</small></div><div class="tile"><div class="num">MÉDIA</div><small>ULTRAPASSAGEM</small></div></div></div>
+<div class="card" style="left:876px;top:92px;width:368px;height:596px;padding:6px 24px 22px">
+<div class="lbl">DURAÇÃO DA CORRIDA</div><div class="seg"><span class="on">25% · 18 v</span><span>50%</span><span>100%</span></div>
+<div class="lbl">CLIMA</div><div class="wx"><span class="on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Realista</span><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Seco</span><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15a4 4 0 1 1 1-7.9A5 5 0 0 1 17.5 9 3.5 3.5 0 0 1 17 16H7"/><path d="M9 19l-1 2M13 19l-1 2M17 19l-1 2"/></svg>Chuva</span><span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M8 2v1M2 8h1M3.8 3.8l.7.7"/><path d="M10 17a3.5 3.5 0 1 1 .9-6.9A4.5 4.5 0 0 1 19.5 12 3 3 0 0 1 19 18H10"/></svg>Variável</span></div>
+<div class="lbl">FORMATO</div><div class="seg"><span class="on">Fim de semana</span><span>Só a corrida</span></div>
+<div style="margin-top:26px;background:#f4f6f9;border-radius:14px;padding:14px 16px;font-size:15px;line-height:1.5;color:#33415a"><b style="font-family:SairaC;font-size:17px">PROGRAMAÇÃO</b><br>Sexta · TL1, TL2<br>Sábado · TL3, Classificação<br>Domingo · Corrida</div>
+<span class="btn red" style="position:absolute;left:24px;right:24px;bottom:22px;justify-content:center;height:62px;font-size:22px">COMEÇAR FIM DE SEMANA <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span></div></div></body></html>
