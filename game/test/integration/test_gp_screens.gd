@@ -159,9 +159,9 @@ func test_criacao_de_equipe_valida_nome_sigla_e_pilotos() -> void:
 	await wait_process_frames(1)
 	assert_true(screen._next.disabled, "precisa de dois pilotos")
 	screen._toggle_driver("rafael_camara")
-	screen._toggle_driver("colton_herta")
+	screen._toggle_driver("gabriele_mini")
 	assert_false(screen._next.disabled)
-	assert_eq(screen.spec["drivers"], ["rafael_camara", "colton_herta"])
+	assert_eq(screen.spec["drivers"], ["rafael_camara", "gabriele_mini"])
 	screen._toggle_driver("rafael_camara")
 	assert_true(screen._next.disabled, "tocar de novo tira o piloto")
 

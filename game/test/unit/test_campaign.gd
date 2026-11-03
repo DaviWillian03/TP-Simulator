@@ -3,7 +3,7 @@ extends GutTest
 
 const SPEC := {"origin": "manufacturer", "name": "Aurora Racing", "short": "aur", "color": "#0E7C66", "color2": "#F2A900",
 	"shape": "hex", "country": "Brasil", "engine": "Ferrari", "objective": {"id": "win"}, "detail": "essential",
-	"ai_difficulty": "normal", "drivers": ["rafael_camara", "colton_herta"]}
+	"ai_difficulty": "normal", "drivers": ["rafael_camara", "gabriele_mini"]}
 
 
 func test_base_de_pilotos_da_f2_e_f3_e_valida() -> void:
@@ -37,7 +37,7 @@ func test_equipe_criada_entra_como_12a_com_24_carros() -> void:
 		numbers[int(d["number"])] = true
 	assert_eq(numbers.size(), 24, "números de carro sem repetição")
 	var mine := c.drivers().filter(func(d: Dictionary) -> bool: return d["team"] == Campaign.CUSTOM_ID)
-	assert_eq(mine.map(func(d: Dictionary) -> String: return d["code"]), ["CAM", "HER"])
+	assert_eq(mine.map(func(d: Dictionary) -> String: return d["code"]), ["CAM", "MIN"])
 
 
 func test_origem_define_as_condicoes_iniciais() -> void:
@@ -164,6 +164,8 @@ func test_falencia_com_caixa_negativo() -> void:
 func test_demissao_quando_a_confianca_acaba() -> void:
 	var c := Campaign.new_created(SPEC.merged({"origin": "investor", "ai_difficulty": "hard"}, true))
 	c.trust = 0.3
+	c.base_rating = 60.0  # carro bem lento: resultado ruim garantido (o teste é da regra, não do equilíbrio)
+	c.refresh_rating()
 	_played(c, 1)
 	assert_eq(c.state, "fired")
 

@@ -65,6 +65,9 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	teams = options.get("teams", GameData.teams())  # campanha: grid com a equipe criada
 	drivers = options.get("drivers", GameData.drivers())
 	player_team = options.get("player_team", "")
+	seed_value = int(options.get("seed", 1))
+	# forma do fim de semana: cada equipe chega um pouco acima/abaixo da nota do carro (CarForm); "form": 0 desliga
+	teams = CarForm.apply(teams, circuit_id, seed_value, float(options.get("form", 1.0)))
 	duration_pct = float(options.get("duration_pct", 1.0))
 	weather_mode = options.get("weather", "realistic")
 	race_only = options.get("format", "full") == "race_only"

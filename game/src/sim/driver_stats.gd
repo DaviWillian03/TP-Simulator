@@ -9,7 +9,7 @@ const NAMES := {"pace": "Ritmo de corrida", "quali": "Classificação", "consist
 	"wet": "Chuva", "tyres": "Gestão de pneus"}
 const WEIGHTS := {"pace": 0.30, "quali": 0.15, "consistency": 0.15, "racecraft": 0.20, "wet": 0.10, "tyres": 0.10}
 ## Quanto cada ponto de atributo pesa na simulação
-const RACECRAFT_K := 0.012  ## s por volta de vantagem por ponto de diferença entre atacante e defensor
+const RACECRAFT_K := 0.009  ## s por volta de vantagem por ponto de diferença entre atacante e defensor
 const QUALI_K := 0.010  ## s na volta lançada por ponto de (classificação − ritmo)
 const WET_K := 0.012  ## fração do tempo perdido na chuva por ponto abaixo de 80
 const TYRE_K := 0.004  ## fração do desgaste por ponto abaixo/acima de 75

@@ -1,5 +1,5 @@
 {
- "_notas": "Origens da equipe criada (proposta P10 aprovada). Valores de dinheiro, fábrica, nota do carro e dívida são PROVISÓRIOS até o balanceamento da campanha.",
+ "_notas": "Origens da equipe criada (proposta P10 aprovada). Valores de dinheiro, fábrica, nota do carro e dívida são PROVISÓRIOS até o balanceamento da campanha. Notas do carro na escala comprimida de 2026-11-03 (grid real de 79 a 90).",
  "origins": [
   {
    "id": "garage",
@@ -9,7 +9,7 @@
    "debt_musd": 0,
    "factory_level": 1,
    "own_engine": false,
-   "car_rating": 74,
+   "car_rating": 77,
    "board_patience": 5,
    "morale": 4,
    "difficulty": "Difícil",
@@ -32,7 +32,7 @@
    "debt_musd": 0,
    "factory_level": 3,
    "own_engine": false,
-   "car_rating": 79,
+   "car_rating": 82,
    "board_patience": 1,
    "morale": 4,
    "difficulty": "Média",
@@ -55,7 +55,7 @@
    "debt_musd": 0,
    "factory_level": 3,
    "own_engine": true,
-   "car_rating": 78,
+   "car_rating": 81,
    "board_patience": 2,
    "morale": 4,
    "difficulty": "Média",
@@ -78,7 +78,7 @@
    "debt_musd": 60,
    "factory_level": 3,
    "own_engine": false,
-   "car_rating": 77,
+   "car_rating": 80,
    "board_patience": 3,
    "morale": 2,
    "difficulty": "Difícil",

@@ -49,8 +49,6 @@ func setup(sim: RaceSim) -> void:
 	if not muted:
 		_bed.play()
 		_crowd.play(rng.randf() * 5.0)
-	if sim.time_s < 1.0:
-		_start_lights()
 
 
 func _sim() -> RaceSim:
@@ -139,13 +137,14 @@ func _on_pit_stop(car: CarState, _compound: String, _stationary: float) -> void:
 		get_tree().create_timer(0.45).timeout.connect(func() -> void: play("pit_gun", -4.0, 1.08))
 
 
-## Semáforo: cinco luzes e a largada (só som; a simulação não espera).
-func _start_lights() -> void:
-	for i in 5:
-		get_tree().create_timer(0.15 + i * 0.35).timeout.connect(func() -> void: play("light", -6.0))
-	get_tree().create_timer(0.15 + 5 * 0.35 + 0.2).timeout.connect(func() -> void:
-		play("go", -4.0)
-		play("cheer", -6.0))
+## Semáforo (a tela de corrida chama a cada luz e na largada, sincronizado com o desenho).
+func light_on() -> void:
+	play("light", -6.0)
+
+
+func lights_out() -> void:
+	play("go", -4.0)
+	play("cheer", -6.0)
 
 
 func _loop(sound: String) -> AudioStreamWAV:

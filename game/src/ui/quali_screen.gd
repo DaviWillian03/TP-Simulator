@@ -193,18 +193,6 @@ func _player_panel(car: CarState) -> Control:
 	photo.custom_minimum_size = Vector2(CarControlPanel.PHOTO, CarControlPanel.PHOTO)
 	photo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	photo.add_child(DriverPhotos.make_avatar(car.driver, car.team_color(), CarControlPanel.PHOTO))
-	var chip := PanelContainer.new()
-	chip.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.RED, 9, 6, 0))
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var pos := UiStyle.g_label("P–", 14, Color.WHITE, "black")
-	pos.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_child(pos)
-	photo.add_child(chip)
-	chip.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	chip.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	chip.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	chip.offset_right = 6
-	chip.offset_bottom = 3
 	var logo := TeamEmblems.make_rect(String(car.team["id"]), 26)
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	photo.add_child(logo)
@@ -232,6 +220,14 @@ func _player_panel(car: CarState) -> Control:
 	surname.clip_text = true
 	surname.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	names.add_child(surname)
+	var pos_row := HBoxContainer.new()
+	pos_row.add_theme_constant_override("separation", 6)
+	var pos := UiStyle.g_label("P–", 17, UiStyle.RED, "black")
+	pos_row.add_child(pos)
+	var num := UiStyle.g_label("#%d" % int(car.driver["number"]), 12, UiStyle.G_TEXT_3, "bold")
+	num.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pos_row.add_child(num)
+	names.add_child(pos_row)
 	var status := UiStyle.g_label("", 12, UiStyle.G_TEXT_2, "bold")
 	status.clip_text = true
 	status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -375,7 +371,7 @@ func _refresh_panel(p: Dictionary, order: Array[CarState]) -> void:
 	var state := q.status_of(car)
 	var garage := state == "Garagem"
 	var running := state in ["Volta de saída", "Volta lançada", "Volta de entrada"]
-	(p["status"] as Label).text = "#%d · %s" % [int(car.driver["number"]), state]
+	(p["status"] as Label).text = state
 	var lap: Label = p["lap"]
 	var bar: ProgressBar = p["bar"]
 	bar.visible = running

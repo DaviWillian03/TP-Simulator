@@ -42,7 +42,9 @@ das escolhas técnicas.
   zoom só por pinça. A pista mostra corrida ou classificação via `TrackFeed` (adaptador). Corrida e classificação usam a pista em
   tela cheia com painéis de vidro (`UiStyle.G_GLASS`, `ScreenKit.top_shade`/`glass_*`); radar de chuva fica em Dados > Clima.
 - `src/core/session.gd` — autoload `Session` (escolhas do menu + opções de desenvolvimento).
-- `test/unit`, `test/integration` — GUT. `tools/race_report.gd` — relatório de corridas simuladas.
+- `test/unit`, `test/integration` — GUT. `tools/race_report.gd` — relatório de corridas simuladas. `tools/balance_report.gd` —
+  calibra carro × piloto × resto (meta 55/25/20; `--incidents=0 --weather=dry`). `CarForm` = forma da equipe em cada GP.
+- Notas: pilotos F1 em `tools/enrich_drivers.py` (PROFILE), base/agentes livres em `tools/rescale_feeder_ratings.py`, carros em `tools/enrich_teams.py`.
 - Raiz: `tools/make_logo.py` (logo), `tools/make_emblems.py` (emblemas), `tools/make_car_art.py`
   (carro ilustrado por equipe), `tools/make_icons.py` (ícones), `tools/geojson_to_track.py`.
 - `design/mockups/` — mockups HTML (gerador `build.py`). **Tela nova = mockup primeiro**, usuário

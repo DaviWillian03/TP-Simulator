@@ -1,7 +1,7 @@
 """Acrescenta dados reais às equipes de game/data/teams_2026.json: chefe de equipe, diretor técnico, ano de
 fundação (estreia na F1 com este nome/estrutura) e títulos de construtores até o fim de 2025.
 Chefes de equipe: RacingNews365 (14/01/2026). Diretor técnico: só onde há fonte recente (RacingNews365/PlanetF1/ESPN em 2026).
-Nota do carro (car_rating) = 74 + 19 * raiz(pontos / pontos do líder) com os pontos de construtores da ESPN após 20 rodadas
+Nota do carro (car_rating) = 79 + 11 * raiz(pontos / pontos do líder)^0,75 (escala comprimida a pedido do usuário: mais equilibrada, estilo 2012) com os pontos de construtores da ESPN após 20 rodadas
 (tools/research/snapshot_2026-11-02.json). O que não tem fonte fica null ("—" no jogo). Uso: python tools/enrich_teams.py
 """
 import json
@@ -33,7 +33,7 @@ for t in d["teams"]:
     t["debut"] = debut
     t["constructors_titles"] = titles
     lead = max(SNAP["team_points"].values())
-    t["car_rating"] = round(74 + 19 * math.sqrt(SNAP["team_points"][t["id"]] / lead), 1)
+    t["car_rating"] = round(79 + 11 * math.sqrt(SNAP["team_points"][t["id"]] / lead) ** 0.75, 1)  # escala comprimida (2026-11-03): ~79 a 90
     t["points_2026"] = SNAP["team_points"][t["id"]]
 d["_notas"] = ("Nomes reais por decisão do usuário; sem logos oficiais. car_rating = função dos pontos de construtores de 2026 após 20 rodadas (pesquisa 02/11/2026). "
                "principal/technical_director/debut/constructors_titles: só dados com fonte; null = a verificar. 'emblem' = emblema ORIGINAL.")

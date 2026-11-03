@@ -376,3 +376,23 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   McLaren **laranja** `#FF8000` (caía no preto porque o laranja passa do limite de luminância); Racing Bulls **azul-marinho** `#26398C`
   (melhor contraste com o logo branco e distinto da Red Bull e da Williams; testado contra vermelho, azul real e azul escuro).
 - Os logos das equipes voltaram nos cartões dos pilotos (canto da foto) e na tabela da classificação. Nos marcadores da pista 3D continua o número.
+
+### Equilíbrio de forças, notas, incidentes, largada e pódio (2026-11-03)
+- **Notas dos pilotos (definidas pelo usuário)**: Verstappen 96, Leclerc 93, Hamilton 92, Antonelli 90, Alonso 89, Norris 88,
+  Russell 87, Bearman 85, Sainz 84, Piastri 83, Gasly 81, Hadjar/Hülkenberg/Pérez 80, Albon 79, Bortoleto/Ocon 78, Lawson 77,
+  Lindblad/Bottas 75, Colapinto/Stroll 74. Atributos por perfil (reputação + estatísticas de carreira) em `tools/enrich_drivers.py`,
+  com média ponderada exatamente igual à nota.
+- **Base e outras categorias** (`tools/rescale_feeder_ratings.py`): F2 64–78, F3 50–70 (escolha do usuário), IndyCar/WEC/FE topo 84,
+  mediana ~78, piores abaixo de 74. Colton Herta saiu da F2 (é da IndyCar; já está nos agentes livres).
+- **Carros mais equilibrados (estilo 2012)**: escala 79–90 (`tools/enrich_teams.py`); `CarForm` dá a cada equipe uma forma por GP
+  (variação normal, afinidade com a pista e 20% de chance de fim de semana muito bom/ruim). Pesos calibrados com
+  `tools/balance_report.gd` (Shapley do R² da posição final): **sem incidentes, seco: carro 53,6% · piloto 23,6% · resto 22,7%**
+  (alvo 55/25/20). Com incidentes e clima, Alpine, Haas e Racing Bulls venceram corridas em 30 GPs de teste.
+  `CAR_K` 0,07→0,105, `DRIVER_K` 0,035→0,019, `RACECRAFT_K` 0,012→0,009. Equipe criada: 77–82 na nova escala.
+- **Mais erros e quebras**: erros de piloto 0,0013→0,0024 por volta (novo: travada/escapada com pneu "quadrado"; rodadas danificam a asa
+  com mais frequência; escapadas podem danificar o assoalho); quebras 0,0004→0,0018, 35% delas parciais (o carro segue mais lento até
+  o fim). Resultado na seca: ~2,5 abandonos por corrida (0 a 5).
+- **5 luzes de largada** (`StartLights`): acendem uma a uma, espera variável e apagam — só então a corrida começa (som sincronizado).
+- **Bandeira quadriculada** ao lado do nome na torre para quem recebeu a bandeirada.
+- **Pódio animado** (`PodiumView`): 3º, 2º e vencedor sobem nos degraus com foto, logo e confete; botão leva ao resultado completo.
+- Correção: a herança de desenvolvimento da IA na virada era calculada equipe por equipe, mudando a ordem das seguintes; agora calcula tudo antes.

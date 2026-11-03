@@ -120,5 +120,5 @@ func test_dados_pesquisados_de_2026_estao_nos_pilotos_e_equipes() -> void:
 	assert_eq(int(_driver("hamilton")["career"]["wins"]), 106)
 	var mercedes := GameData.team_by_id(GameData.teams(), "mercedes")
 	var cad := GameData.team_by_id(GameData.teams(), "cadillac")
-	assert_gt(float(mercedes["car_rating"]), float(cad["car_rating"]) + 15.0)
+	assert_gt(float(mercedes["car_rating"]), float(cad["car_rating"]) + 9.0, "escala comprimida (2026-11-03): ~79 a 90")
 	assert_eq(GameData.team_by_id(GameData.teams(), "astonmartin")["principal"], "Adrian Newey")

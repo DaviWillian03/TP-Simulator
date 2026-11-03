@@ -609,9 +609,14 @@ func start_next_season() -> void:
 	ledger = {}
 	cash_log = [{"r": 0, "cash": budget_musd}]
 	var cfg: Dictionary = origins_data()["rivals"]
-	for t: Dictionary in _teams:  # a IA guarda parte do que desenvolveu neste ano
+	# a IA guarda parte do que desenvolveu neste ano. Calcula tudo antes de gravar: o potencial depende da
+	# posição de cada equipe, e gravar uma por uma mudava a ordem das que vinham depois (carros mais próximos).
+	var potentials := {}
+	for t: Dictionary in _teams:
 		if t["id"] != player_team:
-			rival_carry[t["id"]] = (float(rival_carry.get(t["id"], 0.0)) + rival_potential(t["id"])) * float(cfg["carry"])
+			potentials[t["id"]] = rival_potential(t["id"])
+	for tid: String in potentials:
+		rival_carry[tid] = (float(rival_carry.get(tid, 0.0)) + float(potentials[tid])) * float(cfg["carry"])
 	season += 1
 	round = 0
 	driver_points = {}

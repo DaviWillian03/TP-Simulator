@@ -38,8 +38,8 @@ const MODE_UPDATE_S := 2.0
 const TRACE_STEP_M := 5.0
 
 ## Escalas de desempenho (PROVISÓRIAS até a definição dos atributos)
-const CAR_K := 0.07  ## s/volta por ponto de nota do carro abaixo de 100
-const DRIVER_K := 0.035  ## s/volta por ponto de nota do piloto abaixo de 100
+const CAR_K := 0.105  ## s/volta por ponto de nota do carro abaixo de 100 (calibrado: ~55% do resultado, tools/balance_report.gd)
+const DRIVER_K := 0.019  ## s/volta por ponto de ritmo do piloto abaixo de 100 (calibrado: ~25% do resultado)
 const FUEL_START_S := 3.0  ## carro cheio de combustível é ~3 s/volta mais lento
 const LAP_NOISE_SIGMA := 0.12
 const WET_TRACK_S := 4.0  ## pista totalmente molhada deixa todos ~4 s/volta mais lentos
@@ -464,7 +464,7 @@ func _lap_time(car: CarState, with_traffic: bool) -> float:
 	t -= PitStop.WING_LAP_S * car.wing_step
 	if car.energy_mode != CarState.EnergyMode.DEPLOY or car.battery > 0.0:
 		t += ENERGY_TIME[car.energy_mode]
-	t += car.damage_wing * RaceControl.WING_PENALTY_S + car.damage_floor * RaceControl.FLOOR_PENALTY_S
+	t += car.damage_wing * RaceControl.WING_PENALTY_S + car.damage_floor * RaceControl.FLOOR_PENALTY_S + car.power_loss_s
 	t += radio.confidence_delta_s(car)
 	if with_traffic:
 		t += car.lap_noise

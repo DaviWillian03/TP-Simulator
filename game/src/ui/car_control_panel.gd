@@ -16,6 +16,7 @@ var car: CarState
 
 var _pos_label: Label
 var _sub_label: Label
+var _num_label: Label
 var _tyre_badge: TyreBadge
 var _tyre_label: Label
 var _life_bar: StandingsPanel.LifeBar
@@ -42,25 +43,13 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	# cabeça: foto, sobrenome, #número · diferenças, posição
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 10)
-	# foto com a posição num selo no canto (assim o sobrenome ganha a largura toda)
+	# foto com o logo da equipe no canto
 	var photo := Control.new()
 	photo.custom_minimum_size = Vector2(PHOTO, PHOTO)
 	photo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var face := DriverPhotos.make_avatar(car.driver, car.team_color(), PHOTO)
 	photo.add_child(face)
-	var chip := PanelContainer.new()
-	chip.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.RED, 9, 6, 0))
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pos_label = UiStyle.g_label("P–", 14, Color.WHITE, "black")
-	_pos_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chip.add_child(_pos_label)
-	photo.add_child(chip)
-	chip.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	chip.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	chip.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	chip.offset_right = 6
-	chip.offset_bottom = 3
-	# logo da equipe no canto oposto ao da posição
+	# logo da equipe no canto da foto (a posição fica ao lado do nome, não em cima do rosto)
 	var logo := TeamEmblems.make_rect(String(car.team["id"]), 26)
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	photo.add_child(logo)
@@ -78,6 +67,15 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	surname.clip_text = true
 	surname.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	names.add_child(surname)
+	# linha da posição (vermelha, grande) + número do piloto, e embaixo as diferenças
+	var pos_row := HBoxContainer.new()
+	pos_row.add_theme_constant_override("separation", 6)
+	_pos_label = UiStyle.g_label("P–", 17, UiStyle.RED, "black")
+	pos_row.add_child(_pos_label)
+	_num_label = UiStyle.g_label("", 12, UiStyle.G_TEXT_3, "bold")
+	_num_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pos_row.add_child(_num_label)
+	names.add_child(pos_row)
 	_sub_label = UiStyle.g_label("", 12, UiStyle.G_TEXT_2, "bold")
 	_sub_label.clip_text = true
 	_sub_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -200,7 +198,8 @@ func _segment(options: Array, selected: int, store: Dictionary, on_pick: Callabl
 
 func refresh(race_position: int) -> void:
 	_pos_label.text = "P%d" % race_position
-	_sub_label.text = "#%d · %s" % [int(car.driver["number"]), _gaps_text(race_position)]
+	_num_label.text = "#%d" % int(car.driver["number"])
+	_sub_label.text = _gaps_text(race_position)
 	var c: Dictionary = sim.tyres.compounds[car.tyre]
 	_tyre_badge.set_compound(c["letter"], Color(c["color"]))
 	_tyre_label.text = "%s · %dv" % [c["name"], car.tyre_laps]
@@ -217,6 +216,10 @@ func refresh(race_position: int) -> void:
 	var hints: Array[String] = []
 	if car.damage_wing > 0.0:
 		hints.append("Asa −%d%%" % roundi(car.damage_wing * 100.0))
+	if car.damage_floor > 0.0:
+		hints.append("Assoalho −%d%%" % roundi(car.damage_floor * 100.0))
+	if car.power_loss_s > 0.0:
+		hints.append("Problema mecânico: −%s s/volta" % String.num(car.power_loss_s, 1).replace(".", ","))
 	if not (car.finished or car.retired or sim.compound_rule_ok(car)):
 		hints.append("Falta usar outro composto seco.")
 	_hint_label.text = " · ".join(hints)

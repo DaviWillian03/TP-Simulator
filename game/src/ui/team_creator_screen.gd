@@ -712,6 +712,8 @@ func _fill_slots() -> void:
 			for f: Dictionary in Campaign.feeder_drivers():
 				if f["id"] == chosen[i]:
 					d = f
+			if d.is_empty():  # piloto que saiu da lista (ex.: dados atualizados): o lugar fica vago
+				continue
 			var b := Button.new()
 			b.focus_mode = Control.FOCUS_NONE
 			b.custom_minimum_size = Vector2(0, 96)

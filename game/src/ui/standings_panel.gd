@@ -126,7 +126,7 @@ func _make_row(index: int) -> Dictionary:
 	name_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_box.add_child(name_l)
 	var icons := {}
-	for kind: String in ["fastest", "investigation", "penalty", "camera"]:
+	for kind: String in ["finished", "fastest", "investigation", "penalty", "camera"]:
 		var ic := StatusIcon.new()
 		ic.kind = kind
 		ic.visible = false
@@ -203,6 +203,7 @@ func refresh() -> void:
 		icons["investigation"].visible = not car.investigation.is_empty() and not retired
 		icons["penalty"].visible = (car.penalty_pending_s > 0.0 or car.drive_through) and not retired
 		icons["camera"].visible = focus
+		icons["finished"].visible = car.finished and not car.disqualified  # recebeu a bandeirada
 		var tag: Label = row["tag"]
 		var state := "DSQ" if car.disqualified else ("" if retired else ("BOX" if car.in_pit else ("RODOU" if car.stall_s > 0.0 else "")))
 		tag.visible = state != "" or retired
@@ -268,6 +269,14 @@ class StatusIcon:
 				draw_circle(c, 7.0, Color("#E10600"), true, -1.0, true)
 				draw_line(c + Vector2(0, -3.5), c + Vector2(0, 1.0), Color.WHITE, 1.8, true)
 				draw_circle(c + Vector2(0, 3.8), 1.0, Color.WHITE)
+			"finished":  # bandeira quadriculada: já recebeu a bandeirada
+				draw_line(c + Vector2(-6, -7), c + Vector2(-6, 7.5), Color(UiStyle.G_LIGHT), 1.6, true)
+				var cell := 3.0
+				for row in 3:
+					for col in 4:
+						var on := (row + col) % 2 == 0
+						draw_rect(Rect2(c + Vector2(-5.2 + col * cell, -7 + row * cell), Vector2(cell, cell)), Color.WHITE if on else Color("#11141a"))
+				draw_rect(Rect2(c + Vector2(-5.2, -7), Vector2(4 * cell, 3 * cell)), Color(UiStyle.G_LIGHT), false, 1.0)
 			"camera":  # em foco
 				draw_rect(Rect2(c + Vector2(-7, -3.5), Vector2(14, 9)), Color(UiStyle.G_LIGHT), false, 1.6)
 				draw_circle(c + Vector2(0, 1), 2.4, Color(UiStyle.G_LIGHT), false, 1.6, true)

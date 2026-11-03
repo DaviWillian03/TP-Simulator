@@ -2,13 +2,15 @@ class_name RaceControl
 extends RefCounted
 ## Direção de prova: incidentes, quebras, toques, bandeiras (safety car, VSC, vermelha)
 ## e comissários (punições). As chances são PROVISÓRIAS e calibradas para o nível
-## "realista" escolhido pelo usuário: na seca, safety car em ~metade das corridas e
-## 1–3 abandonos; na chuva, bem mais.
+## "realista" escolhido pelo usuário, com mais erros e quebras a pedido dele (2026-11-03): na seca, ~2–3
+## abandonos por corrida, várias rodadas/escapadas e algum carro perdendo ritmo por problema mecânico.
 
 enum Flag { GREEN, SC, VSC, RED }
 
-const INCIDENT_PER_LAP := 0.0013  ## chance base de rodada/batida por carro por volta
-const FAILURE_PER_LAP := 0.0004  ## chance base de quebra por carro por volta
+const INCIDENT_PER_LAP := 0.0024  ## chance base de erro do piloto (travada, rodada, batida) por carro por volta
+const FAILURE_PER_LAP := 0.0018  ## chance base de problema mecânico por carro por volta
+const PARTIAL_FAILURE_SHARE := 0.35  ## parte dos problemas que não tira o carro da prova, só tira ritmo
+const POWER_LOSS_S := Vector2(0.25, 0.9)  ## perda por volta numa quebra parcial (até o fim da corrida)
 const INVESTIGATION_MIN_S := 45.0  ## investigação dura de ~45 s a ~2 min
 const INVESTIGATION_MAX_S := 120.0
 const CONTACT_CHANCE := 0.003  ## chance de toque numa tentativa de ultrapassagem (há centenas por corrida)
@@ -147,13 +149,19 @@ func on_leader_lap(lap: int) -> void:
 
 func _incident(car: CarState) -> void:
 	var roll := sim.rng.randf()
-	if roll < 0.6:
+	if roll < 0.3:
+		# travada / escapada: perde pouco tempo, mas o pneu fica "quadrado" (gasta mais dali para a frente)
+		var small := sim.rng.randf_range(1.0, 3.0)
+		car.stall_s = small
+		car.tyre_wear = minf(1.0, car.tyre_wear + sim.rng.randf_range(0.04, 0.1))
+		sim.incident.emit(car, "lockup", "%s trava os pneus e escapa (%.1f s)" % [car.display_name(), small])
+	elif roll < 0.65:
 		var loss := sim.rng.randf_range(3.0, 9.0)
 		car.stall_s = loss
-		if sim.rng.randf() < 0.25:
-			car.damage_wing = minf(1.0, car.damage_wing + sim.rng.randf_range(0.1, 0.3))
+		if sim.rng.randf() < 0.4:
+			car.damage_wing = minf(1.0, car.damage_wing + sim.rng.randf_range(0.1, 0.35))
 		sim.incident.emit(car, "spin", "%s roda e perde %.0f s" % [car.display_name(), loss])
-	elif roll < 0.82:
+	elif roll < 0.83:
 		sim.retire_car(car, "batida")
 		sim.incident.emit(car, "crash", "%s bate e abandona!" % car.display_name())
 		var neut := sim.rng.randf()
@@ -167,12 +175,21 @@ func _incident(car: CarState) -> void:
 			deploy_vsc("Batida de %s" % car.display_name())
 	else:
 		car.stall_s = sim.rng.randf_range(2.0, 4.0)
-		car.damage_wing = minf(1.0, car.damage_wing + sim.rng.randf_range(0.3, 0.7))
-		sim.incident.emit(car, "damage", "%s sai da pista e danifica a asa" % car.display_name())
+		if sim.rng.randf() < 0.5:
+			car.damage_wing = minf(1.0, car.damage_wing + sim.rng.randf_range(0.3, 0.7))
+			sim.incident.emit(car, "damage", "%s sai da pista e danifica a asa" % car.display_name())
+		else:
+			car.damage_floor = minf(1.0, car.damage_floor + sim.rng.randf_range(0.3, 0.6))
+			sim.incident.emit(car, "damage", "%s passa por cima da zebra e danifica o assoalho" % car.display_name())
 
 
 func _failure(car: CarState) -> void:
 	var what: String = ["motor", "câmbio", "sistema híbrido", "freios", "hidráulica"][sim.rng.randi() % 5]
+	if car.power_loss_s <= 0.0 and sim.rng.randf() < PARTIAL_FAILURE_SHARE:
+		# quebra parcial: segue na prova, mas mais lento até o fim (não se conserta no box)
+		car.power_loss_s = sim.rng.randf_range(POWER_LOSS_S.x, POWER_LOSS_S.y)
+		sim.incident.emit(car, "issue", "%s com problema de %s: perde %.1f s por volta" % [car.display_name(), what, car.power_loss_s])
+		return
 	sim.retire_car(car, "quebra: " + what)
 	sim.incident.emit(car, "failure", "%s abandona: problema de %s" % [car.display_name(), what])
 	if sim.rng.randf() < 0.5:

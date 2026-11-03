@@ -39,6 +39,7 @@ var _results_shown := false
 var _pit: PitScreen = null
 var _tap: PitTapOverlay = null
 var _scale_before_stop := 0.0  ## velocidade antes de a parada forçar 1×
+var _start_lights: StartLights = null  ## semáforo antes da largada (a corrida espera as luzes apagarem)
 
 
 func _ready() -> void:
@@ -76,7 +77,10 @@ func _ready() -> void:
 	_refresh_ui()
 	if Session.debug_pit or Session.debug_tap:
 		_debug_pit_state()
-	_toasts.push("Luzes apagadas! %d voltas em %s." % [sim.total_laps, sim.track.short_name])
+	if sim.time_s < 0.5 and Session.debug_advance_s <= 0.0 and not sim.is_over():
+		_begin_start_lights()
+	else:
+		_toasts.push("Luzes apagadas! %d voltas em %s." % [sim.total_laps, sim.track.short_name])
 	if sim.is_over():  # (só acontece quando a corrida foi avançada antes de abrir a tela)
 		_on_race_finished()
 
@@ -334,8 +338,24 @@ func _sync_speed() -> void:
 		b.disabled = (_pit != null or _tap != null) and float(b.get_meta("value")) > PIT_MAX_SCALE
 
 
+## Cinco luzes vermelhas acendem uma a uma; depois de uma espera curta e variável, apagam e a corrida começa.
+func _begin_start_lights() -> void:
+	_start_lights = StartLights.new()
+	_layer.add_child(_start_lights)
+	_start_lights.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_start_lights.position.y = SIDE_TOP + 8.0
+	_start_lights.light_on.connect(func(_i: int) -> void: _audio.light_on())
+	_start_lights.lights_out.connect(func() -> void:
+		_audio.lights_out()
+		_toasts.push("Luzes apagadas! %d voltas em %s." % [sim.total_laps, sim.track.short_name], "hot"))
+	_start_lights.finished.connect(func() -> void: _start_lights = null)
+	_start_lights.start(sim.rng.randf_range(0.4, 1.6))
+
+
 func _process(delta: float) -> void:
-	if not paused and not sim.is_over():
+	if _start_lights != null and not _start_lights.is_out():
+		pass  # grid parado esperando as luzes apagarem
+	elif not paused and not sim.is_over():
 		sim.advance(delta * time_scale)
 	_refresh_timer -= delta
 	if _refresh_timer <= 0.0:
@@ -462,7 +482,7 @@ func _on_fastest_lap(car: CarState, lap_time: float) -> void:
 
 
 func _on_incident(car: CarState, kind: String, text: String) -> void:
-	var important := car.is_player or kind in ["crash", "failure", "contact", "investigation", "cleared"] or sim.standings().find(car) < 5
+	var important := car.is_player or kind in ["crash", "failure", "issue", "contact", "investigation", "cleared"] or sim.standings().find(car) < 5
 	if important:
 		_toasts.push(text, "hot" if car.is_player or kind == "crash" else "note")
 
@@ -491,7 +511,21 @@ func _on_race_finished() -> void:
 		return
 	_results_shown = true
 	_refresh_ui()
-	_layer.add_child(_build_results())
+	_radio.visible = false
+	_drawer.visible = false
+	# pódio animado primeiro (com a torcida); o botão dele abre a tabela completa
+	var order := sim.standings()
+	var top3: Array[CarState] = []
+	for car in order:
+		if top3.size() < 3 and car.finished and not car.disqualified:
+			top3.append(car)
+	if top3.is_empty() or Session.debug_skip_podium:
+		_layer.add_child(_build_results())
+		return
+	var podium := PodiumView.new()
+	_layer.add_child(podium)
+	podium.setup(top3, ("Sprint · " if sim.sprint else "") + sim.track.grand_prix)
+	podium.done.connect(func() -> void: _layer.add_child(_build_results()))
 
 
 func _notification(what: int) -> void:

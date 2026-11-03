@@ -8,7 +8,8 @@
    "https://www.fiaformula3.com/Latest/3MAShT6egzdnblU3uFaLk2/2026-fia-formula-3-season-everything-you-need-to-know-about-calendar-drivers"
   ],
   "fora": "Assentos com fontes divergentes ficaram de fora (F2: 2º carro Van Amersfoort; F3: 3º carro Rodin, Prema e AIX).",
-  "provisorio": "rating, nacionalidades e equipes são PROVISÓRIOS (conferir na pesquisa de atributos); números não definidos."
+  "provisorio": "nacionalidades e equipes são PROVISÓRIOS (conferir na pesquisa de atributos); notas reescaladas em 2026-11-03.",
+  "rescalado": "2026-11-03: F2 64-78, F3 50-70 (pedido do usuário); ordem por avaliação do projeto."
  },
  "drivers": [
   {
@@ -17,7 +18,7 @@
    "nationality": "Brasil",
    "category": "F2",
    "series_team": "Invicta Racing",
-   "rating": 79
+   "rating": 78
   },
   {
    "id": "joshua_durksen",
@@ -25,7 +26,7 @@
    "nationality": "Paraguai",
    "category": "F2",
    "series_team": "Invicta Racing",
-   "rating": 77
+   "rating": 74
   },
   {
    "id": "ritomo_miyata",
@@ -33,15 +34,7 @@
    "nationality": "Japão",
    "category": "F2",
    "series_team": "Hitech",
-   "rating": 76
-  },
-  {
-   "id": "colton_herta",
-   "name": "Colton Herta",
-   "nationality": "Estados Unidos",
-   "category": "F2",
-   "series_team": "Hitech",
-   "rating": 81
+   "rating": 73
   },
   {
    "id": "noel_leon",
@@ -49,7 +42,7 @@
    "nationality": "México",
    "category": "F2",
    "series_team": "Campos Racing",
-   "rating": 75
+   "rating": 71
   },
   {
    "id": "nikola_tsolov",
@@ -57,7 +50,7 @@
    "nationality": "Bulgária",
    "category": "F2",
    "series_team": "Campos Racing",
-   "rating": 77
+   "rating": 74
   },
   {
    "id": "dino_beganovic",
@@ -65,7 +58,7 @@
    "nationality": "Suécia",
    "category": "F2",
    "series_team": "DAMS",
-   "rating": 76
+   "rating": 73
   },
   {
    "id": "roman_bilinski",
@@ -73,7 +66,7 @@
    "nationality": "Polônia",
    "category": "F2",
    "series_team": "DAMS",
-   "rating": 74
+   "rating": 69
   },
   {
    "id": "gabriele_mini",
@@ -89,7 +82,7 @@
    "nationality": "Alemanha",
    "category": "F2",
    "series_team": "MP Motorsport",
-   "rating": 74
+   "rating": 69
   },
   {
    "id": "sebastian_montoya",
@@ -97,7 +90,7 @@
    "nationality": "Colômbia",
    "category": "F2",
    "series_team": "Prema Racing",
-   "rating": 75
+   "rating": 71
   },
   {
    "id": "mari_boya",
@@ -105,7 +98,7 @@
    "nationality": "Espanha",
    "category": "F2",
    "series_team": "Prema Racing",
-   "rating": 74
+   "rating": 69
   },
   {
    "id": "martinius_stenshorne",
@@ -113,7 +106,7 @@
    "nationality": "Noruega",
    "category": "F2",
    "series_team": "Rodin Motorsport",
-   "rating": 76
+   "rating": 73
   },
   {
    "id": "alexander_dunne",
@@ -121,7 +114,7 @@
    "nationality": "Irlanda",
    "category": "F2",
    "series_team": "Rodin Motorsport",
-   "rating": 78
+   "rating": 76
   },
   {
    "id": "kush_maini",
@@ -129,7 +122,7 @@
    "nationality": "Índia",
    "category": "F2",
    "series_team": "ART Grand Prix",
-   "rating": 75
+   "rating": 71
   },
   {
    "id": "tasanapol_inthraphuvasak",
@@ -137,7 +130,7 @@
    "nationality": "Tailândia",
    "category": "F2",
    "series_team": "ART Grand Prix",
-   "rating": 73
+   "rating": 68
   },
   {
    "id": "emerson_fittipaldi",
@@ -145,7 +138,7 @@
    "nationality": "Brasil",
    "category": "F2",
    "series_team": "AIX Racing",
-   "rating": 72
+   "rating": 66
   },
   {
    "id": "cian_shields",
@@ -153,7 +146,7 @@
    "nationality": "Reino Unido",
    "category": "F2",
    "series_team": "AIX Racing",
-   "rating": 71
+   "rating": 64
   },
   {
    "id": "rafael_villagomez",
@@ -161,7 +154,7 @@
    "nationality": "México",
    "category": "F2",
    "series_team": "Van Amersfoort Racing",
-   "rating": 72
+   "rating": 66
   },
   {
    "id": "laurens_van_hoepen",
@@ -169,7 +162,7 @@
    "nationality": "Países Baixos",
    "category": "F2",
    "series_team": "Trident",
-   "rating": 75
+   "rating": 71
   },
   {
    "id": "john_bennett",
@@ -177,7 +170,7 @@
    "nationality": "Reino Unido",
    "category": "F2",
    "series_team": "Trident",
-   "rating": 72
+   "rating": 66
   },
   {
    "id": "theophile_nael",
@@ -185,7 +178,7 @@
    "nationality": "França",
    "category": "F3",
    "series_team": "Campos Racing",
-   "rating": 70
+   "rating": 65
   },
   {
    "id": "ugo_ugochukwu",
@@ -193,7 +186,7 @@
    "nationality": "Estados Unidos",
    "category": "F3",
    "series_team": "Campos Racing",
-   "rating": 72
+   "rating": 70
   },
   {
    "id": "ernesto_rivera",
@@ -201,7 +194,7 @@
    "nationality": "México",
    "category": "F3",
    "series_team": "Campos Racing",
-   "rating": 67
+   "rating": 58
   },
   {
    "id": "noah_strmsted",
@@ -209,7 +202,7 @@
    "nationality": "Dinamarca",
    "category": "F3",
    "series_team": "Trident",
-   "rating": 70
+   "rating": 65
   },
   {
    "id": "freddie_slater",
@@ -217,7 +210,7 @@
    "nationality": "Reino Unido",
    "category": "F3",
    "series_team": "Trident",
-   "rating": 71
+   "rating": 68
   },
   {
    "id": "matteo_de_palo",
@@ -225,7 +218,7 @@
    "nationality": "Itália",
    "category": "F3",
    "series_team": "Trident",
-   "rating": 66
+   "rating": 55
   },
   {
    "id": "mattia_colnaghi",
@@ -233,7 +226,7 @@
    "nationality": "Itália",
    "category": "F3",
    "series_team": "MP Motorsport",
-   "rating": 69
+   "rating": 62
   },
   {
    "id": "tuukka_taponen",
@@ -241,7 +234,7 @@
    "nationality": "Finlândia",
    "category": "F3",
    "series_team": "MP Motorsport",
-   "rating": 70
+   "rating": 65
   },
   {
    "id": "alessandro_giusti",
@@ -249,7 +242,7 @@
    "nationality": "França",
    "category": "F3",
    "series_team": "MP Motorsport",
-   "rating": 68
+   "rating": 60
   },
   {
    "id": "taito_kato",
@@ -257,7 +250,7 @@
    "nationality": "Japão",
    "category": "F3",
    "series_team": "ART Grand Prix",
-   "rating": 66
+   "rating": 55
   },
   {
    "id": "maciej_gadysz",
@@ -265,7 +258,7 @@
    "nationality": "Polônia",
    "category": "F3",
    "series_team": "ART Grand Prix",
-   "rating": 67
+   "rating": 58
   },
   {
    "id": "kanato_le",
@@ -273,7 +266,7 @@
    "nationality": "Japão",
    "category": "F3",
    "series_team": "ART Grand Prix",
-   "rating": 66
+   "rating": 55
   },
   {
    "id": "hiyu_yamakoshi",
@@ -281,7 +274,7 @@
    "nationality": "Japão",
    "category": "F3",
    "series_team": "Van Amersfoort Racing",
-   "rating": 66
+   "rating": 55
   },
   {
    "id": "enzo_deligny",
@@ -289,7 +282,7 @@
    "nationality": "França",
    "category": "F3",
    "series_team": "Van Amersfoort Racing",
-   "rating": 66
+   "rating": 55
   },
   {
    "id": "bruno_del_pino",
@@ -297,7 +290,7 @@
    "nationality": "Espanha",
    "category": "F3",
    "series_team": "Van Amersfoort Racing",
-   "rating": 66
+   "rating": 55
   },
   {
    "id": "pedro_clerot",
@@ -305,7 +298,7 @@
    "nationality": "Brasil",
    "category": "F3",
    "series_team": "Rodin Motorsport",
-   "rating": 67
+   "rating": 58
   },
   {
    "id": "brando_badoer",
@@ -313,7 +306,7 @@
    "nationality": "Itália",
    "category": "F3",
    "series_team": "Rodin Motorsport",
-   "rating": 66
+   "rating": 55
   },
   {
    "id": "james_wharton",
@@ -321,7 +314,7 @@
    "nationality": "Austrália",
    "category": "F3",
    "series_team": "Prema Racing",
-   "rating": 69
+   "rating": 62
   },
   {
    "id": "jose_garfias",
@@ -329,7 +322,7 @@
    "nationality": "México",
    "category": "F3",
    "series_team": "Prema Racing",
-   "rating": 65
+   "rating": 52
   },
   {
    "id": "michael_shin",
@@ -337,7 +330,7 @@
    "nationality": "Coreia do Sul",
    "category": "F3",
    "series_team": "Hitech TGR",
-   "rating": 65
+   "rating": 52
   },
   {
    "id": "fionn_mclaughlin",
@@ -345,7 +338,7 @@
    "nationality": "Irlanda",
    "category": "F3",
    "series_team": "Hitech TGR",
-   "rating": 66
+   "rating": 55
   },
   {
    "id": "jin_nakamura",
@@ -353,7 +346,7 @@
    "nationality": "Japão",
    "category": "F3",
    "series_team": "Hitech TGR",
-   "rating": 65
+   "rating": 52
   },
   {
    "id": "yevan_david",
@@ -361,7 +354,7 @@
    "nationality": "Sri Lanka",
    "category": "F3",
    "series_team": "AIX Racing",
-   "rating": 66
+   "rating": 55
   },
   {
    "id": "fernando_barrichello",
@@ -369,7 +362,7 @@
    "nationality": "Brasil",
    "category": "F3",
    "series_team": "AIX Racing",
-   "rating": 64
+   "rating": 50
   },
   {
    "id": "nicola_lacorte",
@@ -377,7 +370,7 @@
    "nationality": "Itália",
    "category": "F3",
    "series_team": "DAMS",
-   "rating": 67
+   "rating": 58
   },
   {
    "id": "nandhavud_bhirombhakdi",
@@ -385,7 +378,7 @@
    "nationality": "Tailândia",
    "category": "F3",
    "series_team": "DAMS",
-   "rating": 64
+   "rating": 50
   },
   {
    "id": "gerrard_xie",
@@ -393,7 +386,7 @@
    "nationality": "China",
    "category": "F3",
    "series_team": "DAMS",
-   "rating": 65
+   "rating": 52
   }
  ]
 }
