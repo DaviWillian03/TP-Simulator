@@ -81,7 +81,7 @@ const FRAME_PAD_WIDE := 0.08
 
 ## Logos brancas (as da navegação da F1) somem em fundo claro e ficam minúsculas quando são
 ## largas. Compomos cada uma sobre um quadrado arredondado na cor da equipe (ou da cor de
-## destaque, se a principal for clara), como na transmissão. Imagens coloridas ficam como estão.
+## destaque, se a principal for clara — ou a `emblem_bg` do JSON, se existir), como na transmissão. Imagens coloridas ficam como estão.
 static func _framed(team_id: String, tex: Texture2D) -> Texture2D:
 	var img := tex.get_image() if tex != null else null
 	if img == null or img.is_empty() or not _is_white_logo(img):
@@ -111,6 +111,8 @@ static func _framed(team_id: String, tex: Texture2D) -> Texture2D:
 
 
 static func _frame_color(team: Dictionary) -> Color:
+	if team.has("emblem_bg"):  # fundo escolhido à mão (ex.: laranja da McLaren, azul-marinho da Racing Bulls)
+		return Color(team["emblem_bg"])
 	for key: String in ["color", "color2"]:
 		var c := Color(team.get(key, "#555555"))
 		if c.get_luminance() < 0.5:

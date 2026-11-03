@@ -60,6 +60,14 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	chip.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	chip.offset_right = 6
 	chip.offset_bottom = 3
+	# logo da equipe no canto oposto ao da posição
+	var logo := TeamEmblems.make_rect(String(car.team["id"]), 26)
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	photo.add_child(logo)
+	logo.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	logo.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	logo.offset_left = -4
+	logo.offset_bottom = 3
 	head.add_child(photo)
 	var names := VBoxContainer.new()
 	names.add_theme_constant_override("separation", -2)

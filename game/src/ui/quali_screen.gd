@@ -10,7 +10,7 @@ extends Control
 const UI_REFRESH_S := 0.2
 const SPEEDS := [2.0, 4.0, 8.0, 16.0]
 const LEFT_W := CarControlPanel.WIDTH + 24.0
-const TOWER_W := 364.0
+const TOWER_W := 384.0
 const SIDE_TOP := 78.0
 
 var weekend: WeekendSim
@@ -78,9 +78,9 @@ func _ready() -> void:
 	_table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_table.setup([
 		{"title": "Pos", "width": 32, "kind": "pos"},
-		{"title": "Piloto", "width": 0, "heavy": true},  # a cor da equipe já está no quadrado da posição
-		{"title": "Melhor", "width": 84, "align": "right"},
-		{"title": "Dif.", "width": 70, "align": "right"},
+		{"title": "Piloto", "width": 0, "kind": "team"},
+		{"title": "Melhor", "width": 76, "align": "right"},
+		{"title": "Dif.", "width": 62, "align": "right"},
 		{"title": "Pn", "width": 28, "kind": "tyre"},
 	], q.cars.size(), "garage")
 	scroll.add_child(_table)
@@ -205,6 +205,13 @@ func _player_panel(car: CarState) -> Control:
 	chip.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	chip.offset_right = 6
 	chip.offset_bottom = 3
+	var logo := TeamEmblems.make_rect(String(car.team["id"]), 26)
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	photo.add_child(logo)
+	logo.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	logo.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	logo.offset_left = -4
+	logo.offset_bottom = 3
 	# tocar na foto segue esse carro na pista (de novo: volta à vista geral)
 	var cam := Button.new()
 	cam.flat = true
@@ -345,7 +352,7 @@ func _refresh_ui() -> void:
 		var b := q.best_in_segment(car)
 		_table.set_row_style(i, "me" if car.is_player else ("out" if out else "normal"))
 		_table.set_pos(i, 0, str(i + 1), Color(1, 1, 1, 0.18) if out else car.team_color())
-		_table.set_text(i, 1, StandingsPanel.surname(car.display_name()))
+		_table.set_team(i, 1, car.team["id"], StandingsPanel.surname(car.display_name()))
 		_table.set_text(i, 2, UiStyle.format_time(b))
 		_table.set_text(i, 3, "—" if i == 0 or b == INF or out else "+%.3f" % (b - lead_best))
 		var c: Dictionary = q.tyres.compounds[car.tyre] if q.run_tyre.has(car) else {}

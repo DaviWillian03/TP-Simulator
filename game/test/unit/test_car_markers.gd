@@ -45,3 +45,11 @@ func test_marker_shows_driver_number_and_player_ring() -> void:
 func test_ink_contrasts_with_team_color() -> void:
 	assert_eq(CarMarker3D._ink_for(Color("#F2F2F2")), Color("#0b0c0f"), "disco claro: número escuro")
 	assert_eq(CarMarker3D._ink_for(Color("#2B2B2B")), Color.WHITE, "disco escuro: número branco")
+
+
+func test_emblem_background_comes_from_data() -> void:
+	# McLaren: fundo laranja (antes caía no preto); Racing Bulls: azul-marinho com bom contraste para o logo branco
+	assert_eq(TeamEmblems._frame_color(GameData.team_by_id(GameData.teams(), "mclaren")), Color("#FF8000"))
+	assert_eq(TeamEmblems._frame_color(GameData.team_by_id(GameData.teams(), "racingbulls")), Color("#26398C"))
+	# sem emblem_bg continua a regra antiga (cor da equipe escura o bastante)
+	assert_eq(TeamEmblems._frame_color(GameData.team_by_id(GameData.teams(), "ferrari")), Color("#E8002D"))

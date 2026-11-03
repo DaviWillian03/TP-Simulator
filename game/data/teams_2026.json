@@ -8,6 +8,7 @@
    "power_unit": "Mercedes",
    "color": "#FF8000",
    "color2": "#1A1A1A",
+   "emblem_bg": "#FF8000",
    "car_rating": 88.5,
    "emblem": {
     "shape": "chevron",
@@ -93,6 +94,7 @@
    "power_unit": "Red Bull Ford",
    "color": "#6692FF",
    "color2": "#FFFFFF",
+   "emblem_bg": "#26398C",
    "car_rating": 81.9,
    "emblem": {
     "shape": "hex",

@@ -370,3 +370,9 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   **ver ao vivo e mandar sair** (sem ordens durante a volta e sem setores — ficam como ideia futura).
 - **Bug corrigido**: `QualiSim.advance` e `PracticeSession.advance` descartavam o resto do quadro (a 60 fps e 4× cada quadro dá menos de um
   passo), então o relógio **não andava** na tela e só dava para "simular". Agora acumulam o resto (teste `test_session_clock`).
+
+### Fundo dos logos e logos de volta (2026-11-03)
+- Campo opcional `emblem_bg` em `teams_2026.json` define o fundo do quadradinho do logo (usado por `TeamEmblems._frame_color`).
+  McLaren **laranja** `#FF8000` (caía no preto porque o laranja passa do limite de luminância); Racing Bulls **azul-marinho** `#26398C`
+  (melhor contraste com o logo branco e distinto da Red Bull e da Williams; testado contra vermelho, azul real e azul escuro).
+- Os logos das equipes voltaram nos cartões dos pilotos (canto da foto) e na tabela da classificação. Nos marcadores da pista 3D continua o número.
