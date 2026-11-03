@@ -38,7 +38,9 @@ das escolhas técnicas.
   `TeamEmblems` (prioridade: `user://import/emblems/`, depois `game/local/emblems/` — ignorada
   pelo git, para logos pessoais —, depois os originais).
 - `src/audio/race_audio.gd` — som da corrida (sons originais de `tools/make_sounds.py` em `assets/audio/`).
-  Na pista 3D os carros são bolinhas na cor da equipe (do jogador: maiores, com anel); zoom por pinça/botões.
+  Na pista 3D cada carro é um disco plano na cor da equipe com o número do piloto (`CarMarker3D`; do jogador: maior, com anel);
+  zoom só por pinça. A pista mostra corrida ou classificação via `TrackFeed` (adaptador). Corrida e classificação usam a pista em
+  tela cheia com painéis de vidro (`UiStyle.G_GLASS`, `ScreenKit.top_shade`/`glass_*`); radar de chuva fica em Dados > Clima.
 - `src/core/session.gd` — autoload `Session` (escolhas do menu + opções de desenvolvimento).
 - `test/unit`, `test/integration` — GUT. `tools/race_report.gd` — relatório de corridas simuladas.
 - Raiz: `tools/make_logo.py` (logo), `tools/make_emblems.py` (emblemas), `tools/make_car_art.py`

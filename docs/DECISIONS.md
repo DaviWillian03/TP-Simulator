@@ -358,3 +358,15 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - **Zoom**: só pinça com dois dedos (e roda do mouse). **Sem botões + / −** na tela.
 - **Som refeito**: a 1ª versão soava como sirene (tons puros que deslizam + alerta de dois tons). Agora cada explosão do motor é um
   estalo áspero com irregularidade, passagens com Doppler sobre cada estalo, avisos viraram toques curtos. Segue por síntese (`tools/make_sounds.py`).
+
+### Corrida refeita estilo MM3 e classificação jogável (2026-11-03, mockups v14)
+- **Corrida**: a pista 3D ocupa a **tela toda**; por cima, barra de topo (voltar, GP, pausa/velocidades, selo do clima, Dados, som, volta),
+  **cartões dos seus pilotos na vertical à esquerda** (236 px, foto de 62 px com a posição num selo, sem a fileira de pneus — o pneu
+  se escolhe na tela do box) e a **torre à direita** (290 px). Painéis são "vidro escuro" translúcido (`UiStyle.G_GLASS`).
+- **Radar de chuva saiu da pista**: vive em **Dados > Clima**; na barra fica só um selo ("Seca · chuva 67% em 6–8 v") que abre essa aba.
+  O rádio virou faixa baixa no centro da área livre.
+- **Classificação jogável**: a mesma pista 3D mostra os carros andando (volta de saída, lançada e de entrada) via `TrackFeed`; o jogador
+  escolhe o pneu e manda cada piloto sair (como já era), vendo a volta acontecer. Tocar na foto segue o carro. Nível de controle escolhido:
+  **ver ao vivo e mandar sair** (sem ordens durante a volta e sem setores — ficam como ideia futura).
+- **Bug corrigido**: `QualiSim.advance` e `PracticeSession.advance` descartavam o resto do quadro (a 60 fps e 4× cada quadro dá menos de um
+  passo), então o relógio **não andava** na tela e só dava para "simular". Agora acumulam o resto (teste `test_session_clock`).

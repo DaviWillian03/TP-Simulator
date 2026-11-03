@@ -18,7 +18,7 @@ const PIT_OFFSET_M := 15.0
 
 enum CamMode { OVERVIEW, FOLLOW_1, FOLLOW_2, LEADER, CAR }
 
-var sim: RaceSim
+var sim: TrackFeed  ## o que a pista mostra (corrida ou classificação)
 var t3: Track3D
 var cam_mode := CamMode.OVERVIEW
 var followed: CarState = null  ## carro em foco (CamMode.CAR): escolhido tocando na torre
@@ -44,8 +44,14 @@ var _night := false
 var _last_wet := -1.0
 
 
-func setup(p_sim: RaceSim) -> void:
-	sim = p_sim
+## Aceita uma corrida (RaceSim), uma classificação (QualiSim) ou um TrackFeed pronto.
+func setup(source: Variant) -> void:
+	if source is RaceSim:
+		sim = TrackFeed.of_race(source)
+	elif source is QualiSim:
+		sim = TrackFeed.of_quali(source)
+	else:
+		sim = source
 	stretch = true
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_vp = SubViewport.new()
@@ -259,8 +265,8 @@ func _process(delta: float) -> void:
 			(_cars[order[i]] as CarMarker3D).set_rank(i if not order[i].is_player else -1)
 	for car: CarState in _cars:
 		var mi: CarMarker3D = _cars[car]
-		mi.visible = not car.retired
-		if car.retired:
+		mi.visible = sim.marker_visible(car)
+		if not mi.visible:
 			continue
 		var d := sim.render_distance(car)
 		var frac := fposmod(d, sim.track.length_m) / sim.track.length_m
@@ -274,7 +280,7 @@ func _process(delta: float) -> void:
 		elif d < 0.0:
 			pos += basis.x * (3.0 if car.grid_position % 2 == 0 else -3.0)
 		mi.position = pos + Vector3.UP * 3.0
-	_sc.visible = sim.control.flag == RaceControl.Flag.SC
+	_sc.visible = sim.safety_car_out()
 	if _sc.visible:
 		var lead := sim.standings()[0]
 		var f := fposmod(sim.render_distance(lead) + 80.0, sim.track.length_m) / sim.track.length_m

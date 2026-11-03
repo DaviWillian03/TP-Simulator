@@ -261,6 +261,7 @@ const G_TEXT_OFF := Color("#6c7380")  ## indisponível
 const G_INK := Color("#11141a")  ## texto sobre o claro
 const G_INK_2 := Color("#4b5260")
 const G_RED_PRESS := Color("#b30500")
+const G_GLASS := Color(0.043, 0.051, 0.071, 0.86)  ## painel escuro translúcido sobre a pista em tela cheia
 const G_OFF := Color(1, 1, 1, 0.04)  ## fundo de controle desabilitado
 
 const R_TILE := 16  ## blocos de modo, cartões

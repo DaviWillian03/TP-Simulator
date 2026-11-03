@@ -11,13 +11,15 @@ var _pcts: Array[Label] = []
 var _text: Label
 var _wet_bar: ProgressBar
 var _wet_label: Label
+var _embedded := false  ## true = dentro da aba Clima do DADOS (maior, sem moldura própria)
 
 
-func setup(p_sim: RaceSim) -> void:
+func setup(p_sim: RaceSim, embedded: bool = false) -> void:
 	sim = p_sim
+	_embedded = embedded
 	custom_minimum_size = Vector2(240, 0)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_theme_stylebox_override("panel", UiStyle.g_box(Color(0.05, 0.06, 0.08, 0.88), 16, 14, 10))
+	add_theme_stylebox_override("panel", StyleBoxEmpty.new() if embedded else UiStyle.g_box(Color(0.05, 0.06, 0.08, 0.88), 16, 14, 10))
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 5)
 	add_child(v)
@@ -27,7 +29,7 @@ func setup(p_sim: RaceSim) -> void:
 
 	var bars := HBoxContainer.new()
 	bars.add_theme_constant_override("separation", 6)
-	bars.custom_minimum_size = Vector2(0, 62)
+	bars.custom_minimum_size = Vector2(0, 150 if embedded else 62)
 	v.add_child(bars)
 	for i in BUCKETS:
 		var col := VBoxContainer.new()
@@ -48,9 +50,10 @@ func setup(p_sim: RaceSim) -> void:
 		_bars.append(bar)
 		_pcts.append(pct)
 
-	_text = UiStyle.g_label("", 13, Color("#c3c9d3"))
+	_text = UiStyle.g_label("", 16 if embedded else 13, Color("#c3c9d3"))
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size = Vector2(220, 0)
+	_text.custom_minimum_size = Vector2(0 if embedded else 220, 0)
+	_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.add_child(_text)
 	var wet := HBoxContainer.new()
 	wet.add_child(UiStyle.g_caption("Pista"))
@@ -67,11 +70,24 @@ func setup(p_sim: RaceSim) -> void:
 	v.add_child(wet)
 
 
+## Resumo de uma linha para o selo do clima na barra de topo ("Seca · chuva 68% em 8–10 v").
+static func chip_text(p_sim: RaceSim) -> String:
+	var f := p_sim.weather.forecast(p_sim.track.base_lap_time_s, BUCKETS * 2)
+	var rain_now := p_sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD
+	var base := p_sim.weather.rain_label().capitalize() if rain_now else p_sim.weather.surface_label().capitalize()
+	if rain_now:
+		return base
+	for i in f.size():
+		if f[i] >= 0.5:
+			return "%s · chuva %d%% em %d–%d v" % [base, roundi(f[i] * 100.0), i * 2, i * 2 + 2]
+	return "%s · sem chuva prevista" % base
+
+
 func refresh() -> void:
 	var lap := sim.track.base_lap_time_s
 	var f := sim.weather.forecast(lap, BUCKETS * 2)
 	for i in BUCKETS:
-		_bars[i].custom_minimum_size = Vector2(0, maxf(3.0, f[i] * 44.0))
+		_bars[i].custom_minimum_size = Vector2(0, maxf(3.0, f[i] * (110.0 if _embedded else 44.0)))
 		_pcts[i].text = "%d%%" % roundi(f[i] * 100.0)
 	var now := sim.weather.rain_label()
 	var first := -1

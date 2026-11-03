@@ -42,7 +42,8 @@ var race_seed := 0
 var debug_advance_s := 0.0
 var debug_pause := false  ## --pause: começa pausado (capturas do grid parado)
 var debug_sc := false  ## --sc: aciona o safety car logo após o --advance
-var debug_open_data := false  ## --data: abre o menu DADOS
+var debug_open_data := false  ## --data: abre o menu DADOS (--data=3 abre na aba Clima)
+var debug_data_tab := 0
 var debug_profile := ""  ## --profile=<id do piloto>: abre a ficha na tela Pessoal
 var debug_pit := false  ## --pit: abre a tela do box na corrida
 var debug_tap := false  ## --tap: leva um carro ao box e abre o mini-jogo de toque
@@ -82,6 +83,7 @@ func _ready() -> void:
 		circuit_id = args["circuit"]
 	debug_sc = args.has("sc")
 	debug_open_data = args.has("data")
+	debug_data_tab = int(str(args.get("data", "0")))
 	debug_pit = args.has("pit")
 	debug_profile = args.get("profile", "")
 	debug_tap = args.has("tap")

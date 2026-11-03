@@ -1,6 +1,7 @@
 extends Control
-## Tela de corrida — direção Garagem (mockup v7): barra de topo, pista 3D grande com cantos
-## arredondados, dois cartões dos seus carros e a torre de cronometragem à direita.
+## Tela de corrida — direção Garagem (mockup v14, estilo Motorsport Manager): a pista 3D ocupa a
+## tela toda; por cima, a barra de topo, os dois cartões dos seus pilotos na vertical à esquerda e a
+## torre de cronometragem à direita. O radar de chuva fica em DADOS > Clima (não tampa a pista).
 ##
 ## A cada quadro, avança a simulação pelo tempo real × velocidade escolhida. A tabela e os
 ## painéis são atualizados algumas vezes por segundo (não a cada quadro) para poupar bateria.
@@ -19,12 +20,12 @@ var paused := false
 var _audio: RaceAudio
 
 var _layer: Control
-var _track_holder: Panel
+var _track_holder: Control
 var _track_view: TrackView3D
 var _standings: StandingsPanel
 var _car_panels: Array[CarControlPanel] = []
 var _toasts: ToastFeed
-var _radar: RadarWidget
+var _weather_btn: Button
 var _radio: RadioCard
 var _drawer: DataDrawer
 var _meta: Label
@@ -69,7 +70,8 @@ func _ready() -> void:
 		for c in get_children():
 			if c != _track_view and c is CanvasItem:
 				c.visible = false
-	_drawer.visible = Session.debug_open_data
+	if Session.debug_open_data:
+		_drawer.open_tab(Session.debug_data_tab)
 	_connect_sim_signals()
 	_refresh_ui()
 	if Session.debug_pit or Session.debug_tap:
@@ -93,17 +95,20 @@ func _debug_pit_state() -> void:
 	_on_pit_box_stop(car, car.box_hold_s)
 
 
+const LEFT_W := CarControlPanel.WIDTH + 24.0  ## coluna dos seus pilotos (cartão + margens)
+const TOWER_W := 290.0
+const SIDE_TOP := 78.0
+
+
 func _build_ui() -> void:
-	# fundo da Garagem na cor da equipe que o jogador gerencia (imersão)
+	# fundo da Garagem na cor da equipe que o jogador gerencia (aparece só se a pista falhar)
 	var page := ScreenKit.garage_page(self, _my_team_id())
 	_layer = page["layer"]
-	_build_top_bar()
 
-	# pista 3D: cantos arredondados (o recorte vale para os filhos)
-	_track_holder = Panel.new()
-	_track_holder.add_theme_stylebox_override("panel", UiStyle.g_box(Color.BLACK, 22, 0, 0))
-	_track_holder.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
-	ScreenKit.place(_track_holder, _layer, Control.PRESET_TOP_LEFT, Vector2(16, 58), Vector2(916, 462))
+	# pista 3D em tela cheia, atrás de todo o resto
+	_track_holder = Control.new()
+	_layer.add_child(_track_holder)
+	_track_holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_track_view = TrackView3D.new()
 	_track_view.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_track_holder.add_child(_track_view)
@@ -118,41 +123,21 @@ func _build_ui() -> void:
 			_track_view.distance = Session.debug_camera["dist"]
 		_track_view.snap_camera = true  # captura: câmera já no alvo, sem deslizar
 
-	_toasts = ToastFeed.new()
-	_toasts.position = Vector2(14, 14)
-	_toasts.custom_minimum_size = Vector2(380, 0)
-	_track_holder.add_child(_toasts)
-	_radar = RadarWidget.new()
-	_radar.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_radar.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_radar.offset_right = -14
-	_radar.offset_top = 14
-	_track_holder.add_child(_radar)
-	_radar.setup(sim)
-	_radio = RadioCard.new()
-	_radio.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_radio.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_radio.offset_left = 14
-	_radio.offset_bottom = -14
-	_track_holder.add_child(_radio)
-	_radio.answered.connect(func(id: int, option: int) -> void:
-		sim.radio.answer(id, option)
-		_refresh_ui())
-	_drawer = DataDrawer.new()
-	_drawer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_drawer.visible = false
-	_track_holder.add_child(_drawer)
-	_drawer.setup(sim)
-	_drawer.closed.connect(func() -> void: _drawer.visible = false)
+	ScreenKit.top_shade(_layer)
+	_build_top_bar()
 
-	# cartões dos seus carros
-	var cards := HBoxContainer.new()
-	cards.add_theme_constant_override("separation", 16)
-	ScreenKit.place(cards, _layer, Control.PRESET_TOP_LEFT, Vector2(16, 530))
+	_toasts = ToastFeed.new()
+	_toasts.position = Vector2(LEFT_W + 14.0, SIDE_TOP + 6.0)
+	_toasts.custom_minimum_size = Vector2(440, 0)
+	_layer.add_child(_toasts)
+
+	# cartões dos seus pilotos: coluna vertical à esquerda
+	var cards := VBoxContainer.new()
+	cards.add_theme_constant_override("separation", 12)
+	ScreenKit.place(cards, _layer, Control.PRESET_TOP_LEFT, Vector2(12, SIDE_TOP))
 	for car in sim.cars:
 		if car.is_player:
 			var p := CarControlPanel.new()
-			p.custom_minimum_size = Vector2(450, 178)
 			cards.add_child(p)
 			p.setup(sim, car)
 			p.pit_pressed.connect(_open_pit)
@@ -161,9 +146,44 @@ func _build_ui() -> void:
 
 	# torre: tocar numa linha segue aquele carro; tocar de novo volta à vista geral
 	_standings = StandingsPanel.new()
-	ScreenKit.place(_standings, _layer, Control.PRESET_TOP_RIGHT, Vector2(-16, 58), Vector2(320, 650))
+	ScreenKit.place(_standings, _layer, Control.PRESET_TOP_RIGHT, Vector2(-12, SIDE_TOP), Vector2(TOWER_W, 720.0 - SIDE_TOP - 8.0))
 	_standings.setup(sim)
 	_standings.driver_pressed.connect(_on_driver_pressed)
+
+	# rádio: faixa baixa no centro da área livre (contêineres alinham no rodapé sem esticar)
+	var radio_area := MarginContainer.new()
+	radio_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	radio_area.add_theme_constant_override("margin_left", int(LEFT_W))
+	radio_area.add_theme_constant_override("margin_right", int(TOWER_W + 24.0))
+	radio_area.add_theme_constant_override("margin_bottom", 12)
+	_layer.add_child(radio_area)
+	radio_area.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var radio_col := VBoxContainer.new()
+	radio_col.alignment = BoxContainer.ALIGNMENT_END
+	radio_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	radio_area.add_child(radio_col)
+	var radio_row := HBoxContainer.new()
+	radio_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	radio_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	radio_col.add_child(radio_row)
+	_radio = RadioCard.new()
+	_radio.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	radio_row.add_child(_radio)
+	_radio.answered.connect(func(id: int, option: int) -> void:
+		sim.radio.answer(id, option)
+		_refresh_ui())
+
+	# DADOS: painel sobre a área livre (não cobre os seus pilotos nem a torre)
+	_drawer = DataDrawer.new()
+	_layer.add_child(_drawer)
+	_drawer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_drawer.offset_left = LEFT_W
+	_drawer.offset_right = -(TOWER_W + 24.0)
+	_drawer.offset_top = SIDE_TOP
+	_drawer.offset_bottom = -12
+	_drawer.visible = false
+	_drawer.setup(sim)
+	_drawer.closed.connect(func() -> void: _drawer.visible = false)
 
 
 func _my_team_id() -> String:
@@ -173,17 +193,72 @@ func _my_team_id() -> String:
 	return Session.player_team
 
 
+func _glass_pill(radius: int = 22, margin: int = 16) -> StyleBoxFlat:
+	return UiStyle.g_box(UiStyle.G_GLASS, radius, margin, 0)
+
+
 func _build_top_bar() -> void:
 	var bar := HBoxContainer.new()
-	bar.add_theme_constant_override("separation", 14)
-	ScreenKit.place(bar, _layer, Control.PRESET_TOP_LEFT, Vector2(16, 6), Vector2(1248, 48))
-	var title := UiStyle.g_label(("SPRINT · " if sim.sprint else "") + sim.track.grand_prix.to_upper(), 24, UiStyle.G_TEXT, "black")
-	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bar.add_child(title)
-	_meta = UiStyle.g_caption("")
-	_meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bar.add_child(_meta)
-	bar.add_child(UiStyle.hspacer())
+	bar.add_theme_constant_override("separation", 10)
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE  # a barra não bloqueia o toque na pista
+	ScreenKit.place(bar, _layer, Control.PRESET_TOP_LEFT, Vector2(12, 6), Vector2(1256, 60))
+	var menu := ScreenKit.glass_round_button("back", 44, "Menu")
+	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	menu.pressed.connect(Session.go_to_title)
+	bar.add_child(menu)
+
+	var titles := VBoxContainer.new()
+	titles.add_theme_constant_override("separation", -2)
+	titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	titles.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var title := UiStyle.g_label(("SPRINT · " if sim.sprint else "") + sim.track.grand_prix.to_upper(), 20, UiStyle.G_TEXT, "black")
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	titles.add_child(title)
+	_meta = UiStyle.g_caption("", UiStyle.G_TEXT_2)
+	_meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	titles.add_child(_meta)
+	bar.add_child(titles)
+
+	# pausa + velocidades numa pílula escura
+	var speed_pill := PanelContainer.new()
+	speed_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	speed_pill.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS, 24, 3, 3))
+	var sh := HBoxContainer.new()
+	sh.add_theme_constant_override("separation", 3)
+	speed_pill.add_child(sh)
+	_pause_btn = Button.new()
+	_pause_btn.toggle_mode = true
+	_pause_btn.text = "II"
+	_pause_btn.focus_mode = Control.FOCUS_NONE
+	_pause_btn.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN, 40)
+	ScreenKit._selectable_styles(_pause_btn, 20)
+	_pause_btn.toggled.connect(func(on: bool) -> void:
+		paused = on
+		if _audio != null:
+			_audio.set_paused(on))
+	_pause_btn.button_pressed = Session.debug_pause
+	sh.add_child(_pause_btn)
+	_speed_seg = ScreenKit.segmented(SPEEDS.map(func(s: float) -> Array: return [s, "%d×" % int(s)]), time_scale, set_time_scale)
+	_speed_seg.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	for b: Control in (_speed_seg.get_child(0) as Control).get_children():
+		b.custom_minimum_size = Vector2(46, 40)
+		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	sh.add_child(_speed_seg)
+	bar.add_child(speed_pill)
+
+	# selo do clima: resume pista e previsão; tocar abre DADOS > Clima (onde está o radar)
+	_weather_btn = Button.new()
+	_weather_btn.focus_mode = Control.FOCUS_NONE
+	_weather_btn.custom_minimum_size = Vector2(0, 44)
+	_weather_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_weather_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_weather_btn.add_theme_constant_override("icon_max_width", 22)
+	_weather_btn.add_theme_font_size_override("font_size", UiStyle.fs(13))
+	for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		_weather_btn.add_theme_stylebox_override(st, _glass_pill())
+	_weather_btn.pressed.connect(func() -> void: _drawer.open_tab(3))
+	ScreenKit.press_feedback(_weather_btn)
+	bar.add_child(_weather_btn)
 
 	_flag_pill = PanelContainer.new()
 	_flag_pill.visible = false
@@ -192,58 +267,34 @@ func _build_top_bar() -> void:
 	_flag_pill.add_child(_flag_label)
 	bar.add_child(_flag_pill)
 
-	_pause_btn = Button.new()
-	_pause_btn.toggle_mode = true
-	_pause_btn.text = "II"
-	_pause_btn.focus_mode = Control.FOCUS_NONE
-	_pause_btn.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN, 40)
-	_pause_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	ScreenKit._selectable_styles(_pause_btn, 20)
-	_pause_btn.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_SURFACE, 20, 10, 0))
-	_pause_btn.toggled.connect(func(on: bool) -> void:
-		paused = on
-		if _audio != null:
-			_audio.set_paused(on))
-	_pause_btn.button_pressed = Session.debug_pause
-	bar.add_child(_pause_btn)
-	_speed_seg = ScreenKit.segmented(SPEEDS.map(func(s: float) -> Array: return [s, "%d×" % int(s)]), time_scale, set_time_scale)
-	_speed_seg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	for b: Control in (_speed_seg.get_child(0) as Control).get_children():
-		b.custom_minimum_size = Vector2(46, 34)
-		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	bar.add_child(_speed_seg)
+	var data := ScreenKit.glass_pill_button("Dados", 84)
+	data.pressed.connect(func() -> void:
+		_drawer.visible = not _drawer.visible
+		_drawer.refresh())
+	bar.add_child(data)
 
 	# som da corrida: liga/desliga (vale até fechar o jogo)
-	var snd := ScreenKit.round_button("mute" if RaceAudio.muted else "sound", 40, "Som")
+	var snd := ScreenKit.glass_round_button("mute" if RaceAudio.muted else "sound", 44, "Som")
 	snd.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	snd.pressed.connect(func() -> void:
 		_audio.set_muted(not RaceAudio.muted)
 		snd.icon = load("res://assets/icons/%s.svg" % ("mute" if RaceAudio.muted else "sound")))
 	bar.add_child(snd)
 
-	var data := Button.new()
-	data.text = "Dados"
-	data.focus_mode = Control.FOCUS_NONE
-	data.custom_minimum_size = Vector2(84, 40)
-	data.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
-		data.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_SURFACE_HOVER if s != "pressed" else UiStyle.G_SURFACE_PRESS, 20, 16, 0))
-	data.add_theme_font_size_override("font_size", UiStyle.fs(14))
-	data.pressed.connect(func() -> void:
-		_drawer.visible = not _drawer.visible
-		_drawer.refresh())
-	ScreenKit.press_feedback(data)
-	bar.add_child(data)
-
+	bar.add_child(UiStyle.hspacer())
+	var lap := VBoxContainer.new()
+	lap.add_theme_constant_override("separation", -6)
+	lap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	lap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_lap_label = UiStyle.g_label("", 30, UiStyle.RED, "black")
-	_lap_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_lap_label.custom_minimum_size = Vector2(96, 0)
 	_lap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	bar.add_child(_lap_label)
-	var menu := ScreenKit.round_button("back", 40, "Menu")
-	menu.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	menu.pressed.connect(Session.go_to_title)
-	bar.add_child(menu)
+	_lap_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lap.add_child(_lap_label)
+	var lc := UiStyle.g_caption("Volta")
+	lc.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	lc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lap.add_child(lc)
+	bar.add_child(lap)
 
 
 func _connect_sim_signals() -> void:
@@ -295,11 +346,12 @@ func _process(delta: float) -> void:
 func _refresh_ui() -> void:
 	_lap_label.text = "FIM" if sim.chequered else "%d/%d" % [sim.leader_lap(), sim.total_laps]
 	var rain := sim.weather.rain_label()
-	_meta.text = "%s · %d voltas · %s" % [sim.track.short_name, sim.total_laps, ("pista " + sim.weather.surface_label()) if rain == "sem chuva" else rain]
+	_meta.text = "%s · %d voltas" % [sim.track.short_name, sim.total_laps]
+	_weather_btn.text = " " + RadarWidget.chip_text(sim)
+	_weather_btn.icon = load("res://assets/icons/%s.svg" % ("rain" if sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD else ("mixed" if rain != "sem chuva" else "sun")))
 	_refresh_flag()
 	_standings.followed = _track_view.followed if _track_view.cam_mode == TrackView3D.CamMode.CAR else null
 	_standings.refresh()
-	_radar.refresh()
 	_drawer.refresh()
 	var question := {}
 	for p in _car_panels:

@@ -156,6 +156,46 @@ static func garage_page(screen: Control, team_id: String) -> Dictionary:
 
 
 ## Posiciona um elemento por âncora e deslocamento (referência 1280×720).
+## Degradê escuro no topo de uma tela com pista/cenário claro atrás: a barra de topo continua legível.
+static func top_shade(layer: Control, height: float = 96.0) -> void:
+	var grad := Gradient.new()
+	grad.colors = PackedColorArray([Color(0.03, 0.04, 0.055, 0.95), Color(0.03, 0.04, 0.055, 0.82), Color(0.03, 0.04, 0.055, 0.0)])
+	grad.offsets = PackedFloat32Array([0.0, 0.62, 1.0])
+	var gt := GradientTexture2D.new()
+	gt.gradient = grad
+	gt.fill_from = Vector2(0, 0)
+	gt.fill_to = Vector2(0, 1)
+	var shade := TextureRect.new()
+	shade.texture = gt
+	shade.stretch_mode = TextureRect.STRETCH_SCALE
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(shade)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	shade.offset_bottom = height
+
+
+## Botão redondo escuro translúcido (para ficar legível sobre a pista).
+static func glass_round_button(icon_name: String, size: int, tooltip: String = "") -> Button:
+	var b := round_button(icon_name, size, tooltip)
+	for st: String in ["normal", "hover"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_GLASS, size / 2, 0, 0))
+	return b
+
+
+## Pílula escura translúcida com texto (botões da barra de topo).
+static func glass_pill_button(text: String, min_w: float = 0.0) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(min_w, 44)
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_GLASS, 22, 16, 0))
+	b.add_theme_font_size_override("font_size", UiStyle.fs(14))
+	press_feedback(b)
+	return b
+
+
 ## Coloca uma coluna dentro de uma lista que rola na vertical arrastando o dedo
 ## (para colunas que, com a letra maior, passam do fim da tela).
 static func scroll_column(node: Control, parent: Control, offset: Vector2, size: Vector2) -> DragScroll:

@@ -41,6 +41,7 @@ var cars: Array[CarState] = []
 var setups: Dictionary = {}  ## id do piloto -> CarSetup (alterado ao fim de cada bloco)
 var programs: Dictionary = {}  ## id do piloto -> Array de ids de bloco
 var time_s := 0.0
+var _acc := 0.0
 var over := false
 var rng := RandomNumberGenerator.new()
 var history: Array[Dictionary] = []  ## {car, block, text} — resumo do treino
@@ -108,7 +109,9 @@ func _ai_program() -> Array:
 # --- tempo ------------------------------------------------------------------------------
 
 func advance(seconds: float) -> void:
-	var steps := int(seconds / DT)
+	_acc += seconds  # guarda o resto do quadro (a 60 fps um quadro é menor que um passo)
+	var steps := int(_acc / DT)
+	_acc -= steps * DT
 	for i in steps:
 		if over:
 			return

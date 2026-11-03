@@ -1,7 +1,7 @@
 class_name DataDrawer
 extends PanelContainer
 ## Menu DADOS: informações completas da corrida, abertas por cima do mapa sem pausar.
-## Abas: Todos (todos os pilotos), Meus pilotos (detalhes) e Voltas (tempos recentes).
+## Abas: Todos (todos os pilotos), Meus pilotos (detalhes), Voltas (tempos recentes) e Clima (radar de chuva).
 ## Tabelas no estilo Garagem (TimingTable "garage"), linhas do jogador na cor da equipe.
 
 signal closed
@@ -13,6 +13,7 @@ var _tab := 0
 var _tabs: PanelContainer
 var _body: VBoxContainer
 var _table: TimingTable
+var _radar: RadarWidget
 
 
 func setup(p_sim: RaceSim) -> void:
@@ -24,7 +25,7 @@ func setup(p_sim: RaceSim) -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 14)
 	head.add_child(UiStyle.g_label("DADOS DA CORRIDA", 22, UiStyle.G_TEXT, "black"))
-	var tabs := ScreenKit.segmented([[0, "Todos"], [1, "Meus pilotos"], [2, "Voltas"]], 0, _select)
+	var tabs := ScreenKit.segmented([[0, "Todos"], [1, "Meus pilotos"], [2, "Voltas"], [3, "Clima"]], 0, _select)
 	_tabs = tabs
 	head.add_child(tabs)
 	head.add_child(UiStyle.hspacer())
@@ -49,9 +50,24 @@ func _select(i: int) -> void:
 	refresh()
 
 
+## Abre o painel já numa aba (o selo de clima da barra de topo abre direto no Clima).
+func open_tab(i: int) -> void:
+	visible = true
+	_select(i)
+	for b: Button in (_tabs.get_child(0) as Control).get_children():
+		b.set_pressed_no_signal(int(b.get_meta("value")) == i)
+
+
 func _build() -> void:
 	for c in _body.get_children():
 		c.queue_free()
+	_radar = null
+	if _tab == 3:
+		_radar = RadarWidget.new()
+		_radar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_body.add_child(_radar)
+		_radar.setup(sim, true)
+		return
 	_table = TimingTable.new()
 	_table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_child(_table)
@@ -111,6 +127,8 @@ func refresh() -> void:
 	if not visible:
 		return
 	match _tab:
+		3:
+			_radar.refresh()
 		0:
 			_refresh_all()
 		1:

@@ -5,6 +5,8 @@ extends PanelContainer
 
 signal answered(message_id: int, option: int)
 
+const WIDTH := 600.0  ## faixa baixa no centro da pista
+
 var _message_id := -1
 var _who: Label
 var _avatar_holder: HBoxContainer
@@ -18,7 +20,7 @@ func _ready() -> void:
 	style.border_width_left = 7
 	style.border_color = UiStyle.RED
 	add_theme_stylebox_override("panel", style)
-	custom_minimum_size = Vector2(440, 0)
+	custom_minimum_size = Vector2(WIDTH, 0)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	add_child(v)
@@ -31,9 +33,9 @@ func _ready() -> void:
 	_who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(_who)
 	v.add_child(head)
-	_text = UiStyle.g_label("", 19, UiStyle.G_INK, "black")
+	_text = UiStyle.g_label("", 16, UiStyle.G_INK, "black")
 	_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text.custom_minimum_size = Vector2(416, 0)
+	_text.custom_minimum_size = Vector2(WIDTH - 24.0, 0)
 	v.add_child(_text)
 	_answers = HBoxContainer.new()
 	_answers.add_theme_constant_override("separation", 6)

@@ -23,9 +23,9 @@ var _seg_leader: Button
 
 func setup(p_sim: RaceSim) -> void:
 	sim = p_sim
-	custom_minimum_size.x = 320.0  # (a altura vem de quem posiciona a torre)
+	custom_minimum_size.x = 290.0  # (a altura vem de quem posiciona a torre)
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.05), 22, 0, 0))
+	add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS, 20, 0, 0))
 	clip_contents = true
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 0)
@@ -120,6 +120,9 @@ func _make_row(index: int) -> Dictionary:
 	name_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_box.clip_contents = true
 	var name_l := UiStyle.g_label("", 13, UiStyle.G_TEXT, "black")
+	name_l.clip_text = true  # nome comprido encolhe com "…" em vez de empurrar as colunas para fora
+	name_l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_box.add_child(name_l)
 	var icons := {}
@@ -135,7 +138,7 @@ func _make_row(index: int) -> Dictionary:
 	tag.visible = false
 	h.add_child(tag)
 	var gap := UiStyle.g_label("", 12, UiStyle.G_TEXT_2)
-	gap.custom_minimum_size = Vector2(46, 0)
+	gap.custom_minimum_size = Vector2(44, 0)
 	gap.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(gap)
@@ -143,7 +146,7 @@ func _make_row(index: int) -> Dictionary:
 	tyre.custom_minimum_size = Vector2(20, 20)
 	h.add_child(tyre)
 	var tail := Control.new()
-	tail.custom_minimum_size = Vector2(36, 0)
+	tail.custom_minimum_size = Vector2(32, 0)
 	tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var age := UiStyle.g_label("", 12, UiStyle.G_TEXT_2)
 	age.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

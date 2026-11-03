@@ -72,6 +72,8 @@ var crashed: Dictionary = {}  ## CarState -> true se bateu (fora do resto da cla
 var ai_plan: Dictionary = {}  ## CarState -> Array[float] instantes de saída planejados
 var red_flag_at := INF
 var red_flag_until := -1.0
+var phase_start: Dictionary = {}  ## CarState -> instante (seg_time) em que a fase começou (para o carro andar na pista 3D)
+var _acc := 0.0  ## tempo que sobrou de um quadro (a tela chama advance() com frações de segundo)
 
 
 ## options: seed, player_team, weather, rain_probability, incident_rate, sprint, auto_player.
@@ -123,7 +125,11 @@ func _set_cuts(n: int) -> void:
 # --- tempo ------------------------------------------------------------------------------
 
 func advance(seconds: float) -> void:
-	var steps := int(seconds / DT)
+	# acumula o resto: a 60 fps e 4× cada quadro traz só ~0,07 s, menos que um passo (DT = 0,5 s);
+	# sem isso o relógio nunca andava na tela e só dava para "simular"
+	_acc += seconds
+	var steps := int(_acc / DT)
+	_acc -= steps * DT
 	for i in steps:
 		if over:
 			return
@@ -181,6 +187,7 @@ func _update_car(car: CarState) -> void:
 
 func _set_phase(car: CarState, p: Phase, end_time: float) -> void:
 	phase[car] = p
+	phase_start[car] = seg_time
 	phase_end[car] = end_time
 
 
@@ -427,6 +434,21 @@ func status_of(car: CarState) -> String:
 		Phase.IN_LAP:
 			return "Volta de entrada"
 	return "Garagem"
+
+
+## Distância percorrida na volta da fase atual (saída, lançada ou entrada), para desenhar o carro na
+## pista. Interpola com o tempo que sobrou do último passo (`_acc`), então o movimento é suave.
+func render_distance(car: CarState) -> float:
+	if phase[car] == Phase.GARAGE:
+		return 0.0
+	var start: float = phase_start.get(car, 0.0)
+	var span := maxf(float(phase_end[car]) - start, 0.001)
+	return clampf((seg_time + _acc - start) / span, 0.0, 1.0) * track.length_m
+
+
+## O carro aparece na pista (na garagem, batido ou eliminado ele some).
+func marker_visible(car: CarState) -> bool:
+	return phase[car] != Phase.GARAGE and not crashed.has(car)
 
 
 func is_red_flag() -> bool:
