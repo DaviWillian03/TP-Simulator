@@ -160,13 +160,14 @@ func test_icones_de_status_e_abandono_na_torre() -> void:
 	assert_true(st._rows[4]["icons"]["investigation"].visible, "triângulo amarelo")
 	assert_true(st._rows[5]["icons"]["penalty"].visible, "círculo vermelho")
 	assert_eq(st._rows[order.find(screen.sim.fastest_lap_car)]["icons"]["fastest"].visible, screen.sim.fastest_lap_car != null)
-	# abandono vai para o fim da torre, apagado e com a etiqueta
+	# abandono vai para o fim da torre, apagado e com "FORA" no lugar da diferença (como na transmissão)
 	order[0].retired = true
 	order[0].retire_reason = "motor"
 	st.refresh()
 	var last: Dictionary = st._rows[st._rows.size() - 1]
 	assert_eq(st._row_cars[st._rows.size() - 1], order[0])
-	assert_eq((last["tag"] as Label).text, "ABANDONO")
+	assert_eq((last["gap"] as Label).text, "FORA")
+	assert_eq((last["name"] as Label).text, order[0].code(), "sigla de 3 letras")
 
 
 func test_rival_mostra_so_idade_do_pneu_e_meu_carro_mostra_barra_de_vida() -> void:

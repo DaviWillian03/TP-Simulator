@@ -3,7 +3,7 @@
  "name": "Circuit of the Americas",
  "short_name": "Austin",
  "grand_prix": "GP dos Estados Unidos",
- "country": "Estados Unidos",
+ "country": "Estados Unidos", "country_code": "us",
  "city": "Austin",
  "round": 17,
  "date": "2026-10-25",

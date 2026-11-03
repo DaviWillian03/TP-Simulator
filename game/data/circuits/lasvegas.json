@@ -3,7 +3,7 @@
  "name": "Las Vegas Strip Circuit",
  "short_name": "Las Vegas",
  "grand_prix": "GP de Las Vegas",
- "country": "Estados Unidos",
+ "country": "Estados Unidos", "country_code": "us",
  "city": "Las Vegas",
  "round": 20,
  "date": "2026-11-21",

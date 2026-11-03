@@ -31,3 +31,7 @@ Logos pessoais das equipes: o usuário forneceu um zip (formula1.com/en/teams, v
 símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `game/local/emblems/`
 (ignorada pelo git) e **não entram no repositório**; `tools/prepare_logos.py` as padroniza e
 `TeamEmblems` as compõe sobre um quadrado na cor da equipe.
+
+## Bandeiras dos países (game/assets/flags/)
+- **flag-icons** 7.2.3 — https://github.com/lipis/flag-icons (via cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/).
+  Licença **MIT** (texto em `game/assets/flags/LICENSE-flag-icons.txt`). Usadas como fundo translúcido do nome do GP.

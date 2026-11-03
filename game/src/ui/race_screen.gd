@@ -29,7 +29,6 @@ var _weather_btn: Button
 var _radio: RadioCard
 var _drawer: DataDrawer
 var _meta: Label
-var _lap_label: Label
 var _flag_pill: PanelContainer
 var _flag_label: Label
 var _speed_seg: PanelContainer
@@ -100,7 +99,7 @@ func _debug_pit_state() -> void:
 
 
 const LEFT_W := CarControlPanel.WIDTH + 24.0  ## coluna dos seus pilotos (cartão + margens)
-const TOWER_W := 290.0
+const TOWER_W := 266.0
 const SIDE_TOP := 78.0
 
 
@@ -146,6 +145,7 @@ func _build_ui() -> void:
 			p.setup(sim, car)
 			p.pit_pressed.connect(_open_pit)
 			p.orders_pressed.connect(_open_orders)
+			p.focus_pressed.connect(_on_driver_pressed)  # tocar no cartão segue o piloto, como a linha da torre
 			_car_panels.append(p)
 
 	# torre: tocar numa linha segue aquele carro; tocar de novo volta à vista geral
@@ -211,17 +211,10 @@ func _build_top_bar() -> void:
 	menu.pressed.connect(Session.go_to_title)
 	bar.add_child(menu)
 
-	var titles := VBoxContainer.new()
-	titles.add_theme_constant_override("separation", -2)
-	titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	titles.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var title := UiStyle.g_label(("SPRINT · " if sim.sprint else "") + sim.track.grand_prix.to_upper(), 20, UiStyle.G_TEXT, "black")
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	titles.add_child(title)
-	_meta = UiStyle.g_caption("", UiStyle.G_TEXT_2)
-	_meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	titles.add_child(_meta)
-	bar.add_child(titles)
+	# nome do GP com a bandeira do país ao fundo (o contador de voltas fica só na torre)
+	var head := ScreenKit.flag_title(("SPRINT · " if sim.sprint else "") + sim.track.grand_prix.to_upper(), 20, sim.track.country_code)
+	_meta = head["sub"]
+	bar.add_child(head["box"])
 
 	# pausa + velocidades numa pílula escura
 	var speed_pill := PanelContainer.new()
@@ -285,20 +278,6 @@ func _build_top_bar() -> void:
 		snd.icon = load("res://assets/icons/%s.svg" % ("mute" if RaceAudio.muted else "sound")))
 	bar.add_child(snd)
 
-	bar.add_child(UiStyle.hspacer())
-	var lap := VBoxContainer.new()
-	lap.add_theme_constant_override("separation", -6)
-	lap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	lap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_lap_label = UiStyle.g_label("", 30, UiStyle.RED, "black")
-	_lap_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_lap_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lap.add_child(_lap_label)
-	var lc := UiStyle.g_caption("Volta")
-	lc.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	lc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lap.add_child(lc)
-	bar.add_child(lap)
 
 
 func _connect_sim_signals() -> void:
@@ -364,9 +343,8 @@ func _process(delta: float) -> void:
 
 
 func _refresh_ui() -> void:
-	_lap_label.text = "FIM" if sim.chequered else "%d/%d" % [sim.leader_lap(), sim.total_laps]
 	var rain := sim.weather.rain_label()
-	_meta.text = "%s · %d voltas" % [sim.track.short_name, sim.total_laps]
+	_meta.text = sim.track.short_name
 	_weather_btn.text = " " + RadarWidget.chip_text(sim)
 	_weather_btn.icon = load("res://assets/icons/%s.svg" % ("rain" if sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD else ("mixed" if rain != "sem chuva" else "sun")))
 	_refresh_flag()
@@ -380,8 +358,10 @@ func _refresh_ui() -> void:
 			question = q
 	_radio.show_message(question)
 	var order := sim.standings()
+	var following := _track_view.followed if _track_view.cam_mode == TrackView3D.CamMode.CAR else null
 	for p in _car_panels:
 		p.refresh(order.find(p.car) + 1)
+		p.set_followed(p.car == following)
 
 
 ## Selo de bandeira na barra de topo (some com a pista liberada).

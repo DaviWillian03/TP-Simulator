@@ -32,7 +32,7 @@ const DT := 0.1  ## segundos de corrida por passo
 const GRID_SPACING_M := 10.0
 const MIN_GAP_M := 9.0  ## sem ultrapassar, um carro não chega mais perto que isso do da frente
 const ATTACK_WINDOW_S := 1.0  ## a menos de 1 s do carro da frente: pode tentar ultrapassar
-const DIRTY_AIR_S := 0.3  ## perda máxima por volta andando colado (ar turbulento)
+const DIRTY_AIR_S := 0.25  ## perda máxima por volta andando colado (ar turbulento)
 const STRATEGY_FRAC := 0.85  ## ponto da volta onde a IA decide se para no box
 const MODE_UPDATE_S := 2.0
 const TRACE_STEP_M := 5.0
@@ -47,12 +47,14 @@ const RUBBER_GAIN_S := 0.4  ## pista totalmente emborrachada: ~0,4 s/volta mais 
 const PACE_TIME := {CarState.PaceMode.CONSERVE: 0.45, CarState.PaceMode.NORMAL: 0.0, CarState.PaceMode.ATTACK: -0.35}
 const PACE_WEAR := {CarState.PaceMode.CONSERVE: 0.7, CarState.PaceMode.NORMAL: 1.0, CarState.PaceMode.ATTACK: 1.35}
 const ENERGY_TIME := {CarState.EnergyMode.HARVEST: 0.3, CarState.EnergyMode.BALANCED: 0.0, CarState.EnergyMode.DEPLOY: -0.3}
-const ENERGY_SOC := {CarState.EnergyMode.HARVEST: 0.12, CarState.EnergyMode.BALANCED: 0.0, CarState.EnergyMode.DEPLOY: -0.15}
-const OVERTAKE_MODE_BONUS_S := 0.25  ## energia extra para quem ataca a menos de 1 s (regra 2026)
-const OVERTAKE_MODE_COST := 0.05
-const OVERTAKE_SCALE := 0.2  ## quão "suave" é a curva de chance em torno da vantagem exigida
-const OVERTAKE_BASE_REQUIRED_S := 0.45  ## vantagem mínima mesmo na pista mais fácil
-const OVERTAKE_DIFFICULTY_S := 1.5  ## vantagem extra exigida por ponto de dificuldade da pista
+## carga da bateria por volta: Equilíbrio recarrega devagar (antes era 0 e a bateria só esvaziava), Carregar
+## recarrega rápido (custa ritmo), Bateria gasta (ganha ritmo). Ver test_battery.
+const ENERGY_SOC := {CarState.EnergyMode.HARVEST: 0.18, CarState.EnergyMode.BALANCED: 0.05, CarState.EnergyMode.DEPLOY: -0.14}
+const OVERTAKE_MODE_BONUS_S := 0.2  ## energia extra para quem ataca a menos de 1 s (regra 2026)
+const OVERTAKE_MODE_COST := 0.03
+const OVERTAKE_SCALE := 0.21  ## quão "suave" é a curva de chance em torno da vantagem exigida
+const OVERTAKE_BASE_REQUIRED_S := 0.4  ## vantagem mínima mesmo na pista mais fácil
+const OVERTAKE_DIFFICULTY_S := 1.4  ## vantagem extra exigida por ponto de dificuldade da pista
 const OVERTAKE_MAX_CHANCE := 0.5
 const OVERTAKE_HARD_TRACK_S := 4.0  ## pistas muito travadas (dificuldade > 0,7) exigem bem mais
 const DEFEND_HARD_S := 0.15  ## "defender forte" exige mais vantagem de quem ataca
@@ -504,11 +506,17 @@ func _resolve_overtakes(order: Array[CarState]) -> void:
 func _try_overtake(att: CarState, def: CarState, zone: Dictionary) -> bool:
 	var advantage := _lap_time(def, false) - _lap_time(att, false)  # > 0: atacante mais rápido
 	advantage += (DriverStats.attr(att.driver, "racecraft") - DriverStats.attr(def.driver, "racecraft")) * DriverStats.RACECRAFT_K
-	if att.battery > 0.1:
+	var required_base := OVERTAKE_BASE_REQUIRED_S + track.overtaking_difficulty * OVERTAKE_DIFFICULTY_S \
+		+ maxf(0.0, track.overtaking_difficulty - 0.7) * OVERTAKE_HARD_TRACK_S + (DEFEND_HARD_S if def.defend_hard else 0.0)
+	# modo de ultrapassagem: gasta bateria só quando faz diferença (sem ele faltaria vantagem) e no máximo uma
+	# vez por volta — antes era usado em toda tentativa e a bateria ficava sempre vazia
+	if att.battery > 0.1 and att.boost_lap != att.laps_done and advantage < required_base \
+			and advantage + OVERTAKE_MODE_BONUS_S > required_base - 2.0 * OVERTAKE_SCALE:
 		advantage += OVERTAKE_MODE_BONUS_S
 		att.battery = maxf(0.0, att.battery - OVERTAKE_MODE_COST)
-	# Ex.: Interlagos (0,35) exige ~1,0 s/volta de vantagem para a chance chegar à metade do máximo;
-	# Mônaco (0,95) exige ~2,9 s (quase impossível, como na vida real).
+		att.boost_lap = att.laps_done
+	# Ex.: Interlagos (0,35) exige ~0,9 s/volta de vantagem para a chance chegar à metade do máximo;
+	# Mônaco (0,95) exige ~2,8 s (ainda quase impossível). Mais fácil desde 2026-11-03 (pedido do usuário).
 	var required := OVERTAKE_BASE_REQUIRED_S + track.overtaking_difficulty * OVERTAKE_DIFFICULTY_S \
 		+ maxf(0.0, track.overtaking_difficulty - 0.7) * OVERTAKE_HARD_TRACK_S
 	if def.defend_hard:

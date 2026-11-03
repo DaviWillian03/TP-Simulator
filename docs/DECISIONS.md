@@ -396,3 +396,19 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - **Bandeira quadriculada** ao lado do nome na torre para quem recebeu a bandeirada.
 - **Pódio animado** (`PodiumView`): 3º, 2º e vencedor sobem nos degraus com foto, logo e confete; botão leva ao resultado completo.
 - Correção: a herança de desenvolvimento da IA na virada era calculada equipe por equipe, mudando a ordem das seguintes; agora calcula tudo antes.
+
+### Torre estilo TV, bateria, ultrapassagens, animações e cartão do piloto (2026-11-03)
+- **Torre** (`StandingsPanel`, 266 px): posição na cor da equipe · emblema · seta verde/vermelha ao ganhar/perder posição (vira bandeira
+  quadriculada após a bandeirada) · **sigla de 3 letras** · diferença (ou NO BOX em vermelho, RODOU, FORA) · pneu · idade/vida ·
+  **extras na ponta direita, alinhados** (volta mais rápida e investigação/punição; cabem os dois). Volta atual no cabeçalho da torre
+  (o contador vermelho da barra de cima saiu). Classificação também usa as siglas.
+- **Bandeira do país** translúcida atrás do nome do GP (`ScreenKit.flag_title`; bandeiras flag-icons, MIT; `country_code` nos circuitos).
+- **Bateria**: Equilíbrio recarrega +5%/volta (antes 0), Carregar +18%, Usar −14%; o bônus de ultrapassagem gasta 3% e só é usado quando
+  faz diferença, no máximo uma vez por volta (antes era gasto em toda tentativa e a bateria vivia vazia). Largada com 80%.
+- **Ultrapassagens um pouco mais fáceis** (vantagem mínima 0,45→0,40 s, dificuldade da pista 1,5→1,4, ar sujo 0,3→0,25 s): ~1,2–1,4×
+  mais trocas de posição. Equilíbrio conferido depois: carro 53,6% · piloto 23,2% · resto 23,2%.
+- **Animações na pista** (`MarkerMotion`): ultrapassagem = o carro de trás passa por dentro do outro em ~1,2 s; rodada/escapada = sai da
+  pista (anel amarelo piscando), para e volta; batida/quebra = fica parado fora da pista, apagando, por ~14 s.
+- **Cartão do piloto**: faixa na cor da equipe, logo ao lado da foto, posição que pulsa verde/vermelho ao mudar, velocímetro no ritmo e
+  ícone de bateria com a carga (raio ao usar, seta ao carregar); tocar no cartão segue o piloto na pista (cartão destacado).
+- Correção: o fundo vermelho do `CutButton` ficava cinza depois de o botão voltar a ficar ativo.

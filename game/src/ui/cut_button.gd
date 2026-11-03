@@ -40,7 +40,9 @@ func _init() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED and _bg:
+	# o fundo é um nó filho: redesenha junto com o botão (inclui ligar/desligar — antes ficava cinza
+	# depois de o botão voltar a ficar ativo, ex.: carro saindo do pit lane)
+	if (what == NOTIFICATION_RESIZED or what == NOTIFICATION_DRAW) and _bg:
 		_bg.queue_redraw()
 
 

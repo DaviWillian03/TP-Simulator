@@ -15,7 +15,10 @@ const PLAYER_SCALE := 0.2
 
 static var _disc: ImageTexture
 
-var _layers: Array[GeometryInstance3D] = []  # de trás para a frente: anel, contorno, disco, número
+var _layers: Array[GeometryInstance3D] = []
+var _base_alpha: Array[float] = []
+var _alert: Sprite3D
+var _fade := 1.0  # de trás para a frente: anel, contorno, disco, número
 
 
 func setup(car: CarState) -> void:
@@ -36,6 +39,33 @@ func setup(car: CarState) -> void:
 	_flag(label)
 	add_child(label)
 	_layers.append(label)
+	for l in _layers:
+		_base_alpha.append((l as Variant).modulate.a)
+	# anel amarelo de alerta (rodou / saiu da pista), atrás do disco
+	_alert = Sprite3D.new()
+	_alert.texture = _disc_texture()
+	_alert.modulate = Color("#ffd24a")
+	_flag(_alert)
+	_alert.pixel_size = PIXEL_SIZE * k * 1.15
+	_alert.visible = false
+	add_child(_alert)
+	_alert.render_priority = -1
+
+
+## Transparência do marcador inteiro (carro batido apagando).
+func set_fade(a: float) -> void:
+	if is_equal_approx(a, _fade):
+		return
+	_fade = a
+	for i in _layers.size():
+		var m: Color = (_layers[i] as Variant).modulate
+		m.a = _base_alpha[i] * a
+		(_layers[i] as Variant).modulate = m
+
+
+## Anel amarelo piscando enquanto o carro está fora da pista.
+func set_alert(on: bool) -> void:
+	_alert.visible = on and int(Time.get_ticks_msec() / 180) % 2 == 0
 
 
 ## Ordem de desenho: cada carro desenha as suas 3-4 camadas juntas (senão os números de carros
@@ -44,6 +74,7 @@ func set_rank(rank: int) -> void:
 	var base := clampi(105 - rank * 4, -100, 109)
 	for i in _layers.size():
 		_layers[i].render_priority = base + i
+	_alert.render_priority = base - 1
 
 
 ## Preto ou branco, o que contrastar mais com a cor da equipe.

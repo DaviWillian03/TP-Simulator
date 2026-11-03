@@ -30,7 +30,8 @@ var tyre := "medium"
 var tyre_wear := 0.0  ## 0 = novo, 1 = totalmente gasto
 var tyre_laps := 0
 var compounds_used: Array[String] = []
-var battery := 0.6  ## carga da bateria (0..1)
+var battery := 0.8  ## carga da bateria (0..1)
+var boost_lap := -1  ## última volta em que usou o modo de ultrapassagem (no máximo uma vez por volta)
 
 # ordens (definidas pelo jogador nos carros dele; pela IA nos demais)
 var pace_mode := PaceMode.NORMAL

@@ -10,7 +10,7 @@ extends Control
 const UI_REFRESH_S := 0.2
 const SPEEDS := [2.0, 4.0, 8.0, 16.0]
 const LEFT_W := CarControlPanel.WIDTH + 24.0
-const TOWER_W := 384.0
+const TOWER_W := 330.0
 const SIDE_TOP := 78.0
 
 var weekend: WeekendSim
@@ -132,17 +132,9 @@ func _build_top_bar(layer: Control) -> void:
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(Session.go_to_weekend)
 	bar.add_child(back)
-	var titles := VBoxContainer.new()
-	titles.add_theme_constant_override("separation", -2)
-	titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	titles.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var title := UiStyle.g_label(String(WeekendSim.SESSION_NAMES[weekend.session_id()]).to_upper(), 20, UiStyle.G_TEXT, "black")
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	titles.add_child(title)
-	_sub = UiStyle.g_caption("", UiStyle.G_TEXT_2)
-	_sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	titles.add_child(_sub)
-	bar.add_child(titles)
+	var head := ScreenKit.flag_title(String(WeekendSim.SESSION_NAMES[weekend.session_id()]).to_upper(), 20, String(weekend.circuit.get("country_code", "")))
+	_sub = head["sub"]
+	bar.add_child(head["box"])
 
 	var speed_pill := PanelContainer.new()
 	speed_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -348,7 +340,7 @@ func _refresh_ui() -> void:
 		var b := q.best_in_segment(car)
 		_table.set_row_style(i, "me" if car.is_player else ("out" if out else "normal"))
 		_table.set_pos(i, 0, str(i + 1), Color(1, 1, 1, 0.18) if out else car.team_color())
-		_table.set_team(i, 1, car.team["id"], StandingsPanel.surname(car.display_name()))
+		_table.set_team(i, 1, car.team["id"], car.code())  # sigla de 3 letras, como na transmissão
 		_table.set_text(i, 2, UiStyle.format_time(b))
 		_table.set_text(i, 3, "—" if i == 0 or b == INF or out else "+%.3f" % (b - lead_best))
 		var c: Dictionary = q.tyres.compounds[car.tyre] if q.run_tyre.has(car) else {}

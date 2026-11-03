@@ -1,11 +1,11 @@
 class_name StandingsPanel
 extends PanelContainer
-## Torre de posições da corrida — direção Garagem (mockup design/mockups/v7-1-corrida.html).
+## Torre de posições da corrida no estilo da transmissão da F1 (pedido do usuário, 2026-11-03).
 ##
-## Uma linha tocável por piloto: quadrado da posição na cor da equipe, emblema, SOBRENOME e os
-## ícones de status, diferença (para o carro da frente ou para o líder), pneu em círculo e, nos
-## SEUS carros, a barra de vida do pneu; nos rivais só a idade do pneu em voltas (o desgaste
-## exato é telemetria interna). Tocar na linha segue o carro dele na pista.
+## Cabeçalho com a volta. Uma linha tocável por piloto, com colunas FIXAS (nada cobre nada):
+## posição na cor da equipe · emblema · seta verde/vermelha (ou bandeira quadriculada) · SIGLA de 3 letras ·
+## diferença (ou NO BOX / FORA) · pneu · idade do pneu (rivais) ou barra de vida (seus carros) · extras na ponta
+## direita, só para quem tem: volta mais rápida e investigação/punição, alinhados (cabem os dois). Tocar na linha segue o carro dele na pista.
 
 signal driver_pressed(car: CarState)
 
@@ -19,11 +19,15 @@ var _rows: Array[Dictionary] = []
 var _row_cars: Array[CarState] = []
 var _seg_front: Button
 var _seg_leader: Button
+var _lap_label: Label
+var _prev_pos: Dictionary = {}  ## CarState -> posição na atualização anterior
+var _arrow: Dictionary = {}  ## CarState -> [direção (+1 ganhou / -1 perdeu), até quando (ms)]
+const ARROW_MS := 4000
 
 
 func setup(p_sim: RaceSim) -> void:
 	sim = p_sim
-	custom_minimum_size.x = 290.0  # (a altura vem de quem posiciona a torre)
+	custom_minimum_size.x = 266.0  # (a altura vem de quem posiciona a torre)
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS, 20, 0, 0))
 	clip_contents = true
@@ -54,10 +58,10 @@ func _header() -> Control:
 	m.add_theme_constant_override("margin_left", 12)
 	m.add_theme_constant_override("margin_right", 8)
 	m.add_child(h)
-	var title := UiStyle.g_caption("Pos · Piloto")
-	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	h.add_child(title)
+	_lap_label = UiStyle.g_label("VOLTA –", 20, UiStyle.G_TEXT, "black")
+	_lap_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_lap_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(_lap_label)
 	var seg := PanelContainer.new()
 	seg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	seg.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 14, 2, 2))
@@ -99,46 +103,47 @@ func _make_row(index: int) -> Dictionary:
 	b.tooltip_text = "Tocar para seguir este carro"
 	var h := HBoxContainer.new()
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_theme_constant_override("separation", 6)
+	h.add_theme_constant_override("separation", 3)
 	b.add_child(h)
 	h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	h.offset_left = 6
-	h.offset_right = -8
-	var pos := UiStyle.pos_cell(27.0)
-	pos.custom_minimum_size = Vector2(27, 21)
+	h.offset_left = 5
+	h.offset_right = -6
+	var pos := UiStyle.pos_cell(26.0)
+	pos.custom_minimum_size = Vector2(26, 21)
 	pos.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pos.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	(pos.get_child(0) as Label).add_theme_font_override("font", UiStyle.G_BLACK)
 	(pos.get_child(0) as Label).add_theme_font_size_override("font_size", UiStyle.fs(13))
 	h.add_child(pos)
-	var emblem := TeamEmblems.make_rect("", 22)
+	var emblem := TeamEmblems.make_rect("", 20)
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(emblem)
-	var name_box := HBoxContainer.new()
-	name_box.add_theme_constant_override("separation", 5)
-	name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	name_box.clip_contents = true
-	var name_l := UiStyle.g_label("", 13, UiStyle.G_TEXT, "black")
-	name_l.clip_text = true  # nome comprido encolhe com "…" em vez de empurrar as colunas para fora
-	name_l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	name_box.add_child(name_l)
+	# seta de posição ganha/perdida; depois da bandeirada o mesmo lugar mostra a bandeira quadriculada
+	var mark := Control.new()
+	mark.custom_minimum_size = Vector2(14, 16)
+	mark.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var arrow := StatusIcon.new()
+	arrow.kind = "up"
+	arrow.modulate.a = 0.0
+	mark.add_child(arrow)
+	arrow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var icons := {}
-	for kind: String in ["finished", "fastest", "investigation", "penalty", "camera"]:
-		var ic := StatusIcon.new()
-		ic.kind = kind
-		ic.visible = false
-		name_box.add_child(ic)
-		icons[kind] = ic
-	h.add_child(name_box)
-	var tag := UiStyle.g_label("", 10, Color.WHITE, "black")
-	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tag.visible = false
-	h.add_child(tag)
-	var gap := UiStyle.g_label("", 12, UiStyle.G_TEXT_2)
-	gap.custom_minimum_size = Vector2(44, 0)
+	var flag := StatusIcon.new()
+	flag.kind = "finished"
+	flag.visible = false
+	mark.add_child(flag)
+	flag.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	icons["finished"] = flag
+	h.add_child(mark)
+	var name_l := UiStyle.g_label("", 14, UiStyle.G_TEXT, "black")
+	name_l.custom_minimum_size = Vector2(40, 0)
+	name_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(name_l)
+	icons["camera"] = StatusIcon.new()  # (foco agora é a borda da linha; mantido por compatibilidade)
+	var gap := UiStyle.g_label("", 12, UiStyle.G_TEXT_2, "bold")
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gap.custom_minimum_size = Vector2(46, 0)
 	gap.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(gap)
@@ -146,7 +151,7 @@ func _make_row(index: int) -> Dictionary:
 	tyre.custom_minimum_size = Vector2(20, 20)
 	h.add_child(tyre)
 	var tail := Control.new()
-	tail.custom_minimum_size = Vector2(32, 0)
+	tail.custom_minimum_size = Vector2(28, 0)
 	tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var age := UiStyle.g_label("", 12, UiStyle.G_TEXT_2)
 	age.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -158,10 +163,25 @@ func _make_row(index: int) -> Dictionary:
 	tail.add_child(life)
 	life.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	h.add_child(tail)
+	# extras na ponta direita, alinhados à direita: só aparecem para quem tem (volta mais rápida,
+	# investigação/punição). Um ícone sozinho fica sempre na mesma coluna; cabem dois ao mesmo tempo.
+	var extras := HBoxContainer.new()
+	extras.alignment = BoxContainer.ALIGNMENT_END
+	extras.add_theme_constant_override("separation", 2)
+	extras.custom_minimum_size = Vector2(34, 16)
+	extras.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	extras.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for kind: String in ["fastest", "investigation", "penalty"]:
+		var ic := StatusIcon.new()
+		ic.kind = kind
+		ic.visible = false
+		extras.add_child(ic)
+		icons[kind] = ic
+	h.add_child(extras)
 	b.pressed.connect(func() -> void:
 		if _row_cars[index] != null:
 			driver_pressed.emit(_row_cars[index]))
-	return {"button": b, "pos": pos, "emblem": emblem, "name": name_l, "icons": icons, "tag": tag, "gap": gap,
+	return {"button": b, "pos": pos, "emblem": emblem, "arrow": arrow, "name": name_l, "icons": icons, "gap": gap,
 		"tyre": tyre, "age": age, "life": life}
 
 
@@ -171,6 +191,7 @@ static func surname(full_name: String) -> String:
 
 func refresh() -> void:
 	var order := sim.standings()
+	_lap_label.text = "FIM" if sim.chequered else "VOLTA %d/%d" % [sim.leader_lap(), sim.total_laps]
 	for i in _rows.size():
 		var car := order[i]
 		_row_cars[i] = car
@@ -196,22 +217,31 @@ func refresh() -> void:
 		emblem.texture = TeamEmblems.get_texture(car.team["id"])
 		emblem.modulate.a = 0.4 if retired else 1.0
 		var name_l: Label = row["name"]
-		name_l.text = surname(car.display_name())
+		name_l.text = car.code()
 		name_l.add_theme_color_override("font_color", UiStyle.G_TEXT_OFF if retired else UiStyle.G_TEXT)
 		var icons: Dictionary = row["icons"]
 		icons["fastest"].visible = sim.fastest_lap_car == car and not retired
-		icons["investigation"].visible = not car.investigation.is_empty() and not retired
-		icons["penalty"].visible = (car.penalty_pending_s > 0.0 or car.drive_through) and not retired
-		icons["camera"].visible = focus
+		var penalty := (car.penalty_pending_s > 0.0 or car.drive_through) and not retired
+		icons["penalty"].visible = penalty
+		icons["investigation"].visible = not penalty and not car.investigation.is_empty() and not retired
 		icons["finished"].visible = car.finished and not car.disqualified  # recebeu a bandeirada
-		var tag: Label = row["tag"]
-		var state := "DSQ" if car.disqualified else ("" if retired else ("BOX" if car.in_pit else ("RODOU" if car.stall_s > 0.0 else "")))
-		tag.visible = state != "" or retired
-		tag.text = "ABANDONO" if retired else state
-		tag.add_theme_color_override("font_color", UiStyle.G_TEXT_2 if retired or state == "BOX" else Color.WHITE)
+		# seta de posição: verde ao ganhar, vermelha ao perder (some depois de alguns segundos)
+		var now := Time.get_ticks_msec()
+		var p := i + 1
+		if _prev_pos.has(car) and int(_prev_pos[car]) != p and not retired:
+			_arrow[car] = [1 if p < int(_prev_pos[car]) else -1, now + ARROW_MS]
+		_prev_pos[car] = p
+		var arrow: StatusIcon = row["arrow"]
+		var arr: Array = _arrow.get(car, [0, 0])
+		var show_arrow := int(arr[1]) > now and not retired
+		arrow.kind = "up" if int(arr[0]) > 0 else "down"
+		arrow.modulate.a = 1.0 if show_arrow and not car.finished else 0.0
+		arrow.queue_redraw()
 		var gap: Label = row["gap"]
-		gap.visible = not retired
-		gap.text = _gap_text(car, i, order)
+		gap.text = "DSQ" if car.disqualified else ("FORA" if retired else ("NO BOX" if car.in_pit else ("RODOU" if car.stall_s > 0.0 else _gap_text(car, i, order))))
+		var special := car.in_pit or car.stall_s > 0.0
+		gap.add_theme_color_override("font_color", UiStyle.G_TEXT_OFF if retired or car.disqualified else (UiStyle.RED if car.in_pit else (Color("#ffd24a") if car.stall_s > 0.0 else UiStyle.G_TEXT_2)))
+		gap.add_theme_font_override("font", UiStyle.G_BLACK if special else UiStyle.G_BOLD)
 		var compound: Dictionary = sim.tyres.compounds[car.tyre]
 		var tyre: TyreBadge = row["tyre"]
 		tyre.visible = not retired
@@ -277,6 +307,10 @@ class StatusIcon:
 						var on := (row + col) % 2 == 0
 						draw_rect(Rect2(c + Vector2(-5.2 + col * cell, -7 + row * cell), Vector2(cell, cell)), Color.WHITE if on else Color("#11141a"))
 				draw_rect(Rect2(c + Vector2(-5.2, -7), Vector2(4 * cell, 3 * cell)), Color(UiStyle.G_LIGHT), false, 1.0)
+			"up":  # ganhou posição: triângulo verde
+				draw_colored_polygon(PackedVector2Array([c + Vector2(0, -5), c + Vector2(5, 3), c + Vector2(-5, 3)]), Color("#39d36b"))
+			"down":  # perdeu posição: triângulo vermelho
+				draw_colored_polygon(PackedVector2Array([c + Vector2(0, 5), c + Vector2(5, -3), c + Vector2(-5, -3)]), Color("#ff4d3d"))
 			"camera":  # em foco
 				draw_rect(Rect2(c + Vector2(-7, -3.5), Vector2(14, 9)), Color(UiStyle.G_LIGHT), false, 1.6)
 				draw_circle(c + Vector2(0, 1), 2.4, Color(UiStyle.G_LIGHT), false, 1.6, true)

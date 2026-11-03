@@ -7,6 +7,7 @@ var id := ""
 var name := ""
 var short_name := ""
 var grand_prix := ""
+var country_code := ""  ## ISO de 2 letras (bandeira do país na interface)
 var length_m := 0.0
 var laps := 0
 var base_lap_time_s := 0.0
@@ -32,6 +33,7 @@ func _init(d: Dictionary) -> void:
 	name = d["name"]
 	short_name = d["short_name"]
 	grand_prix = d["grand_prix"]
+	country_code = String(d.get("country_code", ""))
 	length_m = float(d["length_m"])
 	laps = int(d["laps"])
 	base_lap_time_s = float(d["base_lap_time_s"])

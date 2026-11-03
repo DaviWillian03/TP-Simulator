@@ -3,7 +3,7 @@
  "name": "Hungaroring",
  "short_name": "Hungaroring",
  "grand_prix": "GP da Hungria",
- "country": "Hungria",
+ "country": "Hungria", "country_code": "hu",
  "city": "Mogyoród",
  "round": 11,
  "date": "2026-07-26",

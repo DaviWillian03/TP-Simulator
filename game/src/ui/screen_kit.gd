@@ -174,6 +174,40 @@ static func top_shade(layer: Control, height: float = 96.0) -> void:
 	shade.offset_bottom = height
 
 
+## Título com a bandeira do país ao fundo, translúcida (dá para ler o nome por cima).
+## Devolve {"box": Control, "title": Label, "sub": Label}.
+static func flag_title(title: String, size: int, country_code: String) -> Dictionary:
+	var box := PanelContainer.new()
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	box.clip_contents = true
+	box.add_theme_stylebox_override("panel", UiStyle.g_box(Color(0, 0, 0, 0), 10, 10, 2))
+	var path := "res://assets/flags/%s.svg" % country_code
+	if country_code != "" and ResourceLoader.exists(path):
+		var flag := TextureRect.new()
+		flag.texture = load(path)
+		flag.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		flag.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		flag.modulate = Color(1, 1, 1, 0.3)
+		flag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(flag)
+	var titles := VBoxContainer.new()
+	titles.add_theme_constant_override("separation", -2)
+	titles.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var t := UiStyle.g_label(title, size, UiStyle.G_TEXT, "black")
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	t.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))  # legível sobre qualquer bandeira
+	t.add_theme_constant_override("shadow_offset_y", 2)
+	titles.add_child(t)
+	var sub := UiStyle.g_caption("", UiStyle.G_TEXT_2)
+	sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sub.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	sub.add_theme_constant_override("shadow_offset_y", 1)
+	titles.add_child(sub)
+	box.add_child(titles)
+	return {"box": box, "title": t, "sub": sub}
+
+
 ## Botão redondo escuro translúcido (para ficar legível sobre a pista).
 static func glass_round_button(icon_name: String, size: int, tooltip: String = "") -> Button:
 	var b := round_button(icon_name, size, tooltip)

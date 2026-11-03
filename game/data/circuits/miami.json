@@ -3,7 +3,7 @@
  "name": "Miami International Autodrome",
  "short_name": "Miami",
  "grand_prix": "GP de Miami",
- "country": "Estados Unidos",
+ "country": "Estados Unidos", "country_code": "us",
  "city": "Miami",
  "round": 4,
  "date": "2026-05-03",

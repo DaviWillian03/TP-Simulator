@@ -3,7 +3,7 @@
  "name": "Autódromo José Carlos Pace",
  "short_name": "Interlagos",
  "grand_prix": "GP de São Paulo",
- "country": "Brasil",
+ "country": "Brasil", "country_code": "br",
  "city": "São Paulo",
  "round": 19,
  "date": "2026-11-08",

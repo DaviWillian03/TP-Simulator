@@ -36,6 +36,7 @@ var _sky_mat: ProceduralSkyMaterial
 var _asphalt: StandardMaterial3D
 var _rain: CPUParticles3D
 var _rank_timer := 0.0
+var _motion := MarkerMotion.new()
 var _cars: Dictionary = {}  # CarState -> CarMarker3D
 var _sc: MeshInstance3D
 var _target := Vector3.ZERO
@@ -52,6 +53,10 @@ func setup(source: Variant) -> void:
 		sim = TrackFeed.of_quali(source)
 	else:
 		sim = source
+	if source is RaceSim:  # animações de ultrapassagem, rodada e batida
+		(source as RaceSim).overtake.connect(func(att: CarState, def: CarState, _z: String) -> void: _motion.on_overtake(att, def))
+		(source as RaceSim).incident.connect(func(car: CarState, kind: String, _t: String) -> void:
+			_motion.on_incident(car, kind, Track3D.WIDTH, (source as RaceSim).render_distance(car)))
 	stretch = true
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_vp = SubViewport.new()
@@ -263,22 +268,29 @@ func _process(delta: float) -> void:
 		var order := sim.standings()
 		for i in order.size():
 			(_cars[order[i]] as CarMarker3D).set_rank(i if not order[i].is_player else -1)
+	_motion.step(delta)
 	for car: CarState in _cars:
 		var mi: CarMarker3D = _cars[car]
-		mi.visible = sim.marker_visible(car)
+		var wreck := not sim.marker_visible(car) and _motion.is_wreck_visible(car)
+		mi.visible = sim.marker_visible(car) or wreck
 		if not mi.visible:
 			continue
-		var d := sim.render_distance(car)
+		var d := _motion.wreck_distance(car) if wreck else sim.render_distance(car) + _motion.distance_offset(car)
 		var frac := fposmod(d, sim.track.length_m) / sim.track.length_m
 		var pos := t3.point_at(frac)
 		var basis := t3.basis_at(frac)
-		if car.in_pit:
-			pos -= basis.x * PIT_OFFSET_M
-		elif car.stall_s > 0.0:
-			pos += basis.x * (Track3D.WIDTH * 0.9)
-			basis = basis.rotated(Vector3.UP, 1.2)
-		elif d < 0.0:
-			pos += basis.x * (3.0 if car.grid_position % 2 == 0 else -3.0)
+		if wreck:  # batido/quebrado: parado fora da pista, apagando
+			pos += basis.x * _motion.wreck_lateral(car)
+			mi.set_fade(_motion.wreck_alpha(car))
+		else:
+			mi.set_fade(1.0)
+			if car.in_pit:
+				pos -= basis.x * PIT_OFFSET_M
+			elif d < 0.0 and car.laps_done == 0 and sim.render_distance(car) < 0.0:
+				pos += basis.x * (3.0 if car.grid_position % 2 == 0 else -3.0)
+			else:
+				pos += basis.x * _motion.lateral(car)
+		mi.set_alert(not wreck and _motion.is_off_track(car))
 		mi.position = pos + Vector3.UP * 3.0
 	_sc.visible = sim.safety_car_out()
 	if _sc.visible:
