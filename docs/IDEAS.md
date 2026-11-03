@@ -641,3 +641,15 @@ Regras para não ficar maçante:
 "o jogo precisa ter som, coloque barulhos de carro de F1 alternados no fundo, com efeitos sonoros da torcida…; poder aproximar
 a visão da pista…; bolas coloridas com a cor de cada equipe…; aumente as fontes…; arrastar tela para cima, baixo ou lados…"
 → implementado (ver DECISIONS, "Ajustes de jogabilidade pedidos após testar o APK").
+
+## Análise externa (ChatGPT) trazida pelo usuário — 2026-11-03
+Princípio: cada intervenção precisa de benefício, custo e uma situação em que vale a pena; poucos botões, consequências ricas.
+- **Classificação**: janela de saída com previsão de tráfego; plano de 1 ou 2 voltas rápidas; pneu novo × usado; objetivo da volta
+  (garantir tempo × buscar o limite); vácuo entre companheiros; reagir a volta comprometida (continuar / nova tentativa / box).
+- **Corrida**: ordens com objetivo e duração ("atacar por 2 voltas, encerrar se os pneus aquecerem"); escolher batalhas (defender ×
+  priorizar ritmo × deixar passar); reagir à parada do rival (cobrir × estender × manter) com previsão de onde volta à pista;
+  "preparar ataque" (recupera energia para o próximo ponto bom); acordos entre companheiros; clima com informação imperfeita;
+  decisões no safety car e em problemas mecânicos; engenheiro explicando a consequência depois.
+- **Anti-cansaço**: avisos agrupados; se o jogador não responder, segue o plano; desacelerar/pausar em momentos importantes
+  (opcional); IA com as mesmas informações. Meta de protótipo: 3–5 decisões na classificação e 8–12 numa corrida de 10–15 min.
+→ Decidido em 2026-11-03 (ver DECISIONS, "Decisões a partir da análise externa").

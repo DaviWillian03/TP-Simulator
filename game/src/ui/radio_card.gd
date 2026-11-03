@@ -76,6 +76,9 @@ func show_message(m: Dictionary) -> void:
 		ScreenKit.press_feedback(b)
 		b.pressed.connect(func() -> void: answered.emit(_message_id, i))
 		_answers.add_child(b)
-	var left := int(m["expires_lap"]) - car.laps_done
-	_deadline.text = "Sem resposta em %d volta%s, o piloto decide sozinho" % [left, "" if left == 1 else "s"]
+	if m.has("deadline_text"):  # classificação: prazo em segundos de sessão, não em voltas
+		_deadline.text = String(m["deadline_text"])
+	else:
+		var left := int(m["expires_lap"]) - car.laps_done
+		_deadline.text = "Sem resposta em %d volta%s, o piloto decide sozinho" % [left, "" if left == 1 else "s"]
 	visible = true

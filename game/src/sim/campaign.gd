@@ -384,6 +384,14 @@ func weekend_options(extra: Dictionary = {}) -> Dictionary:
 		"points_race": regs.points_race, "points_sprint": regs.points_sprint, "min_dry_compounds": regs.min_dry_compounds}
 	if not season_over():
 		o["sprint"] = regs.is_sprint(next_round()["id"])
+	# posição de cada piloto no campeonato, a partir da metade da temporada: quem briga pelo título arrisca
+	# menos na classificação (QualiSim.choose_lap_mode)
+	if round >= calendar().size() / 2:
+		var champ := {}
+		var rows := driver_standings()
+		for i in rows.size():
+			champ[rows[i][0]] = i + 1
+		o["championship"] = champ
 	o.merge(extra, true)
 	return o
 

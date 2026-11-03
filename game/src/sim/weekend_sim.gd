@@ -40,6 +40,7 @@ var sprint_weekend := false
 var points_race: Array = RaceSim.RACE_POINTS  ## tabela de pontos da corrida (campanha: do regulamento)
 var points_sprint: Array = RaceSim.SPRINT_POINTS
 var seed_value := 1
+var championship: Dictionary = {}  ## campanha: driver id -> posição no campeonato (classificação usa)
 var incident_rate := 1.0
 var campaign := false  ## fim de semana de uma campanha (volta para a sede ao terminar)
 
@@ -74,6 +75,7 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	incident_rate = float(options.get("incident_rate", 1.0))
 	campaign = bool(options.get("campaign", false))
 	seed_value = int(options.get("seed", 1))
+	championship = options.get("championship", {})
 	rng.seed = seed_value
 	sprint_weekend = bool(options.get("sprint", circuit.get("sprint", false)))  # campanha: o Conselho pode mudar quais GPs têm sprint
 	points_race = options.get("points_race", RaceSim.RACE_POINTS)
@@ -173,6 +175,7 @@ func make_quali(auto_player: bool = false) -> QualiSim:
 	var opts := session_options(session_id())
 	opts["sprint"] = session_id() == "sprint_quali"
 	opts["auto_player"] = auto_player
+	opts["championship"] = championship
 	return QualiSim.new(track, tyres, teams, drivers, setups, opts)
 
 

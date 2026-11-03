@@ -44,6 +44,7 @@ var debug_pause := false  ## --pause: começa pausado (capturas do grid parado)
 var debug_sc := false  ## --sc: aciona o safety car logo após o --advance
 var debug_open_data := false  ## --data: abre o menu DADOS (--data=3 abre na aba Clima)
 var debug_data_tab := 0
+var slow_on_decisions := true  ## desacelera a sessão quando surge uma decisão importante (opção do jogador)
 var debug_skip_podium := false  ## --no-podium: vai direto à tabela de resultados (capturas)
 var debug_profile := ""  ## --profile=<id do piloto>: abre a ficha na tela Pessoal
 var debug_pit := false  ## --pit: abre a tela do box na corrida

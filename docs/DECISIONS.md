@@ -412,3 +412,18 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - **Cartão do piloto**: faixa na cor da equipe, logo ao lado da foto, posição que pulsa verde/vermelho ao mudar, velocímetro no ritmo e
   ícone de bateria com a carga (raio ao usar, seta ao carregar); tocar no cartão segue o piloto na pista (cartão destacado).
 - Correção: o fundo vermelho do `CutButton` ficava cinza depois de o botão voltar a ficar ativo.
+
+### Decisões a partir da análise externa (2026-11-03)
+- **Classificação** (fazer primeiro): (1) **abortar ou repetir a volta** — quando a volta lançada é comprometida (tráfego, erro), o
+  rádio oferece continuar, abortar e tentar de novo, ou voltar ao box; sem resposta, o piloto decide. (2) **Plano de 1 ou 2 voltas
+  rápidas** por saída. (3) **Objetivo da volta (garantir tempo × buscar o limite) é decidido pelo PILOTO**, não pelo jogador: depende da
+  "leitura de corrida" (regularidade + ultrapassagem/defesa, sem atributo novo), da situação da sessão (zona de eliminação, tempo,
+  disputa da pole) e, na campanha, da situação no campeonato. Janela de saída com previsão de tráfego: **não**.
+- **Corrida** (depois): manter os botões de ritmo e bateria e **somar planos** com duração (atalhos; o piloto ajusta ritmo e bateria
+  durante o plano); **reagir à parada do rival** (cobrir / estender / manter); **desacelerar em momentos-chave** (opção). Previsão de
+  retorno do box e engenheiro explicando o resultado: não por enquanto.
+- **Implementado (classificação)**: `QualiSim.choose_lap_mode` (garantir: +0,10 s e metade do risco; limite: −0,12 s e 1,8× o risco; acerto
+  da escolha 55–95% pela leitura de corrida; líder do campeonato evita risco desnecessário, a partir da metade da temporada); plano
+  1/2 VOLTAS no cartão; problema da volta sorteado no início e revelado no meio (25–70%) → rádio Continuar / Abortar e tentar de novo
+  (volta lenta até a linha, pneu usado) / Voltar ao box; 25 s de sessão para responder, senão o piloto decide; rivais decidem sozinhos.
+  "Pausa em decisões" (padrão SIM) baixa a velocidade para 2× quando o rádio pergunta.

@@ -28,6 +28,8 @@ var _cut_info: Label
 var _end_card: PanelContainer
 var _toasts: ToastFeed
 var _refresh := 0.0
+var _radio: RadioCard
+var _speeds: PanelContainer
 
 
 func _ready() -> void:
@@ -108,6 +110,12 @@ func _ready() -> void:
 	_cut_info = UiStyle.g_label("", 13, Color("#ffb4a8"), "bold")
 	_cut_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	iv.add_child(_cut_info)
+	_radio = RadioCard.new()
+	_radio.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_child(_radio)
+	_radio.answered.connect(func(id: int, option: int) -> void:
+		q.answer(id, option)
+		_refresh_ui())
 	col.add_child(_info_card)
 	_end_card = _build_end_card()
 	_end_card.visible = false
@@ -120,6 +128,7 @@ func _ready() -> void:
 	q.session_event.connect(func(t: String) -> void: _toasts.push(t))
 	q.segment_finished.connect(_on_segment_finished)
 	q.lap_completed.connect(_on_lap)
+	q.decision_needed.connect(_on_decision)
 	_refresh_ui()
 
 
@@ -143,12 +152,21 @@ func _build_top_bar(layer: Control) -> void:
 	for s: float in SPEEDS:
 		speed_opts.append([s, "%d×" % int(s)])
 	var speeds := ScreenKit.segmented(speed_opts, time_scale, func(s: float) -> void: time_scale = s)
+	_speeds = speeds
 	speeds.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	for b: Control in (speeds.get_child(0) as Control).get_children():
 		b.custom_minimum_size = Vector2(50, 40)
 		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	speed_pill.add_child(speeds)
 	bar.add_child(speed_pill)
+	# desacelerar quando surge uma decisão (opção; vale para a classificação e a corrida)
+	var slow := ScreenKit.glass_pill_button("")
+	var paint := func() -> void: slow.text = "Pausa em decisões: %s" % ("SIM" if Session.slow_on_decisions else "NÃO")
+	paint.call()
+	slow.pressed.connect(func() -> void:
+		Session.slow_on_decisions = not Session.slow_on_decisions
+		paint.call())
+	bar.add_child(slow)
 	var rest := ScreenKit.glass_pill_button("SIMULAR RESTO")
 	rest.pressed.connect(_simulate_rest)
 	bar.add_child(rest)
@@ -185,13 +203,6 @@ func _player_panel(car: CarState) -> Control:
 	photo.custom_minimum_size = Vector2(CarControlPanel.PHOTO, CarControlPanel.PHOTO)
 	photo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	photo.add_child(DriverPhotos.make_avatar(car.driver, car.team_color(), CarControlPanel.PHOTO))
-	var logo := TeamEmblems.make_rect(String(car.team["id"]), 26)
-	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	photo.add_child(logo)
-	logo.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	logo.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	logo.offset_left = -4
-	logo.offset_bottom = 3
 	# tocar na foto segue esse carro na pista (de novo: volta à vista geral)
 	var cam := Button.new()
 	cam.flat = true
@@ -214,6 +225,9 @@ func _player_panel(car: CarState) -> Control:
 	names.add_child(surname)
 	var pos_row := HBoxContainer.new()
 	pos_row.add_theme_constant_override("separation", 6)
+	var logo := TeamEmblems.make_rect(String(car.team["id"]), 22)  # ao lado da foto, não por cima
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pos_row.add_child(logo)
 	var pos := UiStyle.g_label("P–", 17, UiStyle.RED, "black")
 	pos_row.add_child(pos)
 	var num := UiStyle.g_label("#%d" % int(car.driver["number"]), 12, UiStyle.G_TEXT_3, "bold")
@@ -240,6 +254,13 @@ func _player_panel(car: CarState) -> Control:
 	row.add_theme_constant_override("separation", 4)
 	var tyres := _tyre_tiles(row, car)
 	v.add_child(row)
+	# plano da saída: uma volta rápida ou duas seguidas (segunda chance, pneu mais gasto)
+	var plan := {"laps": 1}
+	var plan_seg := ScreenKit.segmented([[1, "1 VOLTA"], [2, "2 VOLTAS"]], 1, func(n: int) -> void: plan["laps"] = n)
+	for b: Control in (plan_seg.get_child(0) as Control).get_children():
+		b.custom_minimum_size = Vector2(0, 36)
+		(b as Button).add_theme_font_size_override("font_size", UiStyle.fs(12))
+	v.add_child(plan_seg)
 	var go := CutButton.new()
 	go.custom_minimum_size = Vector2(0, 48)
 	go.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -253,7 +274,8 @@ func _player_panel(car: CarState) -> Control:
 	go.add_theme_constant_override("h_separation", 6)
 	go.add_theme_font_size_override("font_size", UiStyle.fs(13))
 	v.add_child(go)
-	var panel := {"car": car, "pos": pos, "status": status, "tyres": tyres, "go": go, "bar": bar, "lap": lap, "row": row}
+	var panel := {"car": car, "pos": pos, "status": status, "tyres": tyres, "go": go, "bar": bar, "lap": lap, "row": row,
+		"plan": plan, "plan_seg": plan_seg}
 	go.pressed.connect(_send_out.bind(panel))
 	_panels.append(panel)
 	return card
@@ -302,8 +324,9 @@ func _send_out(panel: Dictionary) -> void:
 	for id: String in panel["tyres"]:
 		if (panel["tyres"][id] as Button).button_pressed:
 			compound = id
-	if q.send_out(panel["car"], compound):
-		_toasts.push("%s saiu para a volta rápida." % (panel["car"] as CarState).code(), "hot")
+	var laps: int = panel["plan"]["laps"]
+	if q.send_out(panel["car"], compound, laps):
+		_toasts.push("%s saiu para %s." % [(panel["car"] as CarState).code(), "a volta rápida" if laps == 1 else "duas voltas rápidas"], "hot")
 	_refresh_ui()
 
 
@@ -353,6 +376,12 @@ func _refresh_ui() -> void:
 		_evolution.text += " Pista %s." % q.weather.surface_label().to_lower()
 	for p: Dictionary in _panels:
 		_refresh_panel(p, order)
+	var ask := {}
+	for p: Dictionary in _panels:
+		var d := q.pending_for(p["car"])
+		if not d.is_empty():
+			ask = d
+	_radio.show_message(ask)
 	_end_card.visible = q.is_over()
 	_info_card.visible = not q.is_over()
 
@@ -368,6 +397,7 @@ func _refresh_panel(p: Dictionary, order: Array[CarState]) -> void:
 	var bar: ProgressBar = p["bar"]
 	bar.visible = running
 	(p["row"] as Control).visible = garage
+	(p["plan_seg"] as Control).visible = garage
 	if garage:
 		lap.text = "%d jogo(s) de macios novos" % q.new_softs[car]
 		if car.last_lap_time > 0.0:
@@ -375,8 +405,10 @@ func _refresh_panel(p: Dictionary, order: Array[CarState]) -> void:
 	elif running:
 		bar.value = q.render_distance(car) / q.track.length_m * 100.0
 		var c: Dictionary = q.tyres.compounds[car.tyre]
-		lap.text = "%s · %d%% da volta" % [c["name"], roundi(bar.value)]
 		var flying := state == "Volta lançada"
+		lap.text = "%s · %d%% da volta" % [c["name"], roundi(bar.value)]
+		if flying:  # o objetivo da volta é escolha do piloto: a tela só informa
+			lap.text = "%s · %s · %d%%" % [c["name"], q.lap_mode_label(car), roundi(bar.value)]
 		bar.add_theme_stylebox_override("fill", UiStyle.g_box(Color("#c77dff") if flying else Color("#8f98a7"), 4, 0, 0))
 	else:
 		lap.text = state
@@ -388,6 +420,16 @@ func _refresh_panel(p: Dictionary, order: Array[CarState]) -> void:
 		go.text = "EM ANDAMENTO"
 	else:
 		go.text = state.to_upper()
+
+
+## Volta comprometida de um dos seus pilotos: o rádio pergunta; com a opção ligada, a sessão desacelera.
+func _on_decision(_d: Dictionary) -> void:
+	if Session.slow_on_decisions and time_scale > SPEEDS[0]:
+		time_scale = SPEEDS[0]
+		for b: Button in (_speeds.get_child(0) as Control).get_children():
+			b.set_pressed_no_signal(is_equal_approx(float(b.get_meta("value")), time_scale))
+		_toasts.push("Rádio: decisão pendente — velocidade reduzida.")
+	_refresh_ui()
 
 
 func _on_lap(car: CarState, lap_time: float, valid: bool) -> void:
