@@ -43,7 +43,7 @@ func setup(sim: RaceSim) -> void:
 	sim.overtake.connect(_on_overtake)
 	sim.pit_stop.connect(_on_pit_stop)
 	sim.radio_message.connect(func(_m: Dictionary) -> void: play("radio", -6.0))
-	sim.flag_changed.connect(func(_f: int, _t: String) -> void: play("alert", -8.0))
+	sim.flag_changed.connect(func(_f: int, _t: String) -> void: play("alert", -14.0))
 	sim.race_finished.connect(func() -> void: play("cheer", 0.0))
 	_apply_mute()
 	if not muted:

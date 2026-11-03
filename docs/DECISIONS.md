@@ -349,3 +349,12 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - **Arrastar para rolar** em todas as listas, tabelas e faixas laterais: `DragScroll` lê o arrasto antes dos botões; arrastar
   não aperta botão; inércia ao soltar. Colunas que passam do fim da tela rolam (`ScreenKit.scroll_column`), a barra de abas da
   campanha e os blocos do treino deslizam para o lado, e a tabela de Dados da corrida desliza para o lado.
+
+### Marcadores estilo MM3, zoom só por pinça e som refeito (2026-11-03)
+- **Marcador do carro** (`CarMarker3D`): disco plano na cor da equipe com o **número do piloto** por cima, sempre de frente
+  para a câmera e com tamanho constante na tela; carros do jogador maiores e com anel branco; o líder desenha por cima.
+  Testado número × logo da equipe dentro da bola: **número venceu** (identifica o piloto; o logo repete nos dois carros e some pequeno).
+- **Cores de equipe distintas**: Williams passou de `#1868DB` para `#1347F5` (estava quase igual à Red Bull); teste garante distância mínima.
+- **Zoom**: só pinça com dois dedos (e roda do mouse). **Sem botões + / −** na tela.
+- **Som refeito**: a 1ª versão soava como sirene (tons puros que deslizam + alerta de dois tons). Agora cada explosão do motor é um
+  estalo áspero com irregularidade, passagens com Doppler sobre cada estalo, avisos viraram toques curtos. Segue por síntese (`tools/make_sounds.py`).

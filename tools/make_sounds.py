@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Gera os sons da corrida por síntese (arquivos originais, sem gravações de terceiros).
 
-Saída: game/assets/audio/*.wav (mono, 22 050 Hz, 16 bits).
+Saída: game/assets/audio/*.wav (mono, 22 050 Hz, 16 bits).  Precisa só de numpy.
 
-Por que síntese: não há licença a negociar nem gravação de transmissão (que teria direitos),
-e dá para ajustar o som mexendo em números. Os motores imitam o timbre agudo de um V6 turbo
-híbrido (~11 mil rpm: 3 explosões por volta do virabrequim ≈ 550 Hz) com efeito Doppler
-na passagem; a torcida é ruído filtrado em faixas de voz com "ondas" de volume.
-
-Uso: python3 tools/make_sounds.py   (precisa só de numpy)
+Versão 2 (a 1ª soava como sirene de ambulância): motor de F1 não é um tom puro, é uma sequência
+de EXPLOSÕES. Aqui cada explosão é um estalo curto e áspero (ruído que decai + ressonâncias do
+escapamento) colocado no instante certo; o tom do motor nasce da repetição desses estalos, com
+pequenas irregularidades de tempo e de força (como num V6 de verdade). Por isso o resultado é
+rugoso e "serrilhado", e não uma senoide limpa que desliza. A passagem do carro usa o efeito
+Doppler sobre o instante de cada estalo. Nada de dois tons alternados (era o "alerta"): os
+avisos agora são toques curtos e discretos.
 """
 import os
 import wave
@@ -23,7 +24,7 @@ rng = np.random.default_rng(2026)
 # --- utilidades ---------------------------------------------------------------------------
 
 def band(x, lo, hi):
-    """Filtro passa-faixa por FFT (circular: bom para sons em loop)."""
+    """Filtro passa-faixa por FFT (circular: bom para sons em loop). lo=0 → só passa-baixa."""
     spec = np.fft.rfft(x)
     f = np.fft.rfftfreq(len(x), 1.0 / SR)
     mask = np.clip((f - lo * 0.7) / (lo * 0.3 + 1e-9), 0, 1) if lo > 0 else np.ones_like(f)
@@ -40,15 +41,6 @@ def smooth_noise(n, rate_hz):
     k = max(2, int(n / SR * rate_hz) + 2)
     pts = rng.uniform(-1, 1, k)
     return np.interp(np.linspace(0, k - 1, n), np.arange(k), pts)
-
-
-def osc(freq, harmonics):
-    """Oscilador com frequência variável (freq = array por amostra) e harmônicos [(n, amp)]."""
-    phase = 2 * np.pi * np.cumsum(freq) / SR
-    out = np.zeros_like(freq)
-    for n, a in harmonics:
-        out += a * np.sin(n * phase + n * 0.7)
-    return out
 
 
 def env(n, attack, release):
@@ -70,6 +62,12 @@ def loopify(x, fade_s=0.6):
     return body
 
 
+def fftconv(x, h):
+    n = len(x) + len(h) - 1
+    m = 1 << (n - 1).bit_length()
+    return np.fft.irfft(np.fft.rfft(x, m) * np.fft.rfft(h, m), m)[:len(x)]
+
+
 def save(name, x, peak=0.85):
     x = x / (np.max(np.abs(x)) + 1e-9) * peak
     os.makedirs(OUT, exist_ok=True)
@@ -81,102 +79,153 @@ def save(name, x, peak=0.85):
     print("%-14s %.1f s" % (name, len(x) / SR))
 
 
-ENGINE_HARM = [(1, 1.0), (2, 0.55), (3, 0.42), (4, 0.25), (5, 0.18), (6, 0.12), (8, 0.07), (10, 0.04)]
+# --- motor --------------------------------------------------------------------------------
 
-
-def rpm_curve(n, start, top, shift_every_s):
-    """Rotação subindo com trocas de marcha (cai ~12% a cada troca)."""
+def _firing_ir():
+    """Resposta de UMA explosão no escapamento: estalo + ressonâncias (~12 ms)."""
+    n = int(0.012 * SR)
     t = np.arange(n) / SR
-    pos = (t % shift_every_s) / shift_every_s
-    return start + (top - start) * pos ** 0.8
+    ir = noise(n) * np.exp(-t / 0.0014)
+    for f, a, d in [(850, 0.9, 0.0022), (2500, 0.6, 0.0013), (5200, 0.3, 0.0008)]:
+        ir += a * np.sin(2 * np.pi * f * t + rng.uniform(0, 6.28)) * np.exp(-t / d)
+    ir[0] += 2.0  # ataque seco
+    return ir / np.max(np.abs(ir))
 
 
-# --- sons ---------------------------------------------------------------------------------
+IR = None
+
+
+def engine(fire_hz, firing_phase=None, jitter=0.11):
+    """Som de motor a partir da frequência de explosões por amostra (fire_hz: array).
+
+    As explosões caem onde a fase acumulada cruza um número inteiro; cada uma tem tempo e força
+    levemente aleatórios (irregularidade) e o padrão de força se repete a cada 3 (V6)."""
+    global IR
+    if IR is None:
+        IR = _firing_ir()
+    n = len(fire_hz)
+    phase = np.cumsum(fire_hz) / SR if firing_phase is None else firing_phase
+    idx = np.nonzero(np.diff(np.floor(phase)))[0]
+    jit = rng.normal(0.0, jitter, len(idx)) * (SR / fire_hz[idx])
+    idx = np.clip(idx + jit.astype(int), 0, n - 1)
+    pattern = np.array([1.0, 0.78, 0.9])
+    amp = pattern[np.arange(len(idx)) % 3] * (1.0 + 0.35 * rng.standard_normal(len(idx)))
+    imp = np.zeros(n)
+    np.add.at(imp, idx, amp)
+    sig = fftconv(imp, IR)
+    # chiado da combustão: ruído de médios/agudos no ritmo das explosões
+    burst = fftconv(np.abs(imp), np.hanning(int(0.005 * SR)))
+    sig += 0.35 * band(noise(n), 900, 5500) * burst / (np.max(burst) + 1e-9)
+    return np.tanh(sig / (np.std(sig) + 1e-9) * 0.9)
+
+
+def rev_curve(n, base, shift_s, depth=0.14):
+    """Rotação (Hz de explosão) subindo e caindo um pouco a cada troca de marcha."""
+    t = np.arange(n) / SR
+    pos = (t % shift_s) / shift_s
+    return base * (1.0 - depth + depth * pos ** 0.8)
+
 
 def engine_bed():
-    """Fundo: vários carros longe, misturados (loop de 8 s)."""
+    """Fundo: vários carros ao longe, misturados (loop de 8 s). Rugido, não tom."""
     n = int(8.6 * SR)
     mix = np.zeros(n)
-    for i in range(6):
-        base = rng.uniform(430, 600)
-        rpm = rpm_curve(n, base * 0.86, base, rng.uniform(1.1, 1.9))
-        rpm *= 1 + 0.02 * smooth_noise(n, 0.5)
-        vol = 0.5 + 0.5 * (0.5 + 0.5 * smooth_noise(n, rng.uniform(0.15, 0.4)))
-        mix += osc(rpm, ENGINE_HARM) * vol * rng.uniform(0.5, 1.0)
-    mix = np.tanh(mix * 0.6)
-    mix = band(mix, 80, 2400)  # longe: perde os agudos
-    mix += 0.25 * band(noise(n), 60, 600)  # ronco/vento
+    for _ in range(7):
+        base = rng.uniform(360, 560)
+        f = rev_curve(n, base, rng.uniform(1.2, 2.2)) * (1 + 0.025 * smooth_noise(n, 0.7))
+        mix += engine(f) * rng.uniform(0.5, 1.0)
+    mix = band(mix, 60, 2600)  # longe: perde os agudos
+    mix += 0.30 * band(noise(n), 40, 260) * (0.7 + 0.3 * smooth_noise(n, 0.5))  # ronco grave
+    mix += 0.10 * band(noise(n), 300, 2000)  # vento/pista
     save("engine_bed", loopify(mix))
 
 
 def passby(idx, seed):
-    """Um carro passando perto: sobe de giro, Doppler e volume pela distância."""
+    """Um carro passando perto: aproxima, passa e se afasta (Doppler sobre cada explosão)."""
     global rng
     rng = np.random.default_rng(seed)
     dur = 3.0
     n = int(dur * SR)
     t = np.arange(n) / SR
-    tc = dur * rng.uniform(0.42, 0.5)  # instante em que passa na frente
-    v = rng.uniform(75, 90)  # m/s (~300 km/h)
-    d = rng.uniform(10, 18)  # distância mínima (m)
+    tc = dur * rng.uniform(0.42, 0.5)
+    v = rng.uniform(70, 88)  # m/s
+    d = rng.uniform(9, 16)  # distância mínima (m)
     x = v * (t - tc)
     r = np.sqrt(x ** 2 + d ** 2)
-    c = 343.0
-    doppler = c / (c + v * x / r)  # aproximando: >1; afastando: <1
-    base = rng.uniform(540, 620)
-    rpm = rpm_curve(n, base * 0.88, base, rng.uniform(0.7, 1.0))
-    sig = osc(rpm * doppler, ENGINE_HARM + [(12, 0.03), (14, 0.02)])
-    sig = np.tanh(sig * 1.4)
-    sig += 0.35 * band(noise(n), 1500, 6000) * (d / r)  # chiado de ar/pneu
-    amp = (d / r) ** 1.3
-    save("passby_%d" % idx, sig * amp * env(n, 0.05, 0.25))
+    doppler = 343.0 / (343.0 + v * x / r)
+    base = rng.uniform(430, 540)
+    src = rev_curve(n, base, rng.uniform(0.8, 1.2), 0.1)
+    sig = engine(src * doppler, jitter=0.12)
+    near = (d / r) ** 1.2
+    bright = near ** 1.6
+    sig = band(sig, 0, 2600) * (1 - bright) + sig * bright  # só de perto soa "aberto"
+    sig += 0.30 * band(noise(n), 250, 3500) * (d / r) ** 1.7  # ar/pneus no instante da passagem
+    save("passby_%d" % idx, sig * near * env(n, 0.06, 0.3))
 
+
+def launch():
+    """Largada: motores acelerando (rotação sobe rápido) para tocar junto da torcida."""
+    global rng
+    rng = np.random.default_rng(99)
+    n = int(1.8 * SR)
+    t = np.arange(n) / SR
+    mix = np.zeros(n)
+    for _ in range(5):
+        f = (260 + 330 * (t / t[-1]) ** 0.7) * rng.uniform(0.92, 1.08)
+        mix += engine(f)
+    mix = band(mix, 80, 3200) * env(n, 0.05, 0.5)
+    save("go", mix)
+
+
+# --- torcida e efeitos --------------------------------------------------------------------
 
 def crowd_loop():
     """Torcida: murmúrio de muitas vozes com ondas de volume (loop de 9 s)."""
+    global rng
+    rng = np.random.default_rng(7)
     n = int(9.6 * SR)
     x = np.zeros(n)
     for lo, hi, a in [(250, 900, 1.0), (700, 1800, 0.7), (1600, 3500, 0.35)]:
         layer = band(noise(n), lo, hi)
         layer *= 0.6 + 0.4 * smooth_noise(n, 1.3)
         x += a * layer
-    # "vozes": rajadas curtas em faixas de formante
-    for _ in range(90):
+    for _ in range(90):  # "vozes": rajadas curtas
         L = int(rng.uniform(0.08, 0.3) * SR)
         s = rng.integers(0, n - L)
         f = rng.uniform(350, 1100)
-        blip = band(noise(L), f * 0.8, f * 1.4) * np.hanning(L)
-        x[s:s + L] += blip * rng.uniform(0.3, 0.9)
+        x[s:s + L] += band(noise(L), f * 0.8, f * 1.4) * np.hanning(L) * rng.uniform(0.3, 0.9)
     save("crowd_loop", loopify(x), 0.7)
 
 
 def cheer():
-    """Torcida vibrando (ultrapassagem, pódio): sobe rápido e cai devagar, com assobios."""
+    """Torcida vibrando: sobe rápido e cai devagar. Só ruído de voz (sem apitos)."""
+    global rng
+    rng = np.random.default_rng(8)
     n = int(3.6 * SR)
     t = np.arange(n) / SR
-    x = band(noise(n), 300, 2600) + 0.5 * band(noise(n), 1500, 4500)
+    x = band(noise(n), 300, 2600) + 0.5 * band(noise(n), 1200, 4000)
     x *= 0.75 + 0.25 * smooth_noise(n, 6)
+    for _ in range(14):  # gritos individuais
+        L = int(rng.uniform(0.15, 0.4) * SR)
+        s = rng.integers(0, n - L)
+        f = rng.uniform(450, 900)
+        x[s:s + L] += 1.2 * band(noise(L), f * 0.8, f * 1.3) * np.hanning(L)
     e = np.minimum(t / 0.35, 1.0) * np.exp(-np.maximum(t - 0.6, 0) / 1.2)
-    for _ in range(4):  # assobios
-        s = rng.uniform(0.2, 1.6)
-        L = rng.uniform(0.4, 0.9)
-        f0 = rng.uniform(1800, 2600)
-        m = (t > s) & (t < s + L)
-        tt = t[m] - s
-        f = f0 + 500 * np.sin(np.pi * tt / L)
-        x[m] += 0.35 * np.sin(2 * np.pi * np.cumsum(f) / SR) * np.hanning(m.sum())
     save("cheer", x * e)
 
 
-def beep(name, freq, dur, vol=1.0):
+def tick(name, freq, dur):
+    """Toque seco e grave (semáforo): batida curta, sem tom de apito."""
     n = int(dur * SR)
     t = np.arange(n) / SR
-    x = np.sin(2 * np.pi * freq * t) + 0.25 * np.sin(4 * np.pi * freq * t)
-    save(name, x * env(n, 0.005, dur * 0.4), 0.8 * vol)
+    x = np.sin(2 * np.pi * freq * t) * np.exp(-t / 0.035) + 0.5 * band(noise(n), 800, 3000) * np.exp(-t / 0.008)
+    save(name, x)
 
 
 def pit_gun():
-    """Pistola pneumática da roda: trem de estalos ressonantes (~0,35 s)."""
+    """Pistola pneumática da roda: trem de estalos (~0,35 s)."""
+    global rng
+    rng = np.random.default_rng(5)
     n = int(0.42 * SR)
     x = np.zeros(n)
     rate = 55.0
@@ -189,34 +238,33 @@ def pit_gun():
 
 
 def radio():
-    """Clique de rádio: chiado curto + dois tons."""
-    n = int(0.32 * SR)
+    """Rádio: estática curta de 'abrir o canal' (sem tons)."""
+    global rng
+    rng = np.random.default_rng(6)
+    n = int(0.28 * SR)
     t = np.arange(n) / SR
-    tone = np.where(t < 0.12, np.sin(2 * np.pi * 1250 * t), np.sin(2 * np.pi * 1650 * t))
-    tone *= (t > 0.04)
-    x = 0.6 * tone + 0.35 * band(noise(n), 1000, 4000) * np.exp(-t / 0.05)
-    save("radio", x * env(n, 0.003, 0.06))
+    x = band(noise(n), 1200, 3600) * np.exp(-t / 0.09)
+    x[:int(0.004 * SR)] += 1.5  # clique de abertura
+    x += 0.4 * band(noise(n), 2500, 5000) * (t > 0.18) * np.exp(-(t - 0.18) / 0.03)
+    save("radio", x * env(n, 0.001, 0.06))
 
 
 def alert():
-    """Bandeira/safety car: dois tons alternados."""
-    n = int(0.9 * SR)
+    """Aviso de bandeira: um toque suave e curto (sino abafado), nada de sirene."""
+    n = int(0.45 * SR)
     t = np.arange(n) / SR
-    f = np.where((t * 4).astype(int) % 2 == 0, 740, 990)
-    x = np.sin(2 * np.pi * np.cumsum(f) / SR)
-    x = np.tanh(2 * x) * 0.8
-    save("alert", x * env(n, 0.01, 0.1))
+    x = np.sin(2 * np.pi * 392 * t) * np.exp(-t / 0.12) + 0.35 * np.sin(2 * np.pi * 784 * t) * np.exp(-t / 0.07)
+    save("alert", x * env(n, 0.004, 0.05))
 
 
 if __name__ == "__main__":
     engine_bed()
     for i, s in enumerate([11, 22, 33]):
         passby(i + 1, s)
-    rng = np.random.default_rng(7)
     crowd_loop()
     cheer()
-    beep("light", 880, 0.22)
-    beep("go", 1320, 0.55)
+    tick("light", 170, 0.16)
+    launch()
     pit_gun()
     radio()
     alert()

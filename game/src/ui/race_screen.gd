@@ -67,7 +67,7 @@ func _ready() -> void:
 		_track_view.reparent(self)
 		_track_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		for c in get_children():
-			if c != _track_view:
+			if c != _track_view and c is CanvasItem:
 				c.visible = false
 	_drawer.visible = Session.debug_open_data
 	_connect_sim_signals()
@@ -138,22 +138,6 @@ func _build_ui() -> void:
 	_radio.answered.connect(func(id: int, option: int) -> void:
 		sim.radio.answer(id, option)
 		_refresh_ui())
-	# zoom da pista: botões + e − (além da pinça com dois dedos e da roda do mouse)
-	var zoom := VBoxContainer.new()
-	zoom.add_theme_constant_override("separation", 10)
-	zoom.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	zoom.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	zoom.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	zoom.offset_right = -14
-	zoom.offset_bottom = -14
-	_track_holder.add_child(zoom)
-	for z: Array in [["plus", "Aproximar", 0.7], ["minus", "Afastar", 1.43]]:
-		var zb := ScreenKit.round_button(z[0], UiStyle.TOUCH_MAIN, z[1])
-		var f: float = z[2]
-		for st: String in ["normal", "hover"]:  # fundo escuro: o cenário da pista é claro
-			zb.add_theme_stylebox_override(st, UiStyle.g_box(Color(0.05, 0.06, 0.08, 0.82), UiStyle.TOUCH_MAIN / 2, 0, 0))
-		zb.pressed.connect(func() -> void: _track_view.zoom_by(f))
-		zoom.add_child(zb)
 	_drawer = DataDrawer.new()
 	_drawer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_drawer.visible = false

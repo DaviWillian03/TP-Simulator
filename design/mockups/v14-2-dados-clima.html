@@ -1,0 +1,153 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>V14 · Dados · Clima</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:1280px;height:720px;overflow:hidden}.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.scene{background:#0b0c0f;color:#eef0f3;font-family:Titillium;font-weight:600}
+.wall{position:absolute;inset:0 0 250px 0;background:linear-gradient(#1b1e24,#111318 80%)}
+.wall:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:250px;background:linear-gradient(#181a1f,#0a0b0d)}
+.lamp{position:absolute;top:0;height:6px;background:#f4f6fa;border-radius:0 0 4px 4px;box-shadow:0 0 34px 10px rgba(240,245,255,.22)}
+.glow{position:absolute;inset:0;background:radial-gradient(ellipse 46% 40% at 64% 66%,rgba(24,104,219,.42),transparent 70%)}
+.cone{position:absolute;left:470px;top:0;width:560px;height:720px;background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0) 75%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%)}
+.car{position:absolute}.refl{position:absolute;transform:scaleY(-1);opacity:.13;-webkit-mask:linear-gradient(transparent 55%,#000)}
+.logo{position:absolute;left:52px;top:34px;height:74px}
+.season{position:absolute;left:56px;top:118px;font-size:13px;letter-spacing:3px;color:#9aa3b2}
+.modes{position:absolute;left:52px;top:168px;width:388px;display:flex;flex-direction:column;gap:12px}
+.mode{display:flex;align-items:center;gap:16px;border-radius:16px;padding:0 20px;background:rgba(255,255,255,.06)}
+.mode b{display:block;font-weight:900;font-size:24px;letter-spacing:.5px;line-height:1}.mode small{display:block;font-size:15px;color:#a8b0bd;margin-top:5px}
+.mode .go{margin-left:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.mode.main{height:112px;background:#f3f4f6;color:#11141a;position:relative;overflow:hidden}
+.mode.main:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:#E10600}
+.mode.main b{font-size:34px}.mode.main small{color:#4b5260}.mode.main .go{background:#E10600;color:#fff;width:54px;height:54px}
+.mode.alt{height:84px}
+.mode.lock svg{flex:none}.mode.lock{height:50px;white-space:nowrap;background:none;color:#6c7380;padding-left:20px}.mode.lock b{font-size:18px;color:#7b8290}
+.tag{font-size:12px;letter-spacing:2px;border-radius:20px;padding:4px 10px;background:rgba(255,255,255,.07);color:#8a92a0;margin-left:auto}
+.pill{display:flex;align-items:center;gap:12px;border-radius:40px;padding:8px 18px 8px 10px;background:rgba(255,255,255,.07)}
+.pill b{display:block;font-size:17px;font-weight:900;letter-spacing:1px}.pill small{display:block;font-size:13px;color:#a8b0bd}
+.top{position:absolute;right:44px;top:40px;display:flex;align-items:center;gap:12px}
+.swap{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07)}
+.plates{position:absolute;right:56px;bottom:40px;display:flex;gap:44px}
+.plate{display:flex;align-items:flex-end;gap:12px}.plate .n{font-weight:900;font-size:62px;line-height:.8;color:transparent;-webkit-text-stroke:2px #5c93ea}
+.plate b{display:block;font-size:20px;font-weight:900}.plate small{display:block;font-size:13px;color:#9aa3b2;letter-spacing:1.5px}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#5d6574}
+/* configuração */
+.hdr{position:absolute;left:44px;top:30px;display:flex;align-items:center;gap:16px}
+.round{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.hdr b{font-size:15px;letter-spacing:3px;font-weight:700;color:#9aa3b2;display:block}.hdr h1{font-size:30px;font-weight:900;letter-spacing:1px}
+.map{position:absolute;left:30px;top:96px;width:830px;height:420px}
+.map svg.trk{position:absolute;left:340px;top:6px;filter:drop-shadow(0 0 10px rgba(110,170,255,.55))}
+.badge{display:inline-flex;gap:8px;align-items:center;border-radius:20px;padding:5px 12px;font-size:13px;letter-spacing:2px;font-weight:700}
+.gpname{position:absolute;left:14px;top:40px;width:420px}
+.gpname h2{font-size:50px;font-weight:900;line-height:.95;margin:14px 0 8px}.gpname p{font-size:16px;color:#a8b0bd}
+.stats{position:absolute;left:14px;top:268px;display:grid;grid-template-columns:repeat(2,170px);gap:22px 26px}
+.stat b{display:block;font-size:40px;font-weight:900;line-height:1}.stat small{font-size:12px;letter-spacing:2px;color:#8f98a7}
+.panel{position:absolute;right:40px;top:92px;width:360px;display:flex;flex-direction:column;gap:13px}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#8f98a7;margin-bottom:8px}
+.seg{display:flex;background:rgba(255,255,255,.07);border-radius:28px;padding:4px;gap:4px}
+.seg span{flex:1;height:44px;border-radius:24px;display:grid;place-items:center;font-size:16px;font-weight:700;color:#c3c9d3}
+.seg span.on{background:#f3f4f6;color:#11141a}
+.wx{display:flex;gap:8px}.wx span{flex:1;height:58px;border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:#c3c9d3}
+.wx span.on{background:#f3f4f6;color:#11141a}
+.cta{height:60px;margin-top:2px;background:#E10600;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;font-weight:900;letter-spacing:1px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%);border-radius:14px 0 14px 14px}
+.cal{position:absolute;left:0;right:0;bottom:16px;height:108px;display:flex;gap:12px;padding-left:44px}
+.card{flex:0 0 172px;border-radius:16px;background:rgba(255,255,255,.055);padding:12px 14px;position:relative}
+.card .rd{font-size:12px;letter-spacing:2px;color:#8f98a7}.card b{display:block;font-size:17px;font-weight:900;margin-top:2px;white-space:nowrap}
+.card small{font-size:13px;color:#a8b0bd}.card svg{position:absolute;right:10px;bottom:10px;opacity:.75}
+.card.on{background:#f3f4f6;color:#11141a}.card.on small,.card.on .rd{color:#4b5260}.card.on:before{content:"";position:absolute;left:14px;right:14px;top:0;height:4px;border-radius:0 0 4px 4px;background:#1868DB}
+.chip{font-size:10px;letter-spacing:1.5px;border-radius:10px;padding:2px 7px;margin-left:4px;vertical-align:middle;font-weight:700}
+.chip.s{background:#E10600;color:#fff}.chip.n{background:#26324a;color:#ffd36b}
+.fade{position:absolute;right:0;bottom:0;width:160px;height:170px;background:linear-gradient(90deg,transparent,#0b0c0f)}
+
+.scene{background:#0b0c0f}
+.world{position:absolute;inset:0;background:#8fbf86 url(png/3d/v14_base.png) 150px 52px/1152px 648px no-repeat}
+.glass{background:rgba(11,13,18,.84);border-radius:20px}
+.top{position:absolute;left:0;right:0;top:0;height:84px;background:linear-gradient(rgba(8,10,14,.92) 0,rgba(8,10,14,.75) 55%,rgba(8,10,14,0));display:flex;align-items:center;gap:12px;padding:0 12px}
+.top h1{font-size:22px;font-weight:900;line-height:1;white-space:nowrap}.top small{display:block;font-size:12px;letter-spacing:2.5px;color:#a8b0bd;margin-top:2px;font-weight:700;white-space:nowrap}
+.rb{width:44px;height:44px;border-radius:50%;background:rgba(11,13,18,.84);display:grid;place-items:center;flex:none}
+.seg{display:flex;background:rgba(11,13,18,.84);border-radius:24px;padding:3px;gap:3px}.seg span{flex:none;white-space:nowrap;min-width:44px;height:36px;padding:0 10px;border-radius:18px;display:grid;place-items:center;font-size:15px;font-weight:700;color:#c3c9d3}
+.seg span.on{background:#f3f4f6;color:#11141a}
+.pill{height:44px;padding:0 16px;border-radius:22px;background:rgba(11,13,18,.84);display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;white-space:nowrap}
+.lapc{margin-left:auto;margin-right:324px;text-align:right}.lapc b{font-size:30px;font-weight:900;line-height:1}.lapc b i{font-style:normal;color:#E10600}.lapc small{margin:0}
+.cap{font-size:12px;letter-spacing:2.5px;color:#8f98a7;font-weight:700}
+/* coluna dos seus pilotos (vertical, à esquerda) */
+.lc{position:absolute;left:12px;width:300px;height:316px;padding:12px 14px;display:flex;flex-direction:column;gap:7px}
+.lc .h{display:flex;align-items:center;gap:9px}.lc .h b{font-size:20px;font-weight:900}.lc .h i{font-style:normal;font-size:13px;color:#8f98a7;font-weight:700}.lc .h .ps{margin-left:auto;font-size:32px;font-weight:900;color:#E10600;line-height:1}
+.lc .t{display:flex;align-items:center;gap:8px;font-size:14px;color:#c3c9d3}.lc .t .tyre{width:24px;height:24px;border-radius:50%;border:4px solid var(--t);background:#0b0c0f;color:#fff;font-size:10px;font-weight:900;display:grid;place-items:center;box-sizing:border-box;flex:none}
+.lc .t .bar2{flex:1;height:9px;border-radius:5px;background:rgba(255,255,255,.1);position:relative}.lc .t .bar2 i{position:absolute;inset:0 auto 0 0;border-radius:5px}.lc .t b{color:#fff;font-weight:900}
+.lc .gaps{display:flex;gap:16px;font-size:14px;color:#a8b0bd}.lc .gaps b{color:#fff;font-weight:900}
+.lc .seg{background:rgba(255,255,255,.07);height:42px}.lc .seg span{flex:1;min-width:0;height:36px;font-size:14px;padding:0 4px}
+.lc .row{display:flex;align-items:center;gap:8px}.lc .lb{font-size:11px;letter-spacing:2px;color:#8f98a7;font-weight:700;width:62px;flex:none}
+.lc .chips{display:flex;gap:6px;align-items:center}.lc .chips .c{width:38px;height:38px;border-radius:50%;border:5px solid var(--t);background:#0b0c0f;color:#fff;font-weight:900;font-size:14px;display:grid;place-items:center;box-sizing:border-box}
+.lc .chips .c.on{box-shadow:0 0 0 3px #f3f4f6}
+.lc .chips .eq{margin-left:auto;width:84px;height:44px;border-radius:12px;background:rgba(255,255,255,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;letter-spacing:1px;color:#8f98a7;font-weight:700;line-height:1.15}
+.lc .chips .eq b{font-size:14px;color:#fff;letter-spacing:0}
+.lc .go{height:48px;background:#E10600;color:#fff;font-size:17px;font-weight:900;letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:8px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);border-radius:12px 0 12px 12px;margin-top:auto}
+.lc .hint{font-size:13px;color:#ffb4a8}
+/* torre */
+.tower{position:absolute;right:12px;top:70px;width:300px;height:642px;overflow:hidden}
+.th{display:flex;height:32px;align-items:center;font-size:11px;letter-spacing:2px;color:#8f98a7;padding:0 12px;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700}
+.th .seg{padding:2px;margin-left:auto;gap:2px;height:26px;background:rgba(255,255,255,.07)}.th .seg span{min-width:0;height:22px;padding:0 9px;font-size:11px;letter-spacing:1px}
+.tr{display:flex;height:27px;align-items:center;padding:0 8px 0 6px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.06);gap:6px}
+.tr .p{width:27px;height:21px;border-radius:6px;display:grid;place-items:center;font-weight:900;font-size:13px;flex:none}
+.tr .n{flex:1;font-weight:900;letter-spacing:.3px;white-space:nowrap;overflow:hidden}.tr .g{width:56px;text-align:right;color:#a8b0bd;font-size:13px;font-variant-numeric:tabular-nums}
+.tr .ty{width:20px;height:20px;border-radius:50%;border:3px solid var(--t);background:#0b0c0f;color:#fff;font-size:9px;font-weight:900;display:grid;place-items:center;flex:none;box-sizing:border-box}
+.tr .age{width:30px;text-align:right;font-size:12px;color:#a8b0bd}.tr.me{background:rgba(54,113,198,.3)}.tr.cut{border-bottom:2px solid #E10600}.tr.out{opacity:.5}
+.tlife{display:inline-block;width:34px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);position:relative;flex:none}.tlife i{position:absolute;inset:0 auto 0 0;border-radius:4px}
+/* faixas e avisos sobre a pista */
+.banner{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;border-radius:16px;padding:10px 16px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px}
+.radio{display:block;bottom:12px;width:600px;background:#f3f4f6;color:#11141a;padding:12px 16px;border-left:7px solid #E10600;border-radius:18px}
+.radio .q{font-size:18px;font-weight:900;margin:3px 0 8px}.radio .opts{display:flex;gap:8px}.radio .opts span{flex:1;height:44px;border-radius:12px;background:#e3e6eb;display:grid;place-items:center;font-size:14px;font-weight:700}
+.radio .opts span.h{background:#11141a;color:#fff}.radio .cap{color:#4b5260}
+/* dados */
+.sheet.glass{background:rgba(11,13,18,.94)}.sheet{position:absolute;left:324px;right:324px;top:70px;bottom:12px;padding:14px 18px;overflow:hidden}
+.sheet .tabs{display:flex;gap:8px;align-items:center;margin-bottom:10px}.sheet .tabs h2{font-size:22px;font-weight:900;margin-right:8px;white-space:nowrap}
+.sheet .seg{background:rgba(255,255,255,.07)}
+.kv{display:flex;gap:10px;margin-top:10px}.kv .box{flex:1;border-radius:14px;background:rgba(255,255,255,.06);padding:10px 12px}.kv .box b{display:block;font-size:22px;font-weight:900;margin-top:2px}
+.radar .bars{display:flex;gap:8px;align-items:flex-end;height:110px;margin:10px 0 4px}.radar .bars i{flex:1;background:#5c93ea;border-radius:4px 4px 0 0}
+.radar .tk{display:flex;gap:8px;font-size:12px;color:#8f98a7}.radar .tk span{flex:1;text-align:center}
+.radar p{font-size:15px;color:#c3c9d3;margin-top:10px;line-height:1.35}
+.evo{margin-top:10px;font-size:14px;color:#c3c9d3;line-height:1.4}
+</style></head><body><div class="scene"><div class="world"></div>
+<div class="top"><span class="rb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span><div><h1>GP DE SÃO PAULO</h1><small>INTERLAGOS</small></div>
+<div class="seg" style="margin-left:14px"><span>II</span><span>1×</span><span class="on">2×</span><span>4×</span><span>8×</span></div>
+<div class="pill" style="background:#f3f4f6;color:#11141a">Dados</div><div class="lapc"><b>6<i>/</i>18</b><small class="cap" style="display:block">VOLTA</small></div></div>
+<div class="lc glass" style="top:70px"><div class="h"><img src="../../game/assets/emblems/redbull.svg" width="30"><b>Verstappen</b><i>#3</i><span class="ps">P3</span></div>
+<div class="t"><span class="tyre" style="--t:#F5C400">M</span><span>Médio · 5 voltas</span><div class="bar2"><i style="width:77%;background:#f3f4f6"></i></div><b>77%</b></div>
+<div class="gaps"><span>▲ <b>+4.1 s</b></span><span>▼ <b>1.8 s</b></span></div>
+<div class="row"><span class="lb">RITMO</span><div class="seg" style="flex:1"><span class="">Poupar</span><span class="on">Normal</span><span class="">Atacar</span></div></div>
+<div class="row"><span class="lb">ENERGIA</span><div class="seg" style="flex:1"><span class="">Carregar</span><span class="on">Equil.</span><span class="">Bateria</span></div></div>
+<div class="chips"><span class="lb" style="width:auto;margin-right:4px">PRÓX. PNEU</span><span class="c " style="--t:#E8261C">S</span><span class="c " style="--t:#F5C400">M</span><span class="c on" style="--t:#F2F2F2">H</span><div class="eq">EQUIPE<b>Liberado</b></div></div>
+<div class="hint">Falta usar outro composto seco.</div>
+<div class="go">CHAMAR P/ BOX <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></div></div>
+<div class="lc glass" style="top:392px"><div class="h"><img src="../../game/assets/emblems/redbull.svg" width="30"><b>Hadjar</b><i>#6</i><span class="ps">P2</span></div>
+<div class="t"><span class="tyre" style="--t:#F5C400">M</span><span>Médio · 5 voltas</span><div class="bar2"><i style="width:59%;background:#f3f4f6"></i></div><b>59%</b></div>
+<div class="gaps"><span>▲ <b>+5.0 s</b></span><span>▼ <b>4.1 s</b></span></div>
+<div class="row"><span class="lb">RITMO</span><div class="seg" style="flex:1"><span class="">Poupar</span><span class="on">Normal</span><span class="">Atacar</span></div></div>
+<div class="row"><span class="lb">ENERGIA</span><div class="seg" style="flex:1"><span class="">Carregar</span><span class="on">Equil.</span><span class="">Bateria</span></div></div>
+<div class="chips"><span class="lb" style="width:auto;margin-right:4px">PRÓX. PNEU</span><span class="c " style="--t:#E8261C">S</span><span class="c " style="--t:#F5C400">M</span><span class="c on" style="--t:#F2F2F2">H</span><div class="eq">EQUIPE<b>Liberado</b></div></div>
+<div class="hint">&nbsp;</div>
+<div class="go">CHAMAR P/ BOX <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></div></div>
+<div class="tower glass"><div class="th"><span style="width:40px">POS</span><span>PILOTO</span><div class="seg"><span class="on">À FRENTE</span><span>LÍDER</span></div></div><div class="tr"><span class="p" style="background:#FF8000;color:#11141a">1</span><img src="../../game/assets/emblems/mclaren.svg" width="22"><span class="n">NORRIS</span><span class="g">Líder</span><span class="ty" style="--t:#F5C400">M</span><span class="age">5v</span></div><div class="tr"><span class="p" style="background:#1347F5;color:#fff">2</span><img src="../../game/assets/emblems/williams.svg" width="22"><span class="n">SAINZ</span><span class="g">+5.0</span><span class="ty" style="--t:#F5C400">M</span><span class="age">5v</span></div><div class="tr"><span class="p" style="background:#1347F5;color:#fff">3</span><img src="../../game/assets/emblems/williams.svg" width="22"><span class="n">ALBON</span><span class="g">+4.1</span><span class="ty" style="--t:#F5C400">M</span><span class="age">5v</span></div><div class="tr"><span class="p" style="background:#8E9296;color:#11141a">4</span><img src="../../game/assets/emblems/audi.svg" width="22"><span class="n">HÜLKENBERG</span><span class="g">+1.8</span><span class="ty" style="--t:#F5C400">M</span><span class="age">5v</span></div><div class="tr"><span class="p" style="background:#6692FF;color:#11141a">5</span><img src="../../game/assets/emblems/racingbulls.svg" width="22"><span class="n">LINDBLAD</span><span class="g">+0.7</span><span class="ty" style="--t:#F5C400">M</span><span class="age">5v</span></div><div class="tr me"><span class="p" style="background:#3671C6;color:#fff">6</span><img src="../../game/assets/emblems/redbull.svg" width="22"><span class="n">VERSTAPPEN</span><span class="g">+10.9</span><span class="ty" style="--t:#F2F2F2">H</span><span class="tlife"><i style="width:77%;background:#f3f4f6"></i></span></div><div class="tr"><span class="p" style="background:#FF8000;color:#11141a">7</span><img src="../../game/assets/emblems/mclaren.svg" width="22"><span class="n">PIASTRI</span><span class="g">+1.2</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#27F4D2;color:#11141a">8</span><img src="../../game/assets/emblems/mercedes.svg" width="22"><span class="n">RUSSELL</span><span class="g">+0.7</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#E8002D;color:#fff">9</span><img src="../../game/assets/emblems/ferrari.svg" width="22"><span class="n">LECLERC</span><span class="g">+0.7</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">1v</span></div><div class="tr me"><span class="p" style="background:#3671C6;color:#fff">10</span><img src="../../game/assets/emblems/redbull.svg" width="22"><span class="n">HADJAR</span><span class="g">+2.1</span><span class="ty" style="--t:#F2F2F2">H</span><span class="tlife"><i style="width:77%;background:#f3f4f6"></i></span></div><div class="tr"><span class="p" style="background:#229971;color:#fff">11</span><img src="../../game/assets/emblems/astonmartin.svg" width="22"><span class="n">ALONSO</span><span class="g">+1.3</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#DEE1E2;color:#11141a">12</span><img src="../../game/assets/emblems/haas.svg" width="22"><span class="n">BEARMAN</span><span class="g">+1.5</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#27F4D2;color:#11141a">13</span><img src="../../game/assets/emblems/mercedes.svg" width="22"><span class="n">ANTONELLI</span><span class="g">+1.2</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">2v</span></div><div class="tr"><span class="p" style="background:#DEE1E2;color:#11141a">14</span><img src="../../game/assets/emblems/haas.svg" width="22"><span class="n">OCON</span><span class="g">+0.7</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#8E9296;color:#11141a">15</span><img src="../../game/assets/emblems/audi.svg" width="22"><span class="n">BORTOLETO</span><span class="g">+0.5</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#229971;color:#fff">16</span><img src="../../game/assets/emblems/astonmartin.svg" width="22"><span class="n">STROLL</span><span class="g">+0.2</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#0093CC;color:#fff">17</span><img src="../../game/assets/emblems/alpine.svg" width="22"><span class="n">COLAPINTO</span><span class="g">+0.3</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#6692FF;color:#11141a">18</span><img src="../../game/assets/emblems/racingbulls.svg" width="22"><span class="n">LAWSON</span><span class="g">+0.2</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#2B2B2B;color:#fff">19</span><img src="../../game/assets/emblems/cadillac.svg" width="22"><span class="n">PÉREZ</span><span class="g">+0.1</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#0093CC;color:#fff">20</span><img src="../../game/assets/emblems/alpine.svg" width="22"><span class="n">GASLY</span><span class="g">+0.2</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr"><span class="p" style="background:#2B2B2B;color:#fff">21</span><img src="../../game/assets/emblems/cadillac.svg" width="22"><span class="n">BOTTAS</span><span class="g">+0.4</span><span class="ty" style="--t:#F2F2F2">H</span><span class="age">0v</span></div><div class="tr out"><span class="p" style="background:rgba(255,255,255,.18);color:#c3c9d3">–</span><img src="../../game/assets/emblems/ferrari.svg" width="22"><span class="n">HAMILTON</span><span class="g" style="width:auto;font-size:11px">ABANDONO</span></div></div>
+<div class="sheet glass"><div class="tabs"><h2>DADOS</h2><div class="seg"><span class="">Todos</span><span class="">Meus pilotos</span><span class="">Voltas</span><span class="on">Clima</span></div><span class="rb" style="margin-left:auto;background:rgba(255,255,255,.1)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span></div>
+<div class="radar"><div class="cap">RADAR · PRÓXIMAS VOLTAS · CHANCE DE CHUVA</div><div class="bars"><i style="height:13%"></i><i style="height:22%"></i><i style="height:41%"></i><i style="height:68%"></i><i style="height:55%"></i></div>
+<div class="tk"><span>+2 v</span><span>+4 v</span><span>+6 v</span><span>+8 v</span><span>+10 v</span></div>
+<p>Chuva provável em 8–10 voltas (68%). A previsão melhora conforme a nuvem chega. Quem demorar para trocar o pneu pode perder tempo na pista molhada.</p></div>
+<div class="kv"><div class="box"><span class="cap">PISTA</span><b>Seca 0%</b></div><div class="box"><span class="cap">TEMPERATURA</span><b>29 °C · asfalto 41 °C</b></div><div class="box"><span class="cap">BORRACHA</span><b>Média</b></div></div></div>
+</div></body></html>

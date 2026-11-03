@@ -5,9 +5,7 @@ extends SubViewportContainer
 ## Controles: arrastar = girar · pinça/roda do mouse = zoom · botão de câmera = alterna entre
 ## visão geral, seguir seus pilotos e seguir o líder.
 
-const CAR_SCALE := 6.0  ## ampliação máxima das bolinhas (câmera longe)
-const BALL_RADIUS := 2.2  ## raio da bolinha em metros (escala 1)
-const PLAYER_BALL := 1.35  ## bolinhas do jogador são maiores
+const CAR_SCALE := 6.0  ## ampliação máxima do safety car (câmera longe)
 const ZOOM_MIN := 40.0
 const ZOOM_MAX := 4000.0
 
@@ -37,8 +35,8 @@ var _env: Environment
 var _sky_mat: ProceduralSkyMaterial
 var _asphalt: StandardMaterial3D
 var _rain: CPUParticles3D
-var _cars: Dictionary = {}  # CarState -> MeshInstance3D
-var _labels: Dictionary = {}
+var _rank_timer := 0.0
+var _cars: Dictionary = {}  # CarState -> CarMarker3D
 var _sc: MeshInstance3D
 var _target := Vector3.ZERO
 var _overview_target := Vector3.ZERO
@@ -227,40 +225,13 @@ func _add_mesh(mesh: Mesh, mat: Material) -> void:
 	_world_root.add_child(mi)
 
 
-## Cada carro é uma bolinha na cor da equipe (decisão do usuário: mais legível que o carro visto de cima).
-## Os carros do jogador são maiores e têm um anel branco em volta, então não precisam de sigla.
+## Cada carro é um marcador plano na cor da equipe com o número do piloto (ver CarMarker3D).
 func _build_cars() -> void:
-	var ball := SphereMesh.new()
-	ball.radius = BALL_RADIUS
-	ball.height = BALL_RADIUS * 2.0
-	ball.radial_segments = 16
-	ball.rings = 8
-	var ring := TorusMesh.new()
-	ring.inner_radius = BALL_RADIUS * 1.25
-	ring.outer_radius = BALL_RADIUS * 1.6
-	ring.rings = 24
-	ring.ring_segments = 6
-	var ring_mat := Materials3D.flat(Color.WHITE, 0.5)
-	ring_mat.emission_enabled = true
-	ring_mat.emission = Color.WHITE
-	ring_mat.emission_energy_multiplier = 0.8
 	for car in sim.cars:
-		var mi := MeshInstance3D.new()
-		mi.mesh = ball
-		var col := car.team_color()
-		var m := Materials3D.flat(col, 0.35)
-		m.emission_enabled = true
-		m.emission = col
-		m.emission_energy_multiplier = 0.35
-		mi.material_override = m
-		_world_root.add_child(mi)
-		_cars[car] = mi
-		if car.is_player:
-			var r := MeshInstance3D.new()
-			r.mesh = ring
-			r.material_override = ring_mat
-			mi.add_child(r)
-			_labels[car] = r
+		var m := CarMarker3D.new()
+		m.setup(car)
+		_world_root.add_child(m)
+		_cars[car] = m
 	_sc = MeshInstance3D.new()
 	var sc_mesh := BoxMesh.new()
 	sc_mesh.size = Vector3(2.0, 1.4, 4.6)
@@ -280,8 +251,14 @@ func _build_cars() -> void:
 func _process(delta: float) -> void:
 	if sim == null:
 		return
+	_rank_timer -= delta
+	if _rank_timer <= 0.0:  # quem está à frente desenha por cima; os seus carros sempre na frente
+		_rank_timer = 0.3
+		var order := sim.standings()
+		for i in order.size():
+			(_cars[order[i]] as CarMarker3D).set_rank(i if not order[i].is_player else -1)
 	for car: CarState in _cars:
-		var mi: MeshInstance3D = _cars[car]
+		var mi: CarMarker3D = _cars[car]
 		mi.visible = not car.retired
 		if car.retired:
 			continue
@@ -296,8 +273,7 @@ func _process(delta: float) -> void:
 			basis = basis.rotated(Vector3.UP, 1.2)
 		elif d < 0.0:
 			pos += basis.x * (3.0 if car.grid_position % 2 == 0 else -3.0)
-		var sc := _car_scale() * (PLAYER_BALL if car.is_player else 1.0)
-		mi.transform = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * sc), pos + Vector3.UP * (BALL_RADIUS * sc + 0.1))
+		mi.position = pos + Vector3.UP * 3.0
 	_sc.visible = sim.control.flag == RaceControl.Flag.SC
 	if _sc.visible:
 		var lead := sim.standings()[0]
@@ -437,7 +413,7 @@ func _update_camera(delta: float) -> void:
 	var car := _follow_car()
 	var goal := _overview_target
 	if car != null and _cars.has(car):
-		goal = (_cars[car] as MeshInstance3D).position
+		goal = (_cars[car] as CarMarker3D).position
 	_target = goal if snap_camera else _target.lerp(goal, clampf(delta * 4.0, 0.0, 1.0))
 	var dir := Vector3(cos(pitch) * sin(yaw), sin(pitch), cos(pitch) * cos(yaw))
 	_cam.position = _target + dir * distance
