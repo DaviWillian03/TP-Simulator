@@ -503,3 +503,14 @@ Respostas do usuário:
 - **Finanças**: patrocínio garantido × por meta; compromissos futuros separados do saldo; prêmio de construtores pela posição
   oficial. (Simulação "e se" não foi escolhida.)
 - **Sede**: próximo GP + até 3 assuntos (NOTÍCIA × DECISÃO) com atalho e "avançar com preparação recomendada" — mockup antes.
+- **Tela de peças centrada no carro** (pedido 2026-11-04): carro da categoria visto de cima, nas cores da equipe, com etiquetas
+  apontando para cada peça (asa dianteira, asa traseira, assoalho, suspensão, unidade de potência, câmbio). Tocar abre um painel
+  com **Usar** (unidades com anel de desgaste e para onde vai cada uma) e **Desenvolver** (direções da próxima versão com efeitos,
+  custo, prazo e GP previsto). Mockups v15-2/2b/3/4 aguardando aprovação.
+- **P&D ligada à equipe técnica e à fábrica** (2026-11-04): prazo e qualidade das pesquisas dependem das notas do corpo técnico
+  (chefe de aerodinâmica, projetista, diretor técnico) e do nível das instalações (túnel de vento etc.).
+- **Upgrade pode dar errado**, para o jogador e para a IA: cada pesquisa tem chance de acertar, de render menos ou de piorar
+  (correlação túnel × pista); a chance vem da equipe técnica + fábrica + ousadia da direção. O resultado real só aparece na
+  pista; o jogador decide voltar à versão anterior, corrigir ou testar mais. Assim a ordem de forças muda ao longo do ano.
+- **Interface**: todos os menus novos devem ser os mais bonitos e interativos possíveis, com símbolos no lugar de texto longo
+  sempre que der, criativos e simples.

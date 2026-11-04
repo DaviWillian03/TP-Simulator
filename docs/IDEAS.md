@@ -672,3 +672,10 @@ movimentação em cadeia F1→F2→F3; (6) F1/F2/F3 na mesma carreira; (7) finan
 patrocínio garantido × por meta, projeção, prêmio pelo resultado oficial; (8) componentes, desgaste, limites e punições, com
 preparação automática e confirmação; (9) simplicidade no Android; (10) entregas por ciclos completos com cenários de aceitação.
 → Decidido (ver DECISIONS, "Campanha reestruturada a partir do prompt mestre").
+
+## Peças, P&D e menus (usuário, 2026-11-04)
+- "na parte das peças, monte um menu muito mais bonito ... um carro da categoria ... a parte das peças apontará para cada parte
+  especifica, clicando nela irá abrir as opções do que fazer com cada peça" (uso e desenvolvimento).
+- P&D com ligação direta à qualidade dos funcionários técnicos e à estrutura da fábrica; upgrade nem sempre é bom (a equipe e a
+  IA podem errar), deixando a relação de forças dinâmica na temporada.
+- Todos os menus: os mais bonitos e interativos possíveis, símbolos em vez de muito texto, criativos e simples.

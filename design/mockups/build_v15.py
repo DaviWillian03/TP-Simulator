@@ -5,6 +5,7 @@ Uso: python design/mockups/build_v15.py   (gera v15-*.html nesta pasta; V15_FACE
 3) Pesquisa concluída: especificação liberada, custo por unidade e para qual GP cada unidade fica pronta.
 Equipe de exemplo: Williams. Datas, custos e ganhos são EXEMPLOS coerentes com o jogo (valores provisórios).
 """
+import math
 import os
 import pathlib
 import sys
@@ -87,9 +88,84 @@ CSS = V.G_CSS + """
 .md .k{font-size:12px;letter-spacing:3px;color:#4b5260;font-weight:700}.md h2{font-size:32px;font-weight:900;line-height:1.05;margin:6px 0 4px}
 .md p{font-size:15px;color:#2b303a;line-height:1.45}
 .facts{display:flex;gap:10px;margin:16px 0}.facts div{flex:1;border-radius:14px;background:#e3e6eb;padding:10px 14px;font-size:12px;color:#4b5260;line-height:1.3;font-weight:700}.facts b{display:block;font-size:20px;color:#11141a;font-weight:900}
-.orders{display:flex;gap:10px}.orders div{flex:1;border-radius:16px;background:#e3e6eb;padding:12px 14px}.orders div.on{background:#11141a;color:#fff}
-.orders b{display:block;font-size:16px;font-weight:900}.orders small{display:block;font-size:12px;line-height:1.35;color:#4b5260;font-weight:700;margin-top:3px}.orders div.on small{color:#c3c9d3}
+.orders{display:flex;gap:10px}.orders>div{flex:1;border-radius:16px;background:#e3e6eb;padding:12px 14px}.orders>div.on{background:#11141a;color:#fff}
+.orders b{display:block;font-size:16px;font-weight:900}.orders small{display:block;font-size:12px;line-height:1.35;color:#4b5260;font-weight:700;margin-top:3px}.orders>div.on small{color:#c3c9d3}
 .orders .price{font-size:18px;font-weight:900;margin-top:8px}
+/* carro interativo (v15-2) */
+.stage{position:absolute;left:36px;top:140px;width:820px;height:562px;border-radius:24px;background:radial-gradient(ellipse 60% 55% at 50% 48%,%COL%40,rgba(255,255,255,.03) 70%);overflow:hidden}
+.stage:before{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(transparent,rgba(0,0,0,.35))}
+.stage .topcar{position:absolute;left:70px;top:150px}
+.stage .sel2{position:absolute;left:18px;top:16px;display:flex;gap:6px;background:rgba(0,0,0,.35);border-radius:22px;padding:4px}
+.stage .sel2 span{height:38px;padding:0 14px 0 4px;border-radius:19px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:900;color:#c3c9d3}
+.stage .sel2 span.on{background:#f3f4f6;color:#11141a}
+.stage .hint{position:absolute;right:20px;top:28px;font-size:12px;color:#a8b0bd;font-weight:700}
+.co{position:absolute;display:flex;align-items:center;gap:8px;border-radius:14px;background:rgba(10,12,16,.9);padding:7px 12px 7px 7px;white-space:nowrap;border:1px solid rgba(255,255,255,.1);min-height:44px}
+.co .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;color:#11141a;flex:none}
+.co strong{display:block;font-size:14px;font-weight:900;line-height:1.1}.co small{display:block;font-size:12px;color:#a8b0bd;font-weight:700}
+.co.on{background:#f3f4f6;color:#11141a;border-color:#fff;box-shadow:0 0 0 3px %COL%,0 8px 24px rgba(0,0,0,.5)}.co.on small{color:#4b5260}
+.co .al{font-size:10px;letter-spacing:1px;font-weight:900;background:#E10600;color:#fff;border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:2px}
+.co .al.y{background:#ffd24a;color:#11141a}
+.lead{position:absolute;height:2px;background:rgba(255,255,255,.5);transform-origin:0 50%}
+.pin{position:absolute;width:16px;height:16px;border-radius:50%;border:3px solid #fff;background:#0b0c0f;transform:translate(-50%,-50%)}
+.pin.on{background:#E10600;box-shadow:0 0 0 7px rgba(225,6,0,.3)}
+.strip{position:absolute;left:18px;right:18px;bottom:14px;display:flex;gap:10px}
+.strip>div{flex:1;border-radius:14px;background:rgba(0,0,0,.45);padding:8px 12px;line-height:1.15}
+.strip .cap{font-size:10px}.strip strong{font-size:22px;font-weight:900}.strip i{font-style:normal;font-size:12px;font-weight:900;margin-left:6px}
+.panel{position:absolute;left:872px;top:140px;width:372px;height:562px;border-radius:24px;background:rgba(255,255,255,.07);padding:16px 18px;box-sizing:border-box}
+.panel h3{font-size:22px;font-weight:900;line-height:1.05;margin:4px 0 2px}
+.panel .ds{font-size:12px;color:#a8b0bd;font-weight:700}
+.tabs{display:flex;gap:4px;background:rgba(0,0,0,.3);border-radius:22px;padding:4px;margin:8px 0}
+.tabs span{flex:1;height:38px;border-radius:19px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#c3c9d3}.tabs span.on{background:#f3f4f6;color:#11141a}
+.unit{display:flex;align-items:center;gap:10px;border-radius:13px;background:rgba(0,0,0,.25);padding:5px 10px;margin-top:5px}
+.unit .sp{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:15px;flex:none}
+.unit strong{display:block;font-size:13px;font-weight:900}.unit small{display:block;font-size:12px;color:#a8b0bd;font-weight:700}
+.unit .w{margin-left:auto;width:58px;flex:none}.unit .w .bar{height:6px}.unit .w small{text-align:right}
+.panel .ch{padding:8px 10px;margin-top:6px}
+.dir{border-radius:14px;background:rgba(255,255,255,.07);padding:9px 12px;margin-top:6px}
+.dir.on{background:#f3f4f6;color:#11141a}.dir.on small{color:#4b5260}
+.dir strong{display:block;font-size:14px;font-weight:900}.dir small{display:block;font-size:12px;color:#a8b0bd;font-weight:700;line-height:1.3}
+.dir .fx{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}.dir .fx span{font-size:12px;font-weight:900;border-radius:7px;padding:1px 7px;background:rgba(57,211,107,.2);color:#2a8a4c}
+.dir .fx span.neg{background:rgba(225,6,0,.15);color:#c0392b}.dir:not(.on) .fx span{color:#7fe0b1}.dir:not(.on) .fx span.neg{color:#ff8a80}
+.dir .ct{display:flex;justify-content:space-between;margin-top:5px;font-size:12px;font-weight:900}
+.odds{border-radius:14px;background:rgba(0,0,0,.28);padding:8px 12px;margin-top:8px}
+.odds .cap{font-size:10px}
+.odds .row{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#c3c9d3;line-height:1.6}
+.odds .row span:last-child{font-weight:900;color:#fff}
+.odds .meter{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:6px 0 4px}
+.odds .meter i{display:block;height:100%}
+.odds .leg{display:flex;gap:10px;font-size:12px;font-weight:700;color:#a8b0bd}
+.md.bad:before{background:#E10600}
+/* v15-2: painéis com símbolos */
+.gl{display:inline-block;vertical-align:middle;flex:none}
+.co .n{color:#11141a}
+.strip>div{display:flex;align-items:center;gap:10px}
+.strip div .tx{line-height:1.05}
+.strip small{display:block;font-size:11px;color:#a8b0bd;font-weight:700}
+.tiles{display:flex;gap:8px;margin-top:6px}
+.tile{flex:1;min-width:0;border-radius:14px;background:rgba(0,0,0,.28);padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;position:relative}
+.tile.on{background:#f3f4f6;color:#11141a;box-shadow:0 0 0 3px %COL%}
+.tile .lb{font-size:12px;font-weight:900;line-height:1.15}
+.tile .sb{font-size:11px;font-weight:700;color:#a8b0bd;line-height:1.2}.tile.on .sb{color:#4b5260}
+.ring{position:relative;width:52px;height:52px}.ring svg{position:absolute;inset:0}
+.ring span{position:absolute;inset:0;display:grid;place-items:center;font-size:20px;font-weight:900}
+.loc{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:900}
+.give{display:flex;align-items:center;gap:4px;height:44px}
+.give .sp{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:16px;background:#ff6a5a33;color:#ff6a5a}
+.chipc{font-size:11px;font-weight:900;border-radius:7px;padding:2px 7px;background:rgba(57,211,107,.18);color:#7fe0b1}
+.tile.on .chipc{color:#2a8a4c}.chipc.money{background:rgba(255,180,168,.18);color:#ffb4a8}
+.fxl{display:flex;flex-direction:column;gap:3px;align-self:stretch;padding:0 4px}
+.fxl div{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:900}
+.up{color:#7fe0b1}.dn{color:#ff8a80}.tile.on .up{color:#2a8a4c}.tile.on .dn{color:#c0392b}
+.meta{display:flex;flex-direction:column;gap:3px;align-self:stretch;border-top:1px solid rgba(128,128,128,.25);padding:5px 4px 0;font-size:12px;font-weight:900}
+.meta div{display:flex;align-items:center;gap:5px}
+.who{display:flex;gap:8px;margin-bottom:6px}
+.who>div{flex:1;display:flex;align-items:center;gap:8px;border-radius:12px;background:rgba(255,255,255,.06);padding:6px 8px}
+.who .av{width:30px;height:30px;border-radius:50%;background:#5c93ea;display:grid;place-items:center;font-size:11px;font-weight:900;color:#11141a;flex:none}
+.who strong{display:block;font-size:15px;font-weight:900;line-height:1}.who small{display:block;font-size:11px;color:#a8b0bd;font-weight:700}
+.dots{display:flex;gap:3px;margin-top:3px}.dots i{width:9px;height:9px;border-radius:3px;background:rgba(255,255,255,.18)}.dots i.f{background:#ffd24a}
+.leg2{display:flex;justify-content:space-between;font-size:12px;font-weight:900;margin-top:2px}
+.leg2 span{display:flex;align-items:center;gap:4px}
+.after2{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#a8b0bd;margin-top:10px}
 """.replace("%COL%", COL)
 
 
@@ -157,43 +233,153 @@ def sede():
     return V.page("V15 · Sede · próximo GP e assuntos", CSS, body)
 
 
-def parts(modal=False):
-    rows = [("AD", "#ff6a5a", "Asa dianteira", "Spec B · curvas lentas +4", "B", "A", 1, True),
-            ("AT", "#5c93ea", "Asa traseira", "Spec A · baixa carga para retas", "A", "A", 2, False),
-            ("AS", "#3c9d5d", "Assoalho", "Spec v2 liberada · fabricar", "v1", "v1", 0, False),
-            ("SU", "#ffd24a", "Suspensão", "Spec A · tração em curva lenta", "A", "A", 1, False),
-            ("UP", "#c77dff", "Unidade de potência", "Mercedes · 2 de 4 usadas", "2ª", "2ª", 1, False)]
-    lst = ""
-    for ab, col, nm, sub, c1, c2, stock, sel in rows:
-        n1 = ' class="new"' if c1 == "B" and sel else ""
-        lst += (f'<div class="prt{" sel" if sel else ""}"><span class="ic" style="background:{col}33;color:{col}">{ab}</span><div class="nm"><b>{nm}</b><small>{sub}</small></div>'
-                f'<div class="car2"><span{n1}>ALB<b>{"B · nova" if sel else c1}</b></span><span>SAI<b>{c2}</b></span></div><div class="stk"><b>{stock}</b>estoque</div></div>')
-    body = f'''<div class="scene"><div class="bg"></div>
-{header("WILLIAMS · SEG, 1 JUN 2026", "CARRO · PEÇAS")}{nav("Carro")}
-<div class="card traits"><div class="cap">CARACTERÍSTICAS DO CARRO · ALB / SAI</div>
-<div style="margin-top:8px">{trait("Reta", 78, "#ffd24a")}{trait("Curvas lentas", 74, "#ff6a5a")}{trait("Curvas rápidas", 71, "#5c93ea")}{trait("Confiabilidade", 82, "#3c9d5d")}</div>
-<div style="font-size:12px;color:#7fe0b1;font-weight:700;margin-top:4px">Com a asa B: curvas lentas 78 no carro do Albon</div>
-<div class="cap" style="margin-top:18px">PRÓXIMOS GPS × SEU CARRO</div>
-<div style="font-size:13px;line-height:1.9;margin-top:4px;font-weight:700;color:#c3c9d3">
-<div style="display:flex;justify-content:space-between"><span>Mônaco · curvas lentas</span><b style="color:#ff6a5a">ponto fraco</b></div>
-<div style="display:flex;justify-content:space-between"><span>Barcelona · equilibrada</span><b style="color:#fff">neutro</b></div>
-<div style="display:flex;justify-content:space-between"><span>Áustria · reta</span><b style="color:#7fe0b1">ponto forte</b></div></div>
-<div class="ghost" style="margin-top:16px">Ver árvore de P&amp;D</div></div>
-<div class="card parts"><div class="cap">ESPECIFICAÇÕES · INSTALADAS · ESTOQUE DA FÁBRICA</div>{lst}
-<div style="font-size:12px;color:#8f98a7;margin-top:10px;font-weight:700">Peça no estoque não melhora o carro: precisa ser instalada.</div></div>
-<div class="card decp"><div class="cap">ASA DIANTEIRA B · ESTREIA</div>
-<div style="font-size:14px;color:#c3c9d3;margin-top:6px;line-height:1.4;font-weight:700">+4 em curvas lentas · em Mônaco <span style="color:#fff">+0,15 s/volta</span> no carro equipado</div>
-<div class="tl"><div class="line"></div>
-<div class="gp2" style="left:130px"><small>MÔNACO</small></div><div class="gp2" style="left:250px"><small>BARCELONA</small></div>
-<div class="u" style="left:60px"><small>1ª · 4 jun</small></div><div class="u" style="left:190px;background:#8f98a7"><small>2ª · 12 jun</small></div></div>
-<div class="ch on"><span class="r"></span><div><b>Estrear no Albon</b><small>Sainz recebe a 2ª em Barcelona.</small></div><span class="cost">sem custo</span></div>
-<div class="ch"><span class="r"></span><div><b>Estrear no Sainz</b><small>Mesma coisa, no outro carro.</small></div><span class="cost">sem custo</span></div>
-<div class="ch"><span class="r"></span><div><b>Esperar as duas</b><small>Os dois estreiam em Barcelona.</small></div><span class="cost">sem custo</span></div>
-<div class="ch"><span class="r"></span><div><b>Acelerar a 2ª unidade</b><small>Turno extra: pronta em 5 jun, os dois com a B em Mônaco.</small></div><span class="cost" style="color:#ffb4a8">US$ 0,7 mi</span></div>
-<div class="after">Depois: caixa <span>US$ 61 mi</span> · estoque <span>0</span> · Albon <span>B</span>, Sainz <span>A</span> até 12 jun</div>
-<div class="cta" style="margin-top:8px;height:50px">CONFIRMAR {ico("chev", 20, "#fff", 3)}</div></div>
-{research_modal() if modal else ""}</div>'''
-    return V.page("V15 · Carro · peças" + (" · pesquisa concluída" if modal else ""), CSS, body)
+def top_car(c1, c2):
+    """Carro visto de cima (arte original nas cores da equipe). Bico para a direita. 680 x 260."""
+    tyre = lambda x, y, w, h: (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="12" fill="#121316"/>'
+                               f'<rect x="{x + 8}" y="{y + 6}" width="{w - 16}" height="3" fill="#2b2f36"/><rect x="{x + 8}" y="{y + h - 9}" width="{w - 16}" height="3" fill="#2b2f36"/>')
+    return f"""<svg class="topcar" width="680" height="260" viewBox="0 0 680 260">
+<defs><linearGradient id="tb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient></defs>
+<ellipse cx="340" cy="132" rx="330" ry="56" fill="#000" opacity=".4"/>
+<path d="M150 98 L142 62 M175 100 L160 62 M150 162 L142 198 M175 160 L160 198 M520 118 L572 64 M556 120 L592 64 M520 142 L572 196 M556 140 L592 196" stroke="#3a3f48" stroke-width="5" stroke-linecap="round"/>
+{tyre(100, 18, 96, 52)}{tyre(100, 190, 96, 52)}{tyre(546, 24, 76, 44)}{tyre(546, 192, 76, 44)}
+<path d="M176 60 L430 72 L470 96 L470 164 L430 188 L176 200 Q160 190 160 176 L160 84 Q160 70 176 60 Z" fill="#15171b"/>
+<rect x="56" y="112" width="60" height="36" rx="6" fill="#1d2026"/>
+<path d="M70 116 L150 110 L192 96 Q232 72 300 70 L392 74 Q424 78 446 98 L476 112 L560 118 L652 124 L664 130 L652 136 L560 142 L476 148 L446 162 Q424 182 392 186 L300 190 Q232 188 192 164 L150 150 L70 144 Z" fill="{c1}"/>
+<path d="M70 116 L150 110 L192 96 Q232 72 300 70 L392 74 Q424 78 446 98 L476 112 L560 118 L652 124 L664 130 L652 136 L560 142 L476 148 L446 162 Q424 182 392 186 L300 190 Q232 188 192 164 L150 150 L70 144 Z" fill="url(#tb)"/>
+<path d="M96 125 L340 116 L446 120 L446 140 L340 144 L96 135 Z" fill="{c2}" opacity=".9"/>
+<path d="M380 80 Q410 82 428 98 L396 98 Z M380 180 Q410 178 428 162 L396 162 Z" fill="#0d0e11"/>
+<ellipse cx="478" cy="130" rx="34" ry="15" fill="#0d0e11"/><circle cx="470" cy="130" r="9" fill="{c2}"/>
+<path d="M444 130 Q476 100 510 130" stroke="#d9dde3" stroke-width="5" fill="none"/><path d="M508 130 L530 130" stroke="#d9dde3" stroke-width="4"/>
+<rect x="20" y="70" width="44" height="120" rx="5" fill="{c1}"/><rect x="26" y="70" width="10" height="120" fill="{c2}" opacity=".85"/>
+<rect x="16" y="64" width="52" height="8" rx="3" fill="#1d2026"/><rect x="16" y="188" width="52" height="8" rx="3" fill="#1d2026"/>
+<rect x="632" y="30" width="10" height="200" rx="4" fill="{c1}"/><rect x="645" y="36" width="8" height="188" rx="4" fill="{c2}"/><rect x="656" y="44" width="6" height="172" rx="3" fill="{c1}"/>
+<rect x="628" y="24" width="38" height="8" rx="3" fill="#1d2026"/><rect x="628" y="228" width="38" height="8" rx="3" fill="#1d2026"/>
+</svg>"""
+
+
+GLYPHS = {  # símbolos desenhados (traço), 24 x 24
+    "fwing": "M2 7h20M4 12h16M7 17h10",
+    "rwing": "M3 5h18v5H3zM8 10v9M16 10v9",
+    "floor": "M2 16 5 8h14l3 8zM6 16v3M18 16v3",
+    "susp": "M3 19 12 6l9 13M7 13h10",
+    "pu": "M13 2 4 14h7l-1 8 9-12h-7z",
+    "gear": "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2",
+    "reta": "M3 12h15M13 6l6 6-6 6",
+    "lenta": "M6 21V10a6 6 0 0 1 12 0v4M14 11l4 4 4-4",
+    "rapida": "M4 20Q4 6 18 5M14 2l4 3-3 4",
+    "conf": "M12 3 20 6v6q0 6-8 9-8-3-8-9V6zM8.5 12l2.5 2.5 4.5-5",
+    "money": "M12 2v20M17 6.5Q15 4 12 4 7 4 7 8t5 4 5 4-5 4q-3 0-5-2.5",
+    "clock": "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 3",
+    "flagc": "M5 21V4h13l-3 4 3 4H5",
+    "box": "M3 8 12 3l9 5v9l-9 5-9-5zM3 8l9 5 9-5M12 13v9",
+    "fact": "M2 21V10l6 4V10l6 4V6l8 5v10z",
+    "ok": "M5 12l5 5 9-10",
+    "mid": "M5 12h14",
+    "bad": "M6 6l12 12M18 6 6 18",
+    "bolt": "M13 2 4 14h7l-1 8 9-12h-7z",
+    "arrow": "M4 12h14M13 6l6 6-6 6",
+}
+
+
+def gl(name, size=18, col="currentColor", w=2.4):
+    return (f'<svg class="gl" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{col}" stroke-width="{w}" '
+            f'stroke-linecap="round" stroke-linejoin="round"><path d="{GLYPHS[name]}"/></svg>')
+
+
+def ring(letter, pct, col):
+    c = 2 * math.pi * 22
+    return (f'<div class="ring"><svg width="52" height="52"><circle cx="26" cy="26" r="22" stroke="rgba(128,128,128,.25)" stroke-width="5" fill="none"/>'
+            f'<circle cx="26" cy="26" r="22" stroke="{col}" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="{c * pct / 100:.1f} {c:.1f}" transform="rotate(-90 26 26)"/></svg><span>{letter}</span></div>')
+
+
+def callout(glyph, col, title, sub, x, y, px, py, on=False, alert=""):
+    """Etiqueta da peça em (x, y), ligada por uma linha ao ponto (px, py) do carro."""
+    cx, cy = x + 22, y + 22
+    ln, ang = math.hypot(px - cx, py - cy), math.degrees(math.atan2(py - cy, px - cx))
+    al = f'<span class="al{" y" if alert == "DESGASTE" else ""}">{alert}</span>' if alert else ""
+    return (f'<div class="lead" style="left:{cx}px;top:{cy}px;width:{ln:.0f}px;transform:rotate({ang:.1f}deg)"></div>'
+            f'<div class="pin{" on" if on else ""}" style="left:{px}px;top:{py}px"></div>'
+            f'<div class="co{" on" if on else ""}" style="left:{x}px;top:{y}px"><span class="n" style="background:{col}">{gl(glyph, 16, "#11141a", 2.6)}</span>'
+            f'<div><strong>{title}{al}</strong><small>{sub}</small></div></div>')
+
+
+def stage(sel):
+    a, s = MY[0], MY[1]
+    ox, oy = 70, 150  # posição do carro no palco
+    cos = (callout("fwing", "#ff6a5a", "Asa dianteira", "B nova · 1 no estoque", 556, 62, ox + 637, oy + 70, sel == 1, "NOVA")
+           + callout("rwing", "#5c93ea", "Asa traseira", "Spec A · baixa carga", 24, 74, ox + 42, oy + 92, sel == 2)
+           + callout("floor", "#3c9d5d", "Assoalho", "v1 · v2 em pesquisa", 262, 62, ox + 250, oy + 66, sel == 3)
+           + callout("susp", "#ffd24a", "Suspensão", "Spec A · 1 no estoque", 560, 436, ox + 566, oy + 170, sel == 4)
+           + callout("pu", "#c77dff", "Unidade de potência", "Mercedes · 2ª de 4", 262, 444, ox + 290, oy + 140, sel == 5)
+           + callout("gear", "#8f98a7", "Câmbio", "2ª de 4 · desgaste 40%", 24, 420, ox + 84, oy + 130, sel == 6, "DESGASTE"))
+    strip = "".join(f'<div>{gl(g, 26, c)}<div class="tx"><strong>{v}</strong><small>{k}{d}</small></div></div>' for g, c, k, v, d in
+                    [("reta", "#ffd24a", "reta", 78, ""), ("lenta", "#ff6a5a", "curvas lentas", 74, ' <span style="color:#7fe0b1">▲78</span>'),
+                     ("rapida", "#5c93ea", "curvas rápidas", 71, ""), ("conf", "#3c9d5d", "confiabilidade", 82, "")])
+    return (f'<div class="stage"><div class="sel2"><span class="on">{avatar(a, 30)}Albon · 23</span><span>{avatar(s, 30)}Sainz · 55</span></div>'
+            f'<div class="hint">Toque numa peça</div>{top_car(COL, TEAM["color2"])}{cos}<div class="strip">{strip}</div></div>')
+
+
+def panel_head(n, glyph, col, area, name, desc, tab):
+    return (f'<div class="panel"><div style="display:flex;align-items:center;gap:12px"><span class="n" style="width:44px;height:44px;border-radius:14px;background:{col};display:grid;place-items:center;flex:none">{gl(glyph, 26, "#11141a", 2.6)}</span>'
+            f'<div><div class="cap">PEÇA {n} · {area}</div><h3>{name}</h3></div></div>{f'<div class="ds" style="margin-top:6px">{desc}</div>' if desc else ""}'
+            f'<div class="tabs"><span class="{"on" if tab == "use" else ""}">{gl("box", 16)}&nbsp; Usar</span><span class="{"on" if tab == "dev" else ""}">{gl("fact", 16)}&nbsp; Desenvolver</span></div>')
+
+
+def panel_use():
+    a, s = MY[0], MY[1]
+    units = (f'<div class="tile">{ring("B", 100, "#3c9d5d")}<div class="loc">{gl("box", 16, "#a8b0bd")} estoque</div><div class="sb">nova</div></div>'
+             f'<div class="tile">{ring("A", 62, "#ffd24a")}<div class="loc">{avatar(a, 20)} Albon</div><div class="sb">62% · 6 GPs</div></div>'
+             f'<div class="tile">{ring("A", 70, "#ffd24a")}<div class="loc">{avatar(s, 20)} Sainz</div><div class="sb">70% · 6 GPs</div></div>')
+    give = lambda d: f'<div class="give"><span class="sp">B</span>{gl("arrow", 16)}{avatar(d, 34)}</div>'
+    opts = (f'<div class="tile on">{give(a)}<div class="lb">B no Albon</div><span class="chipc">grátis</span></div>'
+            f'<div class="tile">{give(s)}<div class="lb">B no Sainz</div><span class="chipc">grátis</span></div>'
+            f'<div class="tile"><div class="give">{gl("bolt", 30, "#ffd24a")}<span class="sp">B</span><span class="sp">B</span></div><div class="lb">Os dois</div><span class="chipc money">US$ 0,7 mi</span></div>')
+    return (panel_head(1, "fwing", "#ff6a5a", "AERODINÂMICA", "ASA DIANTEIRA", "", "use")
+            + f'<div class="cap">UNIDADES · DESGASTE</div><div class="tiles">{units}</div>'
+            + f'<div class="cap" style="margin-top:10px;display:flex;align-items:center;gap:6px">{gl("flagc", 14)} MÔNACO · 7 JUN</div><div class="tiles">{opts}</div>'
+            + f'<div class="after2">{gl("clock", 16)} 2ª unidade da B pronta em 12 jun (Barcelona)</div>'
+            + f'<div class="cta" style="margin-top:10px;height:50px">CONFIRMAR {ico("chev", 20, "#fff", 3)}</div></div>')
+
+
+def panel_dev():
+    def d(name, fx, money, days, gp, on=False):
+        rows = "".join(f'<div>{gl(g, 18)}<span class="{"up" if v > 0 else "dn"}">{"▲" if v > 0 else "▼"} {abs(v)}</span></div>' for g, v in fx)
+        return (f'<div class="tile{" on" if on else ""}"><div class="lb">{name}</div><div class="fxl">{rows}</div>'
+                f'<div class="meta"><div>{gl("money", 14)} {money}</div><div>{gl("clock", 14)} {days} dias</div><div>{gl("flagc", 14)} {gp}</div></div></div>')
+    dirs = (d("Alta carga", [("lenta", 4), ("reta", -2)], "2,4 mi", 18, "Hungria", True)
+            + d("Baixa carga", [("reta", 4), ("lenta", -1)], "2,1 mi", 16, "Áustria")
+            + d("Ousada", [("lenta", 6), ("rapida", 2)], "3,2 mi", 24, "Bélgica"))
+    who = (f'<div class="who"><div><span class="av">AK</span><div><strong>80</strong><small>chefe de aero</small></div></div>'
+           f'<div>{gl("fact", 26, "#ffd24a")}<div><strong>Túnel</strong><div class="dots"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div></div></div></div>')
+    meter = ('<div class="odds" style="margin-top:6px"><div class="cap">CHANCE DE O UPGRADE FUNCIONAR</div>' + who
+             + '<div class="meter"><i style="width:64%;background:#3c9d5d"></i><i style="width:26%;background:#ffd24a"></i><i style="width:10%;background:#E10600"></i></div>'
+             + f'<div class="leg2"><span style="color:#7fe0b1">{gl("ok", 14)} 64%</span><span style="color:#ffd24a">{gl("mid", 14)} 26% ganho menor</span><span style="color:#ff8a80">{gl("bad", 14)} 10% piora</span></div></div>')
+    return (panel_head(2, "rwing", "#5c93ea", "AERODINÂMICA", "ASA TRASEIRA", "", "dev")
+            + f'<div class="tiles">{dirs}</div>{meter}'
+            + f'<div class="cta" style="margin-top:10px;height:50px">INICIAR PESQUISA {ico("chev", 20, "#fff", 3)}</div></div>')
+
+
+def parts(modal="", tab="use"):
+    pnl = panel_use() if tab == "use" else panel_dev()
+    sel = 1 if tab == "use" else 2
+    md = research_modal() if modal == "good" else (bad_modal() if modal == "bad" else "")
+    title = {"": "", "good": " · pesquisa concluída", "bad": " · upgrade falhou"}[modal]
+    body = f"""<div class="scene"><div class="bg"></div>
+{header("WILLIAMS · SEG, 1 JUN 2026", "CARRO · PEÇAS")}{nav("Carro")}{stage(sel)}{pnl}
+{md}</div>"""
+    return V.page("V15 · Carro · peças" + title, CSS, body)
+
+
+def bad_modal():
+    return f"""<div class="sheet"><div class="md bad"><div class="k">PRIMEIRA CORRIDA COM A PEÇA · MÔNACO</div><h2>A ASA DIANTEIRA B NÃO FUNCIONOU</h2>
+<p>No túnel de vento ela prometia <strong>+4 em curvas lentas</strong>. Na pista, os dados mostram <strong>−1</strong>: o fluxo descola na saída das curvas e o carro do Albon ficou instável. A correlação entre túnel e pista falhou.</p>
+<div class="facts"><div><b>+4 → −1</b>curvas lentas (esperado → real)</div><div><b>Kenyon 80</b>chefe de aerodinâmica</div><div><b>Túnel nível 3</b>quanto melhor, menos erros assim</div><div><b>US$ 2,1 mi</b>já gastos</div></div>
+<div class="orders">
+<div class="on"><b>Voltar para a Spec A</b><small>Volta ao carro antigo já em Barcelona. A B fica guardada.</small><div class="price">grátis</div></div>
+<div><b>Corrigir a B</b><small>Pesquisa curta (9 dias) para recuperar o ganho. Pode dar certo ou não.</small><div class="price">US$ 0,8 mi</div></div>
+<div><b>Manter e testar</b><small>Mais dados nos treinos de Barcelona antes de decidir.</small><div class="price">—</div></div></div>
+<div style="display:flex;align-items:center;margin-top:18px"><span style="font-size:13px;color:#4b5260;font-weight:700">Isso também acontece com as rivais: veja o radar de upgrades em Campeonatos.</span>
+<div class="cta" style="margin-left:auto;width:220px">CONFIRMAR {ico("chev", 20, "#fff", 3)}</div></div></div></div>"""
 
 
 def research_modal():
@@ -215,5 +401,7 @@ if __name__ == "__main__":
         V.EMB = "file://" + str((HERE / "../../game/assets/emblems").resolve()) + "/{}.svg"
     (out / "v15-1-sede.html").write_text(sede(), encoding="utf-8")
     (out / "v15-2-carro-pecas.html").write_text(parts(), encoding="utf-8")
-    (out / "v15-3-pesquisa-concluida.html").write_text(parts(True), encoding="utf-8")
+    (out / "v15-2b-carro-desenvolver.html").write_text(parts(tab="dev"), encoding="utf-8")
+    (out / "v15-3-pesquisa-concluida.html").write_text(parts("good", "dev"), encoding="utf-8")
+    (out / "v15-4-upgrade-falhou.html").write_text(parts("bad"), encoding="utf-8")
     print("ok")
