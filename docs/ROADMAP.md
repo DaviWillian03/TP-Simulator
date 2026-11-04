@@ -110,7 +110,7 @@ P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, 
 3. ✅ (2026-11-04) Aposentadoria, pilotos novos fictícios, base que evolui e sobe de categoria. **Falta**: academia de pilotos (P11),
    resultados de F2/F3 simulados ao fundo e F4.
 4. **Teto de gastos e limite de túnel de vento** (P12) e **empréstimo** (Finanças só tem o resumo).
-5. **Conselho — regras técnicas** (#5, P13): motor (V6/V8…), chassi, aerodinâmica ativa, reabastecimento, calendário e os "anos de virada"
+5. ✅ (2026-11-04) Regras técnicas (motor, aero, chassi, reabastecimento, calendário) com ano de virada. **Conselho** (antes): motor (V6/V8…), chassi, aerodinâmica ativa, reabastecimento, calendário e os "anos de virada"
    que embaralham as notas. A 1ª versão só tem pontuação, sprints e pneus; o lobby foi dispensado pelo usuário.
 6. **Eventos**: catálogo de 10; faltam mais eventos (cancelamento/adiamento por país, acidentes de carreira, crises de fábrica, mudanças de
    dirigentes) e eventos com efeito em equipes da IA. O usuário escolheu consequência automática (sem escolhas).

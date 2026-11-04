@@ -243,7 +243,7 @@ func _dev_tick(n: int, last_day: int = -1) -> void:
 ## Rodadas canceladas por eventos são puladas: não há fim de semana, pontos nem patrocínio.
 func _skip_cancelled() -> void:
 	var n := calendar().size()
-	while round < n and events.cancelled.has(round):
+	while round < n and (events.cancelled.has(round) or regs.is_dropped(String(calendar()[round]["id"]))):
 		round += 1
 
 
@@ -386,7 +386,8 @@ func next_round() -> Dictionary:
 ## Opções do fim de semana da próxima rodada (grid da campanha).
 func weekend_options(extra: Dictionary = {}) -> Dictionary:
 	var o := {"player_team": player_team, "teams": _teams, "drivers": _drivers, "seed": season * 100 + round + 1, "campaign": true,
-		"points_race": regs.points_race, "points_sprint": regs.points_sprint, "min_dry_compounds": regs.min_dry_compounds}
+		"points_race": regs.points_race, "points_sprint": regs.points_sprint, "min_dry_compounds": regs.min_dry_compounds,
+		"tech": regs.tech_options()}
 	if not season_over():
 		o["sprint"] = regs.is_sprint(next_round()["id"])
 	# posição de cada piloto no campeonato, a partir da metade da temporada: quem briga pelo título arrisca
@@ -641,8 +642,54 @@ func start_next_season() -> void:
 	history = []
 	best_finish = 99
 	dev.rollover()
+	if not regs.pending_reset.is_empty():
+		regulation_reset(regs.pending_reset)
+		regs.pending_reset.clear()
 	refresh_rating()
 	day = _season_start_day()  # (calendário de 2027+ ainda repete as datas de 2026: PROVISÓRIO)
+
+
+## "Ano de virada" (regra técnica grande mudou): as notas dos carros se aproximam e cada equipe ganha ou perde conforme
+## o que preparou — o corpo técnico, a sorte do fabricante do motor (se o motor mudou) e, para o jogador, o carro do ano
+## seguinte desenvolvido na P&D (que já virou o carro atual e é mantido inteiro, enquanto o desenvolvimento antigo vale
+## só RESET_KEEP). Decisão do usuário: "bastante, mas com lógica".
+const RESET_COMPRESS := 0.5
+const RESET_KEEP := 0.4
+const RESET_STAFF_K := 0.12
+const RESET_NOISE := 1.0
+const RESET_ENGINE_LUCK := 1.5
+
+
+func regulation_reset(kinds: Array) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("reset|%d|%s" % [season, ",".join(kinds)])
+	var cur := {}
+	var total := 0.0
+	for t: Dictionary in _teams:
+		var r := base_rating if t["id"] == player_team else float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0))
+		cur[t["id"]] = r
+		total += r
+	var mean := total / maxf(_teams.size(), 1)
+	var maker_luck := {}
+	for t: Dictionary in _teams:
+		var prep := (personnel.tech_staff_avg(self, t["id"]) - 82.0) * RESET_STAFF_K + rng.randfn(0.0, RESET_NOISE)
+		if kinds.has("engine"):
+			var maker := String(t.get("power_unit", t["name"]))
+			if not maker_luck.has(maker):
+				maker_luck[maker] = rng.randfn(0.0, RESET_ENGINE_LUCK)
+			prep += float(maker_luck[maker])
+		var nr := mean + (float(cur[t["id"]]) - mean) * RESET_COMPRESS + prep
+		if t["id"] == player_team:
+			base_rating = nr
+			dev.carry *= RESET_KEEP
+		else:
+			_file_ratings[t["id"]] = nr
+			rival_carry[t["id"]] = 0.0
+	var names: Array[String] = []
+	for k: String in kinds:
+		names.append({"engine": "motor", "aero": "aerodinâmica", "chassis": "chassi"}.get(k, k))
+	events._add(self, {"day": day, "cat": "calendar", "id": "reset", "title": "ANO DE VIRADA",
+		"text": "Novo regulamento de %s: os carros se aproximam. Quem preparou o carro novo sai na frente." % ", ".join(names), "chips": []})
 
 
 func objective_text() -> String:

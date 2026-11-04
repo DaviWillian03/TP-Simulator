@@ -80,6 +80,16 @@ var fastest_lap_car: CarState = null
 var overtakes_count := 0
 var rng := RandomNumberGenerator.new()
 
+## regulamento técnico (TechRules): mexe no tempo de volta, energia, ultrapassagem, desgaste e reabastecimento
+var tech: Dictionary = TechRules.DEFAULT.duplicate()
+var tech_lap_s := 0.0
+var energy_k := 1.0
+var overtake_k := 1.0
+var dirty_k := 1.0
+var wear_k := 1.0
+var refuel := false
+var engine_pitch := 1.0
+var fuel_window_laps := 999
 var team_box_free_at: Dictionary = {}  ## id da equipe -> instante em que o box fica livre
 var _accum := 0.0
 var _mode_timer := 0.0
@@ -103,6 +113,7 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	sprint = bool(options.get("sprint", false))
 	total_laps = maxi(3, roundi(track.laps * duration_pct / (SPRINT_DISTANCE if sprint else 1.0)))
 	rng.seed = int(options.get("seed", 1))
+	_apply_tech(options.get("tech", {}))
 	var rain_p := float(options.get("rain_probability", track.rain_probability))
 	weather = WeatherModel.new(rain_p, total_laps * track.base_lap_time_s * 1.05, rng, options)
 	control = RaceControl.new(self, float(options.get("incident_rate", 1.0)))
@@ -123,6 +134,19 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 			(setups[d["id"]] as CarSetup).apply_to(car)
 		cars.append(car)
 	_setup_grid(options.get("grid", []))
+
+
+func _apply_tech(t: Dictionary) -> void:
+	tech = TechRules.merged(t)
+	var k := TechRules.knobs(tech)
+	tech_lap_s = k["lap_s"]
+	energy_k = k["energy_k"]
+	overtake_k = k["overtake_k"]
+	dirty_k = k["dirty_k"]
+	wear_k = k["wear_k"]
+	refuel = k["refuel"]
+	engine_pitch = k["pitch"]
+	fuel_window_laps = maxi(3, ceili(total_laps * TechRules.REFUEL_WINDOW)) if refuel else 999
 
 
 # --- largada -------------------------------------------------------------------------
@@ -161,7 +185,7 @@ func race_distance() -> float:
 func wear_multiplier() -> float:
 	# corridas mais curtas desgastam mais (senão ninguém pararia), mas não na proporção cheia:
 	# com o expoente 1 uma corrida de 25% pedia 3 paradas em 18 voltas (balanceado: ver DECISIONS)
-	return track.tyre_wear_factor / pow(duration_pct, WEAR_SHORT_RACE_EXP)
+	return track.tyre_wear_factor / pow(duration_pct, WEAR_SHORT_RACE_EXP) * wear_k
 
 
 func frac_of(car: CarState) -> float:
@@ -461,18 +485,22 @@ func _lap_time(car: CarState, with_traffic: bool) -> float:
 	var wet_skill := 1.0 + (80.0 - DriverStats.attr(car.driver, "wet")) * DriverStats.WET_K
 	t += (tyres.wet_penalty(car.tyre, weather.wetness) + weather.wetness * WET_TRACK_S) * clampf(wet_skill, 0.7, 1.4)
 	t -= weather.rubber * RUBBER_GAIN_S
-	t += FUEL_START_S * (1.0 - clampf(car.distance / race_distance(), 0.0, 1.0))
+	t += tech_lap_s
+	if refuel:  # tanque pequeno: só o peso do combustível desde a última parada
+		t += FUEL_START_S * TechRules.REFUEL_FUEL_K * (1.0 - clampf(float(car.tyre_laps) / fuel_window_laps, 0.0, 1.0))
+	else:
+		t += FUEL_START_S * (1.0 - clampf(car.distance / race_distance(), 0.0, 1.0))
 	t += PACE_TIME[car.pace_mode]
 	t -= PitStop.WING_LAP_S * car.wing_step
 	if car.energy_mode != CarState.EnergyMode.DEPLOY or car.battery > 0.0:
-		t += ENERGY_TIME[car.energy_mode]
+		t += ENERGY_TIME[car.energy_mode] * energy_k
 	t += car.damage_wing * RaceControl.WING_PENALTY_S + car.damage_floor * RaceControl.FLOOR_PENALTY_S + car.power_loss_s
 	t += radio.confidence_delta_s(car)
 	if with_traffic:
 		t += car.lap_noise
 		var gap := gap_to_car_ahead_s(car)
 		if gap >= 0.0 and gap < ATTACK_WINDOW_S:
-			t += DIRTY_AIR_S * (1.0 - gap / ATTACK_WINDOW_S)
+			t += DIRTY_AIR_S * dirty_k * (1.0 - gap / ATTACK_WINDOW_S)
 	return t
 
 
@@ -506,22 +534,18 @@ func _resolve_overtakes(order: Array[CarState]) -> void:
 func _try_overtake(att: CarState, def: CarState, zone: Dictionary) -> bool:
 	var advantage := _lap_time(def, false) - _lap_time(att, false)  # > 0: atacante mais rápido
 	advantage += (DriverStats.attr(att.driver, "racecraft") - DriverStats.attr(def.driver, "racecraft")) * DriverStats.RACECRAFT_K
-	var required_base := OVERTAKE_BASE_REQUIRED_S + track.overtaking_difficulty * OVERTAKE_DIFFICULTY_S \
-		+ maxf(0.0, track.overtaking_difficulty - 0.7) * OVERTAKE_HARD_TRACK_S + (DEFEND_HARD_S if def.defend_hard else 0.0)
+	var required_base := (OVERTAKE_BASE_REQUIRED_S + track.overtaking_difficulty * OVERTAKE_DIFFICULTY_S \
+		+ maxf(0.0, track.overtaking_difficulty - 0.7) * OVERTAKE_HARD_TRACK_S) * overtake_k + (DEFEND_HARD_S if def.defend_hard else 0.0)
 	# modo de ultrapassagem: gasta bateria só quando faz diferença (sem ele faltaria vantagem) e no máximo uma
 	# vez por volta — antes era usado em toda tentativa e a bateria ficava sempre vazia
 	if att.battery > 0.1 and att.boost_lap != att.laps_done and advantage < required_base \
-			and advantage + OVERTAKE_MODE_BONUS_S > required_base - 2.0 * OVERTAKE_SCALE:
-		advantage += OVERTAKE_MODE_BONUS_S
+			and advantage + OVERTAKE_MODE_BONUS_S * energy_k > required_base - 2.0 * OVERTAKE_SCALE:
+		advantage += OVERTAKE_MODE_BONUS_S * energy_k
 		att.battery = maxf(0.0, att.battery - OVERTAKE_MODE_COST)
 		att.boost_lap = att.laps_done
 	# Ex.: Interlagos (0,35) exige ~0,9 s/volta de vantagem para a chance chegar à metade do máximo;
 	# Mônaco (0,95) exige ~2,8 s (ainda quase impossível). Mais fácil desde 2026-11-03 (pedido do usuário).
-	var required := OVERTAKE_BASE_REQUIRED_S + track.overtaking_difficulty * OVERTAKE_DIFFICULTY_S \
-		+ maxf(0.0, track.overtaking_difficulty - 0.7) * OVERTAKE_HARD_TRACK_S
-	if def.defend_hard:
-		required += DEFEND_HARD_S
-	var p := float(zone["strength"]) / (1.0 + exp(-(advantage - required) / OVERTAKE_SCALE))
+	var p := float(zone["strength"]) / (1.0 + exp(-(advantage - required_base) / OVERTAKE_SCALE))
 	return rng.randf() < clampf(p, 0.0, OVERTAKE_MAX_CHANCE)
 
 
@@ -564,7 +588,13 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 	if control.is_neutralized():
 		wear *= 0.5
 	car.tyre_wear += wear * lap_part * car.wear_factor
-	var soc: float = ENERGY_SOC[car.energy_mode] + (0.1 if control.is_neutralized() else 0.0)
+	var soc: float = ENERGY_SOC[car.energy_mode] * energy_k + (0.1 if control.is_neutralized() else 0.0)
+	# reabastecimento: o tanque acaba e o carro TEM de parar (a estratégia escolhe o pneu)
+	if refuel and car.tyre_laps >= fuel_window_laps and not car.pit_requested and not car.in_pit \
+			and car.laps_done + 1 < total_laps and not car.finished and not car.retired:
+		request_pit(car, StrategyAI.choose_compound(self, car, total_laps - car.laps_done))
+		if car.is_player:
+			incident.emit(car, "fuel", "%s precisa reabastecer: box nesta volta." % car.display_name())
 	car.battery = clampf(car.battery + soc * lap_part, 0.0, 1.0)
 
 	if not car.is_player and _crossed(prev, now, STRATEGY_FRAC):
@@ -611,6 +641,8 @@ func _enter_pit(car: CarState) -> void:
 		stationary = float(PitStop.estimate(car, plan)["total"]) + absf(rng.randfn(0.0, 0.3))
 		if rng.randf() < 0.05:
 			stationary += rng.randf_range(2.0, 5.0)  # parada lenta
+		if refuel:
+			stationary += TechRules.REFUEL_S
 	car.pit_stationary_s = stationary
 	# o pit lane tem limite de velocidade: o tempo andando é fixo (ritmo de bandeira verde), por
 	# isso parar sob safety car/VSC custa menos. A parte parada (2,4 s padrão) acontece no box.

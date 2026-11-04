@@ -35,7 +35,8 @@ func _ready() -> void:
 
 	_left = VBoxContainer.new()
 	_left.add_theme_constant_override("separation", 10)
-	ScreenKit.place(_left, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 150), Vector2(760, 0))
+	# coluna das propostas rola (4 propostas: 3 esportivas + 1 técnica) e não invade o painel da direita
+	ScreenKit.scroll_column(_left, _layer, Vector2(44, 150), Vector2(1280 - 88 - 400 - 20, 720 - 150 - 8))
 
 	var right := ScreenKit.g_card(Color(1, 1, 1, 0.06), 22, 22, 16)
 	var rv := VBoxContainer.new()
@@ -44,16 +45,16 @@ func _ready() -> void:
 	rv.add_child(UiStyle.g_caption("Regras em vigor"))
 	for line: Array in regs.rule_lines(campaign.season):
 		var r := HBoxContainer.new()
-		r.custom_minimum_size = Vector2(0, 38)
-		var k := UiStyle.g_label(String(line[0]), 15, UiStyle.G_TEXT_2, "bold")
+		r.custom_minimum_size = Vector2(0, 30)
+		var k := UiStyle.g_label(String(line[0]), 13, UiStyle.G_TEXT_2, "bold")
 		k.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		k.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		r.add_child(k)
-		var v := UiStyle.g_label(String(line[1]), 14, UiStyle.G_TEXT, "black")
+		var v := UiStyle.g_label(String(line[1]), 13, UiStyle.G_TEXT, "black")
 		v.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		r.add_child(v)
 		rv.add_child(r)
-	var note := UiStyle.g_label("As propostas aprovadas valem a partir da temporada seguinte. A IA vota pelo próprio interesse: equipes fortes tendem a favorecer mais pontos e sprints. Fora da janela do fim de temporada a votação fica fechada.", 13, UiStyle.G_TEXT_2)
+	var note := UiStyle.g_label("Aprovadas valem na temporada seguinte. Motor, aerodinâmica e chassi novos são ANO DE VIRADA: os carros se aproximam e quem preparou o carro do ano seguinte na P&D sai na frente.", 13, UiStyle.G_TEXT_2)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.custom_minimum_size = Vector2(340, 0)
 	rv.add_child(note)
@@ -86,9 +87,9 @@ func _refresh() -> void:
 		c.queue_free()
 	if not regs.vote_open(campaign):
 		_left.add_child(UiStyle.g_caption("Votação"))
-		var l := UiStyle.g_label("A votação das regras de %d abre quando a temporada %d termina. Cada fim de temporada o Conselho põe em votação uma mudança de pontuação, de corridas sprint e de pneus." % [campaign.season + 1, campaign.season], 16, Color("#c3c9d3"))
+		var l := UiStyle.g_label("A votação das regras de %d abre quando a temporada %d termina. Cada fim de temporada o Conselho põe em votação uma mudança de pontuação, de corridas sprint, de pneus e uma regra técnica (motor, aerodinâmica, chassi, reabastecimento ou calendário)." % [campaign.season + 1, campaign.season], 16, Color("#c3c9d3"))
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.custom_minimum_size = Vector2(680, 0)
+		l.custom_minimum_size = Vector2(640, 0)
 		_left.add_child(l)
 		if not regs.history.is_empty():
 			_left.add_child(UiStyle.g_caption("Votações anteriores"))
@@ -109,8 +110,10 @@ func _proposal(p: Dictionary) -> Control:
 	card.add_child(v)
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 12)
-	var title := UiStyle.g_label(String(p["title"]), 21, UiStyle.G_TEXT, "black")
+	var title := UiStyle.g_label(String(p["title"]), 18, UiStyle.G_TEXT, "black")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # título longo quebra a linha em vez de alargar o cartão
+	title.custom_minimum_size = Vector2(200, 0)
 	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(title)
 	for o: Array in [["y", "SIM"], ["n", "NÃO"], ["w", "ABSTER"]]:
@@ -120,7 +123,7 @@ func _proposal(p: Dictionary) -> Control:
 		b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
 		var on: bool = regs.player_votes.get(id, "w") == o[0]
 		for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
-			b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_LIGHT if on else Color(1, 1, 1, 0.1), 14, 20, 0))
+			b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_LIGHT if on else Color(1, 1, 1, 0.1), 14, 12, 0))
 		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 			b.add_theme_color_override(k, UiStyle.G_INK if on else UiStyle.G_TEXT)
 		b.add_theme_font_override("font", UiStyle.G_BLACK)
@@ -132,8 +135,9 @@ func _proposal(p: Dictionary) -> Control:
 	var desc := UiStyle.g_label(String(p["desc"]), 14, Color("#c3c9d3"))
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(desc)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 5)
+	var row := HFlowContainer.new()  # bolinhas dos votos quebram a linha se não couberem
+	row.add_theme_constant_override("h_separation", 5)
+	row.add_theme_constant_override("v_separation", 5)
 	for t: Dictionary in campaign.teams():
 		var vote: String = regs.player_votes.get(id, "w") if t["id"] == campaign.player_team else (regs.votes[id] as Dictionary).get(t["id"], "w")
 		row.add_child(_dot(t, vote, t["id"] == campaign.player_team))

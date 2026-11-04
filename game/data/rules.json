@@ -1,20 +1,251 @@
 {
- "_notas": "PROVISÓRIO. Propostas do Conselho de regras (uma por tipo a cada fim de temporada). favors: quem tende a votar SIM (top = equipes fortes, low = equipes fracas). Valem na temporada seguinte.",
- "sprint_priority": ["shanghai", "miami", "montreal", "silverstone", "zandvoort", "singapore", "austin", "interlagos", "suzuka", "lusail", "spa", "baku", "mexico", "lasvegas"],
+ "_notas": "PROVISÓRIO. Propostas do Conselho de regras (uma por tipo a cada fim de temporada). favors: quem tende a votar SIM (top = equipes fortes, low = equipes fracas). Valem na temporada seguinte. Técnicas (kind 'tech'): uma por fim de temporada, valem no ano seguinte; reset = ano de virada (embaralha os carros).",
+ "sprint_priority": [
+  "shanghai",
+  "miami",
+  "montreal",
+  "silverstone",
+  "zandvoort",
+  "singapore",
+  "austin",
+  "interlagos",
+  "suzuka",
+  "lusail",
+  "spa",
+  "baku",
+  "mexico",
+  "lasvegas"
+ ],
  "proposals": [
-  {"id": "points_top12", "kind": "points", "title": "PONTUAÇÃO · TOP 12 PONTUAM", "favors": "low",
+  {
+   "id": "points_top12",
+   "kind": "points",
+   "title": "PONTUAÇÃO · TOP 12 PONTUAM",
+   "favors": "low",
    "desc": "Os 12 primeiros marcam ponto (25-18-15-12-10-8-6-5-4-3-2-1). Beneficia as equipes do meio do grid.",
-   "points_race": [25, 18, 15, 12, 10, 8, 6, 5, 4, 3, 2, 1]},
-  {"id": "points_winner", "kind": "points", "title": "PONTUAÇÃO · VITÓRIA VALE MAIS", "favors": "top",
+   "points_race": [
+    25,
+    18,
+    15,
+    12,
+    10,
+    8,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1
+   ]
+  },
+  {
+   "id": "points_winner",
+   "kind": "points",
+   "title": "PONTUAÇÃO · VITÓRIA VALE MAIS",
+   "favors": "top",
    "desc": "A vitória passa a valer 30 pontos (30-20-15-12-10-8-6-4-2-1). Premia quem vence, não só quem pontua sempre.",
-   "points_race": [30, 20, 15, 12, 10, 8, 6, 4, 2, 1]},
-  {"id": "sprints_more", "kind": "sprint", "title": "MAIS CORRIDAS SPRINT · +2 FINS DE SEMANA", "favors": "top",
-   "desc": "Mais dois fins de semana sprint: mais pontos em jogo, mais custo de pneus e peças.", "sprint_delta": 2},
-  {"id": "sprints_fewer", "kind": "sprint", "title": "MENOS CORRIDAS SPRINT · −2 FINS DE SEMANA", "favors": "low",
-   "desc": "Dois fins de semana sprint a menos: menos desgaste e custo, menos pontos em disputa.", "sprint_delta": -2},
-  {"id": "tyres_free", "kind": "tyres", "title": "PNEUS · LIBERAR O COMPOSTO OBRIGATÓRIO", "favors": "low",
-   "desc": "Acaba a regra dos 2 compostos secos: dá para correr com um só se a estratégia aguentar.", "min_dry_compounds": 1},
-  {"id": "tyres_three", "kind": "tyres", "title": "PNEUS · EXIGIR 3 COMPOSTOS SECOS", "favors": "top",
-   "desc": "Passam a ser obrigatórios 3 compostos secos diferentes: pelo menos duas paradas.", "min_dry_compounds": 3}
+   "points_race": [
+    30,
+    20,
+    15,
+    12,
+    10,
+    8,
+    6,
+    4,
+    2,
+    1
+   ]
+  },
+  {
+   "id": "sprints_more",
+   "kind": "sprint",
+   "title": "MAIS CORRIDAS SPRINT · +2 FINS DE SEMANA",
+   "favors": "top",
+   "desc": "Mais dois fins de semana sprint: mais pontos em jogo, mais custo de pneus e peças.",
+   "sprint_delta": 2
+  },
+  {
+   "id": "sprints_fewer",
+   "kind": "sprint",
+   "title": "MENOS CORRIDAS SPRINT · −2 FINS DE SEMANA",
+   "favors": "low",
+   "desc": "Dois fins de semana sprint a menos: menos desgaste e custo, menos pontos em disputa.",
+   "sprint_delta": -2
+  },
+  {
+   "id": "tyres_free",
+   "kind": "tyres",
+   "title": "PNEUS · LIBERAR O COMPOSTO OBRIGATÓRIO",
+   "favors": "low",
+   "desc": "Acaba a regra dos 2 compostos secos: dá para correr com um só se a estratégia aguentar.",
+   "min_dry_compounds": 1
+  },
+  {
+   "id": "tyres_three",
+   "kind": "tyres",
+   "title": "PNEUS · EXIGIR 3 COMPOSTOS SECOS",
+   "favors": "top",
+   "desc": "Passam a ser obrigatórios 3 compostos secos diferentes: pelo menos duas paradas.",
+   "min_dry_compounds": 3
+  },
+  {
+   "id": "eng_v8",
+   "kind": "tech",
+   "set": {
+    "engine": "v8"
+   },
+   "reset": true,
+   "favors": "low",
+   "title": "MOTOR · V8 ASPIRADO COM COMBUSTÍVEL SUSTENTÁVEL",
+   "desc": "Motores V8 sem a parte elétrica pesada: carros mais rápidos e barulhentos, bateria quase não decide corrida. Ano de virada: o grid embaralha."
+  },
+  {
+   "id": "eng_v10",
+   "kind": "tech",
+   "set": {
+    "engine": "v10"
+   },
+   "reset": true,
+   "favors": "low",
+   "title": "MOTOR · V10 ASPIRADO COM COMBUSTÍVEL SUSTENTÁVEL",
+   "desc": "A volta do V10: o carro mais rápido e o som mais agudo; energia elétrica vira detalhe. Ano de virada."
+  },
+  {
+   "id": "eng_hybrid",
+   "kind": "tech",
+   "set": {
+    "engine": "hybrid_plus"
+   },
+   "reset": true,
+   "favors": "top",
+   "title": "MOTOR · HÍBRIDO COM MAIS ENERGIA ELÉTRICA",
+   "desc": "Mais potência elétrica: a gestão da bateria passa a decidir corridas. Ano de virada, mas as montadoras saem na frente."
+  },
+  {
+   "id": "eng_v6",
+   "kind": "tech",
+   "set": {
+    "engine": "v6h"
+   },
+   "reset": true,
+   "favors": "top",
+   "title": "MOTOR · VOLTA DO V6 HÍBRIDO 2026",
+   "desc": "Retorno ao motor de 2026. Ano de virada."
+  },
+  {
+   "id": "aero_ground",
+   "kind": "tech",
+   "set": {
+    "aero": "ground"
+   },
+   "reset": true,
+   "favors": "low",
+   "title": "AERODINÂMICA · EFEITO SOLO",
+   "desc": "O carro gruda pelo assoalho e sofre menos andando colado: ultrapassar fica bem mais fácil. Ano de virada."
+  },
+  {
+   "id": "aero_drs",
+   "kind": "tech",
+   "set": {
+    "aero": "drs"
+   },
+   "reset": true,
+   "favors": "top",
+   "title": "AERODINÂMICA · ASAS FIXAS COM DRS",
+   "desc": "Asas tradicionais com DRS: ajuda a ultrapassar nas retas, mas o ar sujo atrapalha mais nas curvas. Ano de virada."
+  },
+  {
+   "id": "aero_active",
+   "kind": "tech",
+   "set": {
+    "aero": "active"
+   },
+   "reset": true,
+   "favors": "top",
+   "title": "AERODINÂMICA · VOLTA DA AERO ATIVA 2026",
+   "desc": "Retorno à aerodinâmica ativa de 2026. Ano de virada."
+  },
+  {
+   "id": "ch_light",
+   "kind": "tech",
+   "set": {
+    "chassis": "light"
+   },
+   "reset": true,
+   "favors": "low",
+   "title": "CHASSI · CARRO MENOR E MAIS LEVE",
+   "desc": "Peso mínimo e dimensões menores: voltas mais rápidas e pneus durando mais. Ano de virada."
+  },
+  {
+   "id": "ch_heavy",
+   "kind": "tech",
+   "set": {
+    "chassis": "heavy"
+   },
+   "reset": true,
+   "favors": "top",
+   "title": "CHASSI · CARRO MAIOR E MAIS SEGURO",
+   "desc": "Células de segurança maiores e mais peso: carros mais lentos e mais desgaste de pneu. Ano de virada."
+  },
+  {
+   "id": "ch_std",
+   "kind": "tech",
+   "set": {
+    "chassis": "std"
+   },
+   "reset": true,
+   "favors": "top",
+   "title": "CHASSI · VOLTA AO PADRÃO 2026",
+   "desc": "Retorno às dimensões e ao peso de 2026. Ano de virada."
+  },
+  {
+   "id": "refuel_on",
+   "kind": "tech",
+   "set": {
+    "refuel": true
+   },
+   "reset": false,
+   "favors": "low",
+   "title": "ESTRATÉGIA · VOLTA DO REABASTECIMENTO",
+   "desc": "Carros largam leves e param para abastecer (pelo menos duas paradas): corridas mais rápidas e estratégicas."
+  },
+  {
+   "id": "refuel_off",
+   "kind": "tech",
+   "set": {
+    "refuel": false
+   },
+   "reset": false,
+   "favors": "top",
+   "title": "ESTRATÉGIA · FIM DO REABASTECIMENTO",
+   "desc": "Tanque cheio do início ao fim: uma parada volta a ser o normal."
+  },
+  {
+   "id": "cal_20",
+   "kind": "tech",
+   "set": {
+    "races": 20
+   },
+   "reset": false,
+   "favors": "low",
+   "title": "CALENDÁRIO · 20 CORRIDAS",
+   "desc": "Duas etapas saem do calendário: menos custo de viagem e menos pontos em disputa."
+  },
+  {
+   "id": "cal_22",
+   "kind": "tech",
+   "set": {
+    "races": 22
+   },
+   "reset": false,
+   "favors": "top",
+   "title": "CALENDÁRIO · VOLTAM AS 22 CORRIDAS",
+   "desc": "O calendário volta a ter 22 etapas."
+  }
+ ],
+ "calendar_drop_priority": [
+  "madring",
+  "lusail"
  ]
 }

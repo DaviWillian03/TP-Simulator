@@ -466,3 +466,23 @@ O usuário marcou as quatro frentes: pilotos novos ao longo dos anos, estúdio d
 - **Nomes, fotos e logos oficiais** de F2/F3 2026 enviados pelo usuário: ficam só em `game/local/` (fora do git, APK pessoal),
   como já é com F1. Fotos precisam de **fundo transparente**: o avatar já pinta o fundo com a cor da equipe ATUAL, então a foto
   acompanha a troca de equipe automaticamente.
+
+### Regras técnicas — implementado (2026-11-04)
+Decisões do usuário: o Conselho pode mudar **motor, aerodinâmica, chassi/peso, reabastecimento e calendário**; valem na temporada
+**seguinte**; ano de virada embaralha **bastante, mas com lógica**; as regras **mudam a corrida**.
+- `TechRules` (efeitos, PROVISÓRIO): motor V6 híbrido (2026) / V8 / V10 / híbrido com mais elétrico (tempo de volta, peso dos modos de
+  energia e da bateria, som mais agudo no V8/V10); aerodinâmica ativa / efeito solo (ultrapassar −25% de vantagem exigida, ar sujo
+  ×0,6) / asas com DRS (−15%, ar sujo ×1,3); chassi padrão / leve (−0,8 s, pneu ×0,9) / pesado (+0,6 s, ×1,15); reabastecimento
+  (largam leves, tanque dura 42% da corrida → pelo menos 2 paradas, +3,5 s parado); calendário 20 ou 22 corridas (saem Madri e Catar).
+- Conselho: além das 3 esportivas, **1 proposta técnica por temporada**. Motor, aerodinâmica e chassi novos = **ano de virada**
+  (`Campaign.regulation_reset`): notas dos carros se aproximam pela metade, desenvolvimento antigo vale 40%, o carro do ano seguinte
+  da P&D vale inteiro, corpo técnico ajuda (±0,12 por ponto da média acima de 82), sorte do fabricante quando o motor muda, ±1 de acaso.
+- Correção: a chance de ultrapassagem usava uma segunda conta da vantagem exigida, sem os ajustes (defesa forte já estava somada
+  duas vezes); agora uma conta só.
+
+### Elenco oficial F2/F3 2026 e fotos (2026-11-04)
+- Zip do usuário (fontes fiaformula2.com / fiaformula3.com): equipes de cada piloto (`series_team`), **Colton Herta volta para a F2
+  (Hitech)** — tinha sido removido por engano —, Nico Varrone (F2) e 8 estreantes da F3 entram (notas estimadas). F2 = 22, F3 = 35
+  inscritos; tamanhos da carreira passam aos reais (F2 22, F3 30). `tools/sync_feeder_roster.py`.
+- Fotos e logos ficam **só em `game/local/`** (rostos via `tools/prepare_portraits.py`, que agora lê F2/F3 e subpastas; logos em
+  `game/local/series/f2|f3/`), fora do git, para o APK pessoal.

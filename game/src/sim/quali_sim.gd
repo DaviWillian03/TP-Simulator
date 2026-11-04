@@ -85,7 +85,8 @@ var lap_mode: Dictionary = {}  ## CarState -> "safe" | "limit" (escolha do pilot
 var laps_left: Dictionary = {}  ## CarState -> voltas rápidas que ainda faltam nesta saída (plano de 1 ou 2)
 var lap_event: Dictionary = {}  ## CarState -> {kind, loss, valid, reveal, revealed} do que vai acontecer nesta volta
 var pending: Array[Dictionary] = []  ## decisões abertas para o jogador
-var championship: Dictionary = {}  ## driver id -> posição no campeonato (campanha); quem briga pelo título arrisca menos
+var championship: Dictionary = {}
+var tech_lap_s := 0.0  ## regulamento técnico: carros mais rápidos/lentos para todos  ## driver id -> posição no campeonato (campanha); quem briga pelo título arrisca menos
 var _next_decision := 1
 var phase_d0: Dictionary = {}  ## CarState -> fração da volta em que a fase começou (abortar no meio da volta)
 var phase_start: Dictionary = {}  ## CarState -> instante (seg_time) em que a fase começou (para o carro andar na pista 3D)
@@ -102,6 +103,7 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	segments = SPRINT_SEGMENTS if sprint else SEGMENTS
 	auto_player = bool(options.get("auto_player", false))
 	championship = options.get("championship", {})
+	tech_lap_s = float(TechRules.knobs(options.get("tech", {}))["lap_s"])
 	incident_rate = float(options.get("incident_rate", 1.0))
 	rng.seed = int(options.get("seed", 1))
 	var total := 0.0
@@ -257,7 +259,7 @@ func _lap_base(car: CarState) -> float:
 	# classificação: o atributo "quali" troca o ritmo de corrida na volta lançada
 	var quali_gain := (DriverStats.attr(car.driver, "quali") - DriverStats.attr(car.driver, "pace")) * DriverStats.QUALI_K
 	var wet_skill := 1.0 + (80.0 - DriverStats.attr(car.driver, "wet")) * DriverStats.WET_K
-	return RaceSim.base_lap_time(track, car.team, car.driver) - quali_gain + weather.wetness * RaceSim.WET_TRACK_S * clampf(wet_skill, 0.7, 1.4)
+	return RaceSim.base_lap_time(track, car.team, car.driver) + tech_lap_s - quali_gain + weather.wetness * RaceSim.WET_TRACK_S * clampf(wet_skill, 0.7, 1.4)
 
 
 ## Volta esperada sem sorte (a tela usa para mostrar o efeito da evolução da pista).

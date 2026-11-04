@@ -1,7 +1,8 @@
 class_name Regulations
 extends RefCounted
-## Regulamento da campanha e Conselho de regras (mockup v13-2). Regras mutáveis na 1ª versão: pontuação, número de fins
-## de semana sprint e regra de compostos de pneu. A cada fim de temporada o Conselho põe 3 propostas em votação (uma por
+## Regulamento da campanha e Conselho de regras (mockup v13-2). Regras esportivas: pontuação, número de fins de semana
+## sprint e regra de compostos de pneu. Regras técnicas (TechRules, 2026-11-04): motor, aerodinâmica, chassi,
+## reabastecimento e número de corridas — uma proposta técnica por temporada. A cada fim de temporada o Conselho põe 3 propostas em votação (uma por
 ## tipo); todas as equipes votam (a IA pelo interesse: equipes fortes ou fracas, conforme a proposta), o jogador só vota
 ## (sem lobby), maioria simples (empate barra). As aprovadas valem na temporada seguinte. Valores PROVISÓRIOS (data/rules.json).
 
@@ -17,6 +18,8 @@ var votes: Dictionary = {}  ## id da proposta -> {id da equipe: "y"/"n"/"w"} (s�
 var player_votes: Dictionary = {}  ## id da proposta -> "y"/"n"/"w"
 var vote_season := 0
 var history: Array = []  ## [{season, id, title, passed, yes, no}]
+var tech: Dictionary = TechRules.DEFAULT.duplicate()  ## regulamento técnico em vigor
+var pending_reset: Array = []  ## tipos de regra técnica que mudaram nesta virada (a campanha embaralha os carros)
 
 static var _data: Dictionary = {}
 
@@ -35,6 +38,8 @@ func setup() -> void:
 	points_race = RaceSim.RACE_POINTS.duplicate()
 	points_sprint = RaceSim.SPRINT_POINTS.duplicate()
 	min_dry_compounds = 2
+	tech = TechRules.DEFAULT.duplicate()
+	pending_reset.clear()
 	proposals.clear()
 	votes.clear()
 	player_votes.clear()
@@ -54,8 +59,31 @@ func points_for(position: int, is_sprint_race: bool) -> int:
 func rule_lines(season: int) -> Array:
 	var race := "-".join(points_race.map(func(p: Variant) -> String: return str(int(p))))
 	var spr := "-".join(points_sprint.map(func(p: Variant) -> String: return str(int(p))))
-	return [["Pontuação da corrida", race], ["Pontuação da sprint", spr], ["Fins de semana sprint", "%d de %d" % [sprint_ids.size(), Campaign.calendar().size()]],
-		["Compostos secos obrigatórios", str(min_dry_compounds)], ["Motor", "Híbrido 2026 (V6)"], ["Valem para", "Temporada %d" % season]]
+	return [["Pontuação da corrida", race], ["Pontuação da sprint", spr], ["Fins de semana sprint", "%d de %d" % [sprint_ids.size(), race_count()]],
+		["Compostos secos obrigatórios", str(min_dry_compounds)], ["Motor", TechRules.label("engine", tech["engine"])],
+		["Aerodinâmica", TechRules.label("aero", tech["aero"])], ["Chassi", TechRules.label("chassis", tech["chassis"])],
+		["Reabastecimento", TechRules.label("refuel", tech["refuel"])], ["Calendário", TechRules.label("races", race_count())],
+		["Valem para", "Temporada %d" % season]]
+
+
+## Regulamento técnico para as simulações do fim de semana.
+func tech_options() -> Dictionary:
+	return tech.duplicate()
+
+
+func race_count() -> int:
+	return Campaign.calendar().size() - dropped_ids().size()
+
+
+## Etapas fora do calendário pela regra de número de corridas.
+func dropped_ids() -> Array:
+	var n := Campaign.calendar().size() - int(tech.get("races", Campaign.calendar().size()))
+	var order: Array = data().get("calendar_drop_priority", [])
+	return order.slice(0, clampi(n, 0, order.size()))
+
+
+func is_dropped(circuit_id: String) -> bool:
+	return dropped_ids().has(circuit_id)
 
 
 # --- votação -----------------------------------------------------------------------------------
@@ -80,6 +108,13 @@ func open_vote(camp: Campaign) -> void:
 		if options.is_empty():
 			continue
 		proposals.append(options[absi(hash("%d|%s" % [camp.season, kind])) % options.size()])
+	# uma proposta técnica por temporada (motor, aerodinâmica, chassi, reabastecimento ou calendário)
+	var techs: Array = []
+	for p: Dictionary in data()["proposals"]:
+		if p["kind"] == "tech" and _applicable(p):
+			techs.append(p)
+	if not techs.is_empty():
+		proposals.append(techs[absi(hash("%d|tech" % camp.season)) % techs.size()])
 	for p: Dictionary in proposals:
 		var v: Dictionary = {}
 		for t: Dictionary in camp.teams():
@@ -90,6 +125,11 @@ func open_vote(camp: Campaign) -> void:
 
 
 func _applicable(p: Dictionary) -> bool:
+	if p.has("set"):
+		for k: String in p["set"]:
+			if tech.get(k) != p["set"][k]:
+				return true
+		return false
 	if p.has("points_race"):
 		return p["points_race"] != points_race
 	if p.has("sprint_delta"):
@@ -157,6 +197,11 @@ func apply_passed(camp: Campaign) -> Array[String]:
 			_change_sprints(int(p["sprint_delta"]))
 		if p.has("min_dry_compounds"):
 			min_dry_compounds = int(p["min_dry_compounds"])
+		if p.has("set"):
+			for k: String in p["set"]:
+				tech[k] = p["set"][k]
+				if bool(p.get("reset", false)) and not pending_reset.has(k):
+					pending_reset.append(k)
 		msgs.append("Conselho: aprovada — %s" % p["title"].capitalize())
 	proposals.clear()
 	votes.clear()
@@ -186,7 +231,8 @@ func _change_sprints(delta: int) -> void:
 
 func to_dict() -> Dictionary:
 	return {"points_race": points_race, "points_sprint": points_sprint, "sprint_ids": sprint_ids, "min": min_dry_compounds, "proposals": proposals,
-		"votes": votes, "player_votes": player_votes, "vote_season": vote_season, "history": history}
+		"votes": votes, "player_votes": player_votes, "vote_season": vote_season, "history": history,
+		"tech": tech, "pending_reset": pending_reset}
 
 
 static func from_dict(d: Dictionary) -> Regulations:
@@ -200,4 +246,7 @@ static func from_dict(d: Dictionary) -> Regulations:
 	r.player_votes = d.get("player_votes", {})
 	r.vote_season = int(d.get("vote_season", 0))
 	r.history = d.get("history", [])
+	r.tech = TechRules.merged(d.get("tech", {}))
+	r.tech["races"] = int(r.tech["races"])
+	r.pending_reset = d.get("pending_reset", [])
 	return r

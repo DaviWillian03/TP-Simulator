@@ -46,9 +46,9 @@ func test_votacao_so_abre_no_fim_da_temporada() -> void:
 
 func test_abrir_votacao_traz_uma_proposta_por_tipo_e_voto_da_ia() -> void:
 	camp.regs.open_vote(camp)
-	assert_eq(camp.regs.proposals.size(), 3)
+	assert_eq(camp.regs.proposals.size(), 4, "3 esportivas + 1 técnica")
 	var kinds := camp.regs.proposals.map(func(p: Dictionary) -> String: return p["kind"])
-	assert_eq(kinds, ["points", "sprint", "tyres"])
+	assert_eq(kinds, ["points", "sprint", "tyres", "tech"])
 	for p: Dictionary in camp.regs.proposals:
 		assert_eq((camp.regs.votes[p["id"]] as Dictionary).size(), 10, "10 equipes da IA votam")
 		assert_false((camp.regs.votes[p["id"]] as Dictionary).has("williams"))
@@ -138,7 +138,8 @@ func test_propostas_se_aplicam_na_virada_e_viram_noticia() -> void:
 	camp.start_next_season()
 	assert_true(camp.regs.proposals.is_empty())
 	assert_gt(camp.regs.history.size(), 0)
-	assert_eq(camp.events.news[0]["id"] if camp.events.news.size() > 0 else "", "council")
+	var ids: Array = camp.events.news.map(func(n: Dictionary) -> String: return n["id"])
+	assert_has(ids, "council", "virou notícia (técnica aprovada também gera 'ano de virada')")
 
 
 func test_salvar_e_carregar_guarda_regras_e_votacao() -> void:
@@ -146,6 +147,6 @@ func test_salvar_e_carregar_guarda_regras_e_votacao() -> void:
 	camp.regs.open_vote(camp)
 	camp.regs.cast(camp.regs.proposals[0]["id"], "y")
 	var copy := Campaign.from_dict(JSON.parse_string(JSON.stringify(camp.to_dict())))
-	assert_eq(copy.regs.proposals.size(), 3)
+	assert_eq(copy.regs.proposals.size(), 4)
 	assert_eq(copy.regs.player_votes[camp.regs.proposals[0]["id"]], "y")
 	assert_eq(copy.regs.sprint_ids, camp.regs.sprint_ids)

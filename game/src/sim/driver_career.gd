@@ -15,8 +15,8 @@ const WEAK_RATING := 76  ## fracos: risco × 1,4
 const NO_SEAT_MULT := 1.8  ## sem vaga em equipe nenhuma: desiste mais cedo
 const UNDER_CONTRACT_MULT := 0.4  ## com contrato para o ano seguinte: raramente para no meio
 
-const F2_SIZE := 20
-const F3_SIZE := 27
+const F2_SIZE := 22  ## 11 equipes × 2 (real)
+const F3_SIZE := 30  ## 10 equipes × 3 (real)
 const PROMOTE_F3 := 6  ## melhores da F3 sobem para a F2 a cada ano (se houver vaga)
 const F2_MAX_YEARS_AGE := 26  ## na F2 depois dos 26 sem subir: vira agente livre (sai da base)
 

@@ -86,7 +86,8 @@ func _process(delta: float) -> void:
 	var stopped := flag == RaceControl.Flag.RED or sim.is_over()
 	var target_db := -60.0 if stopped else (BED_DB - 7.0 if slow else BED_DB)
 	_bed.volume_db = move_toward(_bed.volume_db, target_db, delta * 20.0)
-	_bed.pitch_scale = move_toward(_bed.pitch_scale, 0.82 if slow else 1.0, delta * 0.5)
+	var base_pitch := sim.engine_pitch  # motor do regulamento: V8/V10 mais agudos
+	_bed.pitch_scale = move_toward(_bed.pitch_scale, base_pitch * (0.82 if slow else 1.0), delta * 0.5)
 	if stopped:
 		return
 	_next_passby -= delta * clampf(sqrt(time_scale), 1.0, 2.2)
@@ -104,7 +105,7 @@ func _play_passby(slow: bool) -> void:
 	for pl in _passby:
 		if not pl.playing:
 			pl.stream = _passby_streams[i]
-			pl.pitch_scale = rng.randf_range(0.93, 1.07) * (0.8 if slow else 1.0)
+			pl.pitch_scale = rng.randf_range(0.93, 1.07) * (0.8 if slow else 1.0) * _sim().engine_pitch
 			pl.volume_db = PASSBY_DB + rng.randf_range(-6.0, 0.0) - (6.0 if slow else 0.0)
 			pl.play()
 			return

@@ -195,12 +195,17 @@ func staff_of(camp: Campaign, team_id: String, role: String) -> Dictionary:
 	return {}
 
 
-## Equipes da IA: fator de desenvolvimento pela nota média de diretor, aerodinâmica e projetista.
-func ai_dev_factor(camp: Campaign, team_id: String) -> float:
+## Nota média de diretor, aerodinâmica e projetista (vaga conta 60).
+func tech_staff_avg(camp: Campaign, team_id: String) -> float:
 	var total := 0.0
 	for role: String in ["director", "aero", "designer"]:
 		total += float(staff_of(camp, team_id, role).get("skill", 60))
-	return clampf(1.0 + (total / 3.0 - 82.0) * AI_STAFF_DEV_K, 0.7, 1.25)
+	return total / 3.0
+
+
+## Equipes da IA: fator de desenvolvimento pela nota média de diretor, aerodinâmica e projetista.
+func ai_dev_factor(camp: Campaign, team_id: String) -> float:
+	return clampf(1.0 + (tech_staff_avg(camp, team_id) - 82.0) * AI_STAFF_DEV_K, 0.7, 1.25)
 
 
 ## Ganho dos treinos de uma equipe pela engenharia de pista.
