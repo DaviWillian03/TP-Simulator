@@ -1,0 +1,120 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>V20 · F1 pilotos</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:1280px;height:720px;overflow:hidden}.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.scene{background:#0b0c0f;color:#eef0f3;font-family:Titillium;font-weight:600}
+.wall{position:absolute;inset:0 0 250px 0;background:linear-gradient(#1b1e24,#111318 80%)}
+.wall:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:250px;background:linear-gradient(#181a1f,#0a0b0d)}
+.lamp{position:absolute;top:0;height:6px;background:#f4f6fa;border-radius:0 0 4px 4px;box-shadow:0 0 34px 10px rgba(240,245,255,.22)}
+.glow{position:absolute;inset:0;background:radial-gradient(ellipse 46% 40% at 64% 66%,rgba(24,104,219,.42),transparent 70%)}
+.cone{position:absolute;left:470px;top:0;width:560px;height:720px;background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0) 75%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%)}
+.car{position:absolute}.refl{position:absolute;transform:scaleY(-1);opacity:.13;-webkit-mask:linear-gradient(transparent 55%,#000)}
+.logo{position:absolute;left:52px;top:34px;height:74px}
+.season{position:absolute;left:56px;top:118px;font-size:13px;letter-spacing:3px;color:#9aa3b2}
+.modes{position:absolute;left:52px;top:168px;width:388px;display:flex;flex-direction:column;gap:12px}
+.mode{display:flex;align-items:center;gap:16px;border-radius:16px;padding:0 20px;background:rgba(255,255,255,.06)}
+.mode b{display:block;font-weight:900;font-size:24px;letter-spacing:.5px;line-height:1}.mode small{display:block;font-size:15px;color:#a8b0bd;margin-top:5px}
+.mode .go{margin-left:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.mode.main{height:112px;background:#f3f4f6;color:#11141a;position:relative;overflow:hidden}
+.mode.main:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:#E10600}
+.mode.main b{font-size:34px}.mode.main small{color:#4b5260}.mode.main .go{background:#E10600;color:#fff;width:54px;height:54px}
+.mode.alt{height:84px}
+.mode.lock svg{flex:none}.mode.lock{height:50px;white-space:nowrap;background:none;color:#6c7380;padding-left:20px}.mode.lock b{font-size:18px;color:#7b8290}
+.tag{font-size:12px;letter-spacing:2px;border-radius:20px;padding:4px 10px;background:rgba(255,255,255,.07);color:#8a92a0;margin-left:auto}
+.pill{display:flex;align-items:center;gap:12px;border-radius:40px;padding:8px 18px 8px 10px;background:rgba(255,255,255,.07)}
+.pill b{display:block;font-size:17px;font-weight:900;letter-spacing:1px}.pill small{display:block;font-size:13px;color:#a8b0bd}
+.top{position:absolute;right:44px;top:40px;display:flex;align-items:center;gap:12px}
+.swap{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07)}
+.plates{position:absolute;right:56px;bottom:40px;display:flex;gap:44px}
+.plate{display:flex;align-items:flex-end;gap:12px}.plate .n{font-weight:900;font-size:62px;line-height:.8;color:transparent;-webkit-text-stroke:2px #5c93ea}
+.plate b{display:block;font-size:20px;font-weight:900}.plate small{display:block;font-size:13px;color:#9aa3b2;letter-spacing:1.5px}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#5d6574}
+/* configuração */
+.hdr{position:absolute;left:44px;top:30px;display:flex;align-items:center;gap:16px}
+.round{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.hdr b{font-size:15px;letter-spacing:3px;font-weight:700;color:#9aa3b2;display:block}.hdr h1{font-size:30px;font-weight:900;letter-spacing:1px}
+.map{position:absolute;left:30px;top:96px;width:830px;height:420px}
+.map svg.trk{position:absolute;left:340px;top:6px;filter:drop-shadow(0 0 10px rgba(110,170,255,.55))}
+.badge{display:inline-flex;gap:8px;align-items:center;border-radius:20px;padding:5px 12px;font-size:13px;letter-spacing:2px;font-weight:700}
+.gpname{position:absolute;left:14px;top:40px;width:420px}
+.gpname h2{font-size:50px;font-weight:900;line-height:.95;margin:14px 0 8px}.gpname p{font-size:16px;color:#a8b0bd}
+.stats{position:absolute;left:14px;top:268px;display:grid;grid-template-columns:repeat(2,170px);gap:22px 26px}
+.stat b{display:block;font-size:40px;font-weight:900;line-height:1}.stat small{font-size:12px;letter-spacing:2px;color:#8f98a7}
+.panel{position:absolute;right:40px;top:92px;width:360px;display:flex;flex-direction:column;gap:13px}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#8f98a7;margin-bottom:8px}
+.seg{display:flex;background:rgba(255,255,255,.07);border-radius:28px;padding:4px;gap:4px}
+.seg span{flex:1;height:44px;border-radius:24px;display:grid;place-items:center;font-size:16px;font-weight:700;color:#c3c9d3}
+.seg span.on{background:#f3f4f6;color:#11141a}
+.wx{display:flex;gap:8px}.wx span{flex:1;height:58px;border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:#c3c9d3}
+.wx span.on{background:#f3f4f6;color:#11141a}
+.cta{height:60px;margin-top:2px;background:#E10600;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;font-weight:900;letter-spacing:1px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%);border-radius:14px 0 14px 14px}
+.cal{position:absolute;left:0;right:0;bottom:16px;height:108px;display:flex;gap:12px;padding-left:44px}
+.card{flex:0 0 172px;border-radius:16px;background:rgba(255,255,255,.055);padding:12px 14px;position:relative}
+.card .rd{font-size:12px;letter-spacing:2px;color:#8f98a7}.card b{display:block;font-size:17px;font-weight:900;margin-top:2px;white-space:nowrap}
+.card small{font-size:13px;color:#a8b0bd}.card svg{position:absolute;right:10px;bottom:10px;opacity:.75}
+.card.on{background:#f3f4f6;color:#11141a}.card.on small,.card.on .rd{color:#4b5260}.card.on:before{content:"";position:absolute;left:14px;right:14px;top:0;height:4px;border-radius:0 0 4px 4px;background:#1868DB}
+.chip{font-size:10px;letter-spacing:1.5px;border-radius:10px;padding:2px 7px;margin-left:4px;vertical-align:middle;font-weight:700}
+.chip.s{background:#E10600;color:#fff}.chip.n{background:#26324a;color:#ffd36b}
+.fade{position:absolute;right:0;bottom:0;width:160px;height:170px;background:linear-gradient(90deg,transparent,#0b0c0f)}
+
+.scene{background:#0b0c0f}
+.bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 30% 30%,#1b2a55,#0b0c0f 72%)}
+.hd{position:absolute;left:44px;top:20px;right:44px;display:flex;align-items:center;gap:14px}
+.rb{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center}
+.hd h1{font-size:28px;font-weight:900;line-height:1}.hd small{display:block;font-size:12px;letter-spacing:3px;color:#8f98a7;font-weight:900}
+.seg{display:flex;gap:4px;background:rgba(255,255,255,.06);border-radius:26px;padding:4px}
+.seg span{height:44px;padding:0 18px;border-radius:22px;display:flex;align-items:center;gap:8px;font-weight:900;font-size:16px;color:#c3c9d3}
+.seg span.on{background:#f3f4f6;color:#11141a}
+.cat{position:absolute;left:44px;top:88px}
+.sub{position:absolute;left:330px;top:88px}
+.pod{position:absolute;left:44px;top:150px;width:300px;display:flex;flex-direction:column;gap:10px}
+.p1{border-radius:22px;padding:14px;position:relative;overflow:hidden;height:220px}
+.p1 .big{position:absolute;right:-10px;bottom:-34px;font-size:180px;font-weight:900;color:rgba(255,255,255,.12);line-height:1}
+.p1 .fc{position:absolute;left:14px;top:46px}
+.p1 strong{position:absolute;left:150px;top:62px;font-size:22px;font-weight:900;line-height:1.05}
+.p1 small{position:absolute;left:150px;top:118px;font-size:13px;font-weight:800;color:rgba(255,255,255,.85)}
+.p1 b{position:absolute;left:14px;top:14px;font-size:12px;letter-spacing:3px;font-weight:900}
+.p1 .pts{position:absolute;left:150px;top:146px;font-size:34px;font-weight:900}
+.p1 .pts i{font-size:13px;font-style:normal;margin-left:4px}
+.p23{display:flex;gap:10px}
+.p2{flex:1;border-radius:18px;background:rgba(255,255,255,.07);padding:10px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.p2 strong{font-size:14px;font-weight:900}.p2 small{font-size:12px;color:#a8b0bd;font-weight:800}.p2 .n{font-size:12px;letter-spacing:2px;font-weight:900;color:#8f98a7}
+.fc{border-radius:50%;overflow:hidden;display:grid;place-items:center;flex:none}
+.tbl{position:absolute;left:360px;top:150px;right:44px;bottom:16px;border-radius:22px;background:rgba(255,255,255,.05);padding:10px 14px;overflow:hidden}
+.th{display:flex;align-items:center;height:26px;font-size:11px;letter-spacing:2px;font-weight:900;color:#8f98a7}
+.tr{display:flex;align-items:center;height:36px;border-top:1px solid rgba(255,255,255,.06);font-size:15px;font-weight:900;gap:8px}
+.tr.me{background:rgba(19,71,245,.25);border-radius:10px}
+.pos{width:34px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:14px}
+.nm{width:178px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nm small{font-size:11px;color:#8f98a7;margin-left:6px}
+.grid{display:flex;gap:3px;flex:1}
+.grid i{width:21px;height:21px;border-radius:5px;display:grid;place-items:center;font-size:10px;font-style:normal;font-weight:900;color:#11141a}
+.g1{background:#ffd24a}.g2{background:#d6d9df}.g3{background:#d08a4a}.gp{background:#3c9d5d;color:#fff!important}.go{background:rgba(255,255,255,.12);color:#c3c9d3!important}
+.gd{background:#E10600;color:#fff!important}.gn{background:transparent;border:1px dashed rgba(255,255,255,.15)}
+.ptsc{width:52px;text-align:right;font-size:17px}
+.zone{display:flex;align-items:center;gap:8px;height:24px;font-size:11px;letter-spacing:2px;font-weight:900;padding:0 8px;border-radius:7px;margin:4px 0}
+.up{background:rgba(57,211,107,.16);color:#7fe0b1}.dn{background:rgba(225,6,0,.18);color:#ff8a80}
+.tr.zu{box-shadow:inset 4px 0 0 #3c9d5d}.tr.zd{box-shadow:inset 4px 0 0 #E10600}
+.legend{display:flex;gap:12px;font-size:11px;font-weight:800;color:#a8b0bd;margin-left:auto}
+.legend span{display:flex;align-items:center;gap:5px}.legend i{width:12px;height:12px;border-radius:3px;display:block}
+</style></head><body><div class="scene"><div class="bg"></div><div class="hd"><span class="rb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#eef0f3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span><div><small>WILLIAMS · APÓS 12 DE 22 RODADAS</small><h1>CAMPEONATOS</h1></div></div>
+<div class="seg cat"><span class="on">F1</span><span class="">F2</span><span class="">F3</span></div><div class="seg sub"><span class="on">Pilotos</span><span class="">Construtores</span></div><div class="pod"><div class="p1" style="background:linear-gradient(140deg,#3671C6,#0b0c0f)"><b>LÍDER</b><span class="big">1</span><span class="fc" style="width:124px;height:124px;background:#3671C6"></span>
+<strong>Max<br>Verstappen</strong><small>Red Bull Racing</small><span class="pts">256<i>pts</i></span></div>
+<div class="p23"><div class="p2"><span class="n">2º</span><span class="fc" style="width:64px;height:64px;background:#E8002D"></span><strong>Leclerc</strong><small>243 pts</small></div><div class="p2"><span class="n">3º</span><span class="fc" style="width:64px;height:64px;background:#E8002D"></span><strong>Hamilton</strong><small>215 pts</small></div></div></div><div class="tbl"><div class="th"><span style="width:222px">POS · PILOTO</span>POR CORRIDA <div class="legend"><span><i class="g1"></i>vitória</span><span><i class="g3"></i>pódio</span><span><i class="gp"></i>pontos</span><span><i class="go"></i>sem pontos</span><span><i class="gd"></i>abandono</span></div><span class="ptsc">PTS</span></div><div class="tr"><span class="pos" style="background:#3671C6">1</span><img src="../../game/assets/emblems/redbull.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">VERSTAPPEN<small>Red Bull Racin</small></span><div class="grid"><i class="gp">5</i><i class="gp">6</i><i class="g1">1</i><i class="g3">3</i><i class="gd">✕</i><i class="g3">3</i><i class="g2">2</i><i class="gp">4</i><i class="g3">3</i><i class="g1">1</i><i class="g1">1</i><i class="gd">✕</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">256</span></div><div class="tr"><span class="pos" style="background:#E8002D">2</span><img src="../../game/assets/emblems/ferrari.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">LECLERC<small>Ferrari</small></span><div class="grid"><i class="gp">4</i><i class="gp">4</i><i class="gp">5</i><i class="gp">7</i><i class="g1">1</i><i class="gd">✕</i><i class="g2">2</i><i class="g1">1</i><i class="gp">4</i><i class="g1">1</i><i class="gp">9</i><i class="g1">1</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">243</span></div><div class="tr"><span class="pos" style="background:#E8002D">3</span><img src="../../game/assets/emblems/ferrari.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">HAMILTON<small>Ferrari</small></span><div class="grid"><i class="g1">1</i><i class="gp">5</i><i class="g3">3</i><i class="gp">6</i><i class="gd">✕</i><i class="gp">7</i><i class="g1">1</i><i class="g1">1</i><i class="g1">1</i><i class="g1">1</i><i class="gp">8</i><i class="g2">2</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">215</span></div><div class="tr"><span class="pos" style="background:#27F4D2">4</span><img src="../../game/assets/emblems/mercedes.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">ANTONELLI<small>Mercedes</small></span><div class="grid"><i class="g3">3</i><i class="gp">9</i><i class="g3">3</i><i class="g1">1</i><i class="g1">1</i><i class="gp">9</i><i class="g3">3</i><i class="go">11</i><i class="g2">2</i><i class="gp">5</i><i class="gp">7</i><i class="gp">8</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">208</span></div><div class="tr"><span class="pos" style="background:#229971">5</span><img src="../../game/assets/emblems/astonmartin.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">ALONSO<small>Aston Martin</small></span><div class="grid"><i class="gp">4</i><i class="g2">2</i><i class="gp">9</i><i class="gd">✕</i><i class="gp">10</i><i class="gp">5</i><i class="gp">8</i><i class="gp">5</i><i class="gp">7</i><i class="g2">2</i><i class="g1">1</i><i class="go">11</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">188</span></div><div class="tr"><span class="pos" style="background:#FF8000">6</span><img src="../../game/assets/emblems/mclaren.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">NORRIS<small>McLaren</small></span><div class="grid"><i class="gp">5</i><i class="g2">2</i><i class="gp">7</i><i class="gp">5</i><i class="gp">7</i><i class="g2">2</i><i class="gp">4</i><i class="gp">9</i><i class="gp">8</i><i class="go">12</i><i class="gp">5</i><i class="g1">1</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">172</span></div><div class="tr"><span class="pos" style="background:#27F4D2">7</span><img src="../../game/assets/emblems/mercedes.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">RUSSELL<small>Mercedes</small></span><div class="grid"><i class="gp">8</i><i class="gp">10</i><i class="gp">10</i><i class="gp">8</i><i class="gp">8</i><i class="go">11</i><i class="gd">✕</i><i class="go">11</i><i class="go">12</i><i class="g3">3</i><i class="go">11</i><i class="go">13</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">154</span></div><div class="tr"><span class="pos" style="background:#DEE1E2">8</span><img src="../../game/assets/emblems/haas.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">BEARMAN<small>Haas</small></span><div class="grid"><i class="gp">10</i><i class="go">16</i><i class="go">11</i><i class="g2">2</i><i class="gp">5</i><i class="gd">✕</i><i class="gd">✕</i><i class="gp">8</i><i class="gp">5</i><i class="g1">1</i><i class="go">18</i><i class="gp">8</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">126</span></div><div class="tr me"><span class="pos" style="background:#1347F5">9</span><img src="../../game/assets/emblems/williams.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">SAINZ<small>Williams</small></span><div class="grid"><i class="gp">6</i><i class="gp">10</i><i class="gp">9</i><i class="gp">9</i><i class="gp">5</i><i class="gp">4</i><i class="gp">9</i><i class="gp">7</i><i class="gp">8</i><i class="gp">8</i><i class="g3">3</i><i class="go">11</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">105</span></div><div class="tr"><span class="pos" style="background:#FF8000">10</span><img src="../../game/assets/emblems/mclaren.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">PIASTRI<small>McLaren</small></span><div class="grid"><i class="go">12</i><i class="go">12</i><i class="go">15</i><i class="go">16</i><i class="gp">8</i><i class="go">15</i><i class="gd">✕</i><i class="gp">8</i><i class="gp">7</i><i class="go">16</i><i class="gp">5</i><i class="gp">10</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">91</span></div><div class="tr"><span class="pos" style="background:#0093CC">11</span><img src="../../game/assets/emblems/alpine.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">GASLY<small>Alpine</small></span><div class="grid"><i class="go">14</i><i class="go">17</i><i class="go">18</i><i class="gp">4</i><i class="gp">7</i><i class="gp">7</i><i class="go">11</i><i class="gd">✕</i><i class="go">12</i><i class="go">12</i><i class="gp">5</i><i class="go">13</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">72</span></div><div class="tr"><span class="pos" style="background:#3671C6">12</span><img src="../../game/assets/emblems/redbull.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">HADJAR<small>Red Bull Racin</small></span><div class="grid"><i class="gp">8</i><i class="go">12</i><i class="go">15</i><i class="gd">✕</i><i class="go">13</i><i class="go">21</i><i class="gd">✕</i><i class="go">14</i><i class="gp">10</i><i class="go">11</i><i class="go">14</i><i class="gp">8</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">59</span></div><div class="tr"><span class="pos" style="background:#8E9296">13</span><img src="../../game/assets/emblems/audi.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">HÜLKENBERG<small>Audi</small></span><div class="grid"><i class="go">16</i><i class="go">12</i><i class="go">15</i><i class="go">12</i><i class="go">16</i><i class="go">15</i><i class="go">15</i><i class="gp">5</i><i class="go">12</i><i class="go">12</i><i class="go">15</i><i class="go">22</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">39</span></div><div class="tr"><span class="pos" style="background:#2B2B2B">14</span><img src="../../game/assets/emblems/cadillac.svg" style="width:22px;height:22px;object-fit:contain;border-radius:6px"><span class="nm">PÉREZ<small>Cadillac</small></span><div class="grid"><i class="go">13</i><i class="go">12</i><i class="go">11</i><i class="go">17</i><i class="go">12</i><i class="go">17</i><i class="go">11</i><i class="go">18</i><i class="go">21</i><i class="go">20</i><i class="go">17</i><i class="go">16</i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i><i class="gn"></i></div><span class="ptsc">10</span></div></div></div></body></html>
