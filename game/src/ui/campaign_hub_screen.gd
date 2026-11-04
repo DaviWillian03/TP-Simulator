@@ -75,6 +75,8 @@ func _ready() -> void:
 	_layer = layer
 	_show_next_event.call_deferred()
 	PartsDialogs.show_pending.call_deferred(self, campaign, _after_parts_dialog)
+	if campaign.livery != null and not campaign.livery.launch.is_empty():
+		_show_launch.call_deferred()
 
 
 func _chip(caption: String, value: String, size: int) -> PanelContainer:
@@ -414,6 +416,66 @@ func _after_parts_dialog() -> void:
 	var cp := campaign.my_parts()
 	if cp.done_research.is_empty() and cp.reveals.is_empty():
 		Session.open_campaign_hub.call_deferred()
+
+
+## Lançamento do carro novo (mockup v18-3): a pintura, a nota da crítica e o que rendeu.
+func _show_launch() -> void:
+	var l: Dictionary = campaign.livery.launch
+	var sh := ScreenKit.sheet("Lançamento do carro %d" % int(l.get("season", campaign.season)), 900)
+	var body: VBoxContainer = sh["body"]
+	var tex := TextureRect.new()
+	tex.texture = Livery.car_texture(campaign.livery.main)
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.custom_minimum_size = Vector2(0, 190)
+	body.add_child(tex)
+	body.add_child(UiStyle.g_label("%s %d É REVELADO" % [String(campaign.team()["name"]).to_upper(), int(l.get("season", campaign.season))], 30, UiStyle.G_TEXT, "black"))
+	var stars := HBoxContainer.new()
+	stars.add_theme_constant_override("separation", 4)
+	for i in 5:
+		stars.add_child(UiStyle.g_label("★", 26, Color("#ffd24a") if i < int(l.get("stars", 3)) else Color("#4b5260"), "black"))
+	stars.add_child(UiStyle.g_label("  nota da crítica %d de 5" % int(l.get("stars", 3)), 14, Color("#c3c9d3"), "bold"))
+	body.add_child(stars)
+	var q := HBoxContainer.new()
+	q.add_theme_constant_override("separation", 10)
+	var quotes: Array = l.get("quotes", [])
+	for i in quotes.size():
+		var p := PanelContainer.new()
+		p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		p.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.06), 14, 12, 10))
+		var v := VBoxContainer.new()
+		v.add_child(UiStyle.g_caption("Revista do paddock" if i == 0 else "Torcida"))
+		var t := UiStyle.g_label(String(quotes[i]), 13, Color("#c3c9d3"), "bold")
+		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(t)
+		p.add_child(v)
+		q.add_child(p)
+	body.add_child(q)
+	var gains := HBoxContainer.new()
+	gains.add_theme_constant_override("separation", 10)
+	var bonus := float(l.get("bonus", 0.0))
+	var trust := int(l.get("trust", 0))
+	for g: Array in [["US$ %s mi" % ("%.1f" % bonus).replace(".", ","), "bônus das marcas", bonus > 0.0], ["%+d" % trust, "confiança da diretoria", trust >= 0]]:
+		var p := PanelContainer.new()
+		p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		p.add_theme_stylebox_override("panel", UiStyle.g_box(Color(0.22, 0.83, 0.42, 0.12) if g[2] else Color(1, 0.4, 0.4, 0.12), 14, 14, 10))
+		var v := VBoxContainer.new()
+		v.add_theme_constant_override("separation", -3)
+		v.add_child(UiStyle.g_label(g[0], 20, Color("#7fe0b1") if g[2] else Color("#ff8a80"), "black"))
+		v.add_child(UiStyle.g_label(g[1], 12, UiStyle.G_TEXT_2, "bold"))
+		p.add_child(v)
+		gains.add_child(p)
+	body.add_child(gains)
+	var ok := CutButton.new()
+	ok.text = "CONTINUAR"
+	ok.size_flags_horizontal = Control.SIZE_SHRINK_END
+	ok.custom_minimum_size = Vector2(240, 56)
+	ok.pressed.connect(func() -> void:
+		campaign.livery.launch = {}
+		campaign.save()
+		sh["root"].queue_free())
+	body.add_child(ok)
+	_layer.add_child(sh["root"])
 
 
 func _install_action(uid: int, car: int) -> void:

@@ -20,6 +20,10 @@ static var _cache: Dictionary = {}
 
 ## Textura do carro da equipe: arquivo pronto para as equipes reais; gerada para a criada.
 static func car_texture(team: Dictionary) -> Texture2D:
+	if team.has("livery_paint") and not (team["livery_paint"] as Dictionary).is_empty():  # campanha: pintura do estúdio
+		var t := Livery.car_texture(team["livery_paint"])
+		if t != null:
+			return t
 	var id: String = team.get("id", "")
 	if not team.get("custom", false) and ResourceLoader.exists("res://assets/cars/%s.svg" % id):
 		return load("res://assets/cars/%s.svg" % id)

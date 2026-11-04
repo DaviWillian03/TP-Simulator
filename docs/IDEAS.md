@@ -699,3 +699,17 @@ preparação automática e confirmação; (9) simplicidade no Android; (10) entr
 - Escolha de equipe no padrão das telas de seleção de equipe dos jogos de F1 (referência enviada: nome gigante em
   contorno, carro em destaque, fileira de emblemas) — feita com a identidade do jogo, não cópia — com dados da equipe,
   objetivos e fotos/dados dos pilotos; logos oficiais só na pasta local. Mockups v16 aguardando aprovação.
+
+## Complementos da campanha (usuário, 2026-11-04) — na fila depois do item 4
+- **Número 1 do campeão**: o campeão de pilotos usa o número 1 no ano seguinte; Lando Norris volta ao 4 se não for
+  campeão de 2026 no jogo.
+- **Números dos novatos**: quem chega de fora (F2, F3, outras categorias) pode pegar o número de um piloto que saiu ou
+  manter o número da categoria anterior — as duas opções no script, sorteadas durante a campanha.
+- **Idade mínima**: menores de 18 anos não podem ser contratados para a F1.
+- **Treinos livres sempre simulados**: sem jogar o treino; o jogador escolhe os programas para pilotos e engenheiros, e o
+  resultado é sorteado — engenheiros, diretores técnicos e pilotos com mais capacidade de acerto têm mais chance de
+  acertar bem o carro. Isso entra nos 20% da "equipe" (junto com a gerência do jogador e da IA na corrida).
+- **IA de estratégia mais esperta e variada**: bastante variação de pneus e de apostas de risco, sem burrices grandes
+  (ex.: parar na volta 12 de 14 só em casos raros); chuva com estratégias ainda mais imprevisíveis; uma IA que desafie.
+- **Sede e fábrica com prédios virtuais**: menu muito bonito com versões construídas dos prédios da equipe (sede, fábrica
+  etc.), chamando a atenção para a estrutura.

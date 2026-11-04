@@ -44,6 +44,7 @@ var events := CampaignEvents.new()  ## eventos inesperados
 var ledger: Dictionary = {}  ## categoria -> total da temporada (US$ mi): sponsors, bonus, prize, ops, payroll, upkeep, rd, works, contracts, debt
 var cash_log: Array = []  ## [{r: rodada, cash}] caixa depois de cada rodada
 var base_rating := 0.0  ## nota do carro da equipe sem os upgrades
+var livery: Livery  ## pintura, especiais, capacete e lançamento do carro (estúdio de design)
 var parts: Dictionary = {}  ## id da equipe -> CarParts (jogador e IA usam as mesmas regras)
 var rival_carry: Dictionary = {}  ## id da equipe da IA -> bônus herdado das temporadas anteriores
 var _file_ratings: Dictionary = {}  ## id -> nota do carro nos dados (sem evolução)
@@ -142,6 +143,8 @@ func refresh_rating() -> void:
 		var pe := cp.avg_effect() if cp != null else 0.0
 		if t["id"] == player_team:
 			t["car_rating"] = base_rating + dev.rating_bonus() + pe
+			if livery != null and not livery.main.is_empty():
+				t["livery_paint"] = livery.paint_for_round(round)  # o carro desenhado nas telas usa a pintura do estúdio
 			t["failure_mult"] = dev.failure_mult()
 			dev.staff_mod = personnel.staff_effects(self)
 			t["practice_gain_mult"] = dev.practice_gain_mult() * float(dev.staff_mod.get("practice", 1.0))
@@ -199,6 +202,8 @@ func _init_dev(initial_level: int) -> void:
 	base_rating = float(team().get("car_rating", 75))
 	personnel.setup(self)
 	_init_parts()
+	livery = Livery.new()
+	livery.setup(team())
 	sync_factory_level()
 	sponsors.setup(self, _base_sponsor_target())
 	cash_log = [{"r": 0, "cash": budget_musd}]
@@ -409,6 +414,7 @@ func to_dict() -> Dictionary:
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
 		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict(),
+		"livery": livery.to_dict(),
 		"parts": parts.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (parts[k] as CarParts).to_dict(); return acc, {})}
 
 
@@ -459,6 +465,8 @@ static func from_dict(d: Dictionary) -> Campaign:
 	c.ledger = d.get("ledger", {})
 	if d.has("cash_log"):
 		c.cash_log = d["cash_log"]
+	if d.has("livery") and not (d["livery"] as Dictionary).get("main", {}).is_empty():
+		c.livery = Livery.from_dict(d["livery"])
 	if d.has("parts"):
 		for k: String in d["parts"]:
 			if c.parts.has(k):
@@ -796,6 +804,8 @@ func start_next_season() -> void:
 		regulation_reset(regs.pending_reset)
 		regs.pending_reset.clear()
 	_set_ai_gain()
+	livery.specials.clear()  # pinturas especiais valem por temporada
+	livery.make_launch(self)  # lançamento do carro novo (a sede mostra)
 	refresh_rating()
 	day = _season_start_day()  # (calendário de 2027+ ainda repete as datas de 2026: PROVISÓRIO)
 

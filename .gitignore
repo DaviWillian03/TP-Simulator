@@ -30,3 +30,4 @@ Thumbs.db
 # Imagens pessoais do jogador (ex.: logos de equipes para o APK pessoal) — nunca versionar
 /game/local/*
 !/game/local/LEIA-ME.md
+__pycache__/

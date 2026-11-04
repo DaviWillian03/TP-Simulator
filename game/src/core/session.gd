@@ -33,6 +33,7 @@ const CAMPAIGN_COUNCIL_SCENE := "res://src/ui/campaign_council_screen.tscn"
 const CAMPAIGN_FINANCE_SCENE := "res://src/ui/campaign_finance_screen.tscn"
 const CAMPAIGN_STAFF_SCENE := "res://src/ui/campaign_staff_screen.tscn"
 const CAMPAIGN_CAR_SCENE := "res://src/ui/campaign_parts_screen.tscn"  ## Carro: peças (carro interativo)
+const CAMPAIGN_STUDIO_SCENE := "res://src/ui/campaign_studio_screen.tscn"  ## estúdio de design
 const CAMPAIGN_RD_SCENE := "res://src/ui/campaign_car_screen.tscn"  ## árvore de P&D
 const CAMPAIGN_FACTORY_SCENE := "res://src/ui/campaign_factory_screen.tscn"
 const CAMPAIGN_REPORT_SCENE := "res://src/ui/campaign_report_screen.tscn"
@@ -118,7 +119,7 @@ func _ready() -> void:
 			if c2.mode == "created":
 				TeamEmblems.register_custom(c2.team())
 			open_campaign_standings.call_deferred()
-	elif args.has("car") or args.has("rd") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance") or args.has("council"):  # (capturas) árvore de P&D / fábrica da campanha salva
+	elif args.has("car") or args.has("rd") or args.has("studio") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance") or args.has("council"):  # (capturas) árvore de P&D / fábrica da campanha salva
 		var c4 := Campaign.load_saved()
 		if args.has("fresh"):  # (captura) campanha nova da equipe --team, com --demo = P&D e obras de exemplo
 			c4 = Campaign.new_real(player_team)
@@ -168,6 +169,8 @@ func _ready() -> void:
 				open_campaign_car.call_deferred()
 			elif args.has("rd"):
 				open_campaign_rd.call_deferred()
+			elif args.has("studio"):
+				open_campaign_studio.call_deferred()
 			else:
 				open_campaign_factory.call_deferred()
 	elif args.has("report"):
@@ -312,6 +315,10 @@ func open_campaign_staff() -> void:
 
 func open_campaign_car() -> void:
 	get_tree().change_scene_to_file(CAMPAIGN_CAR_SCENE)
+
+
+func open_campaign_studio() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_STUDIO_SCENE)
 
 
 func open_campaign_rd() -> void:
