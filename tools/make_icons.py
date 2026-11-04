@@ -21,6 +21,25 @@ ICONS = {
     "mute": '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9.5l5 5M22 9.5l-5 5"/>',
     "check": '<path d="M5 12l5 5 9-10"/>',
     "bolt": '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+    # peças do carro e características (tela Carro · peças, 2026-11-04)
+    "p_fwing": '<path d="M2 7h20M4 12h16M7 17h10"/>',
+    "p_rwing": '<path d="M3 5h18v5H3zM8 10v9M16 10v9"/>',
+    "p_floor": '<path d="M2 16l3-8h14l3 8zM6 16v3M18 16v3"/>',
+    "p_susp": '<path d="M3 19L12 6l9 13M7 13h10"/>',
+    "p_pu": '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+    "p_gear": '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
+    "t_straight": '<path d="M3 12h15M13 6l6 6-6 6"/>',
+    "t_slow": '<path d="M6 21V10a6 6 0 0 1 12 0v4M14 11l4 4 4-4"/>',
+    "t_fast": '<path d="M4 20Q4 6 18 5M14 2l4 3-3 4"/>',
+    "t_rel": '<path d="M12 3l8 3v6q0 6-8 9-8-3-8-9V6zM8.5 12l2.5 2.5 4.5-5"/>',
+    "money": '<path d="M12 2v20M17 6.5Q15 4 12 4 7 4 7 8t5 4 5 4-5 4q-3 0-5-2.5"/>',
+    "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+    "box": '<path d="M3 8l9-5 9 5v9l-9 5-9-5zM3 8l9 5 9-5M12 13v9"/>',
+    "factory": '<path d="M2 21V10l6 4V10l6 4V6l8 5v10z"/>',
+    "arrow": '<path d="M4 12h14M13 6l6 6-6 6"/>',
+    "wrench": '<path d="M14.5 5.5a4 4 0 0 0 4.9 5.2L21 12l-9 9-3-3 9-9-1.3-1.6a4 4 0 0 0-5.2-4.9l2.5 2.5-2 2-2.5-2.5"/>',
+    "undo": '<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+    "tree": '<circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v5M12 12l-6 5M12 12l6 5"/>',
 }
 
 if __name__ == "__main__":

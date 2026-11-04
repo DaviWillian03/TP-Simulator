@@ -31,8 +31,8 @@ func _ready() -> void:
 
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", UiStyle.SP_L)
-	var back := ScreenKit.round_button("back", 52, "Voltar à sede")
-	back.pressed.connect(Session.open_campaign_hub)
+	var back := ScreenKit.round_button("back", 52, "Voltar às peças")
+	back.pressed.connect(Session.open_campaign_car)
 	head.add_child(back)
 	head.add_child(TeamEmblems.make_rect(campaign.player_team, 46))
 	var titles := VBoxContainer.new()

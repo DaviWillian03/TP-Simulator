@@ -12,7 +12,7 @@ extends Node
 ##   --weather=dry          sem chuva · --incidents=<0..n> multiplicador de incidentes
 ##   --screenshot=<arquivo.png> --frames=<n>   salva a tela após n quadros e fecha o jogo
 ##   --campaign / --creator / --hub   entrada da campanha, criação da equipe, sede (campanha salva)
-##   --car / --factory / --staff / --sponsors / --finance     árvore de P&D, fábrica e pessoal da campanha salva (+ --fresh --demo --team=<id>)
+##   --car (peças) / --rd (árvore) / --factory / --staff / --sponsors / --finance     árvore de P&D, fábrica e pessoal da campanha salva (+ --fresh --demo --team=<id>)
 ##   --gp                   abre a configuração do Grande Prêmio
 ##   --weekend [--skip=<n>] abre o fim de semana (com --circuit/--team), simulando n sessões
 ##   --play                 abre a sessão atual do fim de semana (depois do --skip)
@@ -31,7 +31,8 @@ const CAMPAIGN_SPONSORS_SCENE := "res://src/ui/campaign_sponsors_screen.tscn"
 const CAMPAIGN_COUNCIL_SCENE := "res://src/ui/campaign_council_screen.tscn"
 const CAMPAIGN_FINANCE_SCENE := "res://src/ui/campaign_finance_screen.tscn"
 const CAMPAIGN_STAFF_SCENE := "res://src/ui/campaign_staff_screen.tscn"
-const CAMPAIGN_CAR_SCENE := "res://src/ui/campaign_car_screen.tscn"
+const CAMPAIGN_CAR_SCENE := "res://src/ui/campaign_parts_screen.tscn"  ## Carro: peças (carro interativo)
+const CAMPAIGN_RD_SCENE := "res://src/ui/campaign_car_screen.tscn"  ## árvore de P&D
 const CAMPAIGN_FACTORY_SCENE := "res://src/ui/campaign_factory_screen.tscn"
 const CAMPAIGN_REPORT_SCENE := "res://src/ui/campaign_report_screen.tscn"
 
@@ -113,7 +114,7 @@ func _ready() -> void:
 			if c2.mode == "created":
 				TeamEmblems.register_custom(c2.team())
 			open_campaign_standings.call_deferred()
-	elif args.has("car") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance") or args.has("council"):  # (capturas) árvore de P&D / fábrica da campanha salva
+	elif args.has("car") or args.has("rd") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance") or args.has("council"):  # (capturas) árvore de P&D / fábrica da campanha salva
 		var c4 := Campaign.load_saved()
 		if args.has("fresh"):  # (captura) campanha nova da equipe --team, com --demo = P&D e obras de exemplo
 			c4 = Campaign.new_real(player_team)
@@ -126,6 +127,23 @@ func _ready() -> void:
 				c4.dev.start_project(c4, "cur", "aero.0.4")
 				c4.dev.start_project(c4, "cur", "chassis.0.1")
 				c4.dev.start_upgrade(c4, "media")
+				# peças de exemplo: asa dianteira B pronta no estoque, asa traseira em pesquisa, câmbio gasto
+				var cp := c4.my_parts()
+				cp.research.append({"part": "fwing", "dir": "high", "days_left": 1, "days_total": 16, "cost": 2.2, "fix": -1})
+				c4.day += 1
+				cp.day_step(c4)
+				cp.done_research.clear()
+				cp.order_units(c4, "fwing", 1, 1)
+				for i in 8:
+					c4.day += 1
+					cp.day_step(c4)
+				cp.start_research(c4, "rwing", "high")
+				cp.unit_on("gearbox", 0)["wear"] = 64.0
+				for u: Dictionary in cp.units:
+					if int(u["car"]) >= 0:
+						u["races"] = 6
+						if u["part"] != "gearbox":
+							u["wear"] = 30.0 + 8.0 * int(u["car"])
 				c4.refresh_rating()
 		if c4 != null:
 			campaign = c4
@@ -144,6 +162,8 @@ func _ready() -> void:
 				open_campaign_staff.call_deferred()
 			elif args.has("car"):
 				open_campaign_car.call_deferred()
+			elif args.has("rd"):
+				open_campaign_rd.call_deferred()
 			else:
 				open_campaign_factory.call_deferred()
 	elif args.has("report"):
@@ -281,6 +301,10 @@ func open_campaign_staff() -> void:
 
 func open_campaign_car() -> void:
 	get_tree().change_scene_to_file(CAMPAIGN_CAR_SCENE)
+
+
+func open_campaign_rd() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_RD_SCENE)
 
 
 func open_campaign_factory() -> void:

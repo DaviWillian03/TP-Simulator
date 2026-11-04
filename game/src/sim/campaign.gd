@@ -281,6 +281,15 @@ static func track_profile(circuit_id: String) -> Dictionary:
 	return _profiles[circuit_id]
 
 
+## Primeira corrida (da rodada atual em diante) que acontece pelo menos `days` dias a partir de hoje; {} se nenhuma.
+func race_after(days: int) -> Dictionary:
+	var cal := calendar()
+	for i in range(round, cal.size()):
+		if _day_of(String(cal[i]["date"])) >= day + days and not events.cancelled.has(i) and not regs.is_dropped(String(cal[i]["id"])):
+			return cal[i]
+	return {}
+
+
 ## Pilotos titulares de uma equipe, na ordem dos carros (carro 0, carro 1).
 func team_driver_ids(team_id: String) -> Array:
 	var out: Array = []
