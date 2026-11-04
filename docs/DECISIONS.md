@@ -536,3 +536,7 @@ Respostas do usuário:
   GP escolhido e zeram a cada temporada.
 - **Demissão com proposta** (#17): ao ser demitido, até 3 equipes da metade de baixo do grid oferecem o cargo; aceitar troca
   de equipe no mesmo mundo (grid, histórico, regras), e a equipe antiga passa para a IA.
+- **Item 5 — dinheiro e estrutura (respostas de 2026-11-04)**: **teto de gastos com trava rígida** (não deixa gastar além
+  do limite anual: projetos e peças ficam bloqueados quando acaba); **restrição de túnel de vento pela posição do ano
+  anterior** (campeão ~70% do tempo de pesquisa aerodinâmica, último ~115%; muda dias e chance das pesquisas de aero, também
+  para a IA); **empréstimo: banco com juros e adiantamento de patrocínio**; **academia de pilotos fica para depois**.
