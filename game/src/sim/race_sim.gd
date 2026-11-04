@@ -463,7 +463,7 @@ func _ideal_lap_time(car: CarState) -> float:
 ## Compartilhada com treinos e classificação para que o carro rápido seja rápido em tudo.
 static func base_lap_time(p_track: TrackModel, team: Dictionary, driver: Dictionary) -> float:
 	return p_track.base_lap_time_s \
-		+ (100.0 - float(team["car_rating"])) * CAR_K \
+		+ (100.0 - float(team["car_rating"]) - float((team.get("car_delta", {}) as Dictionary).get(driver.get("id", ""), 0.0))) * CAR_K \
 		+ (100.0 - DriverStats.attr(driver, "pace")) * DRIVER_K
 
 

@@ -24,6 +24,7 @@ var projects: Array = []  ## [{car, id, days_left, days_total, cost}]
 var works: Array = []  ## [{struct, to, days_left, days_total}] (uma obra por estrutura)
 var carry := 0.0  ## bônus herdado do carro anterior
 var focus := "balanced"  ## modo Essencial: "balanced", "aero", "chassis", "durability", "engine"
+var parts_busy := 0  ## pesquisas de peças em andamento (CarParts): ocupam as mesmas vagas de projeto
 var staff_mod: Dictionary = {}  ## efeitos dos técnicos (Personnel.staff_effects), publicados pela campanha
 var auto_spent := 0.0  ## gasto automático no mês atual
 var auto_spent_next := 0.0
@@ -240,9 +241,16 @@ func effect_sum(car: String, effect: String, dept: String = "") -> float:
 	return total
 
 
-## Bônus na nota do carro atual (somado ao car_rating da equipe).
+## Bônus na nota do carro atual (somado ao car_rating da equipe). Desde o ciclo de peças (2026-11-04) os nós de
+## desempenho da árvore não mexem mais direto na nota: viram conhecimento (peças novas maiores, CarParts.gain) e, os do
+## carro do ano seguinte, a base do carro novo na virada.
 func rating_bonus() -> float:
-	return carry + effect_sum("cur", "perf")
+	return carry
+
+
+## Vagas de projeto ocupadas (nós da árvore + pesquisas de peças).
+func busy() -> int:
+	return projects.size() + parts_busy
 
 
 ## Multiplicador de quebras (menor = mais confiável).
@@ -316,7 +324,7 @@ func project_info(car: String, id: String, camp: Campaign) -> Dictionary:
 		out["reason"] = "now"
 	elif st == "lock":
 		out["reason"] = "engine" if not dept_available(info["dept"], camp) else "locked"
-	elif projects.size() >= slots():
+	elif busy() >= slots():
 		out["reason"] = "slots"
 	elif camp.budget_musd - float(out["cost"]) < RESERVE_MUSD:
 		out["reason"] = "cash"
@@ -441,7 +449,7 @@ func _auto_plan(camp: Campaign) -> void:
 		auto_spent = 0.0
 		auto_spent_next = 0.0
 	var guard := 0
-	while projects.size() < slots() and guard < 8:
+	while busy() < slots() and guard < 8:
 		guard += 1
 		var car := "cur"
 		if auto_spent > 0.0 and auto_spent_next < AUTO_NEXT_SHARE * auto_spent:
@@ -465,9 +473,10 @@ func _auto_plan(camp: Campaign) -> void:
 
 # --- virada de temporada --------------------------------------------------------------------
 
-## O carro do ano seguinte vira o carro atual; o antigo deixa só uma fração do bônus.
-func rollover() -> void:
-	carry = (carry + effect_sum("cur", "perf")) * CARRY_SHARE
+## O carro do ano seguinte vira o carro atual: herda uma fração do que o carro velho ganhou (base + peças) e todo o
+## desempenho pesquisado para ele na árvore.
+func rollover(parts_gain: float = 0.0) -> void:
+	carry = (carry + parts_gain) * CARRY_SHARE + effect_sum("next", "perf")
 	done["cur"] = (done["next"] as Dictionary).duplicate()
 	done["next"] = {}
 	var keep: Array = []

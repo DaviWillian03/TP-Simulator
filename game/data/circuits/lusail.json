@@ -35,6 +35,7 @@
    "strength": 0.4
   }
  ],
+ "profile": {"straight": 0.25, "slow": 0.2, "fast": 0.55},
  "rain_probability": 0.01,
  "scenery": {
   "theme": "desert",

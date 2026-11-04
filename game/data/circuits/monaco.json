@@ -35,6 +35,7 @@
    "strength": 0.4
   }
  ],
+ "profile": {"straight": 0.05, "slow": 0.8, "fast": 0.15},
  "rain_probability": 0.15,
  "scenery": {
   "theme": "harbor",

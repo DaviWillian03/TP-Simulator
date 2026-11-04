@@ -10,7 +10,7 @@ extends RefCounted
 ## Valores PROVISÓRIOS (calibrados com tools/balance_report.gd).
 
 const WEEKEND_SIGMA := 2.0
-const AFFINITY_SIGMA := 1.4
+const AFFINITY_SIGMA := 0.9  ## menor desde 2026-11-04: o perfil da pista × características do carro já dá afinidade
 const SPIKE_CHANCE := 0.2
 const SPIKE_RANGE := Vector2(2.5, 5.0)
 const MAX_ABS := 7.0
@@ -31,12 +31,17 @@ static func offset(team_id: String, circuit_id: String, seed_value: int, scale: 
 	return clampf(v * scale, -MAX_ABS, MAX_ABS)
 
 
-## Cópia das equipes com a forma aplicada em `car_rating` (campo `form` guarda a variação).
-static func apply(teams: Array, circuit_id: String, seed_value: int, scale: float = 1.0) -> Array:
+## Cópia das equipes com a forma aplicada em `car_rating` (campo `form` guarda a variação). Com o perfil da pista,
+## soma também as características do carro (reta/lentas/rápidas, CarParts.traits_effect) e a confiabilidade.
+static func apply(teams: Array, circuit_id: String, seed_value: int, scale: float = 1.0, profile: Dictionary = {}) -> Array:
 	var out: Array = []
 	for t: Dictionary in teams:
 		var c := t.duplicate()
 		var f := offset(String(t["id"]), circuit_id, seed_value, scale)
+		if scale > 0.0 and not profile.is_empty():
+			f += CarParts.traits_effect(t, profile)
+			var rel := float((t.get("car_traits", {}) as Dictionary).get("rel", CarParts.REL_NEUTRAL))
+			c["failure_mult"] = float(t.get("failure_mult", 1.0)) * CarParts.rel_mult(rel)
 		c["form"] = f
 		c["car_rating"] = float(t["car_rating"]) + f
 		out.append(c)

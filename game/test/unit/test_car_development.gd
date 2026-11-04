@@ -67,7 +67,8 @@ func test_sem_dinheiro_nao_inicia() -> void:
 	assert_false(camp.dev.start_project(camp, "cur", "aero.0.0"))
 
 
-func test_projeto_conclui_com_os_dias_e_soma_na_nota_do_carro() -> void:
+## Desde o ciclo de peças (2026-11-04) o nó de desempenho não mexe na nota: vira conhecimento (peças novas maiores).
+func test_projeto_conclui_com_os_dias_e_aumenta_o_conhecimento() -> void:
 	var base := float(camp.team()["car_rating"])
 	camp.dev.levels["parts"] = 5  # 4% de defeito, mais acerto
 	assert_true(camp.dev.start_project(camp, "cur", "aero.0.0"))
@@ -77,12 +78,11 @@ func test_projeto_conclui_com_os_dias_e_soma_na_nota_do_carro() -> void:
 	camp.dev.tick(camp, 1)
 	assert_eq(camp.dev.projects.size(), 0)
 	camp.refresh_rating()
-	var bonus := camp.dev.rating_bonus()
+	assert_almost_eq(float(camp.team()["car_rating"]), base, 0.0001, "a nota só muda com peça instalada")
 	if camp.dev.is_done("cur", "aero.0.0"):
-		assert_gt(bonus, 0.0)
-		assert_almost_eq(float(camp.team()["car_rating"]), base + bonus, 0.0001)
+		assert_gt(camp.my_parts().gain(camp, "aero"), 1.0)
 	else:
-		assert_eq(bonus, 0.0, "defeito de produção: nada entra no carro")
+		assert_eq(camp.my_parts().gain(camp, "aero"), 1.0, "defeito de produção: nada muda")
 
 
 func test_resolucao_e_deterministica() -> void:
@@ -118,10 +118,10 @@ func test_carro_do_ano_seguinte_nao_muda_a_nota_atual() -> void:
 
 
 func test_virada_herda_metade_do_bonus_antigo() -> void:
-	camp.dev.done["cur"]["aero.0.3"] = "full"
-	var old := camp.dev.rating_bonus()
-	camp.dev.rollover()
-	assert_almost_eq(camp.dev.rating_bonus(), old * CarDevelopment.CARRY_SHARE, 0.0001)
+	camp.dev.carry = 2.0
+	camp.dev.done["cur"]["aero.0.3"] = "full"  # conhecimento do carro velho não vira nota
+	camp.dev.rollover(1.0)  # peças do carro velho renderam +1
+	assert_almost_eq(camp.dev.rating_bonus(), 3.0 * CarDevelopment.CARRY_SHARE, 0.0001)
 	assert_true((camp.dev.done["cur"] as Dictionary).is_empty())
 
 

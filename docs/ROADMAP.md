@@ -120,6 +120,10 @@ P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, 
 7. ✅ (2026-11-04) 4 cargos com nomes reais e notas em todas as equipes; IA renova e contrata técnicos. **Pessoal** (resto): faltam outros cargos "da sua equipe" (#4: dirigentes, engenheiros de corrida), dirigentes reais por
    equipe e a IA trocar técnicos. **Demissão**: o "demitido pode receber proposta de outra equipe" (#17) ainda não existe (só "nova campanha").
 8. **Histórico da campanha** (campeões por ano, regras de cada ano, eventos marcantes) e a aba "Histórico" dos campeonatos.
+   Pedido de 2026-11-04: sub-telas **Lendas** (maiores campeões; aposentados da campanha entram), **Pilotos atuais**
+   (números até o fim de 2025 + o que a campanha somar) e **Campeonatos** (campeões de pilotos e construtores de cada ano).
+9. **Animação de campeão** (pedido de 2026-11-04): celebração especial ao fim da corrida que decide o título de pilotos
+   ou de construtores (antecipado ou na última etapa).
 9. **Equipe criada**: cargos fictícios existem só como técnicos; faltam logo/identidade editáveis além de formas, e objetivos de longo prazo
    com acompanhamento.
 

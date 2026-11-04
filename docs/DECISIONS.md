@@ -518,3 +518,10 @@ Respostas do usuário:
   falhou, pesquisa concluída e Sede.
 - **Upgrade errado só aparece depois da corrida**: o jogador corre um GP inteiro com a peça antes de saber o resultado real
   (mais arriscado); só então decide voltar, corrigir ou testar mais.
+- **Implementação (simulação) do ciclo de peças** (2026-11-04): `CarParts` por equipe (jogador e IA). Carro com
+  características de fábrica (`car_traits` em teams_2026.json: desvio de reta/lentas/rápidas + confiabilidade) e pistas com
+  perfil (`profile` nos circuitos). A árvore de P&D não soma mais direto na nota: os nós de desempenho viram
+  **conhecimento** (+15% por ponto no tamanho das peças novas do departamento) e, os do carro do ano seguinte, base do carro
+  novo. Desgaste das unidades (asas, assoalho, suspensão) tira rendimento a partir de 60%. Calibração: a IA ganha em média
+  +3 de nota por temporada (como antes), mas cada equipe varia de ~+1 a ~+5 conforme acerta ou erra
+  (`tools/parts_report.gd`).

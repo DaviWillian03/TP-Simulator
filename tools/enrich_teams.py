@@ -25,6 +25,14 @@ T = {
     "audi": ("Jonathan Wheatley", None, 2026, 0),
     "cadillac": ("Graeme Lowdon", "Nick Chester", 2026, 0),
 }
+# Características do carro (PROVISÓRIO, 2026-11-04): desvio de reta / curvas lentas / curvas rápidas em relação à nota
+# (somam 0, então a nota continua sendo a média) e confiabilidade absoluta (80 = normal). Impressão geral da temporada 2026.
+TRAITS = {
+    "mclaren": (-1.5, 1.0, 0.5, 84), "mercedes": (1.5, -1.0, -0.5, 86), "ferrari": (0.5, 0.5, -1.0, 80),
+    "redbull": (1.0, -1.5, 0.5, 78), "williams": (2.0, -1.5, -0.5, 82), "racingbulls": (0.5, -0.5, 0.0, 79),
+    "astonmartin": (-1.5, 1.0, 0.5, 70), "haas": (0.0, 0.5, -0.5, 80), "alpine": (1.0, -0.5, -0.5, 81),
+    "audi": (0.5, -1.0, 0.5, 74), "cadillac": (-0.5, 0.0, 0.5, 76),
+}
 d = json.loads(P.read_text(encoding="utf-8"))
 for t in d["teams"]:
     tp, td, debut, titles = T[t["id"]]
@@ -35,6 +43,8 @@ for t in d["teams"]:
     lead = max(SNAP["team_points"].values())
     t["car_rating"] = round(79 + 11 * math.sqrt(SNAP["team_points"][t["id"]] / lead) ** 0.75, 1)  # escala comprimida (2026-11-03): ~79 a 90
     t["points_2026"] = SNAP["team_points"][t["id"]]
+    st, sl, fa, rel = TRAITS[t["id"]]
+    t["car_traits"] = {"straight": st, "slow": sl, "fast": fa, "rel": rel}
 d["_notas"] = ("Nomes reais por decisão do usuário; sem logos oficiais. car_rating = função dos pontos de construtores de 2026 após 20 rodadas (pesquisa 02/11/2026). "
                "principal/technical_director/debut/constructors_titles: só dados com fonte; null = a verificar. 'emblem' = emblema ORIGINAL.")
 P.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")

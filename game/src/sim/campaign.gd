@@ -44,6 +44,7 @@ var events := CampaignEvents.new()  ## eventos inesperados
 var ledger: Dictionary = {}  ## categoria -> total da temporada (US$ mi): sponsors, bonus, prize, ops, payroll, upkeep, rd, works, contracts, debt
 var cash_log: Array = []  ## [{r: rodada, cash}] caixa depois de cada rodada
 var base_rating := 0.0  ## nota do carro da equipe sem os upgrades
+var parts: Dictionary = {}  ## id da equipe -> CarParts (jogador e IA usam as mesmas regras)
 var rival_carry: Dictionary = {}  ## id da equipe da IA -> bônus herdado das temporadas anteriores
 var _file_ratings: Dictionary = {}  ## id -> nota do carro nos dados (sem evolução)
 var _teams: Array = []
@@ -137,13 +138,15 @@ func sync_factory_level() -> void:
 ## Nota do carro = base + upgrades; também publica a confiabilidade e o ganho dos treinos na equipe.
 func refresh_rating() -> void:
 	for t: Dictionary in _teams:
+		var cp: CarParts = parts.get(t["id"])
+		var pe := cp.avg_effect() if cp != null else 0.0
 		if t["id"] == player_team:
-			t["car_rating"] = base_rating + dev.rating_bonus()
+			t["car_rating"] = base_rating + dev.rating_bonus() + pe
 			t["failure_mult"] = dev.failure_mult()
 			dev.staff_mod = personnel.staff_effects(self)
 			t["practice_gain_mult"] = dev.practice_gain_mult() * float(dev.staff_mod.get("practice", 1.0))
 		else:  # equipes da IA também desenvolvem o carro ao longo da temporada (mais rápido com um bom corpo técnico)
-			t["car_rating"] = float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0)) + rival_gain(t["id"])
+			t["car_rating"] = float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0)) + pe
 			if personnel != null:
 				t["practice_gain_mult"] = personnel.team_practice_mult(self, t["id"])
 
@@ -195,6 +198,7 @@ func _init_dev(initial_level: int) -> void:
 	dev.seed_base = season
 	base_rating = float(team().get("car_rating", 75))
 	personnel.setup(self)
+	_init_parts()
 	sync_factory_level()
 	sponsors.setup(self, _base_sponsor_target())
 	cash_log = [{"r": 0, "cash": budget_musd}]
@@ -230,12 +234,71 @@ func projected_cash_end() -> float:
 	return budget_musd + left * (sponsor_per_race() - cost_per_race()) + prize
 
 
+## Peças de todas as equipes, versão A. A IA ganha o "tamanho" das suas peças do ano (dificuldade, ranking, sorte, técnicos).
+func _init_parts() -> void:
+	parts = {}
+	for t: Dictionary in _teams:
+		var cp := CarParts.new()
+		cp.setup(t["id"])
+		parts[t["id"]] = cp
+	_set_ai_gain()
+
+
+func _set_ai_gain() -> void:
+	var yearly: float = float(origins_data()["rivals"]["yearly_gain"]["normal"])
+	for tid: String in parts:
+		if tid != player_team:
+			(parts[tid] as CarParts).gain_k = rival_potential(tid) / yearly
+
+
+func my_parts() -> CarParts:
+	return parts.get(player_team)
+
+
+## Perfil médio das próximas n pistas (a IA escolhe a direção das peças por ele).
+func upcoming_profile(n: int) -> Dictionary:
+	var cal := calendar()
+	var acc := {"straight": 0.0, "slow": 0.0, "fast": 0.0}
+	var cnt := 0
+	for i in range(round, mini(round + n, cal.size())):
+		var p := track_profile(String(cal[i]["id"]))
+		for k: String in acc:
+			acc[k] += float(p[k])
+		cnt += 1
+	if cnt == 0:
+		return CarParts.NEUTRAL
+	for k: String in acc:
+		acc[k] /= cnt
+	return acc
+
+
+static var _profiles: Dictionary = {}
+
+
+static func track_profile(circuit_id: String) -> Dictionary:
+	if not _profiles.has(circuit_id):
+		_profiles[circuit_id] = CarParts.profile_of(GameData.circuit(circuit_id))
+	return _profiles[circuit_id]
+
+
+## Pilotos titulares de uma equipe, na ordem dos carros (carro 0, carro 1).
+func team_driver_ids(team_id: String) -> Array:
+	var out: Array = []
+	for d: Dictionary in _drivers:
+		if d.get("team", "") == team_id and out.size() < 2:
+			out.append(d["id"])
+	return out
+
+
 func _dev_tick(n: int, last_day: int = -1) -> void:
 	if n > 0:
 		var end_day := day if last_day < 0 else last_day
 		for i in n:
 			events.tick_day(self, end_day - n + 1 + i)
 		dev.tick(self, n)
+		for i in n:
+			for cp: CarParts in parts.values():
+				cp.day_step(self)
 		refresh_rating()
 		_skip_cancelled()
 
@@ -294,7 +357,8 @@ func to_dict() -> Dictionary:
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
-		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict()}
+		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict(),
+		"parts": parts.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (parts[k] as CarParts).to_dict(); return acc, {})}
 
 
 static func from_dict(d: Dictionary) -> Campaign:
@@ -344,8 +408,14 @@ static func from_dict(d: Dictionary) -> Campaign:
 	c.ledger = d.get("ledger", {})
 	if d.has("cash_log"):
 		c.cash_log = d["cash_log"]
+	if d.has("parts"):
+		for k: String in d["parts"]:
+			if c.parts.has(k):
+				c.parts[k] = CarParts.from_dict(d["parts"][k])
 	if d.has("dev"):
 		c.dev = CarDevelopment.from_dict(d["dev"])
+		var mp := c.my_parts()
+		c.dev.parts_busy = mp.research.size() if mp != null else 0
 		c.sync_factory_level()
 		c.refresh_rating()
 	c.trust = float(d.get("trust", c._start_trust()))
@@ -385,9 +455,9 @@ func next_round() -> Dictionary:
 
 ## Opções do fim de semana da próxima rodada (grid da campanha).
 func weekend_options(extra: Dictionary = {}) -> Dictionary:
-	var o := {"player_team": player_team, "teams": _teams, "drivers": _drivers, "seed": season * 100 + round + 1, "campaign": true,
+	var o := {"player_team": player_team, "drivers": _drivers, "seed": season * 100 + round + 1, "campaign": true,
 		"points_race": regs.points_race, "points_sprint": regs.points_sprint, "min_dry_compounds": regs.min_dry_compounds,
-		"tech": regs.tech_options()}
+		"tech": regs.tech_options(), "teams": teams_for_gp(String(next_round().get("id", "")) if not season_over() else "")}
 	if not season_over():
 		o["sprint"] = regs.is_sprint(next_round()["id"])
 	# posição de cada piloto no campeonato, a partir da metade da temporada: quem briga pelo título arrisca
@@ -400,6 +470,29 @@ func weekend_options(extra: Dictionary = {}) -> Dictionary:
 		o["championship"] = champ
 	o.merge(extra, true)
 	return o
+
+
+## Cópia das equipes para um GP: cada carro leva o efeito das SUAS peças nesta pista (`car_delta` por piloto, que a
+## volta ideal soma) e o fator de confiabilidade das suas peças (`failure_by_driver`, multiplica o `failure_mult`). A nota da equipe volta à base sem peças.
+func teams_for_gp(circuit_id: String) -> Array:
+	var prof := track_profile(circuit_id) if circuit_id != "" else CarParts.NEUTRAL
+	var out: Array = []
+	for t: Dictionary in _teams:
+		var c := t.duplicate()
+		var cp: CarParts = parts.get(t["id"])
+		if cp != null:
+			c["car_rating"] = float(t["car_rating"]) - cp.avg_effect()
+			var ids := team_driver_ids(t["id"])
+			var delta := {}
+			var fail := {}
+			var rel0 := float((t.get("car_traits", {}) as Dictionary).get("rel", CarParts.REL_NEUTRAL))
+			for i in ids.size():
+				delta[ids[i]] = cp.car_effect(i, prof)
+				fail[ids[i]] = CarParts.rel_mult(rel0 + cp.trait_delta(i, "rel")) / CarParts.rel_mult(rel0)
+			c["car_delta"] = delta
+			c["failure_by_driver"] = fail
+		out.append(c)
+	return out
 
 
 ## Soma os pontos de um fim de semana concluído, paga as contas da rodada, ajusta a confiança da
@@ -418,6 +511,8 @@ func record_weekend(w: WeekendSim) -> void:
 				best_finish = mini(best_finish, i + 1)
 				break
 	history.append({"round": round + 1, "circuit": w.circuit.get("id", ""), "results": race})
+	for cp: CarParts in parts.values():  # desgaste das peças e revelação dos upgrades estreados nesta corrida
+		cp.after_race(self)
 	var podiums := 0
 	for i in mini(3, race.size()):
 		if team_of(race[i]) == player_team:
@@ -632,8 +727,10 @@ func start_next_season() -> void:
 	for t: Dictionary in _teams:
 		if t["id"] != player_team:
 			potentials[t["id"]] = rival_potential(t["id"])
-	for tid: String in potentials:
-		rival_carry[tid] = (float(rival_carry.get(tid, 0.0)) + float(potentials[tid])) * float(cfg["carry"])
+	for tid: String in potentials:  # o que as peças da IA renderam no ano (com acertos e erros)
+		var cp: CarParts = parts.get(tid)
+		var got := cp.avg_effect() if cp != null else float(potentials[tid])
+		rival_carry[tid] = (float(rival_carry.get(tid, 0.0)) + got) * float(cfg["carry"])
 	season += 1
 	round = 0
 	driver_points = {}
@@ -641,10 +738,13 @@ func start_next_season() -> void:
 	wins = {}
 	history = []
 	best_finish = 99
-	dev.rollover()
+	dev.rollover(my_parts().avg_effect() if my_parts() != null else 0.0)
+	for cp: CarParts in parts.values():
+		cp.rollover()
 	if not regs.pending_reset.is_empty():
 		regulation_reset(regs.pending_reset)
 		regs.pending_reset.clear()
+	_set_ai_gain()
 	refresh_rating()
 	day = _season_start_day()  # (calendário de 2027+ ainda repete as datas de 2026: PROVISÓRIO)
 

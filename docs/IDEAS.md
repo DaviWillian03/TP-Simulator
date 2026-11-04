@@ -679,3 +679,17 @@ preparação automática e confirmação; (9) simplicidade no Android; (10) entr
 - P&D com ligação direta à qualidade dos funcionários técnicos e à estrutura da fábrica; upgrade nem sempre é bom (a equipe e a
   IA podem errar), deixando a relação de forças dinâmica na temporada.
 - Todos os menus: os mais bonitos e interativos possíveis, símbolos em vez de muito texto, criativos e simples.
+
+## Histórico na campanha (usuário, 2026-11-04) — fazer depois dos pedidos atuais
+- Nova aba **Histórico** na campanha, com três sub-telas:
+  - **Lendas**: estatísticas dos maiores campeões da história da F1 (fotos se possível); pilotos em atividade que se
+    aposentarem na campanha entram ali.
+  - **Pilotos atuais**: histórico dos pilotos do grid com números até o fim de 2025 (a campanha começa no início de 2026);
+    corridas e temporadas da campanha vão somando a esses números.
+  - **Campeonatos**: resultado de cada temporada concluída (2026, 2027...), com destaque para os campeões de pilotos e
+    de construtores.
+- Fotos de pessoas reais: só na pasta local ignorada pelo git (`game/local/`), como já é feito com os pilotos.
+
+## Animação de campeão (usuário, 2026-11-04) — fazer depois dos pedidos atuais
+- Animação especial, inovadora e criativa no fim da corrida em que um piloto ou uma equipe garante o título (por
+  antecipação ou na última corrida), para dar ênfase e empolgação à conquista. Mockup/storyboard primeiro.
