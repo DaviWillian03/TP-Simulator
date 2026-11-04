@@ -514,3 +514,7 @@ Respostas do usuário:
   pista; o jogador decide voltar à versão anterior, corrigir ou testar mais. Assim a ordem de forças muda ao longo do ano.
 - **Interface**: todos os menus novos devem ser os mais bonitos e interativos possíveis, com símbolos no lugar de texto longo
   sempre que der, criativos e simples.
+- **Mockups do passo 1 aprovados** (2026-11-04): Peças com carro interativo, Desenvolver com chance de acerto, upgrade que
+  falhou, pesquisa concluída e Sede.
+- **Upgrade errado só aparece depois da corrida**: o jogador corre um GP inteiro com a peça antes de saber o resultado real
+  (mais arriscado); só então decide voltar, corrigir ou testar mais.
