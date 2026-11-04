@@ -96,6 +96,22 @@ F2/F3/F4 simuladas ao fundo → Modo Edição e importação (.zip).
 - Rostos dos pilotos e logos das equipes (só locais, `game/local/`). Cor da equipe como ambiente.
 - Desgaste de pneus balanceado (1 parada em corridas de 25%).
 
+## Fila de pedidos pendentes (revisão de 2026-11-04, pedido do usuário: uma tarefa por vez, do primeiro ao último)
+Ordem de chegada dos pedidos ainda abertos (o que já foi feito está nas seções abaixo com ✅):
+1. #1 — Pop-ups do **campeonato mundial** durante a corrida (só existem os da corrida) e cenários 3D com modelos CC0 (bloqueado: rede).
+2. #2 — **Corrida Caótica** (P8 aprovada, Roleta do Caos).
+3. #3 — **Modo Edição e importação** (.zip com validação e seletor de arquivos no Android).
+4. #4 — **Estúdio de design** (P9) e cargos da sua equipe (dirigentes, engenheiros de corrida); equipe criada com logo/identidade e
+   objetivos de longo prazo; #17 — demitido recebe proposta de outra equipe.
+5. P11/P12 — academia de pilotos, F2/F3 simuladas ao fundo e F4; **teto de gastos, limite de túnel de vento e empréstimo**;
+   mais eventos (cancelamento/adiamento por país, dirigentes, IA).
+6. 2026-11-03 — **Corrida: planos táticos, reação à parada do rival e desacelerar em momentos-chave** (a parte da classificação foi feita).
+7. 2026-11-04 (prompt mestre) — (b) **componentes com limite e punição de grid**; (c) **finanças** (garantido × meta, compromissos,
+   prêmio oficial); (d) **mercado vivo** (contratos futuros da IA, perfis, cadeia F1→F2→F3).
+8. 2026-11-04 — **Campanha em 3 categorias** (F3/F2/F1, acesso e rebaixamento, tabelas bonitas).
+9. 2026-11-04 — **Aba Histórico** (Lendas, Pilotos atuais com números até 2025, Campeonatos).
+10. 2026-11-04 — **Animação de campeão**.
+
 ## O que falta para o jogo ficar completo (revisão geral, 2026-11-02)
 Revisão de todos os pedidos (`docs/IDEAS.md` #1–#6, propostas aprovadas P1–P14, decisões e mensagens da sessão) contra o que existe.
 Já feito: corrida completa e GP (treinos, classificação, sprint), Garagem em todas as telas, box com mini-jogo, campanha com temporada,
