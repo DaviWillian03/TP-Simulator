@@ -693,3 +693,9 @@ preparação automática e confirmação; (9) simplicidade no Android; (10) entr
 ## Animação de campeão (usuário, 2026-11-04) — fazer depois dos pedidos atuais
 - Animação especial, inovadora e criativa no fim da corrida em que um piloto ou uma equipe garante o título (por
   antecipação ou na última corrida), para dar ênfase e empolgação à conquista. Mockup/storyboard primeiro.
+
+## Menu principal e escolha de equipe (usuário, 2026-11-04)
+- Menu principal só com o logo do jogo e os modos; a escolha de equipe sai do menu e vai para dentro de cada modo.
+- Escolha de equipe no padrão das telas de seleção de equipe dos jogos de F1 (referência enviada: nome gigante em
+  contorno, carro em destaque, fileira de emblemas) — feita com a identidade do jogo, não cópia — com dados da equipe,
+  objetivos e fotos/dados dos pilotos; logos oficiais só na pasta local. Mockups v16 aguardando aprovação.
