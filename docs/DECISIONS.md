@@ -449,3 +449,20 @@ O usuário marcou as quatro frentes: pilotos novos ao longo dos anos, estúdio d
   34 dos 44 nomes são reais com fonte (cargo da equipe em `real_title`); sem fonte, nome fictício. Notas = estimativa.
   Equipes da IA: corpo técnico melhor desenvolve o carro mais rápido (±1,5% por ponto da média acima de 82) e treina melhor;
   na virada a IA renova (85%) ou contrata o melhor livre do cargo. Substituiu os 5 cargos antigos (saves antigos são refeitos).
+
+### Campanha em 3 categorias — F3, F2 e F1 (2026-11-04, a fazer depois das frentes já combinadas)
+- Começar a campanha na **F3, F2 ou F1**, com equipe real da categoria ou equipe criada. Os **3 campeonatos** correm sempre
+  (as categorias em que o jogador não está são simuladas rodada a rodada, com tabelas atuais).
+- **Acesso e rebaixamento automáticos** todo ano, para todas as equipes (inclusive a do jogador): campeão de construtores da F3 sobe
+  e o último da F2 desce; campeão da F2 sobe e o último da F1 desce. O número de equipes por categoria nunca muda.
+- **Grids reais**: F1 11×2, F2 11×2, F3 10×3. Equipe criada entra **no lugar** de uma equipe da categoria inicial.
+- **Formato real** na F2/F3: um treino, classificação de sessão única, sprint com os 10 primeiros invertidos e corrida principal com
+  parada obrigatória.
+- **Equilíbrio na F2/F3** (carros iguais): ~30% carro / 50% piloto / 20% decisões; F1 continua 55/25/20.
+- Equipe promovida/rebaixada **mantém os pilotos com contrato** (a IA pode trocar quem não tiver nível).
+- Equipe que sobe para a F1 entra com o **carro mais fraco**, motor de fornecedor e **verba de entrada** para montar a fábrica.
+- **Tabelas novas** (design inovador, mockup antes): grade de resultados por corrida (cores de pódio/pontos/abandono), destaques do
+  top 3 com fotos e logos, e zona de acesso/rebaixamento nos construtores.
+- **Nomes, fotos e logos oficiais** de F2/F3 2026 enviados pelo usuário: ficam só em `game/local/` (fora do git, APK pessoal),
+  como já é com F1. Fotos precisam de **fundo transparente**: o avatar já pinta o fundo com a cor da equipe ATUAL, então a foto
+  acompanha a troca de equipe automaticamente.

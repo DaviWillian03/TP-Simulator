@@ -653,3 +653,11 @@ Princípio: cada intervenção precisa de benefício, custo e uma situação em 
 - **Anti-cansaço**: avisos agrupados; se o jogador não responder, segue o plano; desacelerar/pausar em momentos importantes
   (opcional); IA com as mesmas informações. Meta de protótipo: 3–5 decisões na classificação e 8–12 numa corrida de 10–15 min.
 → Decidido em 2026-11-03 (ver DECISIONS, "Decisões a partir da análise externa").
+
+## Campanha em 3 categorias (pedido do usuário, 2026-11-04)
+> "a partir de agora seria possível começar a campanha pela F3, F2 ou F1, tendo os nomes oficiais dos pilotos, com as logos
+> oficiais das equipes também ... sua equipe criada poderia ir evoluindo de categoria ... mesmo que você escolhesse uma equipe real
+> pra começar na F2 ou F3, ela poderia ir subindo ... cada categoria teria que ter um limite de equipes ... pra subir uma equipe nova,
+> talvez outra tenha que descer ... a campanha terá os 3 campeonatos com os resultados da tabela atual ... uma tabela bem bonitona
+> de pilotos e construtores ... inovar no design ... quando um piloto trocar de equipe, mudar o fundo da foto dele"
+→ Decidido (ver DECISIONS, "Campanha em 3 categorias"). Fazer DEPOIS de regras técnicas, dinheiro e pessoas e estúdio de design.

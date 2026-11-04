@@ -120,6 +120,8 @@ P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, 
 9. **Equipe criada**: cargos fictícios existem só como técnicos; faltam logo/identidade editáveis além de formas, e objetivos de longo prazo
    com acompanhamento.
 
+10b. **Campanha em 3 categorias (F3/F2/F1)** com acesso e rebaixamento — decisões em DECISIONS (2026-11-04). Depois das frentes 4–6.
+
 ### C. Dados e conteúdo
 10. **Dados reais restantes**: diretores técnicos da maioria das equipes, história/estrutura por equipe, biografia de F2/F3 e dos técnicos reais,
     atualização a cada GP; atributos são estimativa do projeto (resultados 2024–26). Balancear pela temporada de 2026 (notas dos carros).
