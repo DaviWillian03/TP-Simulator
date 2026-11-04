@@ -6,7 +6,7 @@ extends Control
 const VERDICTS := {
 	"met": ["META\nCUMPRIDA", "A diretoria renova a confiança e libera mais orçamento."],
 	"failed": ["META\nNÃO CUMPRIDA", "A diretoria perdeu paciência. Mais um resultado assim e o cargo estará em risco."],
-	"fired": ["VOCÊ FOI\nDEMITIDO", "A diretoria encerrou o seu contrato. A campanha acaba aqui."],
+	"fired": ["VOCÊ FOI\nDEMITIDO", "A diretoria encerrou o seu contrato. Aceite a proposta de outra equipe para seguir a carreira, ou comece uma nova campanha."],
 	"bankrupt": ["EQUIPE\nFALIDA", "O caixa ficou negativo e os credores assumiram a equipe. A campanha acaba aqui."],
 }
 
@@ -108,6 +108,42 @@ func _ready() -> void:
 	note.custom_minimum_size = Vector2(0, 70)
 	rv.add_child(note)
 
+	if verdict == "fired":  # propostas de outras equipes (#17): a carreira pode continuar
+		var offers := campaign.job_offers()
+		if not offers.is_empty():
+			var ov := VBoxContainer.new()
+			ov.add_theme_constant_override("separation", 8)
+			ov.add_child(UiStyle.g_caption("Propostas para a temporada %d" % (campaign.season + 1)))
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 10)
+			for tid: String in offers:
+				var t := GameData.team_by_id(campaign.teams(), tid)
+				var b := Button.new()
+				b.focus_mode = Control.FOCUS_NONE
+				b.custom_minimum_size = Vector2(200, 84)
+				for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
+					b.add_theme_stylebox_override(s, UiStyle.g_box(Color(1, 1, 1, 0.08), 16, 12, 8))
+				var h := HBoxContainer.new()
+				h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+				h.offset_left = 12
+				h.add_theme_constant_override("separation", 10)
+				h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				var em := TeamEmblems.make_rect(tid, 44)
+				em.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+				h.add_child(em)
+				var v := VBoxContainer.new()
+				v.alignment = BoxContainer.ALIGNMENT_CENTER
+				v.add_theme_constant_override("separation", -3)
+				v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				v.add_child(UiStyle.g_label(String(t.get("name", tid)), 16, UiStyle.G_TEXT, "black"))
+				v.add_child(UiStyle.g_label("aceitar o cargo", 12, UiStyle.G_TEXT_2, "bold"))
+				h.add_child(v)
+				b.add_child(h)
+				b.pressed.connect(Session.accept_job_offer.bind(tid))
+				ScreenKit.press_feedback(b)
+				row.add_child(b)
+			ov.add_child(row)
+			ScreenKit.place(ov, layer, Control.PRESET_BOTTOM_LEFT, Vector2(44, -24))
 	var go := CutButton.new()
 	go.text = "NOVA CAMPANHA" if bad else "INICIAR TEMPORADA %d" % (campaign.season + 1)
 	go.custom_minimum_size = Vector2(380, UiStyle.TOUCH_MAIN + 4)

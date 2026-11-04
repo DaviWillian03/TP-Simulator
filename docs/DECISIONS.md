@@ -531,3 +531,8 @@ Respostas do usuário:
 - **Campeonato ao vivo na corrida** (2026-11-04, mockups v17 aprovados): pop-up "se terminar assim" de pilotos e de
   construtores só quando a projeção muda a ordem do top 5 (no máximo 1 a cada 3 voltas) e o cartão dourado "título em
   jogo" na hora em que a corrida, terminando assim, decide o título. Só na campanha (no Grande Prêmio avulso não há).
+- **Estúdio de design implementado** (2026-11-04, mockups v18): aba Design na campanha. Lançamento do carro na virada:
+  nota da crítica 1–5 → bônus das marcas (até US$ 0,9 mi) e confiança da diretoria (−2 a +5). Pinturas especiais valem no
+  GP escolhido e zeram a cada temporada.
+- **Demissão com proposta** (#17): ao ser demitido, até 3 equipes da metade de baixo do grid oferecem o cargo; aceitar troca
+  de equipe no mesmo mundo (grid, histórico, regras), e a equipe antiga passa para a IA.

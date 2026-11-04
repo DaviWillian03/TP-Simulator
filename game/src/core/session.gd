@@ -182,6 +182,7 @@ func _ready() -> void:
 				TeamEmblems.register_custom(c3.team())
 			if args.get("report", "") == "fired":
 				c3.trust = 0.0  # (captura) a confiança zerada vira demissão
+				c3.goal_shift = -20  # (captura) meta impossível: a demissão não é salva pelo resultado
 			c3.round = 22
 			c3.close_season()
 			open_campaign_report.call_deferred()
@@ -341,6 +342,15 @@ func finish_season_report() -> void:
 		campaign = null
 		open_campaign()
 		return
+	campaign.start_next_season()
+	campaign.save()
+	open_campaign_hub()
+
+
+## Demitido: aceita a proposta de outra equipe e segue a carreira na temporada seguinte.
+func accept_job_offer(team_id: String) -> void:
+	campaign.switch_team(team_id)
+	player_team = team_id
 	campaign.start_next_season()
 	campaign.save()
 	open_campaign_hub()

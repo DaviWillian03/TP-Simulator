@@ -323,6 +323,62 @@ func track_fit(circuit_id: String) -> float:
 	return CarParts.traits_effect(t, prof) - CarParts.traits_effect(t, CarParts.NEUTRAL) + (cp.avg_effect(prof) - cp.avg_effect() if cp != null else 0.0)
 
 
+# --- demissão: propostas de outras equipes (#17) ------------------------------------------------
+
+## Demitido: até 3 equipes da metade de baixo do grid (por nota do carro) oferecem o cargo de chefe. Determinístico.
+func job_offers() -> Array:
+	var rated := _teams.filter(func(t: Dictionary) -> bool: return t["id"] != player_team)
+	rated.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(_file_ratings.get(a["id"], a["car_rating"])) + float(rival_carry.get(a["id"], 0.0)) > float(_file_ratings.get(b["id"], b["car_rating"])) + float(rival_carry.get(b["id"], 0.0)))
+	var pool: Array = rated.slice(rated.size() / 2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("offers|%d|%s" % [season, player_team])
+	var out: Array = []
+	while not pool.is_empty() and out.size() < 3:
+		var t: Dictionary = pool.pop_at(rng.randi() % pool.size())
+		out.append(t["id"])
+	return out
+
+
+## Aceita a proposta: a carreira continua em outra equipe (mesmo mundo: grid, histórico, regras). A equipe antiga
+## passa para a IA com o carro que tinha.
+func switch_team(team_id: String) -> void:
+	var old := player_team
+	_file_ratings[old] = base_rating
+	rival_carry[old] = dev.carry
+	player_team = team_id
+	mode = "real"
+	base_rating = float(_file_ratings.get(team_id, team()["car_rating"])) + float(rival_carry.get(team_id, 0.0))
+	rival_carry.erase(team_id)
+	dev = CarDevelopment.new()
+	dev.set_all_levels(3)
+	dev.seed_base = season
+	sync_factory_level()
+	personnel.staff.clear()
+	for role: String in Personnel.ROLES:
+		personnel.staff[role] = ""
+		for id: String in personnel.contracts:
+			var c: Dictionary = personnel.contracts[id]
+			if String(c.get("team", "")) == team_id and String(personnel.person(id).get("role", "")) == role:
+				personnel.staff[role] = id
+				break
+	sponsors = Sponsorship.new()
+	sponsors.setup(self, _base_sponsor_target())
+	livery = Livery.new()
+	livery.setup(team())
+	budget_musd = 140.0  # PROVISÓRIO: orçamento padrão das equipes reais
+	debt_musd = 0.0
+	goal_shift = 0
+	state = "active"
+	board_patience = clampi(1 + int((rating_rank(team_id) - 1) / 3.0), 1, 5)
+	trust = _start_trust()
+	if not seasons.is_empty():
+		seasons.back()["new_team"] = team_id
+	events._add(self, {"day": day, "cat": "team", "id": "new_job", "title": "NOVO CHEFE NA %s" % String(team()["name"]).to_upper(),
+		"text": "Depois da demissão, você assume a %s para a próxima temporada." % team()["name"], "chips": []})
+	refresh_rating()
+
+
 ## Corridas e sprints que ainda restam DEPOIS da rodada atual (sem as canceladas): {races, sprints}.
 func remaining_after_current() -> Dictionary:
 	var cal := calendar()
