@@ -528,3 +528,6 @@ Respostas do usuário:
 - **Menu principal e escolha de equipe aprovados** (2026-11-04, mockups v16): menu só com logo e modos; escolha de
   equipe dentro de cada modo. Ajuste: todos os blocos da fileira de emblemas com a cor de fundo da equipe (não só o
   escolhido). Na Campanha, primeiro a pergunta "Equipe real" × "Criar equipe"; depois a escolha.
+- **Campeonato ao vivo na corrida** (2026-11-04, mockups v17 aprovados): pop-up "se terminar assim" de pilotos e de
+  construtores só quando a projeção muda a ordem do top 5 (no máximo 1 a cada 3 voltas) e o cartão dourado "título em
+  jogo" na hora em que a corrida, terminando assim, decide o título. Só na campanha (no Grande Prêmio avulso não há).

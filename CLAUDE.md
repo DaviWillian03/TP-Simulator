@@ -65,7 +65,7 @@ Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--
 (ex.: `--play --circuit=shanghai --skip=2` abre a sprint); `--advance` vale também no treino e na
 classificação. Capturas de interface: `--ui=team|quick` (folhas da tela inicial), `--ui=gallery`
 (estados dos componentes), `--view-only` (só o 3D, base de mockups). Escolha de equipe: `--teamselect=campaign|gp|quick` (com `--team=<id>`). Campanha: `--campaign`, `--car` (peças), `--rd` (árvore),
-`--creator [--ui=<passo 0..3>]`, `--hub` e `--camp-race` (usam a campanha salva).
+`--creator [--ui=<passo 0..3>]`, `--hub` e `--camp-race` (usam a campanha salva; `tools/make_demo_campaign.gd -- --round=<n>` grava uma campanha de reta final).
 Testes de regras usam `{"weather": "dry", "incident_rate": 0.0}` salvo quando testam clima/incidentes.
 - Captura de tela precisa de display: `Xvfb :99 -screen 0 1280x720x24 &`. Use para conferir
   layout depois de mexer na interface (ler logs não mostra a tela).

@@ -318,6 +318,20 @@ func track_fit(circuit_id: String) -> float:
 	return CarParts.traits_effect(t, prof) - CarParts.traits_effect(t, CarParts.NEUTRAL) + (cp.avg_effect(prof) - cp.avg_effect() if cp != null else 0.0)
 
 
+## Corridas e sprints que ainda restam DEPOIS da rodada atual (sem as canceladas): {races, sprints}.
+func remaining_after_current() -> Dictionary:
+	var cal := calendar()
+	var races := 0
+	var sprints := 0
+	for i in range(round + 1, cal.size()):
+		if events.cancelled.has(i) or regs.is_dropped(String(cal[i]["id"])):
+			continue
+		races += 1
+		if regs.is_sprint(String(cal[i]["id"])):
+			sprints += 1
+	return {"races": races, "sprints": sprints}
+
+
 ## Pilotos titulares de uma equipe, na ordem dos carros (carro 0, carro 1).
 func team_driver_ids(team_id: String) -> Array:
 	var out: Array = []

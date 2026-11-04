@@ -98,7 +98,8 @@ F2/F3/F4 simuladas ao fundo → Modo Edição e importação (.zip).
 
 ## Fila de pedidos pendentes (revisão de 2026-11-04, pedido do usuário: uma tarefa por vez, do primeiro ao último)
 Ordem de chegada dos pedidos ainda abertos (o que já foi feito está nas seções abaixo com ✅):
-1. #1 — Pop-ups do **campeonato mundial** durante a corrida (só existem os da corrida) e cenários 3D com modelos CC0 (bloqueado: rede).
+1. ✅ (2026-11-04) #1 — Pop-ups do **campeonato mundial** durante a corrida da campanha (pilotos, construtores, título em jogo).
+   Fica pendente só a troca dos cenários 3D por modelos CC0 (bloqueado: rede).
 2. #2 — **Corrida Caótica** (P8 aprovada, Roleta do Caos).
 3. #3 — **Modo Edição e importação** (.zip com validação e seletor de arquivos no Android).
 4. #4 — **Estúdio de design** (P9) e cargos da sua equipe (dirigentes, engenheiros de corrida); equipe criada com logo/identidade e

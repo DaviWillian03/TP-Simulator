@@ -38,6 +38,14 @@ var _results_shown := false
 var _pit: PitScreen = null
 var _tap: PitTapOverlay = null
 var _scale_before_stop := 0.0  ## velocidade antes de a parada forçar 1×
+var _champ: ChampionshipLive = null  ## campeonato ao vivo (só na campanha)
+var _champ_card: ChampionshipCard
+var _champ_lap := -1  ## volta do líder na última checagem
+var _champ_shown_lap := -99  ## volta do último pop-up (no máximo 1 a cada CHAMP_EVERY voltas)
+var _champ_last := {}  ## última ordem mostrada/considerada: {drivers: [...], teams: [...]}
+var _champ_title := {}  ## último estado de "título em jogo": {drivers: id, teams: id}
+const CHAMP_EVERY := 3
+const CHAMP_TOP := 5
 var _start_lights: StartLights = null  ## semáforo antes da largada (a corrida espera as luzes apagarem)
 
 
@@ -129,6 +137,10 @@ func _build_ui() -> void:
 	ScreenKit.top_shade(_layer)
 	_build_top_bar()
 
+	_champ_card = ChampionshipCard.new()
+	_champ_card.position = Vector2(300, 86)
+	_layer.add_child(_champ_card)
+	_setup_championship()
 	_toasts = ToastFeed.new()
 	_toasts.position = Vector2(LEFT_W + 14.0, SIDE_TOP + 6.0)
 	_toasts.custom_minimum_size = Vector2(440, 0)
@@ -348,6 +360,10 @@ func _refresh_ui() -> void:
 	_weather_btn.text = " " + RadarWidget.chip_text(sim)
 	_weather_btn.icon = load("res://assets/icons/%s.svg" % ("rain" if sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD else ("mixed" if rain != "sem chuva" else "sun")))
 	_refresh_flag()
+	_check_championship()
+	# com o cartão do campeonato na tela, os avisos da corrida descem para não ficar por baixo dele
+	var champ_on := _champ_card != null and _champ_card.visible and _champ_card.modulate.a > 0.05
+	_toasts.position.y = SIDE_TOP + 6.0 + (_champ_card.size.y + 10.0 if champ_on else 0.0)
 	_standings.followed = _track_view.followed if _track_view.cam_mode == TrackView3D.CamMode.CAR else null
 	_standings.refresh()
 	_drawer.refresh()
@@ -362,6 +378,99 @@ func _refresh_ui() -> void:
 	for p in _car_panels:
 		p.refresh(order.find(p.car) + 1)
 		p.set_followed(p.car == following)
+
+
+# --- campeonato ao vivo (pop-ups "se terminar assim", só na campanha) ---------------------------
+
+func _setup_championship() -> void:
+	var camp: Campaign = Session.campaign
+	if weekend == null or not weekend.campaign or camp == null:
+		return
+	var team_of := {}
+	for d: Dictionary in camp.drivers():
+		team_of[d["id"]] = d["team"]
+	var rem := camp.remaining_after_current()
+	var races := int(rem["races"]) + (1 if sim.sprint else 0)  # na sprint, a corrida do domingo ainda vem
+	_champ = ChampionshipLive.new()
+	_champ.setup(camp.driver_points, camp.team_points, team_of, weekend.points_sprint if sim.sprint else weekend.points_race,
+		races, int(rem["sprints"]), weekend.points_race, weekend.points_sprint)
+	_champ_last = {"drivers": _champ.before_order("drivers", CHAMP_TOP), "teams": _champ.before_order("teams", CHAMP_TOP)}
+
+
+func _check_championship() -> void:
+	if _champ == null or sim.is_over():
+		return
+	var lap := sim.leader_lap()
+	if lap == _champ_lap or lap < 1:
+		return
+	_champ_lap = lap
+	var order: Array = []
+	var out := {}
+	for c in sim.standings():
+		order.append(c.driver["id"])
+		if c.retired or c.disqualified:
+			out[c.driver["id"]] = true
+	var proj := _champ.project(order, out)
+	var lap_text := "volta %d de %d" % [lap, sim.total_laps]
+	# título em jogo: aparece na hora (sem esperar o intervalo) quando muda
+	for kind: String in ["drivers", "teams"]:
+		var cl := _champ.clinch(proj[kind], kind)
+		var who := String(cl.get("id", ""))
+		if who != String(_champ_title.get(kind, "")):
+			_champ_title[kind] = who
+			if who != "":
+				_show_title(kind, cl, lap_text)
+				_champ_shown_lap = lap
+				return
+	if lap - _champ_shown_lap < CHAMP_EVERY:
+		return
+	for kind: String in ["drivers", "teams"]:
+		var top: Array = (proj[kind] as Array).slice(0, CHAMP_TOP).map(func(r: Array) -> String: return r[0])
+		if top != _champ_last[kind]:
+			var before: Array = _champ_last[kind]
+			_champ_last[kind] = top
+			_champ_shown_lap = lap
+			_show_standings(kind, proj[kind], before)
+			return
+
+
+func _champ_drivers() -> Dictionary:
+	var out := {}
+	for d: Dictionary in Session.campaign.drivers():
+		out[d["id"]] = d
+	return out
+
+
+func _show_standings(kind: String, rows: Array, before: Array) -> void:
+	var colors := {}
+	for t: Dictionary in Session.campaign.teams():
+		colors[t["id"]] = Color(t["color"])
+	var mine: Array = []
+	for c in sim.cars:
+		if c.is_player:
+			mine.append(c.driver["id"] if kind == "drivers" else c.team["id"])
+	var names := _champ_drivers()
+	var lead := int(rows[0][2]) - int(rows[1][2]) if rows.size() > 1 else 0
+	var leader: String = String(names.get(rows[0][0], {}).get("name", rows[0][0])) if kind == "drivers" else String(GameData.team_by_id(Session.campaign.teams(), rows[0][0]).get("name", ""))
+	var left := _champ.max_remaining() * (2 if kind == "teams" else 1)
+	var msg := "%s lidera por %d ponto%s · ainda restam %d em disputa" % [leader.get_slice(" ", leader.get_slice_count(" ") - 1) if kind == "drivers" else leader, lead, "" if lead == 1 else "s", left]
+	_champ_card.show_standings(kind, rows, before, names, colors, mine, msg)
+
+
+func _show_title(kind: String, cl: Dictionary, lap_text: String) -> void:
+	var names := _champ_drivers()
+	if kind == "drivers":
+		var d: Dictionary = names.get(cl["id"], {})
+		var rival := String(names.get(cl["rival"], {}).get("name", ""))
+		_champ_card.show_title(String(d.get("name", "")), d, UiStyle.team_color_from(Session.campaign.teams(), String(d.get("team", ""))), lap_text,
+			"Vantagem projetada de %d pontos; restam %d em disputa." % [int(cl["lead"]), int(cl["left"])],
+			"%s não alcança mais, se a corrida terminar assim." % rival.get_slice(" ", rival.get_slice_count(" ") - 1), false)
+	else:
+		var t := GameData.team_by_id(Session.campaign.teams(), String(cl["id"]))
+		var rt := GameData.team_by_id(Session.campaign.teams(), String(cl["rival"]))
+		_champ_card.show_title(String(t.get("name", "")), {}, Color(t.get("color", "#888888")), lap_text,
+			"Vantagem projetada de %d pontos; restam %d em disputa." % [int(cl["lead"]), int(cl["left"])],
+			"%s não alcança mais nos construtores." % String(rt.get("name", "")), true, String(cl["id"]))
 
 
 ## Selo de bandeira na barra de topo (some com a pista liberada).
