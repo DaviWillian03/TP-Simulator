@@ -486,3 +486,20 @@ Decisões do usuário: o Conselho pode mudar **motor, aerodinâmica, chassi/peso
   inscritos; tamanhos da carreira passam aos reais (F2 22, F3 30). `tools/sync_feeder_roster.py`.
 - Fotos e logos ficam **só em `game/local/`** (rostos via `tools/prepare_portraits.py`, que agora lê F2/F3 e subpastas; logos em
   `game/local/series/f2|f3/`), fora do git, para o APK pessoal.
+
+### Campanha reestruturada a partir do prompt mestre (2026-11-04)
+Diagnóstico: a P&D vira bônus direto na nota da equipe (os dois carros, sem peça física); nota única por equipe e pistas sem perfil;
+sem componentes/limites; IA só mexe no mercado na virada; finanças sem compromissos futuros; sede sem "assuntos".
+Respostas do usuário:
+- **Peças: ciclo completo por carro** — pesquisa libera a especificação → fabricar unidades (custo/prazo da fábrica) → instalar em
+  cada carro; estrear num piloto só, esperar a segunda unidade ou pagar para acelerar; só o carro equipado ganha o efeito.
+- **Carro com 4 características**: velocidade de reta, curvas lentas, curvas rápidas e confiabilidade; cada pista com um perfil;
+  aerodinâmica como compromisso; a nota geral continua como resumo.
+- **Componentes simplificados com punição**: unidade de potência e câmbio com limite por temporada, desgaste por corrida, risco de
+  quebra com peça gasta, punição de grid acima do limite; preparação automática com preferência e aviso antes do GP.
+- **Ordem**: ciclo de peças primeiro (com a sede nova), depois finanças/mercado; depois estúdio de design e 3 categorias.
+- **Mercado: só contratos futuros** (jogador e IA assinam durante o ano, entrada na virada, cadeia F1→F2→F3); sem troca imediata.
+- **IA com perfis por objetivo**: candidata ao título (ritmo e experiência), meio (custo-benefício), reconstrução (potencial, salário).
+- **Finanças**: patrocínio garantido × por meta; compromissos futuros separados do saldo; prêmio de construtores pela posição
+  oficial. (Simulação "e se" não foi escolhida.)
+- **Sede**: próximo GP + até 3 assuntos (NOTÍCIA × DECISÃO) com atalho e "avançar com preparação recomendada" — mockup antes.

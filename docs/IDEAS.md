@@ -661,3 +661,14 @@ Princípio: cada intervenção precisa de benefício, custo e uma situação em 
 > talvez outra tenha que descer ... a campanha terá os 3 campeonatos com os resultados da tabela atual ... uma tabela bem bonitona
 > de pilotos e construtores ... inovar no design ... quando um piloto trocar de equipe, mudar o fundo da foto dele"
 → Decidido (ver DECISIONS, "Campanha em 3 categorias"). Fazer DEPOIS de regras técnicas, dinheiro e pessoas e estúdio de design.
+
+## Prompt mestre da campanha (ChatGPT, trazido pelo usuário — 2026-11-04)
+Referência: modo carreira do F1 Manager adaptado a sessões curtas no celular. Pontos: (1) ritmo próprio (pós-GP → preparar →
+avançar; sede com próximo GP e até 3 assuntos, separando NOTÍCIA de DECISÃO; preparação recomendada); (2) P&D → especificação →
+fabricar unidades → instalar por carro → efeito na pista; motor/chassi/aero/confiabilidade com papéis distintos; aero com
+compromisso por circuito; poucas melhorias com utilidade clara; (3) fábrica = capacidade, prazo e custo; (4) quatro profissionais
+com papéis e efeitos visíveis, sem efeitos duplicados; (5) mercado vivo para jogador e IA, contratos futuros, perfis de equipe,
+movimentação em cadeia F1→F2→F3; (6) F1/F2/F3 na mesma carreira; (7) finanças: saldo, compromissos, receitas condicionadas,
+patrocínio garantido × por meta, projeção, prêmio pelo resultado oficial; (8) componentes, desgaste, limites e punições, com
+preparação automática e confirmação; (9) simplicidade no Android; (10) entregas por ciclos completos com cenários de aceitação.
+→ Decidido (ver DECISIONS, "Campanha reestruturada a partir do prompt mestre").

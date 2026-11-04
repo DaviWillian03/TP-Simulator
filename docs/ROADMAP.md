@@ -105,6 +105,9 @@ P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, 
 1. **Corrida Caótica** (#2, P8 aprovada: Roleta do Caos completa): nada implementado; a tela inicial mostra "em desenvolvimento".
 
 ### B. Campanha — o que ainda falta
+0. **Reestruturação (prompt mestre, 2026-11-04)** — ordem: (a) ciclo de peças por carro + 4 características do carro e perfil
+   das pistas + sede nova (mockup); (b) componentes com limite e punição; (c) finanças (garantido × meta, compromissos, prêmio
+   oficial); (d) mercado vivo (contratos futuros da IA, perfis, cadeia F1→F2→F3); depois estúdio de design e 3 categorias.
 2. **Estúdio de design do carro** (#4, P9): pinturas em camadas, acabamentos, posição dos patrocinadores no carro (hoje só as zonas),
    capacete, até 3 pinturas especiais por temporada, lançamento do carro, editor de logo da equipe criada, atalho "gerar pintura".
 3. ✅ (2026-11-04) Aposentadoria, pilotos novos fictícios, base que evolui e sobe de categoria. **Falta**: academia de pilotos (P11),
