@@ -4,9 +4,9 @@ extends Control
 ## Tocar numa pessoa abre a negociação: salário e anos → a pessoa aceita, contrapropõe ou recusa.
 ## A troca só vale na virada de temporada (contratos assinados ficam "para o próximo ano").
 
-const ROLE_SHORT := {"director": "DIRETOR\nTÉCNICO", "aero": "ENGENHEIRO\nAERODINÂMICA", "chassis": "ENGENHEIRO\nCHASSI",
-	"durability": "ENGENHEIRO\nDURABILIDADE", "engine": "ENGENHEIRO\nMOTOR"}
-const ROLE_COLOR := {"director": Color("#ffd24a"), "aero": Color("#ffd24a"), "chassis": Color("#5c93ea"), "durability": Color("#3c9d5d"), "engine": Color("#ff6a5a")}
+const ROLE_SHORT := {"director": "DIRETOR\nTÉCNICO", "aero": "CHEFE DE\nAERODINÂMICA", "designer": "PROJETISTA-\nCHEFE",
+	"trackside": "ENGENHARIA\nDE PISTA"}
+const ROLE_COLOR := {"director": Color("#ffd24a"), "aero": Color("#5c93ea"), "designer": Color("#3c9d5d"), "trackside": Color("#ff6a5a")}
 
 var campaign: Campaign
 var pe: Personnel
@@ -125,10 +125,6 @@ func _build_left() -> void:
 	_left.add_child(gap)
 	_left.add_child(UiStyle.g_caption("Equipe técnica"))
 	for role: String in Personnel.ROLES:
-		if role == "engine" and not campaign.has_own_engine():
-			var l2 := UiStyle.g_label("ENGENHEIRO MOTOR · motor do fornecedor, sem engenheiro de motor", 12, UiStyle.G_TEXT_OFF, "bold")
-			_left.add_child(l2)
-			continue
 		_left.add_child(_staff_row(role))
 
 
@@ -211,6 +207,8 @@ func _tag(text: String, kind: String) -> PanelContainer:
 func _effect_text(role: String, skill: float) -> String:
 	var days := 0.0
 	var success := 0.0
+	if role == "trackside":
+		return "%+d%% no ganho dos treinos livres" % roundi((Personnel.practice_mult(skill) - 1.0) * 100.0)
 	if role == "director":
 		days = maxf(skill - 50.0, 0.0) / 600.0
 		success = maxf(skill - 50.0, 0.0) * 0.05
@@ -307,9 +305,7 @@ func _build_market() -> void:
 	if _kind == "driver":
 		opts = [["all", "Todos"], ["free", "Livres"], ["feeder", "F2/F3 e outras"], ["teams", "Outras equipes"]]
 	else:
-		opts = [["", "Todas"], ["director", "Dir."], ["aero", "Aero"], ["chassis", "Chassi"], ["durability", "Durab."]]
-		if campaign.has_own_engine():
-			opts.append(["engine", "Motor"])
+		opts = [["", "Todos"], ["director", "Diretor"], ["aero", "Aero"], ["designer", "Projeto"], ["trackside", "Pista"]]
 	for o: Array in opts:
 		var on: bool = (_role == o[0]) if _kind == "staff" else (_filter == o[0])
 		var b := Button.new()
@@ -376,7 +372,7 @@ func _market_row(e: Dictionary) -> Control:
 	nv.add_child(nm)
 	var where := ""
 	if e["kind"] == "staff":
-		where = "%s · %s" % [String(Personnel.ROLE_NAMES[e["role"]]).replace("Engenheiro de ", "Eng. "), _team_label(team_id, e)]
+		where = "%s · %s" % [String(Personnel.ROLE_NAMES[e["role"]]).replace("Diretor de engenharia de pista", "Eng. de pista"), _team_label(team_id, e)]
 	else:
 		where = "%s · %s" % [_team_label(team_id, e), e["nationality"]]
 	var sub := UiStyle.g_label(where, 11, UiStyle.G_TEXT_2, "bold")

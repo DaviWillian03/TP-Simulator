@@ -69,6 +69,9 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	seed_value = int(options.get("seed", 1))
 	# forma do fim de semana: cada equipe chega um pouco acima/abaixo da nota do carro (CarForm); "form": 0 desliga
 	teams = CarForm.apply(teams, circuit_id, seed_value, float(options.get("form", 1.0)))
+	for t: Dictionary in teams:  # fora da campanha: engenharia de pista de 2026 define o ganho dos treinos
+		if not t.has("practice_gain_mult"):
+			t["practice_gain_mult"] = Personnel.practice_mult(float(Personnel.team_staff(String(t["id"])).get("trackside", {}).get("skill", 75)))
 	duration_pct = float(options.get("duration_pct", 1.0))
 	weather_mode = options.get("weather", "realistic")
 	race_only = options.get("format", "full") == "race_only"

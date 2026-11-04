@@ -6,56 +6,72 @@
    "name": "Pato O'Ward",
    "nationality": "México",
    "category": "IndyCar",
-   "rating": 82
+   "rating": 82,
+   "birth": "1999-05-06",
+   "potential": 85
   },
   {
    "id": "alex_palou",
    "name": "Álex Palou",
    "nationality": "Espanha",
    "category": "IndyCar",
-   "rating": 84
+   "rating": 84,
+   "birth": "1997-04-01",
+   "potential": 87
   },
   {
    "id": "colton_herta",
    "name": "Colton Herta",
    "nationality": "EUA",
    "category": "IndyCar",
-   "rating": 79
+   "rating": 79,
+   "birth": "2000-03-30",
+   "potential": 85
   },
   {
    "id": "felix_rosenqvist",
    "name": "Felix Rosenqvist",
    "nationality": "Suécia",
    "category": "IndyCar",
-   "rating": 77
+   "rating": 77,
+   "birth": "1991-11-07",
+   "potential": 80
   },
   {
    "id": "mick_schumacher",
    "name": "Mick Schumacher",
    "nationality": "Alemanha",
    "category": "WEC",
-   "rating": 73
+   "rating": 73,
+   "birth": "1999-03-22",
+   "potential": 76
   },
   {
    "id": "antonio_giovinazzi",
    "name": "Antonio Giovinazzi",
    "nationality": "Itália",
    "category": "WEC",
-   "rating": 71
+   "rating": 71,
+   "birth": "1993-12-14",
+   "potential": 74
   },
   {
    "id": "stoffel_vandoorne",
    "name": "Stoffel Vandoorne",
    "nationality": "Bélgica",
    "category": "Fórmula E",
-   "rating": 78
+   "rating": 78,
+   "birth": "1992-03-26",
+   "potential": 81
   },
   {
    "id": "nyck_de_vries",
    "name": "Nyck de Vries",
    "nationality": "Holanda",
    "category": "Fórmula E",
-   "rating": 72
+   "rating": 72,
+   "birth": "1995-02-06",
+   "potential": 75
   }
  ]
 }

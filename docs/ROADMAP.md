@@ -107,14 +107,14 @@ P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, 
 ### B. Campanha — o que ainda falta
 2. **Estúdio de design do carro** (#4, P9): pinturas em camadas, acabamentos, posição dos patrocinadores no carro (hoje só as zonas),
    capacete, até 3 pinturas especiais por temporada, lançamento do carro, editor de logo da equipe criada, atalho "gerar pintura".
-3. **Academia de pilotos** (P11) e **pilotos novos ao longo dos anos**: hoje o mercado só encolhe (ninguém se aposenta, ninguém novo entra).
-   Falta aposentadoria por idade, geração de pilotos fictícios (regens), formação própria e F2/F3/F4 simuladas ao fundo (#27).
+3. ✅ (2026-11-04) Aposentadoria, pilotos novos fictícios, base que evolui e sobe de categoria. **Falta**: academia de pilotos (P11),
+   resultados de F2/F3 simulados ao fundo e F4.
 4. **Teto de gastos e limite de túnel de vento** (P12) e **empréstimo** (Finanças só tem o resumo).
 5. **Conselho — regras técnicas** (#5, P13): motor (V6/V8…), chassi, aerodinâmica ativa, reabastecimento, calendário e os "anos de virada"
    que embaralham as notas. A 1ª versão só tem pontuação, sprints e pneus; o lobby foi dispensado pelo usuário.
 6. **Eventos**: catálogo de 10; faltam mais eventos (cancelamento/adiamento por país, acidentes de carreira, crises de fábrica, mudanças de
    dirigentes) e eventos com efeito em equipes da IA. O usuário escolheu consequência automática (sem escolhas).
-7. **Pessoal**: só técnicos e engenheiros; faltam outros cargos "da sua equipe" (#4: dirigentes, engenheiros de corrida), dirigentes reais por
+7. ✅ (2026-11-04) 4 cargos com nomes reais e notas em todas as equipes; IA renova e contrata técnicos. **Pessoal** (resto): faltam outros cargos "da sua equipe" (#4: dirigentes, engenheiros de corrida), dirigentes reais por
    equipe e a IA trocar técnicos. **Demissão**: o "demitido pode receber proposta de outra equipe" (#17) ainda não existe (só "nova campanha").
 8. **Histórico da campanha** (campeões por ano, regras de cada ano, eventos marcantes) e a aba "Histórico" dos campeonatos.
 9. **Equipe criada**: cargos fictícios existem só como técnicos; faltam logo/identidade editáveis além de formas, e objetivos de longo prazo

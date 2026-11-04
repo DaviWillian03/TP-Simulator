@@ -7,10 +7,16 @@ extends RefCounted
 ## a IA também renova, dispensa e contrata na virada, e quem sobra vira agente livre.
 ## Valores PROVISÓRIOS. Técnicos e engenheiros são FICTÍCIOS (data/staff_pool.json).
 
-const ROLES := ["director", "aero", "chassis", "durability", "engine"]
-const ROLE_NAMES := {"director": "Diretor técnico", "aero": "Engenheiro de aerodinâmica", "chassis": "Engenheiro de chassi",
-	"durability": "Engenheiro de durabilidade", "engine": "Engenheiro de motor"}
-const ROLE_DEPT := {"aero": "aero", "chassis": "chassis", "durability": "durability", "engine": "engine"}
+## Os 4 cargos técnicos de cada equipe (decisão do usuário, 2026-11-04; nomes reais em data/staff_2026.json).
+const ROLES := ["director", "aero", "designer", "trackside"]
+const ROLE_NAMES := {"director": "Diretor técnico", "aero": "Chefe de aerodinâmica", "designer": "Projetista-chefe",
+	"trackside": "Diretor de engenharia de pista"}
+## Efeitos (PROVISÓRIO): diretor = todos os departamentos de P&D; aerodinâmica = depto. aero; projetista = chassi,
+## durabilidade e motor; engenharia de pista = ganho dos treinos livres (acerto).
+const DESIGNER_DEPTS := ["chassis", "durability", "engine"]
+const PRACTICE_PER_POINT := 0.012  ## ganho dos treinos por ponto de nota da engenharia de pista acima de 75
+const AI_STAFF_DEV_K := 0.015  ## equipes da IA: desenvolvimento por ponto de nota média do corpo técnico acima de 82
+const AI_STAFF_RENEW := 85  ## % de chance de a IA renovar um técnico com contrato vencendo
 const BUYOUT_SHARE := 0.5  ## fração do salário restante paga para tirar alguém de outra equipe
 const MAX_YEARS := 5
 const AI_RENEW_BASE := 70  ## % de chance de a IA renovar um piloto que vence
@@ -22,23 +28,81 @@ var dismissed: Array = []  ## ids do jogador que saem na virada
 var staff: Dictionary = {}  ## função -> id da pessoa na equipe do jogador ("" = vaga)
 var news: Array = []
 var _ex: Dictionary = {}  ## ex-pilotos do grid liberados: id -> dados (podem ser contratados de volta)
+var prospects: Array = []  ## base da campanha (F2/F3 e pilotos novos fictícios): evolui, sobe de categoria e se aposenta
+var agents: Array = []  ## pilotos de outras categorias (IndyCar, WEC, FE...) e quem ficou sem vaga
+var retired: Array = []  ## [{name, age, season, f1}] aposentadorias (notícias e histórico)
+var _lists_ready := false
 
 static var _staff_pool: Array = []
+static var _team_staff_data: Array = []
 static var _free_agents: Array = []
 
 
 # --- dados ---------------------------------------------------------------------------------
 
+## Todos os técnicos: os 44 das equipes de 2026 (reais ou genéricos) + os do mercado (fictícios).
 static func staff_pool() -> Array:
 	if _staff_pool.is_empty():
-		_staff_pool = GameData.load_json(GameData.DATA_DIR + "staff_pool.json")["people"]
+		_staff_pool = team_staff_data() + GameData.load_json(GameData.DATA_DIR + "staff_pool.json")["people"]
 	return _staff_pool
+
+
+static func team_staff_data() -> Array:
+	if _team_staff_data.is_empty():
+		_team_staff_data = GameData.load_json(GameData.DATA_DIR + "staff_2026.json")["people"]
+	return _team_staff_data
+
+
+## Técnicos de uma equipe no início de 2026: cargo -> pessoa.
+static func team_staff(team_id: String) -> Dictionary:
+	var out := {}
+	for p: Dictionary in team_staff_data():
+		if p["team"] == team_id:
+			out[p["role"]] = p
+	return out
+
+
+## Multiplicador do ganho dos treinos pela nota da engenharia de pista (0 = vaga: um pouco pior).
+static func practice_mult(trackside_skill: float) -> float:
+	if trackside_skill <= 0.0:
+		return 0.9
+	return clampf(1.0 + (trackside_skill - 75.0) * PRACTICE_PER_POINT, 0.85, 1.25)
 
 
 static func free_agent_drivers() -> Array:
 	if _free_agents.is_empty():
 		_free_agents = GameData.load_json(GameData.DATA_DIR + "free_agents.json")["drivers"]
 	return _free_agents
+
+
+## Base da campanha (cópia própria: muda ao longo dos anos). Feita na primeira vez a partir dos dados de 2026.
+func feeder() -> Array:
+	_ensure_lists()
+	return prospects
+
+
+func outside() -> Array:
+	_ensure_lists()
+	return agents
+
+
+func _ensure_lists() -> void:
+	if _lists_ready:
+		return
+	_lists_ready = true
+	if prospects.is_empty():
+		for f: Dictionary in Campaign.feeder_drivers():
+			prospects.append(f.duplicate(true))
+	if agents.is_empty():
+		for f: Dictionary in free_agent_drivers():
+			agents.append(f.duplicate(true))
+
+
+func _find(list: Array, id: String) -> Dictionary:
+	for x: Dictionary in list:
+		if x["id"] == id:
+			return x
+	return {}
 
 
 ## Salário pedido (US$ mi por ano) por nota do piloto.
@@ -63,43 +127,100 @@ func setup(camp: Campaign) -> void:
 	dismissed.clear()
 	staff.clear()
 	news.clear()
+	prospects.clear()
+	agents.clear()
+	retired.clear()
+	_lists_ready = false
+	_ensure_lists()
+	var on_grid := {}
+	for d: Dictionary in camp.drivers():
+		on_grid[d["id"]] = true
+	prospects = prospects.filter(func(x: Dictionary) -> bool: return not on_grid.has(x["id"]))  # escolhidos pela equipe criada
 	for d: Dictionary in camp.drivers():
 		contracts[d["id"]] = {"team": d["team"], "salary": driver_ask(float(d["rating"])),
 			"until": camp.season + (_h(d["id"]) % 3) + (1 if d["team"] == camp.player_team else 0)}
-	for f: Dictionary in Campaign.feeder_drivers():
+	for f: Dictionary in feeder():
 		if not contracts.has(f["id"]):
 			contracts[f["id"]] = {"team": f["category"], "salary": driver_ask(float(f["rating"])), "until": camp.season + (_h(f["id"]) % 2)}
-	for f: Dictionary in free_agent_drivers():
+	for f: Dictionary in outside():
 		contracts[f["id"]] = {"team": "", "salary": driver_ask(float(f["rating"])), "until": camp.season}
 	_assign_staff(camp)
 
 
 func _assign_staff(camp: Campaign) -> void:
-	var target := clampf(float(camp.base_rating) - 15.0, 45.0, 88.0)
 	var taken: Dictionary = {}
+	# equipes do grid: os técnicos de 2026 (inclusive os da sua equipe, se for uma equipe real)
+	for p: Dictionary in team_staff_data():
+		if GameData.team_by_id(camp.teams(), p["team"]).is_empty():
+			continue
+		contracts[p["id"]] = {"team": p["team"], "salary": staff_ask(float(p["skill"])), "until": camp.season + 1 + (_h(p["id"]) % 3)}
+		taken[p["id"]] = true
 	for role: String in ROLES:
 		staff[role] = ""
-		var best := ""
-		var best_gap := 999.0
-		for p: Dictionary in staff_pool():
-			if p["role"] != role or taken.has(p["id"]):
-				continue
-			var gap := absf(float(p["skill"]) - target) + float(_h(p["id"]) % 5)
-			if gap < best_gap:
-				best_gap = gap
-				best = p["id"]
-		if role == "engine" and not camp.has_own_engine():
-			continue
-		staff[role] = best
-		taken[best] = true
-		contracts[best] = {"team": camp.player_team, "salary": staff_ask(float(person(best)["skill"])), "until": camp.season + 1 + (_h(best) % 3)}
-	var ai_teams: Array = camp.teams().filter(func(t: Dictionary) -> bool: return t["id"] != camp.player_team)
+	var own := team_staff(camp.player_team)
+	if not own.is_empty():
+		for role: String in ROLES:
+			if own.has(role):
+				staff[role] = own[role]["id"]
+	else:  # equipe criada: técnicos do mercado no nível da estrutura
+		var target := clampf(float(camp.base_rating) - 5.0, 55.0, 88.0)
+		for role: String in ROLES:
+			var best := ""
+			var best_gap := 999.0
+			for p: Dictionary in staff_pool():
+				if p["role"] != role or taken.has(p["id"]) or p.has("team"):
+					continue
+				var gap := absf(float(p["skill"]) - target) + float(_h(p["id"]) % 5)
+				if gap < best_gap:
+					best_gap = gap
+					best = p["id"]
+			if best != "":
+				staff[role] = best
+				taken[best] = true
+				contracts[best] = {"team": camp.player_team, "salary": staff_ask(float(person(best)["skill"])), "until": camp.season + 1 + (_h(best) % 3)}
+	# mercado: os fictícios sem equipe são agentes livres
 	for p: Dictionary in staff_pool():
-		if taken.has(p["id"]):
-			continue
-		var employed := _h(p["id"]) % 2 == 0
-		contracts[p["id"]] = {"team": ai_teams[_h(p["id"] + "t") % ai_teams.size()]["id"] if employed else "",
-			"salary": staff_ask(float(p["skill"])), "until": camp.season + (_h(p["id"]) % 3) if employed else camp.season}
+		if not taken.has(p["id"]):
+			contracts[p["id"]] = {"team": "", "salary": staff_ask(float(p["skill"])), "until": camp.season}
+
+
+## Técnico de uma equipe num cargo (quem tem contrato com ela), ou {}.
+func staff_of(camp: Campaign, team_id: String, role: String) -> Dictionary:
+	if team_id == camp.player_team:
+		var id: String = staff.get(role, "")
+		return person(id) if id != "" else {}
+	for p: Dictionary in staff_pool():
+		if p["role"] == role and String(contracts.get(p["id"], {}).get("team", "")) == team_id:
+			return person(p["id"])
+	return {}
+
+
+## Equipes da IA: fator de desenvolvimento pela nota média de diretor, aerodinâmica e projetista.
+func ai_dev_factor(camp: Campaign, team_id: String) -> float:
+	var total := 0.0
+	for role: String in ["director", "aero", "designer"]:
+		total += float(staff_of(camp, team_id, role).get("skill", 60))
+	return clampf(1.0 + (total / 3.0 - 82.0) * AI_STAFF_DEV_K, 0.7, 1.25)
+
+
+## Ganho dos treinos de uma equipe pela engenharia de pista.
+func team_practice_mult(camp: Campaign, team_id: String) -> float:
+	return practice_mult(float(staff_of(camp, team_id, "trackside").get("skill", 0)))
+
+
+## Saves antigos (cargos de antes de 2026-11-04 ou técnicos que não existem mais): refaz o corpo técnico.
+func repair_staff(camp: Campaign) -> void:
+	var ok := staff.size() == ROLES.size()
+	for role: String in ROLES:
+		var id: String = staff.get(role, "")
+		if id != "" and person(id).is_empty():
+			ok = false
+	for p: Dictionary in team_staff_data():
+		if not contracts.has(p["id"]):
+			ok = false
+	if not ok:
+		staff.clear()
+		_assign_staff(camp)
 
 
 # --- pessoas --------------------------------------------------------------------------------
@@ -117,13 +238,18 @@ func person(id: String, camp: Campaign = null) -> Dictionary:
 				return out
 	for p: Dictionary in staff_pool():
 		if p["id"] == id:
-			return {"id": id, "name": p["name"], "nationality": p["nationality"], "kind": "staff", "role": p["role"], "skill": int(p["skill"]), "rating": int(p["skill"]), "category": "Técnico"}
-	for f: Dictionary in Campaign.feeder_drivers():
-		if f["id"] == id:
-			return {"id": id, "name": f["name"], "nationality": f["nationality"], "kind": "driver", "role": "driver", "rating": int(f["rating"]), "category": f["category"]}
-	for f: Dictionary in free_agent_drivers():
-		if f["id"] == id:
-			return {"id": id, "name": f["name"], "nationality": f["nationality"], "kind": "driver", "role": "driver", "rating": int(f["rating"]), "category": f["category"]}
+			var o2 := {"id": id, "name": p["name"], "nationality": p["nationality"], "kind": "staff", "role": p["role"], "skill": int(p["skill"]), "rating": int(p["skill"]), "category": "Técnico"}
+			if p.has("real_title"):
+				o2["real_title"] = p["real_title"]
+			return o2
+	for list: Array in [feeder(), outside()]:
+		var f := _find(list, id)
+		if not f.is_empty():
+			var o := {"id": id, "name": f["name"], "nationality": f["nationality"], "kind": "driver", "role": "driver", "rating": int(f["rating"]), "category": f["category"]}
+			for k: String in ["birth", "potential", "regen", "birth_estimated"]:
+				if f.has(k):
+					o[k] = f[k]
+			return o
 	if _ex.has(id):
 		var e: Dictionary = _ex[id]
 		var out2 := {"id": id, "name": e["name"], "nationality": e["nationality"], "kind": "driver", "role": "driver", "rating": int(e["rating"]),
@@ -163,9 +289,9 @@ func market(camp: Campaign, kind: String, filter: String = "all", role: String =
 	if kind == "driver":
 		for d: Dictionary in camp.drivers():
 			ids.append(d["id"])
-		for f: Dictionary in Campaign.feeder_drivers():
+		for f: Dictionary in feeder():
 			ids.append(f["id"])
-		for f: Dictionary in free_agent_drivers():
+		for f: Dictionary in outside():
 			ids.append(f["id"])
 		for id: String in _ex:
 			ids.append(id)
@@ -342,20 +468,24 @@ func payroll_per_race(camp: Campaign) -> float:
 ## Efeitos dos técnicos nos projetos: {"aero.days": 0.06, "aero.success": 3.9, ...} (dias em fração; acerto em pontos).
 func staff_effects(_camp: Campaign) -> Dictionary:
 	var out := {}
-	var director := 0.0
-	if staff.get("director", "") != "":
-		director = float(person(staff["director"])["skill"])
+	var director := _skill_of("director")
+	var aero := _skill_of("aero")
+	var designer := _skill_of("designer")
 	for dept: String in ["engine", "aero", "chassis", "durability"]:
 		var days := maxf(director - 50.0, 0.0) / 600.0
 		var success := maxf(director - 50.0, 0.0) * 0.05
-		var role := String(dept)
-		if staff.get(role, "") != "":
-			var s := float(person(staff[role])["skill"])
-			days += maxf(s - 50.0, 0.0) / 500.0
-			success += maxf(s - 50.0, 0.0) * 0.13
+		var s2 := aero if dept == "aero" else designer
+		days += maxf(s2 - 50.0, 0.0) / 500.0
+		success += maxf(s2 - 50.0, 0.0) * 0.13
 		out[dept + ".days"] = days
 		out[dept + ".success"] = success
+	out["practice"] = practice_mult(_skill_of("trackside"))
 	return out
+
+
+func _skill_of(role: String) -> float:
+	var id: String = staff.get(role, "")
+	return float(person(id).get("skill", 0)) if id != "" else 0.0
 
 
 # --- virada de temporada ---------------------------------------------------------------------------
@@ -364,6 +494,7 @@ func staff_effects(_camp: Campaign) -> Dictionary:
 ## recebe os contratos assinados. Muda a lista de pilotos do grid.
 func rollover(camp: Campaign) -> void:
 	var season := camp.season
+	_careers(camp)
 	# 1) IA: renovações e dispensas
 	for t: Dictionary in camp.teams():
 		if t["id"] == camp.player_team:
@@ -406,9 +537,12 @@ func rollover(camp: Campaign) -> void:
 			contracts[id2] = {"team": "", "salary": float(contracts[id2]["salary"]), "until": season}
 			staff[role] = ""
 			_log("%s deixou a equipe (contrato vencido)." % person(id2)["name"])
+	# 4b) técnicos da IA: renovam (quase sempre) e preenchem vagas com o melhor livre do cargo
+	_ai_staff(camp)
 	# 5) a IA completa os assentos; o jogador também precisa de 2 pilotos
 	_fill_ai(camp)
 	_fill_player(camp)
+	_top_up_f3(camp)
 	camp.driver_ids.assign(player_drivers(camp).map(func(d: Dictionary) -> String: return d["id"]))
 	# contratos das pessoas do jogador valem a partir da próxima temporada
 	for d in player_drivers(camp):
@@ -416,13 +550,39 @@ func rollover(camp: Campaign) -> void:
 			contracts[d["id"]] = {"team": camp.player_team, "salary": driver_ask(float(d["rating"])), "until": season + 2}
 
 
+func _ai_staff(camp: Campaign) -> void:
+	var season := camp.season
+	var order: Array = camp.teams().filter(func(t: Dictionary) -> bool: return t["id"] != camp.player_team)
+	order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["car_rating"]) > float(b["car_rating"]))
+	for t: Dictionary in order:
+		for role: String in ROLES:
+			var cur := staff_of(camp, t["id"], role)
+			if not cur.is_empty():
+				var c: Dictionary = contracts[cur["id"]]
+				if int(c["until"]) > season or pending.has(cur["id"]):
+					continue
+				if _h("%s|%d|staff" % [cur["id"], season]) % 100 < AI_STAFF_RENEW:
+					c["until"] = season + 1 + (_h(cur["id"] + str(season)) % 3)
+					continue
+				contracts[cur["id"]] = {"team": "", "salary": float(c["salary"]), "until": season}
+				_log("%s deixa a %s." % [cur["name"], t["name"]])
+			var best := ""
+			var best_skill := -1.0
+			for p: Dictionary in staff_pool():
+				var cc: Dictionary = contracts.get(p["id"], {})
+				if p["role"] != role or String(cc.get("team", "")) != "" or pending.has(p["id"]):
+					continue
+				if float(p["skill"]) > best_skill:
+					best_skill = float(p["skill"])
+					best = p["id"]
+			if best != "":
+				contracts[best] = {"team": t["id"], "salary": staff_ask(best_skill), "until": season + 1 + (_h(best) % 3)}
+				_log("%s contrata %s (%s)." % [t["name"], person(best)["name"], String(ROLE_NAMES[role]).to_lower()])
+
+
 func _release_to_pool(camp: Campaign, d: Dictionary) -> void:
 	camp._drivers.erase(d)
-	var is_feeder := false
-	for f: Dictionary in Campaign.feeder_drivers():
-		if f["id"] == d["id"]:
-			is_feeder = true
-	if not is_feeder and not _free_agent_ids().has(d["id"]):
+	if _find(feeder(), d["id"]).is_empty() and _find(outside(), d["id"]).is_empty():
 		var e := {"name": d["name"], "nationality": d["nationality"], "rating": int(d["rating"]), "number": int(d["number"]), "code": d["code"]}
 		for k: String in ["attrs", "birth", "titles", "potential", "height_cm", "weight_kg", "career"]:
 			if d.has(k):
@@ -435,7 +595,7 @@ func _release_to_pool(camp: Campaign, d: Dictionary) -> void:
 
 func _free_agent_ids() -> Array[String]:
 	var out: Array[String] = []
-	for f: Dictionary in free_agent_drivers():
+	for f: Dictionary in outside():
 		out.append(f["id"])
 	return out
 
@@ -447,9 +607,9 @@ func _available_drivers(camp: Campaign) -> Array[Dictionary]:
 	for d: Dictionary in camp.drivers():
 		seated[d["id"]] = true
 	var ids: Array[String] = []
-	for f: Dictionary in Campaign.feeder_drivers():
+	for f: Dictionary in feeder():
 		ids.append(f["id"])
-	for f: Dictionary in free_agent_drivers():
+	for f: Dictionary in outside():
 		ids.append(f["id"])
 	for id: String in _ex:
 		ids.append(id)
@@ -480,9 +640,15 @@ func _seat_driver(camp: Campaign, id: String, team_id: String) -> void:
 		number = 2
 		while used.has(number):
 			number += 1
-	camp._drivers.append({"id": id, "name": p["name"], "code": Campaign.driver_code(p["name"]), "number": number,
-		"nationality": p["nationality"], "team": team_id, "rating": int(p["rating"]), "from": p.get("category", "F2")})
+	var nd := {"id": id, "name": p["name"], "code": Campaign.driver_code(p["name"]), "number": number,
+		"nationality": p["nationality"], "team": team_id, "rating": int(p["rating"]), "from": p.get("category", "F2")}
+	for k: String in ["attrs", "birth", "titles", "potential", "height_cm", "weight_kg", "career"]:
+		if p.has(k):
+			nd[k] = p[k]
+	camp._drivers.append(nd)
 	_ex.erase(id)
+	prospects.erase(_find(feeder(), id))  # subiu para a F1: sai da base
+	agents.erase(_find(outside(), id))
 
 
 func _fill_ai(camp: Campaign) -> void:
@@ -525,6 +691,102 @@ func _fill_player(camp: Campaign) -> void:
 		_log("Vaga de piloto vazia: %s foi contratado automaticamente." % best["name"])
 
 
+# --- carreiras: aposentadoria, evolução da base, promoção e pilotos novos -------------------
+
+func _careers(camp: Campaign) -> void:
+	var season := camp.season
+	var seed_value := int(camp.dev.seed_base) if camp.dev != null else 0
+	# 1) aposentadorias (grid, ex-pilotos, base e outras categorias)
+	for d: Dictionary in camp.drivers().duplicate():
+		var c: Dictionary = contracts.get(d["id"], {})
+		var under := int(c.get("until", season)) > season
+		var mine: bool = d["team"] == camp.player_team
+		if mine and under:
+			continue  # o seu piloto cumpre o contrato até o fim
+		if DriverCareer.roll("retire|%s|%d|%d" % [d["id"], season, seed_value]) < DriverCareer.retire_chance(d, season, true, under):
+			_retire(camp, d, true)
+	for id: String in _ex.keys():
+		var e: Dictionary = _ex[id].duplicate()
+		e["id"] = id
+		if DriverCareer.roll("retire|%s|%d|%d" % [id, season, seed_value]) < DriverCareer.retire_chance(e, season, false, false):
+			_ex.erase(id)
+			_retire_record(e, season, false)
+	for list: Array in [feeder(), outside()]:
+		for d: Dictionary in list.duplicate():
+			if DriverCareer.roll("retire|%s|%d|%d" % [d["id"], season, seed_value]) < DriverCareer.retire_chance(d, season, d.get("category", "") != "Sem vaga", false):
+				list.erase(d)
+				contracts.erase(d["id"])
+				_retire_record(d, season, false)
+	# 2) evolução de quem só tem nota geral
+	for list: Array in [feeder(), outside()]:
+		for d: Dictionary in list:
+			DriverCareer.evolve_prospect(d, season + 1, seed_value)
+	for id: String in _ex:
+		if not _ex[id].has("attrs"):
+			var e2: Dictionary = _ex[id]
+			e2["id"] = id
+			DriverCareer.evolve_prospect(e2, season + 1, seed_value)
+			e2.erase("id")
+	# 3) promoções: os melhores da F3 sobem; F2 velhos demais ou excedentes ficam sem vaga
+	var f3: Array = feeder().filter(func(x: Dictionary) -> bool: return x["category"] == "F3")
+	f3.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["rating"]) > int(b["rating"]))
+	for i in mini(DriverCareer.PROMOTE_F3, f3.size()):
+		f3[i]["category"] = "F2"
+		_set_series(f3[i], "F2", season)
+	var f2: Array = feeder().filter(func(x: Dictionary) -> bool: return x["category"] == "F2")
+	f2.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["rating"]) > int(b["rating"]))
+	for i in f2.size():
+		var x: Dictionary = f2[i]
+		if i >= DriverCareer.F2_SIZE or DriverCareer.age_in(x, season + 1) > DriverCareer.F2_MAX_YEARS_AGE:
+			prospects.erase(x)
+			x["category"] = "Sem vaga"
+			agents.append(x)
+			_set_series(x, "", season)
+
+## Pilotos novos (fictícios) completam a F3 — no fim da virada, depois que as equipes contrataram da base.
+func _top_up_f3(camp: Campaign) -> void:
+	var season := camp.season
+	var seed_value := int(camp.dev.seed_base) if camp.dev != null else 0
+	var used := {}
+	for list: Array in [feeder(), outside()]:
+		for x: Dictionary in list:
+			used[x["name"]] = true
+	for d: Dictionary in camp.drivers():
+		used[d["name"]] = true
+	var n_f3 := feeder().filter(func(x: Dictionary) -> bool: return x["category"] == "F3").size()
+	var k := 0
+	while n_f3 < DriverCareer.F3_SIZE:
+		var r := DriverCareer.make_regen(season + 1, k, seed_value, used)
+		prospects.append(r)
+		contracts[r["id"]] = {"team": "F3", "salary": driver_ask(float(r["rating"])), "until": season + 1 + (k % 2)}
+		n_f3 += 1
+		k += 1
+	if k > 0:
+		_log("%d pilotos novos estreiam na F3 em %d." % [k, season + 1])
+
+
+
+
+func _set_series(x: Dictionary, team: String, season: int) -> void:
+	var c: Dictionary = contracts.get(x["id"], {"salary": driver_ask(float(x["rating"]))})
+	c["team"] = team
+	c["until"] = season + 1 if team != "" else season
+	contracts[x["id"]] = c
+
+
+func _retire(camp: Campaign, d: Dictionary, f1: bool) -> void:
+	camp._drivers.erase(d)
+	contracts.erase(d["id"])
+	_retire_record(d, camp.season, f1)
+
+
+func _retire_record(d: Dictionary, season: int, f1: bool) -> void:
+	var a := DriverCareer.age_in(d, season)
+	retired.append({"name": d["name"], "age": a, "season": season, "f1": f1})
+	if f1:
+		_log("%s anuncia a aposentadoria aos %d anos." % [d["name"], a])
+
+
 func _log(text: String) -> void:
 	news.push_front(text)
 	while news.size() > 12:
@@ -534,7 +796,8 @@ func _log(text: String) -> void:
 # --- salvar / carregar ---------------------------------------------------------------------------
 
 func to_dict() -> Dictionary:
-	return {"contracts": contracts, "pending": pending, "dismissed": dismissed, "staff": staff, "news": news, "ex": _ex}
+	return {"contracts": contracts, "pending": pending, "dismissed": dismissed, "staff": staff, "news": news, "ex": _ex,
+		"prospects": feeder(), "agents": outside(), "retired": retired}
 
 
 static func from_dict(d: Dictionary) -> Personnel:
@@ -551,4 +814,17 @@ static func from_dict(d: Dictionary) -> Personnel:
 	p.staff = d.get("staff", {})
 	p.news = d.get("news", [])
 	p._ex = d.get("ex", {})
+	p.prospects = d.get("prospects", [])
+	p.agents = d.get("agents", [])
+	p.retired = d.get("retired", [])
 	return p
+
+
+## Saves antigos (sem a base própria): monta a base e tira quem já está no grid.
+func sync_with_grid(camp: Campaign) -> void:
+	var on_grid := {}
+	for d: Dictionary in camp.drivers():
+		on_grid[d["id"]] = true
+	feeder()
+	prospects = prospects.filter(func(x: Dictionary) -> bool: return not on_grid.has(x["id"]))
+	agents = agents.filter(func(x: Dictionary) -> bool: return not on_grid.has(x["id"]))

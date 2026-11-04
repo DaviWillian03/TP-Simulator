@@ -25,11 +25,12 @@ func test_montagem_cria_contratos_e_equipe_tecnica() -> void:
 	for d: Dictionary in camp.drivers():
 		assert_true(camp.personnel.contracts.has(d["id"]), d["id"])
 		assert_gt(float(camp.personnel.contracts[d["id"]]["salary"]), 0.0)
-	assert_ne(camp.personnel.staff["director"], "")
-	assert_ne(camp.personnel.staff["aero"], "")
-	assert_eq(camp.personnel.staff["engine"], "", "williams usa motor do fornecedor")
-	var own := Campaign.new_real("ferrari")
-	assert_ne(own.personnel.staff["engine"], "", "ferrari tem motor próprio")
+	assert_eq(Personnel.ROLES.size(), 4, "só 4 cargos além do chefe de equipe e dos pilotos")
+	for role: String in Personnel.ROLES:
+		assert_ne(camp.personnel.staff[role], "", role)
+	assert_eq(camp.personnel.person(camp.personnel.staff["director"])["name"], "Pat Fry", "equipe real: técnicos reais de 2026")
+	var ferrari := Campaign.new_real("ferrari")
+	assert_eq(ferrari.personnel.person(ferrari.personnel.staff["aero"])["name"], "Diego Tondi")
 
 
 func test_salario_pedido_cresce_com_a_nota() -> void:

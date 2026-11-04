@@ -1,16 +1,16 @@
 {
- "_notas": "FICTÍCIO e PROVISÓRIO. Gerado por tools/make_staff_pool.py (semente fixa). Funções: director, aero, chassis, durability, engine.",
+ "_notas": "FICTÍCIO e PROVISÓRIO. Gerado por tools/make_staff_pool.py (semente fixa). Funções: director, aero, designer, trackside (agentes livres do mercado).",
  "people": [
   {
-   "id": "staff_callum_calloway",
-   "name": "Callum Calloway",
+   "id": "staff_callum_callard",
+   "name": "Callum Callard",
    "nationality": "Reino Unido",
    "role": "director",
    "skill": 77
   },
   {
-   "id": "staff_harriet_calloway",
-   "name": "Harriet Calloway",
+   "id": "staff_harriet_callard",
+   "name": "Harriet Callard",
    "nationality": "Reino Unido",
    "role": "director",
    "skill": 84
@@ -61,14 +61,14 @@
    "id": "staff_rina_nakano",
    "name": "Rina Nakano",
    "nationality": "Japão",
-   "role": "aero",
+   "role": "director",
    "skill": 85
   },
   {
-   "id": "staff_rhys_ashdown",
-   "name": "Rhys Ashdown",
+   "id": "staff_rhys_ashcombe",
+   "name": "Rhys Ashcombe",
    "nationality": "Reino Unido",
-   "role": "aero",
+   "role": "director",
    "skill": 50
   },
   {
@@ -128,199 +128,199 @@
    "skill": 87
   },
   {
-   "id": "staff_rhys_calloway",
-   "name": "Rhys Calloway",
+   "id": "staff_rhys_callard",
+   "name": "Rhys Callard",
    "nationality": "Reino Unido",
-   "role": "chassis",
+   "role": "aero",
    "skill": 72
   },
   {
    "id": "staff_lucia_ibarra",
    "name": "Lucía Ibarra",
    "nationality": "Espanha",
-   "role": "chassis",
+   "role": "aero",
    "skill": 59
   },
   {
    "id": "staff_rhys_hargreaves",
    "name": "Rhys Hargreaves",
    "nationality": "Reino Unido",
-   "role": "chassis",
+   "role": "aero",
    "skill": 74
   },
   {
    "id": "staff_irene_cortes",
    "name": "Irene Cortés",
    "nationality": "Espanha",
-   "role": "chassis",
+   "role": "aero",
    "skill": 61
   },
   {
    "id": "staff_rina_ishikawa",
    "name": "Rina Ishikawa",
    "nationality": "Japão",
-   "role": "chassis",
+   "role": "designer",
    "skill": 80
   },
   {
    "id": "staff_marta_ibarra",
    "name": "Marta Ibarra",
    "nationality": "Espanha",
-   "role": "chassis",
+   "role": "designer",
    "skill": 57
   },
   {
    "id": "staff_etienne_delorme",
    "name": "Étienne Delorme",
    "nationality": "França",
-   "role": "chassis",
+   "role": "designer",
    "skill": 47
   },
   {
    "id": "staff_katrin_lindner",
    "name": "Katrin Lindner",
    "nationality": "Alemanha",
-   "role": "chassis",
+   "role": "designer",
    "skill": 74
   },
   {
-   "id": "staff_andres_montoya",
-   "name": "Andrés Montoya",
+   "id": "staff_andres_medrano",
+   "name": "Andrés Medrano",
    "nationality": "Espanha",
-   "role": "chassis",
+   "role": "designer",
    "skill": 61
   },
   {
    "id": "staff_camila_arruda",
    "name": "Camila Arruda",
    "nationality": "Brasil",
-   "role": "chassis",
+   "role": "designer",
    "skill": 74
   },
   {
    "id": "staff_nigel_hargreaves",
    "name": "Nigel Hargreaves",
    "nationality": "Reino Unido",
-   "role": "durability",
+   "role": "designer",
    "skill": 90
   },
   {
-   "id": "staff_margaux_vasseur",
-   "name": "Margaux Vasseur",
+   "id": "staff_margaux_vautrin",
+   "name": "Margaux Vautrin",
    "nationality": "França",
-   "role": "durability",
+   "role": "designer",
    "skill": 72
   },
   {
    "id": "staff_javier_navarro",
    "name": "Javier Navarro",
    "nationality": "Espanha",
-   "role": "durability",
+   "role": "designer",
    "skill": 62
   },
   {
    "id": "staff_andres_calderon",
    "name": "Andrés Calderón",
    "nationality": "Espanha",
-   "role": "durability",
+   "role": "designer",
    "skill": 57
   },
   {
    "id": "staff_yuna_hayashi",
    "name": "Yuna Hayashi",
    "nationality": "Japão",
-   "role": "durability",
+   "role": "designer",
    "skill": 45
   },
   {
    "id": "staff_oliver_thorne",
    "name": "Oliver Thorne",
    "nationality": "Reino Unido",
-   "role": "durability",
+   "role": "designer",
    "skill": 82
   },
   {
-   "id": "staff_imogen_pemberton",
-   "name": "Imogen Pemberton",
+   "id": "staff_imogen_penhallow",
+   "name": "Imogen Penhallow",
    "nationality": "Reino Unido",
-   "role": "durability",
+   "role": "trackside",
    "skill": 60
   },
   {
    "id": "staff_imogen_whitlock",
    "name": "Imogen Whitlock",
    "nationality": "Reino Unido",
-   "role": "durability",
+   "role": "trackside",
    "skill": 79
   },
   {
    "id": "staff_ines_roussel",
    "name": "Inès Roussel",
    "nationality": "França",
-   "role": "durability",
+   "role": "trackside",
    "skill": 67
   },
   {
-   "id": "staff_lukas_falk",
-   "name": "Lukas Falk",
+   "id": "staff_lukas_falkner",
+   "name": "Lukas Falkner",
    "nationality": "Alemanha",
-   "role": "durability",
+   "role": "trackside",
    "skill": 87
   },
   {
    "id": "staff_irene_navarro",
    "name": "Irene Navarro",
    "nationality": "Espanha",
-   "role": "engine",
+   "role": "trackside",
    "skill": 53
   },
   {
    "id": "staff_chiara_moretti",
    "name": "Chiara Moretti",
    "nationality": "Itália",
-   "role": "engine",
+   "role": "trackside",
    "skill": 53
   },
   {
    "id": "staff_helena_lindner",
    "name": "Helena Lindner",
    "nationality": "Alemanha",
-   "role": "engine",
+   "role": "trackside",
    "skill": 64
   },
   {
    "id": "staff_aiko_morita",
    "name": "Aiko Morita",
    "nationality": "Japão",
-   "role": "engine",
+   "role": "trackside",
    "skill": 78
   },
   {
    "id": "staff_chiara_ferrante",
    "name": "Chiara Ferrante",
    "nationality": "Itália",
-   "role": "engine",
+   "role": "trackside",
    "skill": 51
   },
   {
    "id": "staff_haruto_takeda",
    "name": "Haruto Takeda",
    "nationality": "Japão",
-   "role": "engine",
+   "role": "trackside",
    "skill": 67
   },
   {
    "id": "staff_ingrid_solheim",
    "name": "Ingrid Solheim",
    "nationality": "Noruega",
-   "role": "engine",
+   "role": "trackside",
    "skill": 77
   },
   {
    "id": "staff_andres_navarro",
    "name": "Andrés Navarro",
    "nationality": "Espanha",
-   "role": "engine",
+   "role": "trackside",
    "skill": 64
   }
  ]

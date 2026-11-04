@@ -1,0 +1,457 @@
+{
+ "_notas": "4 cargos por equipe (2026). Nomes reais com fonte quando 'real' = true (cargo da equipe em real_title); demais FICTÍCIOS. skill = ESTIMATIVA do projeto. tools/make_staff_2026.py",
+ "sources": [
+  "https://en.wikipedia.org/wiki/Mercedes_W17",
+  "https://www.mercedesamgf1.com/team/person/james-allison",
+  "https://www.planetf1.com/news/ferrari-announce-new-technical-director-seven-person-structure-revealed",
+  "https://en.wikipedia.org/wiki/Ferrari_SF-26",
+  "https://en.wikipedia.org/wiki/Red_Bull_Racing_RB22",
+  "https://www.gpfans.com/en/f1-news/1076325/red-bull-f1-craig-skinner-chief-designer-exit/",
+  "https://en.wikipedia.org/wiki/McLaren",
+  "https://racingnews365.com/meet-the-2026-f1-race-engineers",
+  "https://www.espn.com/f1/story/_/id/45899353/enrico-cardile-starts-aston-martin-ferrari-dispute",
+  "https://en.wikipedia.org/wiki/Williams_FW48",
+  "https://en.wikipedia.org/wiki/Matt_Harman",
+  "https://www.formula1.com/en/latest/article/alpine-announce-mike-elliott-as-chief-technical-officer.1ZFQGVhmwtjyec9icP1YHr",
+  "https://en.wikipedia.org/wiki/Alpine_A526",
+  "https://en.wikipedia.org/wiki/Haas_VF-26",
+  "https://www.haasf1team.com/news/vf-26-launch-andrea-de-zordo-qa",
+  "https://en.wikipedia.org/wiki/Audi_R26",
+  "https://racingnews365.com/breaking-racing-bulls-appoint-new-technical-director",
+  "https://en.wikipedia.org/wiki/Racing_Bulls_VCARB_03",
+  "https://en.wikipedia.org/wiki/Cadillac_MAC-26",
+  "https://en.wikipedia.org/wiki/Andrew_Shovlin"
+ ],
+ "people": [
+  {
+   "id": "staff_james_allison",
+   "name": "James Allison",
+   "nationality": "Reino Unido",
+   "role": "director",
+   "skill": 93,
+   "team": "mercedes",
+   "real": true,
+   "real_title": "Technical Director"
+  },
+  {
+   "id": "staff_jarrod_murphy",
+   "name": "Jarrod Murphy",
+   "nationality": "Reino Unido",
+   "role": "aero",
+   "skill": 87,
+   "team": "mercedes",
+   "real": true,
+   "real_title": "Aerodynamics Director"
+  },
+  {
+   "id": "staff_john_owen",
+   "name": "John Owen",
+   "nationality": "Reino Unido",
+   "role": "designer",
+   "skill": 85,
+   "team": "mercedes",
+   "real": true,
+   "real_title": "Car Design Director"
+  },
+  {
+   "id": "staff_andrew_shovlin",
+   "name": "Andrew Shovlin",
+   "nationality": "Reino Unido",
+   "role": "trackside",
+   "skill": 90,
+   "team": "mercedes",
+   "real": true,
+   "real_title": "Trackside Engineering Director"
+  },
+  {
+   "id": "staff_loic_serra",
+   "name": "Loïc Serra",
+   "nationality": "França",
+   "role": "director",
+   "skill": 86,
+   "team": "ferrari",
+   "real": true,
+   "real_title": "Technical Director, Chassis"
+  },
+  {
+   "id": "staff_diego_tondi",
+   "name": "Diego Tondi",
+   "nationality": "Itália",
+   "role": "aero",
+   "skill": 83,
+   "team": "ferrari",
+   "real": true,
+   "real_title": "Head of Aerodynamics"
+  },
+  {
+   "id": "staff_fabio_montecchi",
+   "name": "Fabio Montecchi",
+   "nationality": "Itália",
+   "role": "designer",
+   "skill": 82,
+   "team": "ferrari",
+   "real": true,
+   "real_title": "Head of Chassis Project Engineering"
+  },
+  {
+   "id": "staff_matteo_togninalli",
+   "name": "Matteo Togninalli",
+   "nationality": "Itália",
+   "role": "trackside",
+   "skill": 82,
+   "team": "ferrari",
+   "real": true,
+   "real_title": "Head of Track Engineering"
+  },
+  {
+   "id": "staff_pierre_wache",
+   "name": "Pierre Waché",
+   "nationality": "França",
+   "role": "director",
+   "skill": 91,
+   "team": "redbull",
+   "real": true,
+   "real_title": "Technical Director"
+  },
+  {
+   "id": "staff_enrico_balbo",
+   "name": "Enrico Balbo",
+   "nationality": "Itália",
+   "role": "aero",
+   "skill": 86,
+   "team": "redbull",
+   "real": true,
+   "real_title": "Head of Aerodynamics"
+  },
+  {
+   "id": "staff_edward_pickering",
+   "name": "Edward Pickering",
+   "nationality": "Reino Unido",
+   "role": "designer",
+   "skill": 78,
+   "team": "redbull",
+   "real": false
+  },
+  {
+   "id": "staff_gianpiero_lambiase",
+   "name": "Gianpiero Lambiase",
+   "nationality": "Reino Unido",
+   "role": "trackside",
+   "skill": 90,
+   "team": "redbull",
+   "real": true,
+   "real_title": "Head of Racing / Race Engineering"
+  },
+  {
+   "id": "staff_rob_marshall",
+   "name": "Rob Marshall",
+   "nationality": "Reino Unido",
+   "role": "director",
+   "skill": 91,
+   "team": "mclaren",
+   "real": true,
+   "real_title": "Chief Technical Officer & Chief Designer"
+  },
+  {
+   "id": "staff_peter_prodromou",
+   "name": "Peter Prodromou",
+   "nationality": "Reino Unido",
+   "role": "aero",
+   "skill": 91,
+   "team": "mclaren",
+   "real": true,
+   "real_title": "Chief Technical Officer, Aerodynamics"
+  },
+  {
+   "id": "staff_mark_ingham",
+   "name": "Mark Ingham",
+   "nationality": "Reino Unido",
+   "role": "designer",
+   "skill": 82,
+   "team": "mclaren",
+   "real": true,
+   "real_title": "Technical Director, Engineering Delivery"
+  },
+  {
+   "id": "staff_will_joseph",
+   "name": "Will Joseph",
+   "nationality": "Reino Unido",
+   "role": "trackside",
+   "skill": 84,
+   "team": "mclaren",
+   "real": true,
+   "real_title": "Head of Race Engineering"
+  },
+  {
+   "id": "staff_enrico_cardile",
+   "name": "Enrico Cardile",
+   "nationality": "Itália",
+   "role": "director",
+   "skill": 86,
+   "team": "astonmartin",
+   "real": true,
+   "real_title": "Chief Technical Officer"
+  },
+  {
+   "id": "staff_oliver_whitcombe",
+   "name": "Oliver Whitcombe",
+   "nationality": "Reino Unido",
+   "role": "aero",
+   "skill": 81,
+   "team": "astonmartin",
+   "real": false
+  },
+  {
+   "id": "staff_harriet_ashdown",
+   "name": "Harriet Ashdown",
+   "nationality": "Reino Unido",
+   "role": "designer",
+   "skill": 80,
+   "team": "astonmartin",
+   "real": false
+  },
+  {
+   "id": "staff_lukas_brandt",
+   "name": "Lukas Brandt",
+   "nationality": "Alemanha",
+   "role": "trackside",
+   "skill": 78,
+   "team": "astonmartin",
+   "real": false
+  },
+  {
+   "id": "staff_pat_fry",
+   "name": "Pat Fry",
+   "nationality": "Reino Unido",
+   "role": "director",
+   "skill": 85,
+   "team": "williams",
+   "real": true,
+   "real_title": "Chief Technical Officer"
+  },
+  {
+   "id": "staff_adam_kenyon",
+   "name": "Adam Kenyon",
+   "nationality": "Reino Unido",
+   "role": "aero",
+   "skill": 80,
+   "team": "williams",
+   "real": true,
+   "real_title": "Head of Aerodynamics"
+  },
+  {
+   "id": "staff_matt_harman",
+   "name": "Matt Harman",
+   "nationality": "Reino Unido",
+   "role": "designer",
+   "skill": 82,
+   "team": "williams",
+   "real": true,
+   "real_title": "Technical Director, Engineering"
+  },
+  {
+   "id": "staff_rhys_calloway",
+   "name": "Rhys Calloway",
+   "nationality": "Reino Unido",
+   "role": "trackside",
+   "skill": 77,
+   "team": "williams",
+   "real": false
+  },
+  {
+   "id": "staff_mike_elliott",
+   "name": "Mike Elliott",
+   "nationality": "Reino Unido",
+   "role": "director",
+   "skill": 86,
+   "team": "alpine",
+   "real": true,
+   "real_title": "Chief Technical Officer (desde set/2026)"
+  },
+  {
+   "id": "staff_kristopher_midgley",
+   "name": "Kristopher Midgley",
+   "nationality": "Reino Unido",
+   "role": "aero",
+   "skill": 78,
+   "team": "alpine",
+   "real": true,
+   "real_title": "Head of Aerodynamics"
+  },
+  {
+   "id": "staff_david_sanchez",
+   "name": "David Sanchez",
+   "nationality": "França",
+   "role": "designer",
+   "skill": 83,
+   "team": "alpine",
+   "real": true,
+   "real_title": "Executive Technical Director"
+  },
+  {
+   "id": "staff_julien_marchand",
+   "name": "Julien Marchand",
+   "nationality": "França",
+   "role": "trackside",
+   "skill": 76,
+   "team": "alpine",
+   "real": false
+  },
+  {
+   "id": "staff_andrea_de_zordo",
+   "name": "Andrea De Zordo",
+   "nationality": "Itália",
+   "role": "director",
+   "skill": 79,
+   "team": "haas",
+   "real": true,
+   "real_title": "Technical Director"
+  },
+  {
+   "id": "staff_davide_paganelli",
+   "name": "Davide Paganelli",
+   "nationality": "Itália",
+   "role": "aero",
+   "skill": 76,
+   "team": "haas",
+   "real": true,
+   "real_title": "Head of Aerodynamics"
+  },
+  {
+   "id": "staff_tom_coupland",
+   "name": "Tom Coupland",
+   "nationality": "Reino Unido",
+   "role": "designer",
+   "skill": 75,
+   "team": "haas",
+   "real": true,
+   "real_title": "Chief Designer"
+  },
+  {
+   "id": "staff_kenji_takeda",
+   "name": "Kenji Takeda",
+   "nationality": "Japão",
+   "role": "trackside",
+   "skill": 75,
+   "team": "haas",
+   "real": false
+  },
+  {
+   "id": "staff_james_key",
+   "name": "James Key",
+   "nationality": "Reino Unido",
+   "role": "director",
+   "skill": 85,
+   "team": "audi",
+   "real": true,
+   "real_title": "Technical Director"
+  },
+  {
+   "id": "staff_alessandro_cinelli",
+   "name": "Alessandro Cinelli",
+   "nationality": "Itália",
+   "role": "aero",
+   "skill": 79,
+   "team": "audi",
+   "real": true,
+   "real_title": "Head of Aerodynamics"
+  },
+  {
+   "id": "staff_eric_gandelin",
+   "name": "Eric Gandelin",
+   "nationality": "França",
+   "role": "designer",
+   "skill": 77,
+   "team": "audi",
+   "real": true,
+   "real_title": "Chief Designer, Chassis"
+  },
+  {
+   "id": "staff_matthias_falk",
+   "name": "Matthias Falk",
+   "nationality": "Alemanha",
+   "role": "trackside",
+   "skill": 76,
+   "team": "audi",
+   "real": false
+  },
+  {
+   "id": "staff_dan_fallows",
+   "name": "Dan Fallows",
+   "nationality": "Reino Unido",
+   "role": "director",
+   "skill": 84,
+   "team": "racingbulls",
+   "real": true,
+   "real_title": "Technical Director"
+  },
+  {
+   "id": "staff_guru_johl",
+   "name": "Guru Johl",
+   "nationality": "Reino Unido",
+   "role": "aero",
+   "skill": 80,
+   "team": "racingbulls",
+   "real": true,
+   "real_title": "Head of Aerodynamics"
+  },
+  {
+   "id": "staff_paolo_marabini",
+   "name": "Paolo Marabini",
+   "nationality": "Itália",
+   "role": "designer",
+   "skill": 78,
+   "team": "racingbulls",
+   "real": true,
+   "real_title": "Chief Designer"
+  },
+  {
+   "id": "staff_giulia_bellini",
+   "name": "Giulia Bellini",
+   "nationality": "Itália",
+   "role": "trackside",
+   "skill": 77,
+   "team": "racingbulls",
+   "real": false
+  },
+  {
+   "id": "staff_nick_chester",
+   "name": "Nick Chester",
+   "nationality": "Reino Unido",
+   "role": "director",
+   "skill": 80,
+   "team": "cadillac",
+   "real": true,
+   "real_title": "Chief Technical Officer"
+  },
+  {
+   "id": "staff_jon_tomlinson",
+   "name": "Jon Tomlinson",
+   "nationality": "Reino Unido",
+   "role": "aero",
+   "skill": 76,
+   "team": "cadillac",
+   "real": true,
+   "real_title": "Head of Aerodynamics"
+  },
+  {
+   "id": "staff_john_mcquilliam",
+   "name": "John McQuilliam",
+   "nationality": "Reino Unido",
+   "role": "designer",
+   "skill": 79,
+   "team": "cadillac",
+   "real": true,
+   "real_title": "Chief Designer"
+  },
+  {
+   "id": "staff_nigel_pemberton",
+   "name": "Nigel Pemberton",
+   "nationality": "Reino Unido",
+   "role": "trackside",
+   "skill": 74,
+   "team": "cadillac",
+   "real": false
+  }
+ ]
+}

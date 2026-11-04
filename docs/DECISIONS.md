@@ -427,3 +427,25 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
   1/2 VOLTAS no cartão; problema da volta sorteado no início e revelado no meio (25–70%) → rádio Continuar / Abortar e tentar de novo
   (volta lenta até a linha, pneu usado) / Voltar ao box; 25 s de sessão para responder, senão o piloto decide; rivais decidem sozinhos.
   "Pausa em decisões" (padrão SIM) baixa a velocidade para 2× quando o rádio pergunta.
+
+### Campanha — próximas frentes (2026-11-04)
+O usuário marcou as quatro frentes: pilotos novos ao longo dos anos, estúdio de design, regras técnicas que mudam, dinheiro e pessoas.
+- **Aposentadoria**: idade mínima 32 e máxima 47; a média fica em 36–37 anos, com exceções (pilotos muito bons ou muito
+  ruins podem fugir da curva).
+- **Corpo técnico**: além do chefe de equipe e dos pilotos, cada equipe tem **somente 4 cargos**, escolhidos pelo Claude como os
+  mais importantes da vida real. Nomes **reais** de 2026 quando encontrados em fonte; senão, nomes genéricos. Cada um tem
+  **nota**, como os pilotos, e influencia diretamente a qualidade dos treinos livres, o desenvolvimento das atualizações do carro etc.
+- Ordem de trabalho: (1) aposentadoria + pilotos novos + corpo técnico; (2) regras técnicas que mudam; (3) dinheiro e pessoas;
+  (4) estúdio de design (precisa de mockups antes).
+- **Implementado (2026-11-04) — carreiras** (`DriverCareer`): risco de aposentadoria por idade de 32 a 47 (craques ×0,55, fracos ×1,4,
+  sem vaga ×1,8, com contrato ×0,4; o seu piloto cumpre o contrato). Medido em 4 campanhas × 20 anos: **média 36,8** em regime
+  estável (os veteranos de 2026 puxam a média dos primeiros anos para cima). A base (F2/F3) e os pilotos de outras categorias
+  agora são da campanha: evoluem para o potencial, os 6 melhores da F3 sobem para a F2, F2 com mais de 26 anos ou excedente fica
+  "sem vaga", e **pilotos novos fictícios** (16–18 anos, nomes de `data/name_pool.json`, 8% de chance de "joia") completam a F3
+  todo ano — em 20 anos ~20 deles chegam à F1 por campanha. Idade da base: ano conhecido ou estimado (`tools/add_ages.py`).
+- **Implementado (2026-11-04) — corpo técnico** (`data/staff_2026.json`, `tools/make_staff_2026.py`): 4 cargos escolhidos pelo
+  Claude — **diretor técnico** (todos os departamentos de P&D), **chefe de aerodinâmica** (depto. aero), **projetista-chefe**
+  (chassi, durabilidade e motor) e **diretor de engenharia de pista** (ganho dos treinos livres: ±1,2% por ponto acima de 75).
+  34 dos 44 nomes são reais com fonte (cargo da equipe em `real_title`); sem fonte, nome fictício. Notas = estimativa.
+  Equipes da IA: corpo técnico melhor desenvolve o carro mais rápido (±1,5% por ponto da média acima de 82) e treina melhor;
+  na virada a IA renova (85%) ou contrata o melhor livre do cargo. Substituiu os 5 cargos antigos (saves antigos são refeitos).

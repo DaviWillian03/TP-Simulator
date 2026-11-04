@@ -1,0 +1,421 @@
+{
+ "_notas": "FICTÍCIO. Nomes para pilotos novos (regens) e técnicos genéricos. tools/make_name_pool.py",
+ "nationalities": {
+  "Brasil": {
+   "first": [
+    "Thiago",
+    "Caio",
+    "Rafaela",
+    "Murilo",
+    "Enzo",
+    "Davi",
+    "Lorenzo",
+    "Bernardo",
+    "Heitor",
+    "Iago"
+   ],
+   "last": [
+    "Albuquerque",
+    "Bragança",
+    "Cavalcanti",
+    "Damasceno",
+    "Esteves",
+    "Figueiró",
+    "Guimarães",
+    "Lacerda",
+    "Moraes",
+    "Teixeira"
+   ]
+  },
+  "Reino Unido": {
+   "first": [
+    "Archie",
+    "Finley",
+    "Isla",
+    "Harvey",
+    "Jude",
+    "Ollie",
+    "Rory",
+    "Seb",
+    "Theo",
+    "Elliot"
+   ],
+   "last": [
+    "Ashworth",
+    "Blackwood",
+    "Cartwright",
+    "Davenport",
+    "Fairbairn",
+    "Gillespie",
+    "Holloway",
+    "Kingsley",
+    "Pickering",
+    "Radcliffe"
+   ]
+  },
+  "Itália": {
+   "first": [
+    "Alessio",
+    "Christian",
+    "Davide",
+    "Edoardo",
+    "Filippo",
+    "Leonardo",
+    "Nicolò",
+    "Riccardo",
+    "Samuele",
+    "Tommaso"
+   ],
+   "last": [
+    "Benedetti",
+    "Caruso",
+    "D'Amico",
+    "Fabbri",
+    "Gallo",
+    "Lombardi",
+    "Marchetti",
+    "Orlandi",
+    "Pellegrini",
+    "Valentini"
+   ]
+  },
+  "França": {
+   "first": [
+    "Arthur",
+    "Baptiste",
+    "Clément",
+    "Gabin",
+    "Louis",
+    "Maël",
+    "Nathan",
+    "Raphaël",
+    "Timéo",
+    "Yanis"
+   ],
+   "last": [
+    "Aubert",
+    "Barbier",
+    "Chevalier",
+    "Dumont",
+    "Fontaine",
+    "Guérin",
+    "Lemaire",
+    "Mercier",
+    "Perrin",
+    "Renaud"
+   ]
+  },
+  "Alemanha": {
+   "first": [
+    "Ben",
+    "Elias",
+    "Felix",
+    "Henry",
+    "Jakob",
+    "Leon",
+    "Moritz",
+    "Niklas",
+    "Paul",
+    "Tim"
+   ],
+   "last": [
+    "Albrecht",
+    "Baumann",
+    "Dietrich",
+    "Engel",
+    "Hartmann",
+    "Kessler",
+    "Lorenz",
+    "Pohl",
+    "Seidel",
+    "Winter"
+   ]
+  },
+  "Espanha": {
+   "first": [
+    "Adrián",
+    "Bruno",
+    "Gonzalo",
+    "Hugo",
+    "Iker",
+    "Marc",
+    "Nil",
+    "Pau",
+    "Rubén",
+    "Unai"
+   ],
+   "last": [
+    "Aguilar",
+    "Bermejo",
+    "Castaño",
+    "Delgado",
+    "Escudero",
+    "Ferrer",
+    "Garrido",
+    "Herrero",
+    "Lozano",
+    "Vidal"
+   ]
+  },
+  "Países Baixos": {
+   "first": [
+    "Bram",
+    "Daan",
+    "Jesse",
+    "Lars",
+    "Milan",
+    "Noah",
+    "Ruben",
+    "Sem",
+    "Thijs",
+    "Tygo"
+   ],
+   "last": [
+    "Bakker",
+    "Dekker",
+    "Hendriks",
+    "Jansen",
+    "Kuipers",
+    "Meijer",
+    "Smit",
+    "Visser",
+    "Wouters",
+    "Zijlstra"
+   ]
+  },
+  "Japão": {
+   "first": [
+    "Haruki",
+    "Itsuki",
+    "Kaito",
+    "Minato",
+    "Ren",
+    "Riku",
+    "Sora",
+    "Takumi",
+    "Yuto",
+    "Hayato"
+   ],
+   "last": [
+    "Aoki",
+    "Fujita",
+    "Hasegawa",
+    "Kimura",
+    "Kobayashi",
+    "Matsuda",
+    "Okada",
+    "Sakamoto",
+    "Shimizu",
+    "Yamaguchi"
+   ]
+  },
+  "Estados Unidos": {
+   "first": [
+    "Brody",
+    "Carter",
+    "Dylan",
+    "Grayson",
+    "Hunter",
+    "Logan",
+    "Mason",
+    "Parker",
+    "Ryder",
+    "Tyler"
+   ],
+   "last": [
+    "Bennett",
+    "Coleman",
+    "Donovan",
+    "Fletcher",
+    "Garrison",
+    "Holt",
+    "McAllister",
+    "Prescott",
+    "Sullivan",
+    "Whitaker"
+   ]
+  },
+  "Austrália": {
+   "first": [
+    "Cooper",
+    "Flynn",
+    "Hamish",
+    "Jai",
+    "Lachlan",
+    "Mitchell",
+    "Riley",
+    "Tate",
+    "Zac",
+    "Angus"
+   ],
+   "last": [
+    "Ashby",
+    "Brennan",
+    "Crowley",
+    "Dunstan",
+    "Galloway",
+    "Hennessy",
+    "Kerr",
+    "Macleod",
+    "O'Connell",
+    "Tremayne"
+   ]
+  },
+  "México": {
+   "first": [
+    "Santiago",
+    "Mateo",
+    "Emiliano",
+    "Diego",
+    "Regina",
+    "Iker",
+    "Rodrigo",
+    "Patricio",
+    "Andrés",
+    "Leonel"
+   ],
+   "last": [
+    "Arriaga",
+    "Beltrán",
+    "Cervantes",
+    "Durán",
+    "Escobedo",
+    "Fuentes",
+    "Galindo",
+    "Ochoa",
+    "Quiroga",
+    "Zamora"
+   ]
+  },
+  "Argentina": {
+   "first": [
+    "Bautista",
+    "Benjamín",
+    "Joaquín",
+    "Lautaro",
+    "Máximo",
+    "Nahuel",
+    "Santino",
+    "Tobías",
+    "Valentino",
+    "Thiago"
+   ],
+   "last": [
+    "Acosta",
+    "Bustos",
+    "Cabrera",
+    "Domínguez",
+    "Funes",
+    "Godoy",
+    "Ledesma",
+    "Ojeda",
+    "Paz",
+    "Sosa"
+   ]
+  },
+  "China": {
+   "first": [
+    "Hao",
+    "Jun",
+    "Lei",
+    "Ming",
+    "Rui",
+    "Tian",
+    "Wei",
+    "Xuan",
+    "Yu",
+    "Zhen"
+   ],
+   "last": [
+    "Chen",
+    "Deng",
+    "Guo",
+    "He",
+    "Lin",
+    "Luo",
+    "Song",
+    "Tang",
+    "Xu",
+    "Zhao"
+   ]
+  },
+  "Finlândia": {
+   "first": [
+    "Aleksi",
+    "Eetu",
+    "Joona",
+    "Leevi",
+    "Niko",
+    "Onni",
+    "Rasmus",
+    "Santeri",
+    "Veeti",
+    "Väinö"
+   ],
+   "last": [
+    "Aaltonen",
+    "Heikkinen",
+    "Kallio",
+    "Laine",
+    "Lehtinen",
+    "Nieminen",
+    "Rantanen",
+    "Salonen",
+    "Tuominen",
+    "Virtanen"
+   ]
+  },
+  "Dinamarca": {
+   "first": [
+    "Anton",
+    "August",
+    "Emil",
+    "Frederik",
+    "Magnus",
+    "Malthe",
+    "Oscar",
+    "Viktor",
+    "William",
+    "Asger"
+   ],
+   "last": [
+    "Andersen",
+    "Christiansen",
+    "Frandsen",
+    "Holm",
+    "Kjær",
+    "Lauridsen",
+    "Mikkelsen",
+    "Nygaard",
+    "Poulsen",
+    "Skov"
+   ]
+  },
+  "Polônia": {
+   "first": [
+    "Bartosz",
+    "Filip",
+    "Igor",
+    "Jakub",
+    "Kacper",
+    "Mikołaj",
+    "Oskar",
+    "Szymon",
+    "Wiktor",
+    "Antoni"
+   ],
+   "last": [
+    "Adamczyk",
+    "Bielecki",
+    "Czarnecki",
+    "Dudek",
+    "Górski",
+    "Jankowski",
+    "Kowalczyk",
+    "Michalski",
+    "Sobczak",
+    "Wróbel"
+   ]
+  }
+ }
+}

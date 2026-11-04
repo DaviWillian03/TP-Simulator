@@ -161,7 +161,8 @@ func test_simulador_aumenta_o_ganho_dos_treinos() -> void:
 	camp.dev.levels["sim"] = 5
 	assert_gt(camp.dev.practice_gain_mult(), base)
 	camp.refresh_rating()
-	assert_almost_eq(float(camp.team()["practice_gain_mult"]), 1.2, 0.0001)
+	# simulador nível 5 (+20%) × engenharia de pista da equipe
+	assert_almost_eq(float(camp.team()["practice_gain_mult"]), 1.2 * float(camp.dev.staff_mod["practice"]), 0.0001)
 
 
 func test_tempo_da_campanha_move_projetos() -> void:

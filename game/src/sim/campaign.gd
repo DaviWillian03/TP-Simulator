@@ -140,10 +140,12 @@ func refresh_rating() -> void:
 		if t["id"] == player_team:
 			t["car_rating"] = base_rating + dev.rating_bonus()
 			t["failure_mult"] = dev.failure_mult()
-			t["practice_gain_mult"] = dev.practice_gain_mult()
 			dev.staff_mod = personnel.staff_effects(self)
-		else:  # equipes da IA também desenvolvem o carro ao longo da temporada
+			t["practice_gain_mult"] = dev.practice_gain_mult() * float(dev.staff_mod.get("practice", 1.0))
+		else:  # equipes da IA também desenvolvem o carro ao longo da temporada (mais rápido com um bom corpo técnico)
 			t["car_rating"] = float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0)) + rival_gain(t["id"])
+			if personnel != null:
+				t["practice_gain_mult"] = personnel.team_practice_mult(self, t["id"])
 
 
 ## Quanto da temporada já passou (0 = véspera da primeira rodada, 1 = depois da última).
@@ -166,7 +168,8 @@ func rival_potential(team_id: String) -> float:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d|%s" % [season, team_id])
 	var luck := rng.randf_range(float(cfg["luck_min"]), float(cfg["luck_max"]))
-	return float(cfg["yearly_gain"][ai_difficulty]) * rank_factor * luck
+	var staff_k := personnel.ai_dev_factor(self, team_id) if personnel != null and not personnel.contracts.is_empty() else 1.0
+	return float(cfg["yearly_gain"][ai_difficulty]) * rank_factor * luck * staff_k
 
 
 func rival_gain(team_id: String) -> float:
@@ -330,6 +333,8 @@ static func from_dict(d: Dictionary) -> Campaign:
 			dr["rating"] = int(dr["rating"])
 	if d.has("personnel"):
 		c.personnel = Personnel.from_dict(d["personnel"])
+		c.personnel.sync_with_grid(c)
+		c.personnel.repair_staff(c)
 	if d.has("sponsors"):
 		c.sponsors = Sponsorship.from_dict(d["sponsors"])
 	if d.has("regs"):
@@ -612,7 +617,10 @@ func start_next_season() -> void:
 	for msg: String in council:
 		events._add(self, {"day": day, "cat": "calendar", "id": "council", "title": "CONSELHO DE REGRAS", "text": msg, "chips": []})
 	for d: Dictionary in _drivers:  # jovens evoluem em direção ao potencial; veteranos perdem ritmo
-		DriverStats.evolve(d, season + 1, 0)
+		if DriverStats.has_attrs(d):
+			DriverStats.evolve(d, season + 1, 0)
+		else:  # vindos da base: só têm nota geral
+			DriverCareer.evolve_prospect(d, season + 1, int(dev.seed_base))
 	sponsors.expire(self)
 	ledger = {}
 	cash_log = [{"r": 0, "cash": budget_musd}]

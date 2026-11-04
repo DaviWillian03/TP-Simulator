@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "_notas": "Nomes reais por decisão do usuário; sem logos oficiais. car_rating = função dos pontos de construtores de 2026 após 20 rodadas (pesquisa 02/11/2026). principal/technical_director/debut/constructors_titles: só dados com fonte; null = a verificar. 'emblem' = emblema ORIGINAL.",
+ "_notas": "Nomes reais por decisão do usuário; sem logos oficiais. car_rating = função dos pontos de construtores de 2026 após 20 rodadas (pesquisa 02/11/2026). principal/debut/constructors_titles: só dados com fonte; technical_director vem de data/staff_2026.json (pesquisa 2026-11-04); null = a verificar. 'emblem' = emblema ORIGINAL.",
  "teams": [
   {
    "id": "mclaren",
@@ -15,7 +15,7 @@
     "text": "Mc"
    },
    "principal": "Andrea Stella",
-   "technical_director": null,
+   "technical_director": "Rob Marshall",
    "debut": 1966,
    "constructors_titles": 10,
    "points_2026": 365
@@ -32,7 +32,7 @@
     "text": "Me"
    },
    "principal": "Toto Wolff",
-   "technical_director": null,
+   "technical_director": "James Allison",
    "debut": 2010,
    "constructors_titles": 8,
    "points_2026": 630
@@ -49,7 +49,7 @@
     "text": "F"
    },
    "principal": "Frédéric Vasseur",
-   "technical_director": null,
+   "technical_director": "Loïc Serra",
    "debut": 1950,
    "constructors_titles": 16,
    "points_2026": 504
@@ -83,7 +83,7 @@
     "text": "W"
    },
    "principal": "James Vowles",
-   "technical_director": null,
+   "technical_director": "Pat Fry",
    "debut": 1978,
    "constructors_titles": 9,
    "points_2026": 12
@@ -118,7 +118,7 @@
     "text": "AM"
    },
    "principal": "Adrian Newey",
-   "technical_director": null,
+   "technical_director": "Enrico Cardile",
    "debut": 2021,
    "constructors_titles": 0,
    "points_2026": 7
@@ -135,7 +135,7 @@
     "text": "H"
    },
    "principal": "Ayao Komatsu",
-   "technical_director": null,
+   "technical_director": "Andrea De Zordo",
    "debut": 2016,
    "constructors_titles": 0,
    "points_2026": 31
@@ -169,7 +169,7 @@
     "text": "Au"
    },
    "principal": "Jonathan Wheatley",
-   "technical_director": null,
+   "technical_director": "James Key",
    "debut": 2026,
    "constructors_titles": 0,
    "points_2026": 27

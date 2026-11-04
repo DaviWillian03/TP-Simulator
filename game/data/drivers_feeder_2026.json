@@ -9,7 +9,8 @@
   ],
   "fora": "Assentos com fontes divergentes ficaram de fora (F2: 2º carro Van Amersfoort; F3: 3º carro Rodin, Prema e AIX).",
   "provisorio": "nacionalidades e equipes são PROVISÓRIOS (conferir na pesquisa de atributos); notas reescaladas em 2026-11-03.",
-  "rescalado": "2026-11-03: F2 64-78, F3 50-70 (pedido do usuário); ordem por avaliação do projeto."
+  "rescalado": "2026-11-03: F2 64-78, F3 50-70 (pedido do usuário); ordem por avaliação do projeto.",
+  "idades": "birth: ano conhecido ou ESTIMADO pela categoria (birth_estimated = true); dia e mês não pesquisados. potential: estimativa do projeto (tools/add_ages.py)."
  },
  "drivers": [
   {
@@ -18,7 +19,10 @@
    "nationality": "Brasil",
    "category": "F2",
    "series_team": "Invicta Racing",
-   "rating": 78
+   "rating": 78,
+   "birth": "2005-01-01",
+   "birth_estimated": false,
+   "potential": 95
   },
   {
    "id": "joshua_durksen",
@@ -26,7 +30,10 @@
    "nationality": "Paraguai",
    "category": "F2",
    "series_team": "Invicta Racing",
-   "rating": 74
+   "rating": 74,
+   "birth": "2003-01-01",
+   "birth_estimated": false,
+   "potential": 87
   },
   {
    "id": "ritomo_miyata",
@@ -34,7 +41,10 @@
    "nationality": "Japão",
    "category": "F2",
    "series_team": "Hitech",
-   "rating": 73
+   "rating": 73,
+   "birth": "1999-01-01",
+   "birth_estimated": false,
+   "potential": 76
   },
   {
    "id": "noel_leon",
@@ -42,7 +52,10 @@
    "nationality": "México",
    "category": "F2",
    "series_team": "Campos Racing",
-   "rating": 71
+   "rating": 71,
+   "birth": "2004-01-01",
+   "birth_estimated": false,
+   "potential": 87
   },
   {
    "id": "nikola_tsolov",
@@ -50,7 +63,10 @@
    "nationality": "Bulgária",
    "category": "F2",
    "series_team": "Campos Racing",
-   "rating": 74
+   "rating": 74,
+   "birth": "2006-01-01",
+   "birth_estimated": false,
+   "potential": 95
   },
   {
    "id": "dino_beganovic",
@@ -58,7 +74,10 @@
    "nationality": "Suécia",
    "category": "F2",
    "series_team": "DAMS",
-   "rating": 73
+   "rating": 73,
+   "birth": "2004-01-01",
+   "birth_estimated": false,
+   "potential": 89
   },
   {
    "id": "roman_bilinski",
@@ -66,7 +85,10 @@
    "nationality": "Polônia",
    "category": "F2",
    "series_team": "DAMS",
-   "rating": 69
+   "rating": 69,
+   "birth": "2004-01-01",
+   "birth_estimated": true,
+   "potential": 85
   },
   {
    "id": "gabriele_mini",
@@ -74,7 +96,10 @@
    "nationality": "Itália",
    "category": "F2",
    "series_team": "MP Motorsport",
-   "rating": 77
+   "rating": 77,
+   "birth": "2005-01-01",
+   "birth_estimated": false,
+   "potential": 95
   },
   {
    "id": "oliver_goethe",
@@ -82,7 +107,10 @@
    "nationality": "Alemanha",
    "category": "F2",
    "series_team": "MP Motorsport",
-   "rating": 69
+   "rating": 69,
+   "birth": "2004-01-01",
+   "birth_estimated": false,
+   "potential": 85
   },
   {
    "id": "sebastian_montoya",
@@ -90,7 +118,10 @@
    "nationality": "Colômbia",
    "category": "F2",
    "series_team": "Prema Racing",
-   "rating": 71
+   "rating": 71,
+   "birth": "2005-01-01",
+   "birth_estimated": false,
+   "potential": 90
   },
   {
    "id": "mari_boya",
@@ -98,7 +129,10 @@
    "nationality": "Espanha",
    "category": "F2",
    "series_team": "Prema Racing",
-   "rating": 69
+   "rating": 69,
+   "birth": "2005-01-01",
+   "birth_estimated": false,
+   "potential": 88
   },
   {
    "id": "martinius_stenshorne",
@@ -106,7 +140,10 @@
    "nationality": "Noruega",
    "category": "F2",
    "series_team": "Rodin Motorsport",
-   "rating": 73
+   "rating": 73,
+   "birth": "2005-01-01",
+   "birth_estimated": false,
+   "potential": 92
   },
   {
    "id": "alexander_dunne",
@@ -114,7 +151,10 @@
    "nationality": "Irlanda",
    "category": "F2",
    "series_team": "Rodin Motorsport",
-   "rating": 76
+   "rating": 76,
+   "birth": "2005-01-01",
+   "birth_estimated": false,
+   "potential": 95
   },
   {
    "id": "kush_maini",
@@ -122,7 +162,10 @@
    "nationality": "Índia",
    "category": "F2",
    "series_team": "ART Grand Prix",
-   "rating": 71
+   "rating": 71,
+   "birth": "2000-01-01",
+   "birth_estimated": false,
+   "potential": 77
   },
   {
    "id": "tasanapol_inthraphuvasak",
@@ -130,7 +173,10 @@
    "nationality": "Tailândia",
    "category": "F2",
    "series_team": "ART Grand Prix",
-   "rating": 68
+   "rating": 68,
+   "birth": "2004-01-01",
+   "birth_estimated": true,
+   "potential": 84
   },
   {
    "id": "emerson_fittipaldi",
@@ -138,7 +184,10 @@
    "nationality": "Brasil",
    "category": "F2",
    "series_team": "AIX Racing",
-   "rating": 66
+   "rating": 66,
+   "birth": "2007-01-01",
+   "birth_estimated": false,
+   "potential": 90
   },
   {
    "id": "cian_shields",
@@ -146,7 +195,10 @@
    "nationality": "Reino Unido",
    "category": "F2",
    "series_team": "AIX Racing",
-   "rating": 64
+   "rating": 64,
+   "birth": "2004-01-01",
+   "birth_estimated": true,
+   "potential": 80
   },
   {
    "id": "rafael_villagomez",
@@ -154,7 +206,10 @@
    "nationality": "México",
    "category": "F2",
    "series_team": "Van Amersfoort Racing",
-   "rating": 66
+   "rating": 66,
+   "birth": "2001-01-01",
+   "birth_estimated": false,
+   "potential": 74
   },
   {
    "id": "laurens_van_hoepen",
@@ -162,7 +217,10 @@
    "nationality": "Países Baixos",
    "category": "F2",
    "series_team": "Trident",
-   "rating": 71
+   "rating": 71,
+   "birth": "2004-01-01",
+   "birth_estimated": true,
+   "potential": 87
   },
   {
    "id": "john_bennett",
@@ -170,7 +228,10 @@
    "nationality": "Reino Unido",
    "category": "F2",
    "series_team": "Trident",
-   "rating": 66
+   "rating": 66,
+   "birth": "2004-01-01",
+   "birth_estimated": true,
+   "potential": 82
   },
   {
    "id": "theophile_nael",
@@ -178,7 +239,10 @@
    "nationality": "França",
    "category": "F3",
    "series_team": "Campos Racing",
-   "rating": 65
+   "rating": 65,
+   "birth": "2006-01-01",
+   "birth_estimated": false,
+   "potential": 86
   },
   {
    "id": "ugo_ugochukwu",
@@ -186,7 +250,10 @@
    "nationality": "Estados Unidos",
    "category": "F3",
    "series_team": "Campos Racing",
-   "rating": 70
+   "rating": 70,
+   "birth": "2007-01-01",
+   "birth_estimated": false,
+   "potential": 94
   },
   {
    "id": "ernesto_rivera",
@@ -194,7 +261,10 @@
    "nationality": "México",
    "category": "F3",
    "series_team": "Campos Racing",
-   "rating": 58
+   "rating": 58,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 82
   },
   {
    "id": "noah_strmsted",
@@ -202,7 +272,10 @@
    "nationality": "Dinamarca",
    "category": "F3",
    "series_team": "Trident",
-   "rating": 65
+   "rating": 65,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 89
   },
   {
    "id": "freddie_slater",
@@ -210,7 +283,10 @@
    "nationality": "Reino Unido",
    "category": "F3",
    "series_team": "Trident",
-   "rating": 68
+   "rating": 68,
+   "birth": "2008-01-01",
+   "birth_estimated": false,
+   "potential": 94
   },
   {
    "id": "matteo_de_palo",
@@ -218,7 +294,10 @@
    "nationality": "Itália",
    "category": "F3",
    "series_team": "Trident",
-   "rating": 55
+   "rating": 55,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 79
   },
   {
    "id": "mattia_colnaghi",
@@ -226,7 +305,10 @@
    "nationality": "Itália",
    "category": "F3",
    "series_team": "MP Motorsport",
-   "rating": 62
+   "rating": 62,
+   "birth": "2007-01-01",
+   "birth_estimated": false,
+   "potential": 86
   },
   {
    "id": "tuukka_taponen",
@@ -234,7 +316,10 @@
    "nationality": "Finlândia",
    "category": "F3",
    "series_team": "MP Motorsport",
-   "rating": 65
+   "rating": 65,
+   "birth": "2006-01-01",
+   "birth_estimated": false,
+   "potential": 86
   },
   {
    "id": "alessandro_giusti",
@@ -242,7 +327,10 @@
    "nationality": "França",
    "category": "F3",
    "series_team": "MP Motorsport",
-   "rating": 60
+   "rating": 60,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 84
   },
   {
    "id": "taito_kato",
@@ -250,7 +338,10 @@
    "nationality": "Japão",
    "category": "F3",
    "series_team": "ART Grand Prix",
-   "rating": 55
+   "rating": 55,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 79
   },
   {
    "id": "maciej_gadysz",
@@ -258,7 +349,10 @@
    "nationality": "Polônia",
    "category": "F3",
    "series_team": "ART Grand Prix",
-   "rating": 58
+   "rating": 58,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 82
   },
   {
    "id": "kanato_le",
@@ -266,7 +360,10 @@
    "nationality": "Japão",
    "category": "F3",
    "series_team": "ART Grand Prix",
-   "rating": 55
+   "rating": 55,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 79
   },
   {
    "id": "hiyu_yamakoshi",
@@ -274,7 +371,10 @@
    "nationality": "Japão",
    "category": "F3",
    "series_team": "Van Amersfoort Racing",
-   "rating": 55
+   "rating": 55,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 79
   },
   {
    "id": "enzo_deligny",
@@ -282,7 +382,10 @@
    "nationality": "França",
    "category": "F3",
    "series_team": "Van Amersfoort Racing",
-   "rating": 55
+   "rating": 55,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 79
   },
   {
    "id": "bruno_del_pino",
@@ -290,7 +393,10 @@
    "nationality": "Espanha",
    "category": "F3",
    "series_team": "Van Amersfoort Racing",
-   "rating": 55
+   "rating": 55,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 79
   },
   {
    "id": "pedro_clerot",
@@ -298,7 +404,10 @@
    "nationality": "Brasil",
    "category": "F3",
    "series_team": "Rodin Motorsport",
-   "rating": 58
+   "rating": 58,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 82
   },
   {
    "id": "brando_badoer",
@@ -306,7 +415,10 @@
    "nationality": "Itália",
    "category": "F3",
    "series_team": "Rodin Motorsport",
-   "rating": 55
+   "rating": 55,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 79
   },
   {
    "id": "james_wharton",
@@ -314,7 +426,10 @@
    "nationality": "Austrália",
    "category": "F3",
    "series_team": "Prema Racing",
-   "rating": 62
+   "rating": 62,
+   "birth": "2006-01-01",
+   "birth_estimated": false,
+   "potential": 83
   },
   {
    "id": "jose_garfias",
@@ -322,7 +437,10 @@
    "nationality": "México",
    "category": "F3",
    "series_team": "Prema Racing",
-   "rating": 52
+   "rating": 52,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 76
   },
   {
    "id": "michael_shin",
@@ -330,7 +448,10 @@
    "nationality": "Coreia do Sul",
    "category": "F3",
    "series_team": "Hitech TGR",
-   "rating": 52
+   "rating": 52,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 76
   },
   {
    "id": "fionn_mclaughlin",
@@ -338,7 +459,10 @@
    "nationality": "Irlanda",
    "category": "F3",
    "series_team": "Hitech TGR",
-   "rating": 55
+   "rating": 55,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 79
   },
   {
    "id": "jin_nakamura",
@@ -346,7 +470,10 @@
    "nationality": "Japão",
    "category": "F3",
    "series_team": "Hitech TGR",
-   "rating": 52
+   "rating": 52,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 76
   },
   {
    "id": "yevan_david",
@@ -354,7 +481,10 @@
    "nationality": "Sri Lanka",
    "category": "F3",
    "series_team": "AIX Racing",
-   "rating": 55
+   "rating": 55,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 79
   },
   {
    "id": "fernando_barrichello",
@@ -362,7 +492,10 @@
    "nationality": "Brasil",
    "category": "F3",
    "series_team": "AIX Racing",
-   "rating": 50
+   "rating": 50,
+   "birth": "2005-01-01",
+   "birth_estimated": false,
+   "potential": 69
   },
   {
    "id": "nicola_lacorte",
@@ -370,7 +503,10 @@
    "nationality": "Itália",
    "category": "F3",
    "series_team": "DAMS",
-   "rating": 58
+   "rating": 58,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 82
   },
   {
    "id": "nandhavud_bhirombhakdi",
@@ -378,7 +514,10 @@
    "nationality": "Tailândia",
    "category": "F3",
    "series_team": "DAMS",
-   "rating": 50
+   "rating": 50,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 74
   },
   {
    "id": "gerrard_xie",
@@ -386,7 +525,10 @@
    "nationality": "China",
    "category": "F3",
    "series_team": "DAMS",
-   "rating": 52
+   "rating": 52,
+   "birth": "2007-01-01",
+   "birth_estimated": true,
+   "potential": 76
   }
  ]
 }
