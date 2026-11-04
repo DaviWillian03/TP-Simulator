@@ -6,6 +6,7 @@ extends Control
 const VERDICTS := {
 	"met": ["META\nCUMPRIDA", "A diretoria renova a confiança e libera mais orçamento."],
 	"failed": ["META\nNÃO CUMPRIDA", "A diretoria perdeu paciência. Mais um resultado assim e o cargo estará em risco."],
+	"relegated": ["EQUIPE\nREBAIXADA", "A equipe terminou em último e desce para a F2. Aceite a proposta de uma equipe da F1 para continuar, ou comece uma nova campanha."],
 	"fired": ["VOCÊ FOI\nDEMITIDO", "A diretoria encerrou o seu contrato. Aceite a proposta de outra equipe para seguir a carreira, ou comece uma nova campanha."],
 	"bankrupt": ["EQUIPE\nFALIDA", "O caixa ficou negativo e os credores assumiram a equipe. A campanha acaba aqui."],
 }
@@ -24,7 +25,7 @@ func _ready() -> void:
 		campaign.save()
 	report = campaign.seasons.back()
 	var verdict: String = report["verdict"]
-	var bad := verdict in ["fired", "bankrupt"]
+	var bad := verdict in ["fired", "bankrupt", "relegated"]
 	var color := Color("#b30500") if bad else UiStyle.team_color(campaign.player_team)
 	var page := ScreenKit.garage_page(self, campaign.player_team)
 	var bd: GarageBackdrop = page["backdrop"]
@@ -108,7 +109,7 @@ func _ready() -> void:
 	note.custom_minimum_size = Vector2(0, 70)
 	rv.add_child(note)
 
-	if verdict == "fired":  # propostas de outras equipes (#17): a carreira pode continuar
+	if verdict in ["fired", "relegated"]:  # propostas de outras equipes (#17): a carreira pode continuar
 		var offers := campaign.job_offers()
 		if not offers.is_empty():
 			var ov := VBoxContainer.new()

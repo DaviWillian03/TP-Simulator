@@ -18,6 +18,8 @@ func _init() -> void:
 	for id: String in snap["team_points"]:
 		camp.team_points[id] = int(snap["team_points"][id])
 	camp.round = int(args.get("round", "20"))
+	for i in camp.round:  # F2 e F3 já correram as rodadas até aqui
+		camp._run_series(i)
 	camp.day = Campaign._day_of(String(Campaign.calendar()[camp.round]["date"])) - 3
 	camp.save()
 	print("campanha de demonstração salva: rodada %d" % (camp.round + 1))

@@ -52,6 +52,9 @@ const BANK_TERMS := [[5, 0.04], [11, 0.08], [0, 0.15]]  ## [corridas, juros]; 0 
 const DEBT_TRUST_LIMIT := 40.0  ## dívida acima disso: −3 de confiança ao pedir
 const ADVANCE_SHARE := 0.5  ## adiantamento: até 50% do patrocínio que ainda falta receber nesta temporada
 const ATR_RANGE := [0.70, 1.15]  ## tempo de pesquisa aerodinâmica do 1º ao último do ano anterior
+var series: Dictionary = {}  ## "F2"/"F3" -> Series (campeonatos de base correndo em paralelo; 3 categorias fase 1)
+var moves: Dictionary = {}  ## acesso/rebaixamento decididos no fim do ano: {up_f1, down_f2, up_f2, down_f3}
+const ENTRY_GRANT_MUSD := 60.0  ## verba de entrada de quem sobe para a F1 (só importa para o jogador; fase 2)
 var loans: Array = []  ## banco: [{principal, total, per_race, races_left}]
 var advance: Dictionary = {}  ## adiantamento: {amount, cut, races_left}
 var last_positions: Dictionary = {}  ## id da equipe -> posição nos construtores do ano anterior (restrição de túnel)
@@ -215,6 +218,7 @@ func _init_dev(initial_level: int) -> void:
 	_init_parts()
 	livery = Livery.new()
 	livery.setup(team())
+	_init_series()
 	sync_factory_level()
 	sponsors.setup(self, _base_sponsor_target())
 	cash_log = [{"r": 0, "cash": budget_musd}]
@@ -332,6 +336,154 @@ func track_fit(circuit_id: String) -> float:
 	var cp := my_parts()
 	var prof := track_profile(circuit_id)
 	return CarParts.traits_effect(t, prof) - CarParts.traits_effect(t, CarParts.NEUTRAL) + (cp.avg_effect(prof) - cp.avg_effect() if cp != null else 0.0)
+
+
+# --- F2 e F3 em paralelo; acesso e rebaixamento (3 categorias, fase 1) --------------------------
+
+func _init_series() -> void:
+	series = {}
+	for cat: String in ["F2", "F3"]:
+		var s := Series.make(cat)
+		s.assign_seats(personnel.feeder())
+		series[cat] = s
+
+
+func _prospect_ratings() -> Dictionary:
+	var r := {}
+	for p: Dictionary in personnel.feeder():
+		r[p["id"]] = int(p.get("rating", 60))
+	return r
+
+
+## Depois de cada GP da F1: as categorias de base que correm nesse fim de semana também correm.
+func _run_series(f1_round: int) -> void:
+	var ratings := _prospect_ratings()
+	for s: Series in series.values():
+		if s.runs_on(f1_round):
+			s.simulate_round(f1_round, ratings, season * 100 + int(dev.seed_base))
+
+
+## Fim do ano: quem sobe e quem desce (campeão da F3 ↑ F2, último da F2 ↓ F3; campeão da F2 ↑ F1, último da F1 ↓ F2).
+func decide_moves() -> Dictionary:
+	moves = {}
+	if series.is_empty():
+		return moves
+	var f2: Series = series["F2"]
+	var f3: Series = series["F3"]
+	var t3 := f3.team_standings()
+	var t2 := f2.team_standings()
+	var t1 := team_standings()
+	if not t3.is_empty() and not t2.is_empty():
+		moves["up_f2"] = t3[0][0]
+		moves["down_f3"] = t2[t2.size() - 1][0]
+	if not t2.is_empty() and not t1.is_empty():
+		moves["up_f1"] = t2[0][0]
+		moves["down_f2"] = t1[t1.size() - 1][0]
+	return moves
+
+
+func _free_number() -> int:
+	var used := {}
+	for d: Dictionary in _drivers:
+		used[int(d.get("number", 0))] = true
+	var n := 2
+	while used.has(n) or n == 17:
+		n += 1
+	return n
+
+
+## Aplica o acesso/rebaixamento decidido (chamado na virada, antes do mercado).
+func apply_moves() -> void:
+	if moves.is_empty():
+		return
+	var f2: Series = series["F2"]
+	var f3: Series = series["F3"]
+	# F3 ↔ F2: as equipes trocam de categoria com os pilotos de contrato
+	_swap_series_team(f3, f2, String(moves.get("up_f2", "")))
+	_swap_series_team(f2, f3, String(moves.get("down_f3", "")))
+	# F2 → F1 e F1 → F2
+	var up := String(moves.get("up_f1", ""))
+	var down := String(moves.get("down_f2", ""))
+	if up != "" and down != "" and not GameData.team_by_id(_teams, down).is_empty():
+		_relegate_from_f1(down, f2)
+		_promote_to_f1(up, f2)
+	moves = {}
+
+
+func _swap_series_team(from: Series, to: Series, team_id: String) -> void:
+	var t := from.team(team_id)
+	if t.is_empty():
+		return
+	from.teams.erase(t)
+	to.teams.append(t)
+	t["car_rating"] = float(t["car_rating"]) + (2.0 if to.cat == "F2" else -2.0)
+	for id: String in from.team_drivers(team_id):
+		from.seat_of.erase(id)
+		var p := _prospect(id)
+		if not p.is_empty():
+			p["category"] = to.cat
+			to.seat_of[id] = team_id
+
+
+func _prospect(id: String) -> Dictionary:
+	for p: Dictionary in personnel.feeder():
+		if p["id"] == id:
+			return p
+	return {}
+
+
+## A última da F1 desce para a F2 com os pilotos (que viram pilotos da base).
+func _relegate_from_f1(team_id: String, f2: Series) -> void:
+	var t := GameData.team_by_id(_teams, team_id)
+	_teams.erase(t)
+	f2.teams.append({"id": team_id, "base_id": team_id, "name": t["name"], "color": t.get("color", "#888888"), "color2": t.get("color2", "#FFFFFF"),
+		"shape": t.get("shape", "hex"), "short_name": t.get("short_name", String(t["name"]).left(2).to_upper()), "car_rating": 61.0, "from_f1": t})
+	for d: Dictionary in _drivers.duplicate():
+		if d["team"] != team_id:
+			continue
+		_drivers.erase(d)
+		var p := {"id": d["id"], "name": d["name"], "nationality": d.get("nationality", ""), "category": "F2", "rating": int(d.get("rating", 75)),
+			"birth": d.get("birth", ""), "potential": int(d.get("rating", 75)), "series_team": t["name"]}
+		personnel.feeder().append(p)
+		f2.seat_of[d["id"]] = team_id
+		if personnel.contracts.has(d["id"]):
+			personnel.contracts[d["id"]]["team"] = "F2"
+	parts.erase(team_id)
+	rival_carry.erase(team_id)
+	_file_ratings.erase(team_id)
+
+
+## A campeã da F2 sobe com o carro mais fraco do grid, motor de fornecedor e os pilotos de contrato.
+func _promote_to_f1(team_id: String, f2: Series) -> void:
+	var st := f2.team(team_id)
+	if st.is_empty():
+		return
+	f2.teams.erase(st)
+	var weakest := 999.0
+	for t: Dictionary in _teams:
+		weakest = minf(weakest, float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0)))
+	var back: Dictionary = st.get("from_f1", {})
+	var nt := back.duplicate(true) if not back.is_empty() else {"id": team_id, "name": st["name"], "short_name": st.get("short_name", ""),
+		"color": st["color"], "color2": st["color2"], "shape": st.get("shape", "hex"), "custom": true, "power_unit": "Mercedes",
+		"car_traits": {"straight": 0.0, "slow": 0.0, "fast": 0.0, "rel": 76.0}, "principal": null, "technical_director": null,
+		"debut": season + 1, "constructors_titles": 0}
+	nt["car_rating"] = weakest - 1.0
+	_teams.append(nt)
+	_file_ratings[team_id] = weakest - 1.0
+	var cp := CarParts.new()
+	cp.setup(team_id)
+	parts[team_id] = cp
+	for id: String in f2.team_drivers(team_id):
+		f2.seat_of.erase(id)
+		var p := _prospect(id)
+		if p.is_empty():
+			continue
+		personnel.feeder().erase(p)
+		_drivers.append({"id": p["id"], "name": p["name"], "code": driver_code(String(p["name"])), "number": _free_number(),
+			"nationality": p.get("nationality", ""), "team": team_id, "rating": int(p.get("rating", 70)), "birth": p.get("birth", ""), "from": "F2"})
+		personnel.contracts[p["id"]] = {"team": team_id, "salary": Personnel.driver_ask(float(p.get("rating", 70))), "until": season + 2}
+	events._add(self, {"day": day, "cat": "calendar", "id": "promotion", "title": "%s SOBE PARA A F1" % String(st["name"]).to_upper(),
+		"text": "A campeã da F2 entra no grid com o carro mais fraco e motor de fornecedor.", "chips": []})
 
 
 # --- teto de gastos, túnel de vento e crédito (item 5, 2026-11-04) -------------------------------
@@ -591,6 +743,8 @@ func to_dict() -> Dictionary:
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
 		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict(),
+		"series": series.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (series[k] as Series).to_dict(); return acc, {}),
+		"moves": moves, "teams_grid": _teams, "file_ratings": _file_ratings,
 		"livery": livery.to_dict(), "loans": loans, "advance": advance, "last_positions": last_positions,
 		"parts": parts.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (parts[k] as CarParts).to_dict(); return acc, {})}
 
@@ -646,6 +800,21 @@ static func from_dict(d: Dictionary) -> Campaign:
 	c.ledger = d.get("ledger", {})
 	if d.has("cash_log"):
 		c.cash_log = d["cash_log"]
+	if d.has("teams_grid"):  # equipes que subiram/desceram (3 categorias)
+		c._teams = d["teams_grid"]
+		for t: Dictionary in c._teams:
+			t["car_rating"] = float(t["car_rating"])
+		for k: String in d.get("file_ratings", {}):
+			c._file_ratings[k] = float(d["file_ratings"][k])
+		for t: Dictionary in c._teams:
+			if not c.parts.has(t["id"]):
+				var cp := CarParts.new()
+				cp.setup(t["id"])
+				c.parts[t["id"]] = cp
+	if d.has("series"):
+		for k: String in d["series"]:
+			c.series[k] = Series.from_dict(d["series"][k])
+	c.moves = d.get("moves", {})
 	c.loans = d.get("loans", [])
 	for l: Dictionary in c.loans:
 		l["races_left"] = int(l["races_left"])
@@ -762,6 +931,7 @@ func record_weekend(w: WeekendSim) -> void:
 	history.append({"round": round + 1, "circuit": w.circuit.get("id", ""), "results": race})
 	for cp: CarParts in parts.values():  # desgaste das peças e revelação dos upgrades estreados nesta corrida
 		cp.after_race(self)
+	_run_series(round)
 	var podiums := 0
 	for i in mini(3, race.size()):
 		if team_of(race[i]) == player_team:
@@ -946,6 +1116,10 @@ func close_season() -> Dictionary:
 	elif trust <= 0.0:
 		state = "fired"
 		verdict = "fired"
+	decide_moves()
+	if verdict not in ["bankrupt", "fired"] and String(moves.get("down_f2", "")) == player_team:
+		verdict = "relegated"  # 3 categorias (fase 1): a equipe desce; o chefe recebe propostas da F1
+		state = "relegated"
 	var report := {"season": season, "verdict": verdict, "position": pos, "goal": goal, "points": int(team_points.get(player_team, 0)),
 		"best": best_finish, "prize": prize, "budget": budget_musd, "trust": trust, "next_goal": goal}
 	if verdict == "met":
@@ -962,7 +1136,11 @@ func start_next_season() -> void:
 	for i in rows.size():
 		last_positions[rows[i][0]] = i + 1
 	events.reset_for_new_season(self)  # lesionados voltam ao carro e o calendário cancelado zera antes do mercado
+	apply_moves()
 	personnel.rollover(self)
+	for s: Series in series.values():
+		s.reset_season()
+		s.assign_seats(personnel.feeder())
 	var council := regs.apply_passed(self)
 	for msg: String in council:
 		events._add(self, {"day": day, "cat": "calendar", "id": "council", "title": "CONSELHO DE REGRAS", "text": msg, "chips": []})

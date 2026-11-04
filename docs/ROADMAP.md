@@ -111,7 +111,11 @@ Ordem de chegada dos pedidos ainda abertos (o que já foi feito está nas seçõ
 6. 2026-11-03 — **Corrida: planos táticos, reação à parada do rival e desacelerar em momentos-chave** (a parte da classificação foi feita).
 7. 2026-11-04 (prompt mestre) — (b) **componentes com limite e punição de grid**; (c) **finanças** (garantido × meta, compromissos,
    prêmio oficial); (d) **mercado vivo** (contratos futuros da IA, perfis, cadeia F1→F2→F3).
-8. 2026-11-04 — **Campanha em 3 categorias** (F3/F2/F1, acesso e rebaixamento, tabelas bonitas).
+8. ✅ fase 1 (2026-11-04) — **Campanha em 3 categorias**: F2 e F3 correm em paralelo (simuladas: classificação, sprint com top 10
+   invertido, corrida principal; 30% carro / 50% piloto / 20% acaso), tabelas novas das 3 categorias (mockup v20), acesso e
+   rebaixamento das equipes no fim do ano, campeã da F2 entra na F1 com o carro mais fraco; sua equipe rebaixada → propostas da F1.
+   **Fase 2 (pendente)**: começar e jogar a campanha na F2/F3 (formato real ao vivo, equipe criada nas categorias de base,
+   verba de entrada ao subir).
 9. 2026-11-04 — **Aba Histórico** (Lendas, Pilotos atuais com números até 2025, Campeonatos).
 10. 2026-11-04 — **Animação de campeão**.
 11. 2026-11-04 — **Complementos da campanha**: número 1 do campeão (Norris volta ao 4), números dos novatos (herdar de quem

@@ -540,3 +540,8 @@ Respostas do usuário:
   do limite anual: projetos e peças ficam bloqueados quando acaba); **restrição de túnel de vento pela posição do ano
   anterior** (campeão ~70% do tempo de pesquisa aerodinâmica, último ~115%; muda dias e chance das pesquisas de aero, também
   para a IA); **empréstimo: banco com juros e adiantamento de patrocínio**; **academia de pilotos fica para depois**.
+- **3 categorias — fase 1 aprovada** (2026-11-04, mockups v20): F2 e F3 correm em paralelo (simuladas rodada a rodada,
+  nomes reais das equipes; emblemas originais no jogo, logos oficiais só em `game/local/`), tabelas novas das 3 categorias,
+  acesso/rebaixamento das equipes no fim do ano (campeão da F3 ↑ F2, último da F2 ↓; campeão da F2 ↑ F1, último da F1 ↓),
+  equipe que sobe para a F1 com o carro mais fraco, motor de fornecedor e verba de entrada. **Sua equipe rebaixada**: ela
+  desce para a F2 e você recebe propostas de equipes da F1 (como na demissão). Jogar na F2/F3 = fase 2.

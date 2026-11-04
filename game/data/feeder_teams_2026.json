@@ -1,0 +1,297 @@
+{
+ "_notas": "Nomes reais das equipes (decisão do usuário); emblemas ORIGINAIS no jogo (forma + cores); logos oficiais só em game/local/.",
+ "series": {
+  "F2": {
+   "seats": 2,
+   "teams": [
+    {
+     "id": "f2_aixracing",
+     "base_id": "aixracing",
+     "name": "AIX Racing",
+     "color": "#7B2CBF",
+     "color2": "#FFFFFF",
+     "shape": "hex",
+     "short_name": "AR",
+     "car_rating": 59.0
+    },
+    {
+     "id": "f2_artgrandprix",
+     "base_id": "artgrandprix",
+     "name": "ART Grand Prix",
+     "color": "#1B1D22",
+     "color2": "#F2F2F2",
+     "shape": "square",
+     "short_name": "AG",
+     "car_rating": 61.2
+    },
+    {
+     "id": "f2_camposracing",
+     "base_id": "camposracing",
+     "name": "Campos Racing",
+     "color": "#E10600",
+     "color2": "#FFFFFF",
+     "shape": "shield",
+     "short_name": "CR",
+     "car_rating": 61.0
+    },
+    {
+     "id": "f2_damslucasoil",
+     "base_id": "damslucasoil",
+     "name": "DAMS Lucas Oil",
+     "color": "#1E5BC6",
+     "color2": "#FFD24A",
+     "shape": "circle",
+     "short_name": "DL",
+     "car_rating": 60.0
+    },
+    {
+     "id": "f2_hitech",
+     "base_id": "hitech",
+     "name": "Hitech",
+     "color": "#C0C6CF",
+     "color2": "#11141A",
+     "shape": "diamond",
+     "short_name": "H",
+     "car_rating": 60.8
+    },
+    {
+     "id": "f2_invictaracing",
+     "base_id": "invictaracing",
+     "name": "Invicta Racing",
+     "color": "#0B0C0F",
+     "color2": "#D4A017",
+     "shape": "shield",
+     "short_name": "IR",
+     "car_rating": 61.2
+    },
+    {
+     "id": "f2_mpmotorsport",
+     "base_id": "mpmotorsport",
+     "name": "MP Motorsport",
+     "color": "#FF8000",
+     "color2": "#11141A",
+     "shape": "hex",
+     "short_name": "MM",
+     "car_rating": 60.6
+    },
+    {
+     "id": "f2_premaracing",
+     "base_id": "premaracing",
+     "name": "Prema Racing",
+     "color": "#D4001A",
+     "color2": "#FFFFFF",
+     "shape": "square",
+     "short_name": "PR",
+     "car_rating": 61.5
+    },
+    {
+     "id": "f2_rodinmotorsport",
+     "base_id": "rodinmotorsport",
+     "name": "Rodin Motorsport",
+     "color": "#00A3E0",
+     "color2": "#FFFFFF",
+     "shape": "circle",
+     "short_name": "RM",
+     "car_rating": 60.4
+    },
+    {
+     "id": "f2_trident",
+     "base_id": "trident",
+     "name": "Trident",
+     "color": "#0A2A6E",
+     "color2": "#FFFFFF",
+     "shape": "diamond",
+     "short_name": "T",
+     "car_rating": 59.6
+    },
+    {
+     "id": "f2_vanamersfoortracing",
+     "base_id": "vanamersfoortracing",
+     "name": "Van Amersfoort Racing",
+     "color": "#FF6A00",
+     "color2": "#0B0C0F",
+     "shape": "hex",
+     "short_name": "VA",
+     "car_rating": 59.4
+    }
+   ],
+   "rounds": [
+    0,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    15,
+    20,
+    21
+   ],
+   "points_feature": [
+    25,
+    18,
+    15,
+    12,
+    10,
+    8,
+    6,
+    4,
+    2,
+    1
+   ],
+   "points_sprint": [
+    10,
+    8,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1
+   ]
+  },
+  "F3": {
+   "seats": 3,
+   "teams": [
+    {
+     "id": "f3_aixracing",
+     "base_id": "aixracing",
+     "name": "AIX Racing",
+     "color": "#7B2CBF",
+     "color2": "#FFFFFF",
+     "shape": "hex",
+     "short_name": "AR",
+     "car_rating": 54.0
+    },
+    {
+     "id": "f3_artgrandprix",
+     "base_id": "artgrandprix",
+     "name": "ART Grand Prix",
+     "color": "#1B1D22",
+     "color2": "#F2F2F2",
+     "shape": "square",
+     "short_name": "AG",
+     "car_rating": 56.2
+    },
+    {
+     "id": "f3_camposracing",
+     "base_id": "camposracing",
+     "name": "Campos Racing",
+     "color": "#E10600",
+     "color2": "#FFFFFF",
+     "shape": "shield",
+     "short_name": "CR",
+     "car_rating": 56.0
+    },
+    {
+     "id": "f3_damslucasoil",
+     "base_id": "damslucasoil",
+     "name": "DAMS Lucas Oil",
+     "color": "#1E5BC6",
+     "color2": "#FFD24A",
+     "shape": "circle",
+     "short_name": "DL",
+     "car_rating": 55.0
+    },
+    {
+     "id": "f3_hitech",
+     "base_id": "hitech",
+     "name": "Hitech",
+     "color": "#C0C6CF",
+     "color2": "#11141A",
+     "shape": "diamond",
+     "short_name": "H",
+     "car_rating": 55.8
+    },
+    {
+     "id": "f3_mpmotorsport",
+     "base_id": "mpmotorsport",
+     "name": "MP Motorsport",
+     "color": "#FF8000",
+     "color2": "#11141A",
+     "shape": "hex",
+     "short_name": "MM",
+     "car_rating": 55.6
+    },
+    {
+     "id": "f3_premaracing",
+     "base_id": "premaracing",
+     "name": "Prema Racing",
+     "color": "#D4001A",
+     "color2": "#FFFFFF",
+     "shape": "square",
+     "short_name": "PR",
+     "car_rating": 56.5
+    },
+    {
+     "id": "f3_rodinmotorsport",
+     "base_id": "rodinmotorsport",
+     "name": "Rodin Motorsport",
+     "color": "#00A3E0",
+     "color2": "#FFFFFF",
+     "shape": "circle",
+     "short_name": "RM",
+     "car_rating": 55.4
+    },
+    {
+     "id": "f3_trident",
+     "base_id": "trident",
+     "name": "Trident",
+     "color": "#0A2A6E",
+     "color2": "#FFFFFF",
+     "shape": "diamond",
+     "short_name": "T",
+     "car_rating": 54.6
+    },
+    {
+     "id": "f3_vanamersfoortracing",
+     "base_id": "vanamersfoortracing",
+     "name": "Van Amersfoort Racing",
+     "color": "#FF6A00",
+     "color2": "#0B0C0F",
+     "shape": "hex",
+     "short_name": "VA",
+     "car_rating": 54.4
+    }
+   ],
+   "rounds": [
+    0,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14
+   ],
+   "points_feature": [
+    25,
+    18,
+    15,
+    12,
+    10,
+    8,
+    6,
+    4,
+    2,
+    1
+   ],
+   "points_sprint": [
+    10,
+    8,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1
+   ]
+  }
+ }
+}

@@ -37,10 +37,38 @@ static func get_texture(team_id: String) -> Texture2D:
 			if ResourceLoader.exists(LOCAL_DIR + team_id + "." + ext):
 				tex = _framed(team_id, load(LOCAL_DIR + team_id + "." + ext))
 				break
+	if tex == null and (team_id.begins_with("f2_") or team_id.begins_with("f3_")):  # equipes da F2/F3 (3 categorias)
+		tex = _series_texture(team_id)
 	if tex == null:
 		var path := BUILTIN_DIR + team_id + ".svg"
 		tex = load(path) if ResourceLoader.exists(path) else null
 	_cache[team_id] = tex
+	return tex
+
+
+## F2/F3: logo pessoal em game/local/series/<f2|f3>/<equipe>.png (fora do git); senão, emblema original gerado.
+static func _series_texture(team_id: String) -> Texture2D:
+	var cat := team_id.left(2)
+	var base := team_id.substr(3)
+	if use_local:
+		for ext: String in ["png", "svg", "webp", "jpg"]:
+			var p := "res://local/series/%s/%s.%s" % [cat, base, ext]
+			if ResourceLoader.exists(p):
+				return _framed_series(team_id, load(p))
+	for c: String in ["F2", "F3"]:
+		for t: Dictionary in Series.data()["series"][c]["teams"]:
+			if t["base_id"] == base:
+				return CarArt.emblem_texture(String(t.get("shape", "hex")), String(t["color"]), String(t["color2"]), String(t.get("short_name", "")))
+	return null
+
+
+## Logo pessoal da F2/F3 sobre o quadrado na cor da equipe (as logos são brancas ou coloridas).
+static func _framed_series(team_id: String, tex: Texture2D) -> Texture2D:
+	var base := team_id.substr(3)
+	for c: String in ["F2", "F3"]:
+		for t: Dictionary in Series.data()["series"][c]["teams"]:
+			if t["base_id"] == base:
+				return _framed_with(Color(t["color"]), tex)
 	return tex
 
 
@@ -83,13 +111,15 @@ const FRAME_PAD_WIDE := 0.08
 ## largas. Compomos cada uma sobre um quadrado arredondado na cor da equipe (ou da cor de
 ## destaque, se a principal for clara — ou a `emblem_bg` do JSON, se existir), como na transmissão. Imagens coloridas ficam como estão.
 static func _framed(team_id: String, tex: Texture2D) -> Texture2D:
+	return _framed_with(_frame_color(GameData.team_by_id(GameData.teams(), team_id)), tex, true)
+
+
+static func _framed_with(bg: Color, tex: Texture2D, only_white: bool = false) -> Texture2D:
 	var img := tex.get_image() if tex != null else null
-	if img == null or img.is_empty() or not _is_white_logo(img):
+	if img == null or img.is_empty() or (only_white and not _is_white_logo(img)):
 		return tex
 	img.decompress()
 	img.convert(Image.FORMAT_RGBA8)
-	var team := GameData.team_by_id(GameData.teams(), team_id)
-	var bg := _frame_color(team)
 	var out := Image.create(FRAME_PX, FRAME_PX, false, Image.FORMAT_RGBA8)
 	var r := float(FRAME_RADIUS)
 	for y in FRAME_PX:
