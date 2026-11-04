@@ -290,6 +290,34 @@ func race_after(days: int) -> Dictionary:
 	return {}
 
 
+## Nota efetiva do carro de uma equipe numa pista (sem a forma aleatória do fim de semana): base + características de
+## fábrica no perfil da pista + média das peças dos dois carros.
+func track_rating(team_id: String, circuit_id: String) -> float:
+	var t := GameData.team_by_id(_teams, team_id)
+	var cp: CarParts = parts.get(team_id)
+	var prof := track_profile(circuit_id)
+	var pe := cp.avg_effect() if cp != null else 0.0
+	return float(t["car_rating"]) - pe + CarParts.traits_effect(t, prof) + (cp.avg_effect(prof) if cp != null else 0.0)
+
+
+## Posição (1..) do carro do jogador entre os carros do grid numa pista.
+func track_rank(circuit_id: String) -> int:
+	var mine := track_rating(player_team, circuit_id)
+	var rank := 1
+	for t: Dictionary in _teams:
+		if t["id"] != player_team and track_rating(t["id"], circuit_id) > mine:
+			rank += 1
+	return rank
+
+
+## Ponto forte/fraco da pista para o carro do jogador (efeito do perfil em relação a uma pista neutra).
+func track_fit(circuit_id: String) -> float:
+	var t := team()
+	var cp := my_parts()
+	var prof := track_profile(circuit_id)
+	return CarParts.traits_effect(t, prof) - CarParts.traits_effect(t, CarParts.NEUTRAL) + (cp.avg_effect(prof) - cp.avg_effect() if cp != null else 0.0)
+
+
 ## Pilotos titulares de uma equipe, na ordem dos carros (carro 0, carro 1).
 func team_driver_ids(team_id: String) -> Array:
 	var out: Array = []

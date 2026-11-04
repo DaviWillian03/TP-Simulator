@@ -489,18 +489,35 @@ func _unit_value(u: Dictionary, profile: Dictionary) -> float:
 	return v - WEAR_PENALTY * maxf(0.0, float(u["wear"]) - WEAR_SOFT) / (100.0 - WEAR_SOFT)
 
 
-## Preparação recomendada para uma pista: em cada peça, coloca nos carros as melhores unidades disponíveis
-## (efeito conhecido; peça já revelada como ruim não entra). Devolve quantas trocas fez.
-func auto_prepare(profile: Dictionary = NEUTRAL) -> int:
-	var changes := 0
+## Plano da preparação recomendada para uma pista: em cada peça, as melhores unidades disponíveis para cada carro
+## (efeito conhecido, desgaste descontado; peça revelada ruim perde para a anterior). [{part, car, uid, spec}]
+func prepare_plan(profile: Dictionary = NEUTRAL) -> Array:
+	var plan: Array = []
 	for pid: String in part_ids():
+		var taken := {}
 		for car in 2:
 			var cur := unit_on(pid, car)
-			var best := best_stock_unit(pid, profile)
-			if not best.is_empty() and _unit_value(best, profile) > _unit_value(cur, profile) + 0.05:
-				install(int(best["uid"]), car)
-				changes += 1
-	return changes
+			var best := {}
+			var best_v := _unit_value(cur, profile) + 0.05
+			for u: Dictionary in stock(pid):
+				if taken.has(int(u["uid"])):
+					continue
+				var v := _unit_value(u, profile)
+				if v > best_v:
+					best_v = v
+					best = u
+			if not best.is_empty():
+				taken[int(best["uid"])] = true
+				plan.append({"part": pid, "car": car, "uid": int(best["uid"]), "spec": int(best["spec"])})
+	return plan
+
+
+## Aplica a preparação recomendada. Devolve quantas trocas fez.
+func auto_prepare(profile: Dictionary = NEUTRAL) -> int:
+	var plan := prepare_plan(profile)
+	for p: Dictionary in plan:
+		install(int(p["uid"]), int(p["car"]))
+	return plan.size()
 
 
 # --- passagem do tempo e corridas ------------------------------------------------------------------
