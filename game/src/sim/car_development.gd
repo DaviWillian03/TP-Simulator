@@ -24,6 +24,7 @@ var projects: Array = []  ## [{car, id, days_left, days_total, cost}]
 var works: Array = []  ## [{struct, to, days_left, days_total}] (uma obra por estrutura)
 var carry := 0.0  ## bônus herdado do carro anterior
 var focus := "balanced"  ## modo Essencial: "balanced", "aero", "chassis", "durability", "engine"
+var atr := 1.0  ## restrição de túnel de vento (tempo de pesquisa aero; publicada pela campanha)
 var parts_busy := 0  ## pesquisas de peças em andamento (CarParts): ocupam as mesmas vagas de projeto
 var staff_mod: Dictionary = {}  ## efeitos dos técnicos (Personnel.staff_effects), publicados pela campanha
 var auto_spent := 0.0  ## gasto automático no mês atual
@@ -262,6 +263,7 @@ func days_mult(dept: String) -> float:
 	var m := 1.0 - effect_sum_both("eff", dept) - float(staff_mod.get(dept + ".days", 0.0))
 	if dept == "aero":
 		m -= float(structure("wind")["days_pct"][level_of("wind") - 1]) / 100.0
+		return clampf(clampf(m, 0.4, 1.0) / maxf(atr, 0.5), 0.35, 1.6)  # menos tempo de túnel = mais dias
 	return clampf(m, 0.4, 1.0)
 
 
@@ -275,7 +277,8 @@ func success_chance(dept: String) -> float:
 	var base := float(factory_data()["base_success_pct"])
 	# aerodinâmica: túnel de vento; os demais departamentos: fábrica de peças e qualidade
 	var fac: float = float(structure("wind" if dept == "aero" else "parts")["success_pct"][level_of("wind" if dept == "aero" else "parts") - 1])
-	return clampf((base + fac + effect_sum_both("qual", dept) + float(staff_mod.get(dept + ".success", 0.0))) / 100.0, 0.05, 0.98)
+	var atr_pts := (atr - 1.0) * 20.0 if dept == "aero" else 0.0  # restrição de túnel: −6 pontos (campeão) a +3 (último)
+	return clampf((base + fac + atr_pts + effect_sum_both("qual", dept) + float(staff_mod.get(dept + ".success", 0.0))) / 100.0, 0.05, 0.98)
 
 
 func dept_available(dept: String, camp: Campaign) -> bool:
@@ -328,6 +331,8 @@ func project_info(car: String, id: String, camp: Campaign) -> Dictionary:
 		out["reason"] = "slots"
 	elif camp.budget_musd - float(out["cost"]) < RESERVE_MUSD:
 		out["reason"] = "cash"
+	elif not camp.cap_allows(float(out["cost"])):
+		out["reason"] = "cap"
 	else:
 		out["ok"] = true
 	return out

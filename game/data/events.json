@@ -11,6 +11,11 @@
   {"id": "sponsor_leaves", "cat": "team", "weight": 2},
   {"id": "breakthrough", "cat": "team", "weight": 2},
   {"id": "economic_crisis", "cat": "market", "weight": 2, "days": 90, "mult": 0.85},
-  {"id": "host_support", "cat": "market", "weight": 2, "amount": [3.0, 6.0]}
+  {"id": "host_support", "cat": "market", "weight": 2, "amount": [3.0, 6.0]},
+  {"id": "rival_factory_fire", "cat": "rival", "weight": 2, "delay_days": 12},
+  {"id": "rival_staff_leaves", "cat": "rival", "weight": 2, "gain_mult": 0.88},
+  {"id": "rival_sponsor", "cat": "rival", "weight": 2, "gain_mult": 1.1},
+  {"id": "principal_change", "cat": "rival", "weight": 1},
+  {"id": "race_postponed", "cat": "calendar", "weight": 1, "days": 7}
  ]
 }

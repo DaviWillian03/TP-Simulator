@@ -252,6 +252,8 @@ func success_chance(camp: Campaign, pid: String, dir_id: String) -> float:
 		base = camp.dev.success_chance(String(part(pid)["dept"]))
 	else:
 		base = _ai_success(camp)
+		if String(part(pid)["dept"]) == "aero":
+			base += (camp.atr_mult(team_id) - 1.0) * 0.20  # restrição de túnel também para a IA
 	return clampf(base - float(direction(pid, dir_id).get("risk", 0)) / 100.0, 0.05, 0.95)
 
 
@@ -271,6 +273,8 @@ func research_days(camp: Campaign, pid: String, dir_id: String) -> int:
 		d *= camp.dev.days_mult(String(part(pid)["dept"]))
 	else:
 		d /= _ai_staff_k(camp)
+		if String(part(pid)["dept"]) == "aero":
+			d /= maxf(camp.atr_mult(team_id), 0.5)
 	return maxi(3, ceili(d))
 
 
@@ -286,6 +290,8 @@ func research_info(camp: Campaign, pid: String, dir_id: String) -> Dictionary:
 		out["reason"] = "slots"
 	elif team_id == camp.player_team and camp.budget_musd - float(out["cost"]) < CarDevelopment.RESERVE_MUSD:
 		out["reason"] = "cash"
+	elif team_id == camp.player_team and not camp.cap_allows(float(out["cost"])):
+		out["reason"] = "cap"
 	else:
 		out["ok"] = true
 	return out
@@ -425,7 +431,7 @@ func ready_in(camp: Campaign, pid: String, n: int) -> int:
 func order_units(camp: Campaign, pid: String, spec_index: int, n: int, install_on: Array = []) -> bool:
 	var cost := unit_cost(pid) * n
 	if team_id == camp.player_team:
-		if camp.budget_musd - cost < CarDevelopment.RESERVE_MUSD:
+		if camp.budget_musd - cost < CarDevelopment.RESERVE_MUSD or not camp.cap_allows(cost):
 			return false
 		camp.budget_musd -= cost
 		camp.record("rd", cost)
@@ -446,7 +452,7 @@ func rush(camp: Campaign, pid: String) -> bool:
 		return false
 	var cost := rush_cost(pid)
 	if team_id == camp.player_team:
-		if camp.budget_musd - cost < CarDevelopment.RESERVE_MUSD:
+		if camp.budget_musd - cost < CarDevelopment.RESERVE_MUSD or not camp.cap_allows(cost):
 			return false
 		camp.budget_musd -= cost
 		camp.record("rd", cost)

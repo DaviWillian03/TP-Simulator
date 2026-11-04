@@ -105,8 +105,9 @@ Ordem de chegada dos pedidos ainda abertos (o que já foi feito está nas seçõ
 4. ✅ (2026-11-04) #4 — **Estúdio de design** (pintura em camadas, acabamentos, patrocínios nas zonas, capacete, logo da equipe
    criada, até 3 especiais, lançamento do carro) e #17 — **demitido recebe proposta** de outra equipe (a carreira continua no
    mesmo mundo). Os **engenheiros de corrida** entram junto com o item 11 (treinos simulados), onde fica o efeito deles.
-5. P11/P12 — academia de pilotos, F2/F3 simuladas ao fundo e F4; **teto de gastos, limite de túnel de vento e empréstimo**;
-   mais eventos (cancelamento/adiamento por país, dirigentes, IA).
+5. ✅ (2026-11-04) P12 — **teto de gastos** (US$ 150 mi, trava rígida), **restrição de túnel de vento** pela posição do
+   ano anterior (também para a IA), **empréstimo do banco** e **adiantamento de patrocínio**; eventos novos (incêndio,
+   técnico que sai e patrocinador novo nas rivais, troca de chefe de equipe, GP adiado). Academia de pilotos: para depois.
 6. 2026-11-03 — **Corrida: planos táticos, reação à parada do rival e desacelerar em momentos-chave** (a parte da classificação foi feita).
 7. 2026-11-04 (prompt mestre) — (b) **componentes com limite e punição de grid**; (c) **finanças** (garantido × meta, compromissos,
    prêmio oficial); (d) **mercado vivo** (contratos futuros da IA, perfis, cadeia F1→F2→F3).

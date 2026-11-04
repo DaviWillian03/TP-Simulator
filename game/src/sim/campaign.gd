@@ -45,6 +45,16 @@ var ledger: Dictionary = {}  ## categoria -> total da temporada (US$ mi): sponso
 var cash_log: Array = []  ## [{r: rodada, cash}] caixa depois de cada rodada
 var base_rating := 0.0  ## nota do carro da equipe sem os upgrades
 var livery: Livery  ## pintura, especiais, capacete e lançamento do carro (estúdio de design)
+const COST_CAP_MUSD := 150.0  ## teto de gastos anual, igual para todas (PROVISÓRIO; decisão 2026-11-04: trava rígida)
+const CAP_CATEGORIES := ["ops", "upkeep", "rd"]  ## o que conta no teto (salários, obras e juros ficam de fora)
+const BANK_LIMIT_MUSD := 45.0
+const BANK_TERMS := [[5, 0.04], [11, 0.08], [0, 0.15]]  ## [corridas, juros]; 0 = até o fim da temporada seguinte
+const DEBT_TRUST_LIMIT := 40.0  ## dívida acima disso: −3 de confiança ao pedir
+const ADVANCE_SHARE := 0.5  ## adiantamento: até 50% do patrocínio que ainda falta receber nesta temporada
+const ATR_RANGE := [0.70, 1.15]  ## tempo de pesquisa aerodinâmica do 1º ao último do ano anterior
+var loans: Array = []  ## banco: [{principal, total, per_race, races_left}]
+var advance: Dictionary = {}  ## adiantamento: {amount, cut, races_left}
+var last_positions: Dictionary = {}  ## id da equipe -> posição nos construtores do ano anterior (restrição de túnel)
 var parts: Dictionary = {}  ## id da equipe -> CarParts (jogador e IA usam as mesmas regras)
 var rival_carry: Dictionary = {}  ## id da equipe da IA -> bônus herdado das temporadas anteriores
 var _file_ratings: Dictionary = {}  ## id -> nota do carro nos dados (sem evolução)
@@ -147,6 +157,7 @@ func refresh_rating() -> void:
 				t["livery_paint"] = livery.paint_for_round(round)  # o carro desenhado nas telas usa a pintura do estúdio
 			t["failure_mult"] = dev.failure_mult()
 			dev.staff_mod = personnel.staff_effects(self)
+			dev.atr = atr_mult(player_team)
 			t["practice_gain_mult"] = dev.practice_gain_mult() * float(dev.staff_mod.get("practice", 1.0))
 		else:  # equipes da IA também desenvolvem o carro ao longo da temporada (mais rápido com um bom corpo técnico)
 			t["car_rating"] = float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0)) + pe
@@ -157,7 +168,7 @@ func refresh_rating() -> void:
 ## Quanto da temporada já passou (0 = véspera da primeira rodada, 1 = depois da última).
 func season_progress() -> float:
 	var start := _season_start_day()
-	var end_day := _day_of(calendar()[calendar().size() - 1]["date"]) + 1
+	var end_day := round_day(calendar().size() - 1) + 1
 	return clampf(float(day - start) / maxf(float(end_day - start), 1.0), 0.0, 1.0)
 
 
@@ -290,7 +301,7 @@ static func track_profile(circuit_id: String) -> Dictionary:
 func race_after(days: int) -> Dictionary:
 	var cal := calendar()
 	for i in range(round, cal.size()):
-		if _day_of(String(cal[i]["date"])) >= day + days and not events.cancelled.has(i) and not regs.is_dropped(String(cal[i]["id"])):
+		if round_day(i) >= day + days and not events.cancelled.has(i) and not regs.is_dropped(String(cal[i]["id"])):
 			return cal[i]
 	return {}
 
@@ -321,6 +332,116 @@ func track_fit(circuit_id: String) -> float:
 	var cp := my_parts()
 	var prof := track_profile(circuit_id)
 	return CarParts.traits_effect(t, prof) - CarParts.traits_effect(t, CarParts.NEUTRAL) + (cp.avg_effect(prof) - cp.avg_effect() if cp != null else 0.0)
+
+
+# --- teto de gastos, túnel de vento e crédito (item 5, 2026-11-04) -------------------------------
+
+## Quanto do teto de gastos já foi usado nesta temporada.
+func cap_spent() -> float:
+	var s := 0.0
+	for k: String in CAP_CATEGORIES:
+		s += float(ledger.get(k, 0.0))
+	return maxf(s, 0.0)
+
+
+func cap_left() -> float:
+	return maxf(COST_CAP_MUSD - cap_spent(), 0.0)
+
+
+## Trava rígida: um gasto de P&D/peças só passa se couber no que resta do teto.
+func cap_allows(cost: float) -> bool:
+	return cost <= cap_left() + 0.0001
+
+
+## Restrição de túnel de vento (tempo de pesquisa aerodinâmica) pela posição do ano anterior; no 1º ano, pela nota do carro.
+func atr_mult(team_id: String) -> float:
+	var n := maxi(_teams.size() - 1, 1)
+	var pos := int(last_positions.get(team_id, rating_rank(team_id)))
+	return lerpf(float(ATR_RANGE[0]), float(ATR_RANGE[1]), float(pos - 1) / n)
+
+
+func debt_total() -> float:
+	var s := 0.0
+	for l: Dictionary in loans:
+		s += float(l["per_race"]) * int(l["races_left"])
+	return s
+
+
+func races_left_in_season() -> int:
+	return int(remaining_after_current()["races"]) + (0 if season_over() else 1)
+
+
+## Empréstimo do banco: {ok, reason, total, per_race, races, rate}
+func loan_info(amount: float, term: int) -> Dictionary:
+	var t: Array = BANK_TERMS[clampi(term, 0, BANK_TERMS.size() - 1)]
+	var races := int(t[0]) if int(t[0]) > 0 else races_left_in_season() + calendar().size()
+	var total := snappedf(amount * (1.0 + float(t[1])), 0.1)
+	var out := {"ok": true, "reason": "", "total": total, "per_race": snappedf(total / races, 0.01), "races": races, "rate": float(t[1])}
+	var taken := 0.0
+	for l: Dictionary in loans:
+		taken += float(l["principal"])
+	if amount <= 0.0 or taken + amount > BANK_LIMIT_MUSD + 0.001:
+		out["ok"] = false
+		out["reason"] = "limit"
+	return out
+
+
+func bank_room() -> float:
+	var taken := 0.0
+	for l: Dictionary in loans:
+		taken += float(l["principal"])
+	return maxf(BANK_LIMIT_MUSD - taken, 0.0)
+
+
+func take_loan(amount: float, term: int) -> bool:
+	var info := loan_info(amount, term)
+	if not info["ok"]:
+		return false
+	loans.append({"principal": amount, "total": info["total"], "per_race": info["per_race"], "races_left": info["races"]})
+	budget_musd += amount
+	record("loan", amount)
+	if debt_total() > DEBT_TRUST_LIMIT:
+		trust = clampf(trust - 3.0, 0.0, 100.0)
+	return true
+
+
+## Adiantamento de patrocínio: máximo que dá para receber agora.
+func advance_room() -> float:
+	if not advance.is_empty():
+		return 0.0
+	return snappedf(sponsor_per_race() * races_left_in_season() * ADVANCE_SHARE, 0.1)
+
+
+func take_advance(amount: float) -> bool:
+	if amount <= 0.0 or amount > advance_room() + 0.001:
+		return false
+	var races := maxi(races_left_in_season(), 1)
+	advance = {"amount": amount, "cut": snappedf(amount / races, 0.01), "races_left": races}
+	budget_musd += amount
+	record("loan", amount)
+	return true
+
+
+## Depois de cada corrida: parcelas do banco e o desconto do adiantamento no patrocínio.
+func _pay_credit() -> void:
+	for l: Dictionary in loans.duplicate():
+		budget_musd -= float(l["per_race"])
+		record("debt", float(l["per_race"]))
+		l["races_left"] = int(l["races_left"]) - 1
+		if int(l["races_left"]) <= 0:
+			loans.erase(l)
+	if not advance.is_empty():
+		budget_musd -= float(advance["cut"])
+		record("sponsors", -float(advance["cut"]))
+		advance["races_left"] = int(advance["races_left"]) - 1
+		if int(advance["races_left"]) <= 0:
+			advance = {}
+	debt_musd = debt_total()
+
+
+## Data (dia) de uma rodada, já com adiamento por evento.
+func round_day(i: int) -> int:
+	return _day_of(String(calendar()[i]["date"])) + int(events.postponed.get(i, 0))
 
 
 # --- demissão: propostas de outras equipes (#17) ------------------------------------------------
@@ -470,7 +591,7 @@ func to_dict() -> Dictionary:
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
 		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict(),
-		"livery": livery.to_dict(),
+		"livery": livery.to_dict(), "loans": loans, "advance": advance, "last_positions": last_positions,
 		"parts": parts.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (parts[k] as CarParts).to_dict(); return acc, {})}
 
 
@@ -518,9 +639,22 @@ static func from_dict(d: Dictionary) -> Campaign:
 		c.regs = Regulations.from_dict(d["regs"])
 	if d.has("events"):
 		c.events = CampaignEvents.from_dict(d["events"])
+		for tid: String in c.events.principals:  # chefes trocados por evento
+			var tt := GameData.team_by_id(c._teams, tid)
+			if not tt.is_empty():
+				tt["principal"] = c.events.principals[tid]
 	c.ledger = d.get("ledger", {})
 	if d.has("cash_log"):
 		c.cash_log = d["cash_log"]
+	c.loans = d.get("loans", [])
+	for l: Dictionary in c.loans:
+		l["races_left"] = int(l["races_left"])
+	c.advance = d.get("advance", {})
+	if not c.advance.is_empty():
+		c.advance["races_left"] = int(c.advance["races_left"])
+	c.last_positions = d.get("last_positions", {})
+	for k: String in c.last_positions:
+		c.last_positions[k] = int(c.last_positions[k])
 	if d.has("livery") and not (d["livery"] as Dictionary).get("main", {}).is_empty():
 		c.livery = Livery.from_dict(d["livery"])
 	if d.has("parts"):
@@ -640,6 +774,7 @@ func record_weekend(w: WeekendSim) -> void:
 	record("payroll", personnel.payroll_per_race(self))
 	record("upkeep", dev.upkeep_per_race())
 	budget_musd += sponsor_per_race() + bonus - cost_per_race()
+	_pay_credit()
 	var pos := team_position(player_team)
 	var gap := season_goal() - pos  # >= 0: dentro da meta
 	var drift: float = origins_data()["board"]["drift_per_race"]
@@ -647,7 +782,7 @@ func record_weekend(w: WeekendSim) -> void:
 	round += 1
 	cash_log.append({"r": round, "cash": budget_musd})
 	events.on_race_recorded(self)
-	var new_day := _day_of(calendar()[round - 1]["date"]) + 1
+	var new_day := round_day(round - 1) + 1
 	_dev_tick(new_day - day, new_day)
 	day = new_day
 	_skip_cancelled()
@@ -686,7 +821,7 @@ func _season_start_day() -> int:
 
 ## Dia em que o fim de semana da próxima rodada começa (sexta: 2 dias antes da corrida).
 func event_start_day() -> int:
-	return -1 if season_over() else _day_of(next_round()["date"]) - 2
+	return -1 if season_over() else round_day(round) - 2
 
 
 func days_to_event() -> int:
@@ -822,6 +957,10 @@ func close_season() -> Dictionary:
 
 ## Começa a próxima temporada (mesmo grid: o mercado de pilotos chega na camada de contratos).
 func start_next_season() -> void:
+	last_positions = {}  # restrição de túnel do ano novo: posição final deste ano
+	var rows := team_standings()
+	for i in rows.size():
+		last_positions[rows[i][0]] = i + 1
 	events.reset_for_new_season(self)  # lesionados voltam ao carro e o calendário cancelado zera antes do mercado
 	personnel.rollover(self)
 	var council := regs.apply_passed(self)

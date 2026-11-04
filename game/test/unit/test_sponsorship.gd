@@ -93,8 +93,9 @@ func test_bonus_por_podio_entra_no_caixa() -> void:
 	w.results["race"] = order
 	var before := camp.budget_musd
 	camp.advance_to_event()
+	var per_podium := camp.sponsors.bonus_per_podium()  # (um evento depois da corrida pode mudar os contratos)
 	camp.record_weekend(w)
-	assert_almost_eq(float(camp.ledger["bonus"]), camp.sponsors.bonus_per_podium(), 0.0001)
+	assert_almost_eq(float(camp.ledger["bonus"]), per_podium, 0.0001)
 	assert_gt(float(camp.ledger["sponsors"]), 0.0)
 	assert_gt(camp.budget_musd, before - camp.cost_per_race() - 0.001 + camp.sponsor_per_race())
 

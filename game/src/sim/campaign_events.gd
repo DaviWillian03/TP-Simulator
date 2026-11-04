@@ -15,6 +15,8 @@ var news: Array = []  ## [{day, cat, id, title, text, chips: [{kind, big, small}
 var unseen: Array = []  ## notícias ainda não mostradas no cartão
 var injuries: Dictionary = {}  ## id do piloto lesionado -> {rounds_left, sub_id, original, sub_contract_prev}
 var moods: Dictionary = {}  ## id do piloto -> {rounds_left, delta: {atributo: valor}}
+var principals: Dictionary = {}  ## id da equipe -> chefe novo (troca de dirigentes)
+var postponed: Dictionary = {}  ## índice da rodada -> dias de adiamento
 var cancelled: Array = []  ## índices do calendário cancelados nesta temporada
 var ask_mult: Dictionary = {}  ## id do piloto -> multiplicador do salário pedido até a virada
 var market_until := -1
@@ -97,7 +99,27 @@ func _eligible(camp: Campaign, e: Dictionary) -> bool:
 			return camp.sponsors.contracts.size() >= 2
 		"economic_crisis":
 			return market_until < camp.day
+		"race_postponed":
+			return not _postpone_candidates(camp).is_empty()
 	return true
+
+
+## Rodadas futuras que podem ser adiadas uma semana sem encostar na seguinte (pelo menos 14 dias de folga).
+func _postpone_candidates(camp: Campaign) -> Array[int]:
+	var out: Array[int] = []
+	var n := Campaign.calendar().size()
+	for i in range(camp.round + 2, n - 1):
+		if cancelled.has(i) or postponed.has(i):
+			continue
+		if camp.round_day(i + 1) - camp.round_day(i) >= 14:
+			out.append(i)
+	return out
+
+
+## Equipe da IA sorteada.
+func _rival(camp: Campaign, rng: RandomNumberGenerator) -> Dictionary:
+	var pool := camp.teams().filter(func(t: Dictionary) -> bool: return t["id"] != camp.player_team)
+	return pool[rng.randi() % pool.size()]
 
 
 func _cancel_candidates(camp: Campaign) -> Array[int]:
@@ -207,6 +229,47 @@ func _apply(camp: Campaign, e: Dictionary, rng: RandomNumberGenerator, day: int)
 			n["title"] = "CRISE ECONÔMICA"
 			n["text"] = "A economia desacelera: as ofertas de patrocínio valem 15%% menos pelos próximos %d dias." % int(e["days"])
 			n["chips"] = [_chip("bad", "−15%", "nas ofertas"), _chip("", "%d dias" % int(e["days"]), "de duração")]
+		"rival_factory_fire":
+			var t := _rival(camp, rng)
+			var cp: CarParts = camp.parts.get(t["id"])
+			if cp != null:
+				for r: Dictionary in cp.research:
+					r["days_left"] = int(r["days_left"]) + int(e["delay_days"])
+				for q: Dictionary in cp.queue:
+					q["days_left"] = int(q["days_left"]) + int(e["delay_days"])
+			n["title"] = "INCÊNDIO NA FÁBRICA DA %s" % String(t["name"]).to_upper()
+			n["text"] = "Um incêndio atrasa em %d dias as pesquisas e a produção de peças da %s." % [int(e["delay_days"]), t["name"]]
+			n["chips"] = [_chip("good", "+%d dias" % int(e["delay_days"]), "para a rival")]
+		"rival_staff_leaves", "rival_sponsor":
+			var t2 := _rival(camp, rng)
+			var cp2: CarParts = camp.parts.get(t2["id"])
+			if cp2 != null:
+				cp2.gain_k *= float(e["gain_mult"])
+			var bad: bool = e["id"] == "rival_staff_leaves"
+			n["title"] = ("%s PERDE UM TÉCNICO-CHAVE" if bad else "%s FECHA PATROCÍNIO GRANDE") % String(t2["name"]).to_upper()
+			n["text"] = ("Um engenheiro importante deixa a %s: as peças novas dela devem render menos neste ano." if bad
+				else "A %s anuncia um patrocinador novo e acelera o desenvolvimento do carro.") % t2["name"]
+			n["chips"] = [_chip("good" if bad else "bad", "%+d%%" % roundi((float(e["gain_mult"]) - 1.0) * 100.0), "no desenvolvimento da rival")]
+		"principal_change":
+			var t3 := _rival(camp, rng)
+			var names: Dictionary = GameData.load_json(GameData.DATA_DIR + "name_pool.json")["nationalities"]
+			var nats: Array = names.keys()
+			var pool: Dictionary = names[nats[rng.randi() % nats.size()]]
+			var new_name := "%s %s" % [pool["first"][rng.randi() % pool["first"].size()], pool["last"][rng.randi() % pool["last"].size()]]
+			var old := String(t3.get("principal", "")) if t3.get("principal") != null else ""
+			t3["principal"] = new_name
+			principals[t3["id"]] = new_name
+			n["title"] = "NOVO CHEFE NA %s" % String(t3["name"]).to_upper()
+			n["text"] = ("%s deixa o comando da %s; %s assume o cargo." % [old, t3["name"], new_name]) if old != "" else ("%s assume o comando da %s." % [new_name, t3["name"]])
+			n["chips"] = [_chip("", new_name, "novo chefe de equipe")]
+		"race_postponed":
+			var cands := _postpone_candidates(camp)
+			var idx: int = cands[rng.randi() % cands.size()]
+			postponed[idx] = int(e["days"])
+			var gp: String = Campaign.calendar()[idx]["grand_prix"]
+			n["title"] = "%s ADIADO" % gp.to_upper()
+			n["text"] = "Por problemas de logística, o %s passa para uma semana depois. A data nova já está no calendário." % gp
+			n["chips"] = [_chip("", "+%d dias" % int(e["days"]), "na data")]
 		"host_support":
 			var amount := snappedf(rng.randf_range(float(e["amount"][0]), float(e["amount"][1])), 0.5)
 			camp.budget_musd += amount
@@ -290,6 +353,7 @@ func reset_for_new_season(camp: Campaign) -> void:
 	for id: String in moods.keys():
 		_end_mood(camp, id)
 	cancelled.clear()
+	postponed.clear()
 	ask_mult.clear()
 	market_until = -1
 	market_mult = 1.0
@@ -298,7 +362,7 @@ func reset_for_new_season(camp: Campaign) -> void:
 # --- salvar / carregar --------------------------------------------------------------------------------------
 
 func to_dict() -> Dictionary:
-	return {"freq": freq, "news": news, "unseen": unseen.size(), "injuries": injuries, "moods": moods, "cancelled": cancelled, "ask_mult": ask_mult,
+	return {"freq": freq, "news": news, "unseen": unseen.size(), "injuries": injuries, "moods": moods, "cancelled": cancelled, "postponed": postponed, "principals": principals, "ask_mult": ask_mult,
 		"market_until": market_until, "market_mult": market_mult}
 
 
@@ -320,6 +384,9 @@ static func from_dict(d: Dictionary) -> CampaignEvents:
 		e.moods[id]["rounds_left"] = int(e.moods[id]["rounds_left"])
 	e.cancelled = (d.get("cancelled", []) as Array).map(func(x: Variant) -> int: return int(x))
 	e.ask_mult = d.get("ask_mult", {})
+	e.principals = d.get("principals", {})
+	for k: Variant in (d.get("postponed", {}) as Dictionary):
+		e.postponed[int(k)] = int(d["postponed"][k])
 	e.market_until = int(d.get("market_until", -1))
 	e.market_mult = float(d.get("market_mult", 1.0))
 	return e
