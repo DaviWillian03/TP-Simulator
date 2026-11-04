@@ -525,3 +525,6 @@ Respostas do usuário:
   novo. Desgaste das unidades (asas, assoalho, suspensão) tira rendimento a partir de 60%. Calibração: a IA ganha em média
   +3 de nota por temporada (como antes), mas cada equipe varia de ~+1 a ~+5 conforme acerta ou erra
   (`tools/parts_report.gd`).
+- **Menu principal e escolha de equipe aprovados** (2026-11-04, mockups v16): menu só com logo e modos; escolha de
+  equipe dentro de cada modo. Ajuste: todos os blocos da fileira de emblemas com a cor de fundo da equipe (não só o
+  escolhido). Na Campanha, primeiro a pergunta "Equipe real" × "Criar equipe"; depois a escolha.

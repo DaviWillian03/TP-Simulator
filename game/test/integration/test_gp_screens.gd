@@ -100,19 +100,20 @@ func test_corrida_do_gp_larga_com_o_grid_da_classificacao() -> void:
 
 # --- direção Garagem: tela inicial e configuração ---------------------------------------
 
-func test_tela_inicial_troca_a_equipe_pela_folha() -> void:
+## Menu principal só com logo e modos (v16-1); a escolha de equipe é uma tela dentro do modo (v16-2).
+func test_menu_sem_equipe_e_escolha_de_equipe_troca_e_confirma() -> void:
 	var before := Session.player_team
-	var screen: Control = await _open("res://src/ui/title_screen.tscn")
-	screen._open_team_picker()
+	var title: Control = await _open("res://src/ui/title_screen.tscn")
+	assert_false("_team_pill" in title, "o menu principal não tem escolha de equipe")
+	Session.team_select_mode = "gp"
+	var screen: Control = await _open("res://src/ui/team_select_screen.tscn")
+	assert_eq(screen._strip.get_child_count(), 11, "um emblema por equipe")
+	var tile: Button = screen._strip.get_child(2).get_child(0)  # Ferrari (terceira equipe nos dados)
+	tile.pressed.emit()
 	await wait_process_frames(1)
-	var sheet: Node = screen.get_child(screen.get_child_count() - 1)
-	var cards := sheet.find_children("*", "Button", true, false).filter(func(b: Button) -> bool: return b.toggle_mode)
-	assert_eq(cards.size(), 11, "uma opção por equipe")
-	(cards[2] as Button).pressed.emit()  # Ferrari (terceira equipe nos dados)
-	assert_eq(Session.player_team, "ferrari")
-	await wait_process_frames(1)
-	var names: Array = screen._team_pill.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)
-	assert_has(names, "Ferrari", "a pílula mostra a nova equipe")
+	assert_eq(screen._team, "ferrari")
+	assert_eq(screen._name.text, "FERRARI")
+	assert_eq(screen._drivers.get_child_count(), 3, "título + 2 pilotos")
 	Session.player_team = before
 
 

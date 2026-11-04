@@ -121,10 +121,9 @@ func _first_number(team_id: String) -> int:
 	return 0
 
 
-## Equipe real: escolhe no seletor e começa a campanha.
+## Equipe real: abre a escolha de equipe (mockup v16-2) e de lá começa a campanha.
 func _pick_real_team() -> void:
-	ScreenKit.open_team_picker(self, func(id: String) -> void:
-		Session.start_campaign(Campaign.new_real(id)))
+	Session.open_team_select("campaign")
 
 
 func _notification(what: int) -> void:

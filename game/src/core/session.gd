@@ -23,6 +23,7 @@ const GP_SETUP_SCENE := "res://src/ui/gp_setup_screen.tscn"
 const WEEKEND_SCENE := "res://src/ui/weekend_screen.tscn"
 const PRACTICE_SCENE := "res://src/ui/practice_screen.tscn"
 const QUALI_SCENE := "res://src/ui/quali_screen.tscn"
+const TEAM_SELECT_SCENE := "res://src/ui/team_select_screen.tscn"
 const CAMPAIGN_ENTRY_SCENE := "res://src/ui/campaign_entry_screen.tscn"
 const TEAM_CREATOR_SCENE := "res://src/ui/team_creator_screen.tscn"
 const CAMPAIGN_HUB_SCENE := "res://src/ui/campaign_hub_screen.tscn"
@@ -50,6 +51,7 @@ var debug_skip_podium := false  ## --no-podium: vai direto à tabela de resultad
 var debug_profile := ""  ## --profile=<id do piloto>: abre a ficha na tela Pessoal
 var debug_pit := false  ## --pit: abre a tela do box na corrida
 var debug_tap := false  ## --tap: leva um carro ao box e abre o mini-jogo de toque
+var team_select_mode := "gp"  ## escolha de equipe: "campaign" | "gp" | "quick"
 var debug_ui := ""  ## --ui=team|quick (abre a folha na tela inicial) · --ui=gallery (estados dos componentes)
 var debug_view_only := false  ## --view-only: só o cenário 3D em tela cheia (base para mockups)
 var debug_camera: Dictionary = {}  ## --yaw --pitch --dist --cam=<n> (capturas da vista 3D)
@@ -102,6 +104,8 @@ func _ready() -> void:
 	if args.has("race"):
 		race_seed = int(args.get("seed", "1"))
 		get_tree().change_scene_to_file.call_deferred(RACE_SCENE)
+	elif args.has("teamselect"):  # (capturas) --teamselect=campaign|gp|quick
+		open_team_select.call_deferred(String(args["teamselect"]) if String(args["teamselect"]) != "" else "gp")
 	elif args.has("campaign"):
 		get_tree().change_scene_to_file.call_deferred(CAMPAIGN_ENTRY_SCENE)
 	elif args.has("creator"):
@@ -237,6 +241,13 @@ func restart_race() -> void:
 func go_to_title() -> void:
 	weekend = null
 	get_tree().change_scene_to_file(TITLE_SCENE)
+
+
+# --- Escolha de equipe (dentro de cada modo) ----------------------------------------------
+
+func open_team_select(mode: String) -> void:
+	team_select_mode = mode
+	get_tree().change_scene_to_file(TEAM_SELECT_SCENE)
 
 
 # --- Grande Prêmio ----------------------------------------------------------------------
