@@ -399,7 +399,7 @@ func _refresh_panel(p: Dictionary, order: Array[CarState]) -> void:
 	(p["row"] as Control).visible = garage
 	(p["plan_seg"] as Control).visible = garage
 	if garage:
-		lap.text = "%d jogo(s) de macios novos" % q.new_softs[car]
+		lap.text = "%d jogo(s) de macios novos" % q.new_softs_left(car)
 		if car.last_lap_time > 0.0:
 			lap.text += " · última: %s" % UiStyle.format_time(car.last_lap_time)
 	elif running:

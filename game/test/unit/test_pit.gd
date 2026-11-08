@@ -226,15 +226,18 @@ func test_toque_do_mini_jogo_ajusta_o_tempo_uma_vez() -> void:
 	assert_almost_eq(PitStop.tap_delta(0.0), PitStop.TAP_MISS_S, 0.001)
 
 
-func test_estoque_do_gp_vem_dos_macios_da_classificacao() -> void:
+func test_estoque_do_gp_vem_do_que_sobrou_dos_jogos_do_fim_de_semana() -> void:
 	var w := WeekendSim.new("interlagos", {"seed": 4, "player_team": "williams", "weather": "dry", "incident_rate": 0.0})
 	while w.session_id() != "quali":
 		w.simulate_current()
 	w.simulate_current()
 	var st: Dictionary = w.race_tyre_stock()["albon"]
-	var used := int(st["soft"]["used"])
-	assert_gt(used, 0, "a classificação gastou macios")
-	assert_eq(int(st["soft"]["new"]) + used, QualiSim.NEW_SOFT_SETS)
+	var dry := 0
+	for k: String in ["soft", "medium", "hard"]:
+		dry += int(st[k]["new"]) + int(st[k]["used"])
+	assert_between(dry, 6, 7, "13 jogos − 6 devolvidos nos treinos (− o macio do Q3 de quem chegou lá)")
+	assert_gt(int(st["soft"]["used"]), 0, "a classificação gastou macios")
+	assert_gt(int(st["medium"]["new"]) + int(st["hard"]["new"]), 1, "médio e duro novos guardados para a corrida")
 
 
 func test_toque_abre_investigacao_e_so_depois_sai_a_punicao() -> void:

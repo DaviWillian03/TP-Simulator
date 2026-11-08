@@ -159,10 +159,11 @@ func test_jogador_sai_no_fim_e_aproveita_a_pista_melhor() -> void:
 	var early := q.track_evolution_s()
 	q.advance(q.segment_length() * 0.75)
 	assert_gt(q.track_evolution_s(), early + 0.15, "a pista melhora ao longo da parte")
+	var fresh_before := q.new_softs_left(me)
 	assert_true(q.send_out(me, "soft"))
 	assert_false(q.send_out(me, "soft"), "não sai de novo enquanto está na pista")
 	assert_eq(q.status_of(me), "Volta de saída")
-	assert_eq(q.new_softs[me], QualiSim.NEW_SOFT_SETS - 1, "gastou um jogo novo de macios")
+	assert_eq(q.new_softs_left(me), fresh_before - 1, "gastou um jogo novo de macios")
 	while q.segment == 0 and not q.is_over():
 		q.step()
 	assert_lt(q.best[me][0], INF, "marcou tempo antes do fim do Q1")

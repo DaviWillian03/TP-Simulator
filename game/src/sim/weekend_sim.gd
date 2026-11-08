@@ -51,7 +51,7 @@ var setups: Dictionary = {}  ## id do piloto -> CarSetup
 var programs: Dictionary = {}  ## id do piloto -> programa do próximo treino (jogador)
 var results: Dictionary = {}  ## sessão -> Array de ids na ordem final
 var summaries: Dictionary = {}  ## sessão -> texto curto para o painel ("ALB 3º, SAI 7º")
-var soft_used: Dictionary = {}  ## id do piloto -> jogos de macio gastos na classificação (viram jogos usados)
+var tyre_alloc: TyreAllocation  ## jogos de pneus de cada piloto no fim de semana (regra real de 2026, v22)
 var grids: Dictionary = {}  ## "sprint"/"race" -> Array de ids na ordem de largada
 var points: Dictionary = {}  ## id do piloto -> pontos no fim de semana
 var forecast: Array[float] = []  ## chance de chuva por dia (sexta, sábado, domingo)
@@ -93,6 +93,7 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 		sessions = ["race"]
 	else:
 		sessions.assign(SPRINT_FORMAT if sprint_weekend else NORMAL)
+	tyre_alloc = TyreAllocation.make(drivers.map(func(x: Dictionary) -> String: return x["id"]), sprint_weekend)
 	for d: Dictionary in drivers:
 		setups[d["id"]] = CarSetup.random_start(rng)
 		points[d["id"]] = 0
@@ -185,6 +186,7 @@ func make_quali(auto_player: bool = false) -> QualiSim:
 	opts["auto_player"] = auto_player
 	opts["championship"] = championship
 	opts["tech"] = tech
+	opts["tyre_alloc"] = tyre_alloc
 	return QualiSim.new(track, tyres, teams, drivers, setups, opts)
 
 
@@ -194,7 +196,7 @@ func make_race(extra: Dictionary = {}) -> RaceSim:
 	opts["duration_pct"] = duration_pct
 	opts["sprint"] = id == "sprint"
 	opts["setups"] = setups
-	opts["tyre_stock"] = race_tyre_stock()
+	opts["tyre_stock"] = race_tyre_stock(id != "sprint")
 	opts["tech"] = tech
 	if grids.has(id):
 		opts["grid"] = grids[id]
@@ -213,14 +215,17 @@ func finish_practice(p: PracticeSession) -> void:
 	for c in p.standings():
 		times.append({"id": c.driver["id"], "code": String(c.driver.get("code", "")), "team": c.team["id"], "best": c.best_lap_time})
 	last_practice = {"session": session_id(), "drivers": own, "times": times}
+	for did: String in p.block_log:  # o treino gasta jogos sozinho e devolve 2 no fim (regra real)
+		tyre_alloc.consume_practice(did, p.block_log[did])
+		tyre_alloc.return_after_practice(did)
 	_store(p.standings())
 	_next()
 
 
 func finish_quali(q: QualiSim) -> void:
-	for car in q.cars:
-		var did: String = car.driver["id"]
-		soft_used[did] = mini(QualiSim.NEW_SOFT_SETS, int(soft_used.get(did, 0)) + QualiSim.NEW_SOFT_SETS - int(q.new_softs[car]))
+	if session_id() == "quali":  # quem disputou o Q3 devolve o macio guardado
+		for car in q.cars:
+			tyre_alloc.after_quali(car.driver["id"], q.eliminated_in[car] < 0 and not q.crashed.has(car))
 	var order := q.standings()
 	_store(order)
 	grids["sprint" if session_id() == "sprint_quali" else "race"] = q.grid_ids()
@@ -236,6 +241,9 @@ func points_for(position: int, is_sprint_race: bool) -> int:
 func finish_race(sim: RaceSim) -> void:
 	var order := sim.standings()
 	_store(order)
+	if sim.sprint:  # depois da sprint: os jogos gastos viram usados e o de mais voltas é devolvido
+		for car in sim.cars:
+			tyre_alloc.after_sprint(car.driver["id"], car.stint_history())
 	for i in order.size():
 		var car := order[i]
 		if not (car.retired or car.disqualified):
@@ -243,14 +251,12 @@ func finish_race(sim: RaceSim) -> void:
 	_next()
 
 
-## Estoque de pneus de cada piloto na corrida: os macios gastos na classificação viram jogos usados.
-func race_tyre_stock() -> Dictionary:
+## Estoque de pneus de cada piloto na corrida (o que sobrou dos jogos do fim de semana; 0 volta = novo).
+## Na sprint o macio guardado para o Q3 ainda não entra.
+func race_tyre_stock(include_q3: bool = true) -> Dictionary:
 	var out := {}
 	for d: Dictionary in drivers:
-		var st := PitStop.default_stock()
-		var used := int(soft_used.get(d["id"], 0))
-		st["soft"] = {"new": QualiSim.NEW_SOFT_SETS - used, "used": used}
-		out[d["id"]] = st
+		out[d["id"]] = tyre_alloc.race_stock(d["id"], include_q3)
 	return out
 
 

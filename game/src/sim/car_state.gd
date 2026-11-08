@@ -53,6 +53,7 @@ var last_threat_idx := -1  ## último carro que ameaçava (para saber se ele par
 var last_pit_lap := -1  ## volta em que fez a última parada
 var stuck_laps := 0  ## voltas seguidas colado no carro da frente sem passar
 var ai_gamble := 0.0  ## 0..1: quanto a equipe aposta (estratégia alternativa, ficar fora no safety car)
+var stints: Array = []  ## stints já encerrados: [{compound, laps}] (devolução de pneus depois da sprint)
 var plan: Dictionary = {}  ## plano da parada (PitStop.make_plan); vazio = parada padrão
 var wing_step := 0  ## ajuste da asa dianteira (−1..+2) em vigor
 var tyre_stock: Dictionary = {}  ## composto -> {"new": n, "used": n}; vazio = estoque ilimitado (IA)
@@ -115,3 +116,10 @@ func team_color() -> Color:
 
 func team_color2() -> Color:
 	return Color(team["color2"])
+
+
+## Stints da prova até agora, incluindo o atual.
+func stint_history() -> Array:
+	var out := stints.duplicate()
+	out.append({"compound": tyre, "laps": tyre_laps})
+	return out

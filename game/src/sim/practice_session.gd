@@ -52,6 +52,7 @@ var over := false
 var rng := RandomNumberGenerator.new()
 var history: Array[Dictionary] = []  ## {car, block, text, kind ("ok"/"wet"/"spin"/"failure")} — resumo do treino
 var setups_before: Dictionary = {}  ## id do piloto -> cópia do CarSetup no começo do treino
+var block_log: Dictionary = {}  ## id do piloto -> [{block, laps, wet}] (gasto de pneus do treino, TyreAllocation)
 var draws: Dictionary = {}  ## id do piloto -> Array das notas sorteadas (0..1) de cada bloco
 
 var _plan: Dictionary = {}  # CarState -> {queue, block, block_end, next_lap}
@@ -79,6 +80,7 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 			setups[d["id"]] = CarSetup.random_start(rng)
 		setups_before[d["id"]] = (setups[d["id"]] as CarSetup).copy()
 		draws[d["id"]] = []
+		block_log[d["id"]] = []
 		var prog: Array = p_programs.get(d["id"], _ai_program())
 		programs[d["id"]] = valid_program(prog)
 		_plan[car] = {"queue": programs[d["id"]].duplicate(), "block": "", "block_end": 0.0, "next_lap": INF}
@@ -169,6 +171,7 @@ func _complete_lap(car: CarState, plan: Dictionary) -> void:
 	car.last_lap_time = t
 	car.lap_times.append(t)
 	car.laps_done += 1
+	plan["laps"] = int(plan.get("laps", 0)) + 1
 	car.best_lap_time = minf(car.best_lap_time, t)
 	car.tyre_wear += tyres.wear_per_lap(car.tyre) * track.tyre_wear_factor
 	lap_completed.emit(car, t)
@@ -226,6 +229,8 @@ func _finish_block(car: CarState, plan: Dictionary) -> void:
 	var setup: CarSetup = setups[car.driver["id"]]
 	var c := _draw(car)
 	(draws[car.driver["id"]] as Array).append(c)
+	(block_log[car.driver["id"]] as Array).append({"block": id, "laps": int(plan.get("laps", 0)), "wet": weather.wetness > 0.3})
+	plan["laps"] = 0
 	var gain := (GAIN_MIN + GAIN_SPAN * c) * float(plan.get("block_share", 1.0)) * float(car.team.get("practice_gain_mult", 1.0))
 	var text := ""
 	var kind := "ok"

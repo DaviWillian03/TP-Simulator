@@ -79,6 +79,7 @@ var fastest_lap_time := INF
 var fastest_lap_car: CarState = null
 var overtakes_count := 0
 var rng := RandomNumberGenerator.new()
+var start_tyres: Dictionary = {}  ## id do piloto -> pneu de largada escolhido na estratégia do jogador
 var options_seed := 1  ## semente da corrida (planos de estratégia da IA usam um sorteio próprio)
 
 ## regulamento técnico (TechRules): mexe no tempo de volta, energia, ultrapassagem, desgaste e reabastecimento
@@ -115,6 +116,7 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	total_laps = maxi(3, roundi(track.laps * duration_pct / (SPRINT_DISTANCE if sprint else 1.0)))
 	rng.seed = int(options.get("seed", 1))
 	options_seed = int(options.get("seed", 1))
+	start_tyres = options.get("start_tyres", {})
 	_apply_tech(options.get("tech", {}))
 	var rain_p := float(options.get("rain_probability", track.rain_probability))
 	weather = WeatherModel.new(rain_p, total_laps * track.base_lap_time_s * 1.05, rng, options)
@@ -168,6 +170,8 @@ func _setup_grid(grid_ids: Array = []) -> void:
 		car.grid_position = i
 		car.distance = -GRID_SPACING_M * i - 5.0
 		car.tyre = StrategyAI.choose_start_compound(i, rng)
+		if start_tyres.has(car.driver["id"]) and tyres.is_dry(String(start_tyres[car.driver["id"]])):
+			car.tyre = String(start_tyres[car.driver["id"]])
 		if weather.wetness >= 0.2:
 			car.tyre = tyres.best_for_wetness(weather.wetness, ["inter", "wet"])
 		car.compounds_used = [car.tyre]
@@ -686,6 +690,7 @@ func _service_car(car: CarState) -> void:
 	if car.is_player:
 		car.wing_step = int(plan.get("wing_step", car.wing_step))
 	var used := PitStop.take_set(car, car.pit_compound, plan.get("use_used", false))
+	car.stints.append({"compound": car.tyre, "laps": car.tyre_laps})
 	car.tyre = car.pit_compound
 	car.tyre_wear = PitStop.USED_SET_WEAR if used else 0.0
 	car.tyre_laps = 0
@@ -765,6 +770,7 @@ func free_tyre_change() -> void:
 		var compound := best
 		if tyres.is_dry(best):
 			compound = car.pit_compound if car.is_player and tyres.is_dry(car.pit_compound) else StrategyAI.choose_compound(self, car, remaining)
+		car.stints.append({"compound": car.tyre, "laps": car.tyre_laps})
 		car.tyre = compound
 		car.tyre_wear = PitStop.USED_SET_WEAR if PitStop.take_set(car, compound, false) else 0.0
 		car.tyre_laps = 0

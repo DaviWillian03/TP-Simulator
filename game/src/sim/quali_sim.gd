@@ -34,7 +34,6 @@ const IN_LAP_K := 1.3
 ## Valores PROVISÓRIOS
 const EVOLUTION_S := 0.3  ## ganho da pista do começo ao fim de cada parte
 const SEGMENT_EVOLUTION_S := 0.1  ## ganho extra a cada parte (pista mais emborrachada)
-const NEW_SOFT_SETS := 3  ## jogos novos de macio guardados para a classificação
 const USED_TYRE_WEAR := 0.15  ## pneu já usado numa volta lançada
 const LAP_NOISE := 0.1
 const TRAFFIC_CHANCE := 0.12
@@ -74,8 +73,10 @@ var phase_end: Dictionary = {}  ## CarState -> instante (seg_time) em que a fase
 var flying_time: Dictionary = {}  ## CarState -> tempo da volta lançada em andamento
 var best: Dictionary = {}  ## CarState -> Array[float] melhor volta em cada parte (INF = sem tempo)
 var best_set_at: Dictionary = {}  ## CarState -> Array[float] quando marcou (desempate)
-var new_softs: Dictionary = {}  ## CarState -> jogos novos de macio restantes
-var run_tyre: Dictionary = {}  ## CarState -> {compound, new}
+var alloc: TyreAllocation  ## jogos de pneus do fim de semana (regra real; v22)
+var q3_open := false  ## o macio guardado para o Q3 só sai na última parte da classificação principal
+var player_mode: Dictionary = {}  ## CarState -> atitude escolhida pelo jogador na saída ("safe"/"limit")
+var run_tyre: Dictionary = {}  ## CarState -> {compound, new, set}
 var eliminated_in: Dictionary = {}  ## CarState -> parte em que caiu (-1 = segue)
 var crashed: Dictionary = {}  ## CarState -> true se bateu (fora do resto da classificação)
 var ai_plan: Dictionary = {}  ## CarState -> Array[float] instantes de saída planejados
@@ -93,7 +94,7 @@ var phase_start: Dictionary = {}  ## CarState -> instante (seg_time) em que a fa
 var _acc := 0.0  ## tempo que sobrou de um quadro (a tela chama advance() com frações de segundo)
 
 
-## options: seed, player_team, weather, rain_probability, incident_rate, sprint, auto_player.
+## options: seed, player_team, weather, rain_probability, incident_rate, sprint, auto_player, tyre_alloc (TyreAllocation).
 func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array,
 		p_setups: Dictionary = {}, options: Dictionary = {}) -> void:
 	track = p_track
@@ -113,6 +114,9 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	weather = WeatherModel.new(rain_p, total, rng, options)
 	weather.rubber = 0.5  # pista já emborrachada pelos treinos
 	var player_team: String = options.get("player_team", "")
+	alloc = options.get("tyre_alloc", null)
+	if alloc == null:  # classificação avulsa (testes): jogos de um fim de semana sem treinos
+		alloc = TyreAllocation.make(drivers.map(func(x: Dictionary) -> String: return x["id"]), sprint)
 	for d: Dictionary in drivers:
 		var car := CarState.new()
 		car.index = cars.size()
@@ -126,7 +130,6 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		phase_end[car] = 0.0
 		best[car] = [INF, INF, INF]
 		best_set_at[car] = [INF, INF, INF]
-		new_softs[car] = NEW_SOFT_SETS
 		eliminated_in[car] = -1
 	_set_cuts(cars.size())
 	_begin_segment()
@@ -232,20 +235,52 @@ func _nobody_on_valid_lap() -> bool:
 
 ## Manda o carro para a pista com o pneu escolhido. Só funciona com o carro na garagem,
 ## na parte em que ele ainda está classificado e com o relógio rodando.
-func send_out(car: CarState, compound: String, laps: int = 1) -> bool:
+func send_out(car: CarState, compound: String, laps: int = 1, mode: String = "") -> bool:
+	return send_out_set(car, best_set(car, compound), laps, mode, compound)
+
+
+## Manda o carro com um jogo específico (folha de saída, v22). mode: "safe"/"limit" (vazio = o piloto decide).
+func send_out_set(car: CarState, set_id: int, laps: int = 1, mode: String = "", fallback: String = "soft") -> bool:
 	if not can_go_out(car):
 		return false
 	laps_left[car] = clampi(laps, 1, 2)
-	var fresh := false
-	if compound == "soft" and new_softs[car] > 0:
-		new_softs[car] -= 1
-		fresh = true
-	elif compound != "soft":
-		fresh = true  # médios/duros/chuva: há jogos novos de sobra para a classificação
-	run_tyre[car] = {"compound": compound, "new": fresh}
+	var did: String = car.driver["id"]
+	var s := alloc.get_set(did, set_id)
+	if not s.is_empty() and (s["returned"] or (s["q3"] and not q3_open)):
+		return false
+	var compound: String = s["compound"] if not s.is_empty() else fallback
+	var fresh := not s.is_empty() and int(s["laps"]) == 0
+	if not s.is_empty():
+		alloc.add_laps(did, set_id, laps + 2)  # volta de saída + lançadas + volta de entrada
+	run_tyre[car] = {"compound": compound, "new": fresh, "set": set_id}
+	if mode != "":
+		player_mode[car] = mode
+	else:
+		player_mode.erase(car)
 	car.tyre = compound
 	_set_phase(car, Phase.OUT_LAP, seg_time + _lap_base(car) * OUT_LAP_K)
 	return true
+
+
+## Jogos que o carro pode usar agora (o macio do Q3 só na última parte da classificação principal).
+func sets_for(car: CarState) -> Array:
+	return alloc.available(car.driver["id"], q3_open)
+
+
+## Melhor jogo de um composto: novo primeiro (o do Q3 quando liberado), senão o usado com menos voltas. -1 = nenhum.
+func best_set(car: CarState, compound: String) -> int:
+	var best := {}
+	for s: Dictionary in sets_for(car):
+		if s["compound"] != compound:
+			continue
+		if best.is_empty() or int(s["laps"]) < int(best["laps"]) or (int(s["laps"]) == int(best["laps"]) and s["q3"]):
+			best = s
+	return int(best["id"]) if not best.is_empty() else -1
+
+
+## Jogos novos de macio que ainda dá para usar nesta parte.
+func new_softs_left(car: CarState) -> int:
+	return sets_for(car).filter(func(s: Dictionary) -> bool: return s["compound"] == "soft" and int(s["laps"]) == 0).size()
 
 
 func can_go_out(car: CarState) -> bool:
@@ -280,7 +315,7 @@ func track_evolution_s() -> float:
 ## Começa uma volta lançada: o piloto escolhe o objetivo, e o que vai dar errado (se der) é sorteado agora e
 ## revelado no meio da volta (aí dá para abortar). repeat = segunda volta seguida ou nova tentativa.
 func _start_flying(car: CarState, repeat: bool) -> void:
-	lap_mode[car] = choose_lap_mode(car)
+	lap_mode[car] = String(player_mode[car]) if player_mode.has(car) else choose_lap_mode(car)
 	var t := expected_lap_time(car, run_tyre[car]["compound"], run_tyre[car]["new"] and not repeat)
 	t += rng.randfn(0.0, LAP_NOISE)
 	t += SECOND_LAP_S if repeat else 0.0
@@ -488,6 +523,7 @@ func ai_compound(_car: CarState) -> String:
 
 func _begin_segment() -> void:
 	seg_time = 0.0
+	q3_open = not sprint and segment == segments.size() - 1
 	red_flag_until = -1.0
 	red_flag_at = INF
 	if rng.randf() < RED_FLAG_CHANCE * incident_rate:
