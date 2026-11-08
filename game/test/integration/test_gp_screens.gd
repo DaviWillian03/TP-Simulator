@@ -213,3 +213,18 @@ func test_relatorio_fecha_a_temporada_uma_unica_vez() -> void:
 	var again: Control = await _open("res://src/ui/campaign_report_screen.tscn")
 	assert_eq(c.seasons.size(), 1, "reabrir o relatório não fecha a temporada de novo")
 	Session.campaign = null
+
+
+func test_estrategia_antes_da_largada_edita_e_confirma() -> void:
+	var w := _weekend_at("race")
+	var screen: Control = await _open("res://src/ui/strategy_screen.tscn")
+	assert_true(screen.chosen.has("albon") and screen.chosen.has("sainz"))
+	var laps0: int = screen.chosen["albon"]["stints"][0]["laps"]
+	if (screen.chosen["albon"]["stints"] as Array).size() > 1:
+		assert_true(RaceStrategy.adjust_laps(screen.chosen["albon"], 0, 2))
+		assert_eq(int(screen.chosen["albon"]["stints"][0]["laps"]), laps0 + 2)
+	w.strategy = screen.chosen.duplicate(true)  # o que o IR PARA O GRID grava
+	var sim := w.make_race()
+	for car in sim.cars:
+		if car.driver["id"] == "albon":
+			assert_eq(car.tyre, String(screen.chosen["albon"]["stints"][0]["compound"]))

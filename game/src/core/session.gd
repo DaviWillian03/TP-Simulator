@@ -22,6 +22,7 @@ const RACE_SCENE := "res://src/ui/race_screen.tscn"
 const GP_SETUP_SCENE := "res://src/ui/gp_setup_screen.tscn"
 const WEEKEND_SCENE := "res://src/ui/weekend_screen.tscn"
 const QUALI_SCENE := "res://src/ui/quali_screen.tscn"
+const STRATEGY_SCENE := "res://src/ui/strategy_screen.tscn"  ## estratégia antes da largada (v22-2)
 const TEAM_SELECT_SCENE := "res://src/ui/team_select_screen.tscn"
 const CAMPAIGN_ENTRY_SCENE := "res://src/ui/campaign_entry_screen.tscn"
 const TEAM_CREATOR_SCENE := "res://src/ui/team_creator_screen.tscn"
@@ -397,4 +398,17 @@ func play_session() -> void:
 	elif weekend.is_quali(id):
 		get_tree().change_scene_to_file(QUALI_SCENE)
 	elif weekend.is_race(id):
-		get_tree().change_scene_to_file(RACE_SCENE)
+		# passo antes da largada: estratégia dos dois pilotos (todos os modos; decisão de 2026-11-08)
+		get_tree().change_scene_to_file(STRATEGY_SCENE if weekend.strategy.is_empty() and _has_player_cars() else RACE_SCENE)
+
+
+func _has_player_cars() -> bool:
+	for d: Dictionary in weekend.drivers:
+		if d["team"] == weekend.player_team:
+			return true
+	return false
+
+
+## Estratégia confirmada: segue para o grid de largada e a corrida.
+func start_race_after_strategy() -> void:
+	get_tree().change_scene_to_file(RACE_SCENE)

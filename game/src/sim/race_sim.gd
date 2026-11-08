@@ -131,6 +131,9 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		car.team = GameData.team_by_id(teams, d["team"])
 		car.is_player = car.team["id"] == player_team
 		if car.is_player:
+			var plans: Dictionary = options.get("player_plans", {})
+			if plans.has(d["id"]):
+				car.player_plan = (plans[d["id"]] as Dictionary).duplicate(true)
 			var stocks: Dictionary = options.get("tyre_stock", {})
 			car.tyre_stock = (stocks[d["id"]] as Dictionary).duplicate(true) if stocks.has(d["id"]) else PitStop.default_stock()
 		var setups: Dictionary = options.get("setups", {})

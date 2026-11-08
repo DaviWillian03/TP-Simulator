@@ -56,6 +56,7 @@ var grids: Dictionary = {}  ## "sprint"/"race" -> Array de ids na ordem de larga
 var points: Dictionary = {}  ## id do piloto -> pontos no fim de semana
 var forecast: Array[float] = []  ## chance de chuva por dia (sexta, sábado, domingo)
 var rng := RandomNumberGenerator.new()
+var strategy: Dictionary = {}  ## id do piloto -> plano da corrida atual (RaceStrategy; passo antes da largada, v22-2)
 var show_practice_report := false  ## a tela do fim de semana abre a folha de resultado do treino (uma vez)
 var last_practice: Dictionary = {}  ## resultado do último treino (tela de resultado, v21): {session, drivers: {id: resumo}, times}
 
@@ -190,9 +191,38 @@ func make_quali(auto_player: bool = false) -> QualiSim:
 	return QualiSim.new(track, tyres, teams, drivers, setups, opts)
 
 
+## Contexto para montar a estratégia da corrida (ou sprint) atual: voltas, desgaste e perda no box.
+func race_context() -> Dictionary:
+	var id := session_id()
+	var is_sprint := id == "sprint"
+	var total := maxi(3, roundi(track.laps * duration_pct / (RaceSim.SPRINT_DISTANCE if is_sprint else 1.0)))
+	var wear := track.tyre_wear_factor / pow(duration_pct, RaceSim.WEAR_SHORT_RACE_EXP) * float(TechRules.knobs(tech)["wear_k"])
+	return RaceStrategy.context(total, wear, track.pit_lane_loss_s, is_sprint)
+
+
+## Planos dos engenheiros para os pilotos do jogador (a tela de estratégia começa por eles).
+func engineer_strategy() -> Dictionary:
+	var ctx := race_context()
+	var stocks := race_tyre_stock(session_id() != "sprint")
+	var out := {}
+	for d: Dictionary in drivers:
+		if d["team"] == player_team:
+			out[d["id"]] = RaceStrategy.engineer_plans(tyres, ctx, stocks[d["id"]])
+	return out
+
+
 func make_race(extra: Dictionary = {}) -> RaceSim:
 	var id := session_id()
 	var opts := session_options(id)
+	if not strategy.is_empty():  # estratégia do jogador: pneu de largada e voltas planejadas das paradas (só avisa)
+		var starts := {}
+		var plans := {}
+		for did: String in strategy:
+			var p: Dictionary = strategy[did]
+			starts[did] = String(p["stints"][0]["compound"])
+			plans[did] = p
+		opts["start_tyres"] = starts
+		opts["player_plans"] = plans
 	opts["duration_pct"] = duration_pct
 	opts["sprint"] = id == "sprint"
 	opts["setups"] = setups
@@ -239,6 +269,7 @@ func points_for(position: int, is_sprint_race: bool) -> int:
 
 
 func finish_race(sim: RaceSim) -> void:
+	strategy = {}
 	var order := sim.standings()
 	_store(order)
 	if sim.sprint:  # depois da sprint: os jogos gastos viram usados e o de mais voltas é devolvido
