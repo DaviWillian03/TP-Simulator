@@ -16,6 +16,8 @@ static func choose_start_compound(grid_position: int, rng: RandomNumberGenerator
 
 
 const LATE_LAPS := 3  ## nas últimas voltas só para em emergência (pneu errado, asa, regra)
+const THREAT_GAP_S := 2.5  ## carro logo atrás a menos disso ameaça com o undercut
+const STUCK_GAP_S := 1.2  ## colado atrás sem conseguir passar
 const NO_GAMBLE_SC := 0.65  ## acima disso, a equipe tende a ficar fora no safety car para ganhar posição
 
 
@@ -102,7 +104,23 @@ static func decide_pit(sim: RaceSim, car: CarState) -> void:
 	if planned and rule_ok and can_reach_end and car.ai_plan.size() == 1 and remaining <= LATE_LAPS + 2:
 		car.ai_plan.clear()  # já cumpriu a regra e o pneu aguenta: não vale parar no fim
 		planned = false
+	# reação aos rivais (só IA): cobrir o undercut de quem vinha logo atrás e parou; ou tentar o undercut em quem
+	# segura o carro há algumas voltas. Só perto da janela planejada — ninguém para cedo demais por isso.
+	if not car.is_player and not planned and not car.ai_plan.is_empty() and remaining > LATE_LAPS + 2:
+		var to_window := car.ai_plan[0] - car.laps_done
+		var near := to_window <= maxi(roundi(sim.total_laps * 0.15), 2)
+		car.stuck_laps = car.stuck_laps + 1 if car.gap_ahead_s >= 0.0 and car.gap_ahead_s < STUCK_GAP_S else 0
+		var rr := RandomNumberGenerator.new()
+		rr.seed = hash("react|%d|%d|%d" % [car.index, car.laps_done, sim.options_seed])
+		if near and car.last_threat_idx >= 0 and car.last_threat_idx < sim.cars.size():
+			var rival: CarState = sim.cars[car.last_threat_idx]
+			if rival.last_pit_lap >= car.laps_done - 1 and rival.last_pit_lap >= 0 and rr.randf() < 0.75 - 0.4 * car.ai_gamble:
+				planned = true  # cobre o undercut: para já
+		if not planned and near and car.stuck_laps >= 2 and rr.randf() < 0.25 + 0.5 * car.ai_gamble:
+			planned = true  # tenta o undercut em quem está segurando
 	var worn_out := car.tyre_wear >= car.ai_pit_wear + 0.08 and not can_reach_end
+	if worn_out and remaining <= LATE_LAPS and car.tyre_wear < 0.95:
+		worn_out = false  # nas últimas voltas a parada custa mais que o pneu gasto: segura até o fim
 	var must_stop_for_rule := not rule_ok and remaining <= LATE_LAPS
 	if planned or worn_out or must_stop_for_rule:
 		var stint := remaining
@@ -158,6 +176,8 @@ static func on_neutralization(sim: RaceSim, car: CarState) -> void:
 	var worth := car.tyre_wear > 0.45 or near_window or (not sim.compound_rule_ok(car) and remaining <= maxi(roundi(sim.total_laps * 0.35), 4))
 	if worth and car.ai_gamble > NO_GAMBLE_SC and car.tyre_wear < 0.55:
 		worth = false
+	if worth and remaining <= LATE_LAPS + 2 and car.tyre_wear < 0.65:
+		worth = false  # safety car no fim: só troca quem está com o pneu realmente gasto (perder posição não compensa)
 	if worth:
 		car.pit_compound = best_compound(sim, car, remaining)
 		car.pit_requested = true

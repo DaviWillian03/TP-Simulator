@@ -693,6 +693,7 @@ func _service_car(car: CarState) -> void:
 	if not car.compounds_used.has(car.tyre):
 		car.compounds_used.append(car.tyre)
 	car.pit_stops += 1
+	car.last_pit_lap = car.laps_done
 	control.on_pit_stop(car)
 	pit_stop.emit(car, car.tyre, car.pit_stationary_s)
 
@@ -807,10 +808,15 @@ func _same_lane_ahead(order: Array[CarState], i: int) -> CarState:
 
 
 func _update_gaps(order: Array[CarState]) -> void:
+	for car in order:
+		car.threat_idx = -1
 	for i in order.size():
 		var car := order[i]
 		var ahead := _same_lane_ahead(order, i)
 		car.gap_ahead_s = -1.0 if ahead == null else (ahead.distance - car.distance) / maxf(car.speed, 1.0)
+		if ahead != null and car.gap_ahead_s >= 0.0 and car.gap_ahead_s < StrategyAI.THREAT_GAP_S and not car.in_pit:
+			ahead.threat_idx = car.index
+			ahead.last_threat_idx = car.index
 
 
 func _all_finished() -> bool:

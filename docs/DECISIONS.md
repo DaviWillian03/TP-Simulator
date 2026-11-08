@@ -562,3 +562,7 @@ Respostas do usuário:
   de carreira (Norris = 4). Novato que chega à F1: 50% mantém o número da categoria de base, 50% herda o de um piloto que
   saiu (sem repetir número em uso). Menores de 18 anos (na temporada do contrato) não entram no mercado da F1, não assinam e
   não servem de reserva.
+- **IA reage aos rivais** (2026-11-08): perto da janela planejada, a IA cobre o undercut de quem vinha logo atrás (<2,5 s) e
+  parou (equipes conservadoras cobrem mais) ou tenta o undercut em quem a segura há 2+ voltas (as que apostam tentam mais).
+  Nas últimas voltas não para por pneu gasto (salvo pneu no limite) e no safety car do fim só troca quem está com pneu muito
+  gasto. Item 6 da fila: a parte da IA está feita; os planos táticos do JOGADOR (tela) continuam pendentes.
