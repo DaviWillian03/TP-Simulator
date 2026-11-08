@@ -394,6 +394,8 @@ func drivers() -> Array:
 
 
 func team() -> Dictionary:
+	if feeder != null:  # campanha na F2/F3: a equipe está no campeonato da categoria
+		return my_series().team(player_team)
 	return GameData.team_by_id(_teams, player_team)
 
 

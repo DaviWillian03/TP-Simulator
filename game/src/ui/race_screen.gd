@@ -400,8 +400,8 @@ func _refresh_ui() -> void:
 
 func _setup_championship() -> void:
 	var camp: Campaign = Session.campaign
-	if weekend == null or not weekend.campaign or camp == null:
-		return
+	if weekend == null or not weekend.campaign or camp == null or camp.is_feeder():
+		return  # (F2/F3: o campeonato ao vivo da F1 não se aplica)
 	var team_of := {}
 	for d: Dictionary in camp.drivers():
 		team_of[d["id"]] = d["team"]
