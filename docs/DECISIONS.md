@@ -589,3 +589,9 @@ Respostas do usuário:
   4 jogos secos de um composto, sem parada obrigatória, sprint com os 12 primeiros invertidos. Mockup antes.
 - **Modo Corrida rápida removido** (usuário, 2026-11-08: "modo corrida rapida nem é pra existir mais"): o menu tem Campanha e
   Grande Prêmio (Corrida Caótica segue bloqueada). "Só a corrida" continua como formato dentro do Grande Prêmio.
+- **Histórico e animação de campeão** (respostas de 2026-11-08): aba **Histórico** na campanha com **Lendas = os 15 maiores
+  campeões já aposentados** (pilotos em atividade entram quando se aposentam na campanha), **Pilotos atuais = só o grid da
+  F1** (números até 2025 + o que a campanha somar) e **Campeonatos** (campeões de cada ano). **Animação de campeão = pista +
+  pôster** (câmera no carro do campeão, pista na cor da equipe, fogos/confete; depois pôster com foto grande, "CAMPEÃO
+  MUNDIAL", número e números da temporada), para **pilotos e construtores de qualquer equipe** (mais festa quando é a sua).
+  Mockup antes.

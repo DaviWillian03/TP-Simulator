@@ -1,0 +1,20 @@
+{
+ "_notas": "Lendas = os 15 maiores campeões já aposentados (decisão de 2026-11-08). Estatísticas oficiais de carreira até a aposentadoria (títulos, vitórias, poles, pódios, largadas), conferidas em 2026-11-08 em formula1points.com, f1-fansite.com, crash.net e racingnews365.com (largadas variam ±1 entre fontes; usamos a mais citada). Fotos só em game/local/legends/<id>.png (fora do git). Pilotos em atividade entram quando se aposentam na campanha.",
+ "legends": [
+  {"id": "schumacher", "name": "Michael Schumacher", "nationality": "Alemanha", "years": "1991–2012", "titles": 7, "title_years": [1994, 1995, 2000, 2001, 2002, 2003, 2004], "wins": 91, "poles": 68, "podiums": 155, "starts": 306},
+  {"id": "fangio", "name": "Juan Manuel Fangio", "nationality": "Argentina", "years": "1950–1958", "titles": 5, "title_years": [1951, 1954, 1955, 1956, 1957], "wins": 24, "poles": 29, "podiums": 35, "starts": 51},
+  {"id": "prost", "name": "Alain Prost", "nationality": "França", "years": "1980–1993", "titles": 4, "title_years": [1985, 1986, 1989, 1993], "wins": 51, "poles": 33, "podiums": 106, "starts": 199},
+  {"id": "vettel", "name": "Sebastian Vettel", "nationality": "Alemanha", "years": "2007–2022", "titles": 4, "title_years": [2010, 2011, 2012, 2013], "wins": 53, "poles": 57, "podiums": 122, "starts": 299},
+  {"id": "senna", "name": "Ayrton Senna", "nationality": "Brasil", "years": "1984–1994", "titles": 3, "title_years": [1988, 1990, 1991], "wins": 41, "poles": 65, "podiums": 80, "starts": 161},
+  {"id": "lauda", "name": "Niki Lauda", "nationality": "Áustria", "years": "1971–1985", "titles": 3, "title_years": [1975, 1977, 1984], "wins": 25, "poles": 24, "podiums": 54, "starts": 171},
+  {"id": "piquet", "name": "Nelson Piquet", "nationality": "Brasil", "years": "1978–1991", "titles": 3, "title_years": [1981, 1983, 1987], "wins": 23, "poles": 24, "podiums": 60, "starts": 204},
+  {"id": "stewart", "name": "Jackie Stewart", "nationality": "Reino Unido", "years": "1965–1973", "titles": 3, "title_years": [1969, 1971, 1973], "wins": 27, "poles": 17, "podiums": 43, "starts": 99},
+  {"id": "brabham", "name": "Jack Brabham", "nationality": "Austrália", "years": "1955–1970", "titles": 3, "title_years": [1959, 1960, 1966], "wins": 14, "poles": 13, "podiums": 31, "starts": 126},
+  {"id": "clark", "name": "Jim Clark", "nationality": "Reino Unido", "years": "1960–1968", "titles": 2, "title_years": [1963, 1965], "wins": 25, "poles": 33, "podiums": 32, "starts": 72},
+  {"id": "hakkinen", "name": "Mika Häkkinen", "nationality": "Finlândia", "years": "1991–2001", "titles": 2, "title_years": [1998, 1999], "wins": 20, "poles": 26, "podiums": 51, "starts": 161},
+  {"id": "ascari", "name": "Alberto Ascari", "nationality": "Itália", "years": "1950–1955", "titles": 2, "title_years": [1952, 1953], "wins": 13, "poles": 14, "podiums": 17, "starts": 32},
+  {"id": "fittipaldi", "name": "Emerson Fittipaldi", "nationality": "Brasil", "years": "1970–1980", "titles": 2, "title_years": [1972, 1974], "wins": 14, "poles": 6, "podiums": 35, "starts": 144},
+  {"id": "ghill", "name": "Graham Hill", "nationality": "Reino Unido", "years": "1958–1975", "titles": 2, "title_years": [1962, 1968], "wins": 14, "poles": 13, "podiums": 36, "starts": 176},
+  {"id": "mansell", "name": "Nigel Mansell", "nationality": "Reino Unido", "years": "1980–1995", "titles": 1, "title_years": [1992], "wins": 31, "poles": 32, "podiums": 59, "starts": 187}
+ ]
+}
