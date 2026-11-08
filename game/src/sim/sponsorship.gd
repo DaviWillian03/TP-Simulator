@@ -155,6 +155,19 @@ func accept(camp: Campaign, zone_id: String, key: String) -> Dictionary:
 	return {"ok": false, "text": "Oferta indisponível."}
 
 
+## Modo Essencial: o diretor comercial fecha a melhor oferta (valor por corrida) de cada zona livre. Devolve quantas fechou.
+func auto_fill(camp: Campaign) -> int:
+	var n := 0
+	for z: String in free_zones():
+		var best := {}
+		for o: Dictionary in offers_for(camp, z):
+			if best.is_empty() or float(o["per_race"]) > float(best["per_race"]):
+				best = o
+		if not best.is_empty() and accept(camp, z, String(best["key"]))["ok"]:
+			n += 1
+	return n
+
+
 ## Pede mais: com chance (cresce com a influência) a marca sobe o valor; senão retira a oferta.
 func ask_more(camp: Campaign, zone_id: String, key: String) -> Dictionary:
 	_sync(camp)

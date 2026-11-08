@@ -62,7 +62,7 @@ func test_modo_essencial_mostra_o_diretor_e_preenche_vagas() -> void:
 	var screen: Control = await _open("res://src/ui/campaign_car_screen.tscn")
 	screen._on_mode("essential")
 	assert_eq(camp.detail, "essential")
-	assert_eq(camp.dev.projects.size(), camp.dev.slots(), "o diretor preenche as vagas")
+	assert_eq(camp.dev.busy(), camp.dev.slots(), "o diretor preenche as vagas (peças e árvore)")
 	screen._on_focus("aero")
 	assert_eq(camp.dev.focus, "aero")
 

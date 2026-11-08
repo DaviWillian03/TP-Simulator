@@ -176,10 +176,11 @@ func test_modo_essencial_o_diretor_escolhe_dentro_do_teto() -> void:
 	camp.detail = "essential"
 	camp.dev.levels["parts"] = 3
 	camp.dev.tick(camp, 1)
-	assert_eq(camp.dev.projects.size(), camp.dev.slots(), "preenche as vagas")
+	assert_eq(camp.dev.busy(), camp.dev.slots(), "preenche as vagas (pesquisas de peças primeiro, depois a árvore)")
+	assert_gt(camp.my_parts().research.size(), 0, "o diretor pesquisa peças (o que melhora o carro)")
 	assert_lte(camp.dev.auto_spent, CarDevelopment.AUTO_CAP_MUSD + 0.001)
 	camp.detail = "advanced"
-	var n := camp.dev.projects.size()
+	var n := camp.dev.busy()
 	camp.dev.projects.clear()
 	camp.dev.tick(camp, 1)
 	assert_eq(camp.dev.projects.size(), 0, "no avançado nada é automático")

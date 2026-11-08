@@ -11,8 +11,8 @@ func before_each() -> void:
 
 
 func test_teto_trava_projetos_e_pecas() -> void:
-	camp.record("rd", Campaign.COST_CAP_MUSD - 1.0)
-	assert_almost_eq(camp.cap_left(), 1.0, 0.001)
+	camp.record("rd", camp.cap_left_rd() - 1.0)  # o teto livre para P&D já desconta a operação e a manutenção do resto do ano
+	assert_almost_eq(camp.cap_left_rd(), 1.0, 0.001)
 	assert_eq(camp.dev.project_info("cur", "aero.0.0", camp)["reason"], "cap", "projeto bloqueado pelo teto")
 	assert_eq(camp.my_parts().research_info(camp, "fwing", "high")["reason"], "cap", "pesquisa de peça bloqueada")
 	assert_false(camp.my_parts().order_units(camp, "fwing", 0, 3), "fabricação acima do que resta (3 × 0,35) bloqueada")
@@ -98,3 +98,23 @@ func test_eventos_das_rivais() -> void:
 	var c := Campaign.from_dict(JSON.parse_string(JSON.stringify(camp.to_dict())))
 	var tid: String = camp.events.principals.keys()[0]
 	assert_eq(GameData.team_by_id(c.teams(), tid)["principal"], camp.events.principals[tid], "o chefe novo continua depois de carregar")
+
+
+## Auditoria de 2026-11-08: no modo Essencial a equipe quebrava (gasto concentrado no começo do ano e patrocínio zerado).
+func test_verba_do_diretor_se_espalha_pelo_ano() -> void:
+	camp.detail = "essential"
+	camp.budget_musd = 140.0
+	var a := camp.dev.auto_allowance(camp)
+	assert_gt(a, 0.0)
+	assert_lt(a * 3.0, camp.budget_musd, "três meses de verba não gastam o caixa todo")
+	camp.budget_musd = 20.0
+	assert_lt(camp.dev.auto_allowance(camp), a, "com pouco caixa, a verba cai")
+
+
+func test_modo_essencial_renova_patrocinios_na_virada() -> void:
+	camp.detail = "essential"
+	for z: String in camp.sponsors.contracts.keys():
+		camp.sponsors.contracts[z]["until"] = camp.season
+	camp.start_next_season()
+	assert_true(camp.sponsors.free_zones().is_empty(), "o diretor comercial fecha as zonas livres")
+	assert_gt(camp.sponsor_per_race(), 0.0)

@@ -500,9 +500,16 @@ func cap_left() -> float:
 	return maxf(COST_CAP_MUSD - cap_spent(), 0.0)
 
 
-## Trava rígida: um gasto de P&D/peças só passa se couber no que resta do teto.
+## Teto livre para P&D e peças: o que resta, menos a operação e a manutenção que ainda serão pagas até o fim do ano
+## (gastos obrigatórios também contam no teto, então ficam reservados).
+func cap_left_rd() -> float:
+	var mandatory := (float(origins_data()["finance"]["cost_base"]) + dev.upkeep_per_race()) * races_left_in_season()
+	return maxf(COST_CAP_MUSD - cap_spent() - mandatory, 0.0)
+
+
+## Trava rígida: um gasto de P&D/peças só passa se couber no teto livre para P&D.
 func cap_allows(cost: float) -> bool:
-	return cost <= cap_left() + 0.0001
+	return cost <= cap_left_rd() + 0.0001
 
 
 ## Restrição de túnel de vento (tempo de pesquisa aerodinâmica) pela posição do ano anterior; no 1º ano, pela nota do carro.
@@ -945,6 +952,8 @@ func record_weekend(w: WeekendSim) -> void:
 	record("upkeep", dev.upkeep_per_race())
 	budget_musd += sponsor_per_race() + bonus - cost_per_race()
 	_pay_credit()
+	if detail == "essential" and not sponsors.free_zones().is_empty():  # (um patrocinador pode ter saído por evento)
+		sponsors.auto_fill(self)
 	var pos := team_position(player_team)
 	var gap := season_goal() - pos  # >= 0: dentro da meta
 	var drift: float = origins_data()["board"]["drift_per_race"]
@@ -1150,6 +1159,8 @@ func start_next_season() -> void:
 		else:  # vindos da base: só têm nota geral
 			DriverCareer.evolve_prospect(d, season + 1, int(dev.seed_base))
 	sponsors.expire(self)
+	if detail == "essential":  # modo Essencial: zonas livres ganham patrocinador automaticamente
+		sponsors.auto_fill(self)
 	ledger = {}
 	cash_log = [{"r": 0, "cash": budget_musd}]
 	var cfg: Dictionary = origins_data()["rivals"]

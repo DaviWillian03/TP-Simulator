@@ -612,6 +612,52 @@ func _ai_success(camp: Campaign) -> float:
 	return clampf(float(CarDevelopment.factory_data()["base_success_pct"]) / 100.0 + 0.11 + (_ai_staff_k(camp) - 1.0) * 0.6, 0.3, 0.9)
 
 
+## Modo Essencial (jogador): o diretor técnico começa pesquisas de peças dentro da verba. Devolve quanto gastou.
+func auto_research(camp: Campaign, budget: float) -> float:
+	var spent := 0.0
+	var ids: Array = part_ids().filter(func(p: String) -> bool: return can_develop(camp, p) and research_of(p).is_empty())
+	ids.sort_custom(func(a: String, b: String) -> bool: return _improvement(camp, a) > _improvement(camp, b))
+	for pid: String in ids:
+		var dir_id := best_direction(camp, pid)
+		var info := research_info(camp, pid, dir_id)
+		if not info["ok"]:
+			if info["reason"] == "slots":
+				break
+			continue
+		if spent + float(info["cost"]) > budget:
+			continue
+		if start_research(camp, pid, dir_id):
+			spent += float(info["cost"])
+	return spent
+
+
+## Direção mais útil para as próximas pistas (sem a ousada; confiabilidade vale menos).
+func best_direction(camp: Campaign, pid: String) -> String:
+	var prof := camp.upcoming_profile(4)
+	var best := ""
+	var best_v := -INF
+	for d: Dictionary in part(pid)["dirs"]:
+		if d["id"] == "bold":
+			continue
+		var v := 0.0
+		for k: String in (d["fx"] as Dictionary):
+			v += float(d["fx"][k]) * (float(prof.get(k, 0.0)) if k != "rel" else 0.08)
+		if v > best_v:
+			best_v = v
+			best = d["id"]
+	return best
+
+
+## Quanto a próxima versão da peça renderia por dinheiro (para escolher a ordem das pesquisas).
+func _improvement(camp: Campaign, pid: String) -> float:
+	var prof := camp.upcoming_profile(4)
+	var fx := promised_fx(camp, pid, best_direction(camp, pid))
+	var v := 0.0
+	for k: String in fx:
+		v += float(fx[k]) * (float(prof.get(k, 0.0)) if k != "rel" else 0.08)
+	return v / maxf(research_cost(pid, best_direction(camp, pid)), 0.1)
+
+
 func _ai_plan(camp: Campaign) -> void:
 	if not research.is_empty():
 		return

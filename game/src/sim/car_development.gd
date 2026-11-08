@@ -447,14 +447,34 @@ func recommended(car: String, camp: Campaign, dept_filter: String = "") -> Array
 	return out
 
 
+## Verba do mês para o diretor técnico (modo Essencial): o caixa acima de uma reserva, mais o que a temporada ainda deve
+## render, dividido pelos meses que faltam — e nunca além do teto livre para P&D. Assim o gasto se espalha pelo ano.
+const AUTO_RESERVE_MUSD := 25.0
+const PARTS_SHARE := 0.7  ## fatia da verba que vai para pesquisa de peças (melhora o carro); o resto vai para a árvore
+
+
+func auto_allowance(camp: Campaign) -> float:
+	var races := camp.races_left_in_season()
+	var months := maxf(ceilf(races / 2.2), 1.0)  # ~2,2 corridas por mês
+	var future := (camp.sponsor_per_race() - camp.cost_per_race()) * races
+	var free_cash := camp.budget_musd - AUTO_RESERVE_MUSD + future
+	return clampf(minf(free_cash, camp.cap_left_rd()) / months, 0.0, AUTO_CAP_MUSD)
+
+
 func _auto_plan(camp: Campaign) -> void:
 	var month := camp.day / 30
 	if month != auto_month:
 		auto_month = month
 		auto_spent = 0.0
 		auto_spent_next = 0.0
+	var allowance := auto_allowance(camp)
+	# 1) peças: o diretor pesquisa a próxima versão da peça que mais rende nas próximas pistas
+	var cp := camp.my_parts()
+	if cp != null:
+		var spent := cp.auto_research(camp, allowance * PARTS_SHARE - auto_spent)
+		auto_spent += spent
 	var guard := 0
-	while busy() < slots() and guard < 8:
+	while busy() < slots() and guard < 8 and auto_spent < allowance:
 		guard += 1
 		var car := "cur"
 		if auto_spent > 0.0 and auto_spent_next < AUTO_NEXT_SHARE * auto_spent:
@@ -462,7 +482,7 @@ func _auto_plan(camp: Campaign) -> void:
 		var picked := ""
 		for id: String in recommended(car, camp):
 			var pi := project_info(car, id, camp)
-			if pi["ok"] and auto_spent + float(pi["cost"]) <= AUTO_CAP_MUSD:
+			if pi["ok"] and auto_spent + float(pi["cost"]) <= allowance:
 				picked = id
 				break
 		if picked == "":

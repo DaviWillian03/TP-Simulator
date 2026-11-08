@@ -545,3 +545,10 @@ Respostas do usuário:
   acesso/rebaixamento das equipes no fim do ano (campeão da F3 ↑ F2, último da F2 ↓; campeão da F2 ↑ F1, último da F1 ↓),
   equipe que sobe para a F1 com o carro mais fraco, motor de fornecedor e verba de entrada. **Sua equipe rebaixada**: ela
   desce para a F2 e você recebe propostas de equipes da F1 (como na demissão). Jogar na F2/F3 = fase 2.
+- **Auditoria e calibragem da economia** (2026-11-08, pedido "avalie o que dá para melhorar" → "1 e 2 juntos"): uma temporada
+  no modo Essencial quebrava a equipe (caixa de 140 → 2 na rodada 18, falência na 2ª temporada) e o carro piorava. Correções:
+  manutenção da fábrica pela metade; o teto de gastos reserva a operação e a manutenção do resto do ano (`cap_left_rd`); o
+  diretor técnico (Essencial) tem verba mensal (caixa acima de US$ 25 mi + o que a temporada ainda rende, dividido pelos meses,
+  limitado ao teto) e gasta 70% em **pesquisa de peças** (a árvore agora só dá conhecimento); o diretor comercial fecha as
+  zonas de patrocínio livres. Resultado (tools/season_audit.gd, Williams, 3 temporadas): caixa sempre positivo (111 → 82 → 72
+  no fim de cada ano), carro +2,4 / +1,9 / +1,3, meta cumprida.
