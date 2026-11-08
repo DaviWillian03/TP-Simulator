@@ -208,33 +208,33 @@ def race():
 
 
 def grid():
-    order = ["norris", "verstappen", "leclerc", "piastri", "russell", "hamilton", "antonelli", "hadjar", "albon", "sainz",
-             "alonso", "gasly", "lawson", "bearman", "ocon", "hulkenberg", "bortoleto", "stroll", "colapinto", "lindblad", "perez", "bottas"]
-    tiles = ""
-    for i, did in enumerate(order):
-        d = D.get(did, {"name": did.title(), "number": 0, "team": "williams"})
-        row, side = divmod(i, 2)
-        shown = row >= 4  # a animação já revelou das filas 11 até a 6; as filas 5 → 1 ainda vão aparecer
-        cur = row == 4
-        x = 300 + side * 360
-        y = 560 - (10 - row) * 0 if False else 120 + (10 - row) * 0
+    # uma fila por vez (2 pilotos), da última até a primeira — aqui, a fila 5 (P9 e P10)
+    pair = [("albon", 9, "1:10.874", "Q3"), ("sainz", 10, "1:10.951", "Q3")]
+    cards = ""
+    for i, (did, pos, t, part) in enumerate(pair):
+        d = D[did]
         tc = B.teams[d["team"]]["color"]
-        op = "1" if shown else ".12"
-        tiles += (f'<div class="gt" style="opacity:{op};{"transform:scale(1.04);box-shadow:0 0 0 3px #E10600;" if cur else ""}">'
-                  f'<span class="gp">{i + 1}</span>{face(did, 32) if shown else '<span class="fc" style="width:32px;height:32px;background:rgba(255,255,255,.08)"></span>'}'
-                  f'<div style="flex:1"><strong>{d["name"] if shown else "—"}</strong><small style="color:{tc}">{B.teams[d["team"]]["name"] if shown else ""}</small></div>'
-                  f'<span class="gn">{d["number"] if shown else ""}</span></div>')
-    body = (f'<div class="scene"><div class="track"></div><div class="hd"><div><small>GP DE SÃO PAULO · GRID DE LARGADA</small><h1>DA ÚLTIMA FILA PARA A PRIMEIRA</h1></div>'
-            f'<span class="ghost" style="margin-left:auto;height:48px">PULAR</span></div>'
-            f'<div class="grid">{tiles}</div>'
-            f'<div class="hero2">{face("albon", 120)}<div><div class="cap">FILA 5 · P9</div><div style="font-size:40px;font-weight:900;line-height:1">ALEXANDER ALBON</div>'
-            f'<div style="font-size:15px;font-weight:800;color:#a8b0bd;margin-top:6px">Williams · 1:10.874 no Q3 · seu piloto</div></div></div></div>')
-    css = CSS + """.grid{position:absolute;left:44px;top:96px;width:720px;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;direction:ltr}
-.gt{display:flex;align-items:center;gap:10px;height:40px;border-radius:12px;background:rgba(255,255,255,.06);padding:0 10px}
-.gt:nth-child(even){margin-top:20px;margin-bottom:-20px}
-.gp{width:28px;font-size:16px;font-weight:900;color:#8f98a7}.gt strong{display:block;font-size:14px;font-weight:900}.gt small{display:block;font-size:11px;font-weight:900}
-.gn{font-size:22px;font-weight:900;color:#c3c9d3}
-.hero2{position:absolute;left:800px;top:250px;width:440px;display:flex;flex-direction:column;gap:14px;border-radius:24px;background:rgba(11,13,18,.86);padding:22px}"""
+        big = (f'<img src="file://{FACES}/{did}_face.png" style="width:100%;height:100%;object-fit:cover">' if FACES else "")
+        cards += (f'<div class="gc" style="left:{110 + i * 560}px;top:{150 + i * 60}px;box-shadow:inset 0 -8px 0 {tc}">'
+                  f'<div class="gface" style="background:{tc}">{big}</div>'
+                  f'<div class="gpos">P{pos}</div><div class="ginfo"><div class="gnum" style="color:{tc}">{d["number"]}</div>'
+                  f'<div class="gname">{d["name"].split()[0]}<br><b>{d["name"].split()[-1].upper()}</b></div>'
+                  f'<div class="gteam"><i style="background:{tc}"></i>{B.teams[d["team"]]["name"]}</div>'
+                  f'<div class="gtime">{g("lap", 18, "#c3c9d3")}{t} <small>melhor volta · {part}</small></div></div></div>')
+    dots = "".join(f'<i class="{"on" if r == 4 else ("done" if r > 4 else "")}"></i>' for r in range(10, -1, -1))
+    body = (f'<div class="scene"><div class="track"></div><div class="hd"><div><small>GP DE SÃO PAULO · GRID DE LARGADA</small>'
+            f'<h1>FILA 5</h1></div><div class="dots">{dots}</div><span class="ghost" style="margin-left:auto;height:48px">PULAR</span></div>'
+            f'{cards}</div>')
+    css = CSS + """.gc{position:absolute;width:500px;height:440px;border-radius:26px;background:rgba(11,13,18,.88);overflow:hidden}
+.gface{position:absolute;left:0;top:0;width:250px;height:432px}
+.gpos{position:absolute;left:18px;top:14px;font-size:44px;font-weight:900;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.ginfo{position:absolute;left:270px;top:30px;right:20px}
+.gnum{font-size:64px;font-weight:900;line-height:1}
+.gname{font-size:24px;font-weight:700;line-height:1.05;margin-top:16px}.gname b{font-size:36px;font-weight:900}
+.gteam{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:900;color:#c3c9d3;margin-top:14px}.gteam i{width:6px;height:22px;border-radius:3px}
+.gtime{display:flex;align-items:center;gap:6px;font-size:24px;font-weight:900;margin-top:40px;flex-wrap:wrap}.gtime small{width:100%;font-size:12px;color:#8f98a7;font-weight:800}
+.dots{display:flex;gap:6px;margin-left:30px}.dots i{width:22px;height:8px;border-radius:4px;background:rgba(255,255,255,.12)}
+.dots i.done{background:rgba(255,255,255,.45)}.dots i.on{background:#E10600}"""
     return V.page("V22 · Grid de largada", css, body)
 
 
