@@ -68,10 +68,19 @@ func test_classificacao_ao_vivo_manda_o_carro_para_a_pista() -> void:
 	screen.time_scale = 0.0
 	var panel: Dictionary = screen._panels[0]
 	var car: CarState = panel["car"]
-	panel["tyres"]["medium"].button_pressed = true
 	(panel["go"] as Button).pressed.emit()
+	assert_not_null(screen._out_sheet, "o botão abre a folha de saída (v22-1)")
+	var t0: float = screen.q.seg_time
+	screen._process(1.0)
+	assert_eq(screen.q.seg_time, t0, "a sessão espera enquanto a folha está aberta")
+	screen._pick_out("set", screen.q.best_set(car, "medium"))
+	screen._pick_out("mode", "limit")
+	screen._pick_out("laps", 2)
+	screen._confirm_out()
 	assert_eq(screen.q.status_of(car), "Volta de saída")
 	assert_eq(car.tyre, "medium")
+	assert_eq(screen.q.laps_left[car], 2)
+	assert_eq(screen.q.player_mode[car], "limit")
 	screen._refresh_ui()
 	assert_true((panel["go"] as Button).disabled, "não dá para sair de novo com o carro na pista")
 

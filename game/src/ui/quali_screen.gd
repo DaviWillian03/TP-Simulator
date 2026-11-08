@@ -22,7 +22,9 @@ var _sub: Label
 var _info_card: PanelContainer
 var _clock: Label
 var _clock_caption: Label
-var _panels: Array[Dictionary] = []  # {car, pos, status, tyres: {id: Button}, go: Button, bar, lap}
+var _panels: Array[Dictionary] = []  # {car, pos, status, go: Button, bar, lap}
+var _out_sheet: Control  # folha de saída para a pista aberta (v22-1): a sessão fica parada enquanto ela está aberta
+var _out_choice := {}  # {car, set, mode, laps}
 var _evolution: Label
 var _cut_info: Label
 var _end_card: PanelContainer
@@ -66,6 +68,8 @@ func _ready() -> void:
 	for car in q.cars:
 		if car.is_player:
 			cards.add_child(_player_panel(car))
+	if Session.debug_ui == "out" and not _panels.is_empty():  # (captura) --ui=out abre a folha de saída
+		_open_out_sheet.call_deferred(_panels[0])
 
 	# tabela da parte atual, à direita
 	var tower := PanelContainer.new()
@@ -250,17 +254,6 @@ func _player_panel(car: CarState) -> Control:
 	bar.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.12), 4, 0, 0))
 	bar.add_theme_stylebox_override("fill", UiStyle.g_box(Color("#c77dff"), 4, 0, 0))
 	v.add_child(bar)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
-	var tyres := _tyre_tiles(row, car)
-	v.add_child(row)
-	# plano da saída: uma volta rápida ou duas seguidas (segunda chance, pneu mais gasto)
-	var plan := {"laps": 1}
-	var plan_seg := ScreenKit.segmented([[1, "1 VOLTA"], [2, "2 VOLTAS"]], 1, func(n: int) -> void: plan["laps"] = n)
-	for b: Control in (plan_seg.get_child(0) as Control).get_children():
-		b.custom_minimum_size = Vector2(0, 36)
-		(b as Button).add_theme_font_size_override("font_size", UiStyle.fs(12))
-	v.add_child(plan_seg)
 	var go := CutButton.new()
 	go.custom_minimum_size = Vector2(0, 48)
 	go.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -274,66 +267,328 @@ func _player_panel(car: CarState) -> Control:
 	go.add_theme_constant_override("h_separation", 6)
 	go.add_theme_font_size_override("font_size", UiStyle.fs(13))
 	v.add_child(go)
-	var panel := {"car": car, "pos": pos, "status": status, "tyres": tyres, "go": go, "bar": bar, "lap": lap, "row": row,
-		"plan": plan, "plan_seg": plan_seg}
-	go.pressed.connect(_send_out.bind(panel))
+	var panel := {"car": car, "pos": pos, "status": status, "go": go, "bar": bar, "lap": lap}
+	go.pressed.connect(_open_out_sheet.bind(panel))
 	_panels.append(panel)
 	return card
 
 
-## Escolha do pneu da volta rápida: um bloco por composto (círculo do pneu sobre fundo escuro/claro).
-func _tyre_tiles(row: HBoxContainer, car: CarState) -> Dictionary:
-	var group := ButtonGroup.new()
-	var out := {}
-	var selected := q.ai_compound(car)
-	for id: String in ScreenKit.COMPOUNDS:
-		var c: Dictionary = q.tyres.compounds[id]
-		var b := Button.new()
-		b.toggle_mode = true
-		b.button_group = group
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN, UiStyle.TOUCH_MIN)
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.tooltip_text = c["name"]
-		for st: String in ["normal", "hover"]:
-			b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 12, 0, 0))
-		for st: String in ["pressed", "hover_pressed"]:
-			b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT, 12, 0, 0))
-		var badge := TyreBadge.new()
-		badge.custom_minimum_size = Vector2(26, 26)
-		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		badge.set_compound(c["letter"], Color(c["color"]))
-		b.add_child(badge)
-		badge.anchor_left = 0.5
-		badge.anchor_right = 0.5
-		badge.anchor_top = 0.5
-		badge.anchor_bottom = 0.5
-		badge.offset_left = -13
-		badge.offset_right = 13
-		badge.offset_top = -13
-		badge.offset_bottom = 13
-		b.button_pressed = id == selected
-		ScreenKit.press_feedback(b)
-		row.add_child(b)
-		out[id] = b
-	return out
+# --- folha de saída para a pista (mockup v22-1) ----------------------------------------------
+
+const MODE_INFO := {
+	"safe": ["shield", "Garantir tempo", "Volta limpa, com margem nas zebras. Menos chance de erro; cerca de 0,2 s mais lenta."],
+	"limit": ["fire", "Buscar o limite", "Tudo na volta: mais rápida, mas com mais chance de erro e de volta apagada (limite de pista)."],
+}
+const LAPS_INFO := {
+	1: ["clock", "1 volta rápida", "Sai, faz a volta e volta para o box. Gasta pouco o jogo."],
+	2: ["clock", "2 voltas rápidas", "Volta de resfriamento entre as duas. Segunda chance, mas o pneu cai um pouco."],
+}
 
 
-func _send_out(panel: Dictionary) -> void:
-	var compound := "soft"
-	for id: String in panel["tyres"]:
-		if (panel["tyres"][id] as Button).button_pressed:
-			compound = id
-	var laps: int = panel["plan"]["laps"]
-	if q.send_out(panel["car"], compound, laps):
-		_toasts.push("%s saiu para %s." % [(panel["car"] as CarState).code(), "a volta rápida" if laps == 1 else "duas voltas rápidas"], "hot")
+## Jogos agrupados para a folha: iguais (mesmo composto, mesmas voltas, sem reserva) viram um bloco "×N".
+func _set_groups(car: CarState) -> Array:
+	var groups: Array = []
+	var by_key := {}
+	var order := {"soft": 0, "medium": 1, "hard": 2, "inter": 3, "wet": 4}
+	var list: Array = q.alloc.available(car.driver["id"], true)
+	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["compound"] != b["compound"]:
+			return int(order[a["compound"]]) < int(order[b["compound"]])
+		return int(a["laps"]) < int(b["laps"]))
+	var dry_track := q.weather.wetness < 0.05  # pista seca: os jogos de chuva ficam fora da folha
+	for s: Dictionary in list:
+		if dry_track and s["compound"] in ["inter", "wet"]:
+			continue
+		var locked: bool = s["q3"] and not q.q3_open
+		var key := "%s|%d|%s" % [s["compound"], int(s["laps"]), str(locked)]
+		if s["q3"] or not by_key.has(key):
+			var g := {"set": s, "count": 1, "locked": locked}
+			groups.append(g)
+			if not s["q3"]:
+				by_key[key] = g
+		else:
+			by_key[key]["count"] += 1
+	return groups
+
+
+func _open_out_sheet(panel: Dictionary) -> void:
+	var car: CarState = panel["car"]
+	if not q.can_go_out(car) or _out_sheet != null:
+		return
+	var def_set := q.best_set(car, q.ai_compound(car))
+	_out_choice = {"car": car, "set": def_set, "mode": "safe", "laps": 1}
+	var sh := ScreenKit.sheet(String(car.driver["name"]), 1160)
+	_out_sheet = sh["root"]
+	_out_sheet.tree_exited.connect(func() -> void: _out_sheet = null)
+	var body: VBoxContainer = sh["body"]
+	body.add_child(UiStyle.g_caption("%s · saída para a pista" % q.segment_name()))
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 18)
+	body.add_child(cols)
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", UiStyle.SP_S)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cols.add_child(left)
+	left.add_child(UiStyle.g_caption("Pneus disponíveis"))
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	left.add_child(grid)
+	var set_group := ButtonGroup.new()
+	for g: Dictionary in _set_groups(car):
+		grid.add_child(_set_tile(car, g, set_group))
+	left.add_child(UiStyle.g_caption("Atitude na volta"))
+	var mrow := HBoxContainer.new()
+	mrow.add_theme_constant_override("separation", 10)
+	var mgroup := ButtonGroup.new()
+	for m: String in ["safe", "limit"]:
+		mrow.add_child(_option(MODE_INFO[m], mgroup, m == "safe", _pick_out.bind("mode", m)))
+	left.add_child(mrow)
+	left.add_child(UiStyle.g_caption("Voltas nesta saída"))
+	var lrow := HBoxContainer.new()
+	lrow.add_theme_constant_override("separation", 10)
+	var lgroup := ButtonGroup.new()
+	for n: int in [1, 2]:
+		lrow.add_child(_option(LAPS_INFO[n], lgroup, n == 1, _pick_out.bind("laps", n)))
+	left.add_child(lrow)
+	var right := VBoxContainer.new()
+	right.add_theme_constant_override("separation", UiStyle.SP_M)
+	right.custom_minimum_size = Vector2(300, 0)
+	cols.add_child(right)
+	var sum := ScreenKit.g_card(UiStyle.G_SURFACE, 18, 16, 14)
+	var sv := VBoxContainer.new()
+	sv.add_theme_constant_override("separation", 6)
+	sum.add_child(sv)
+	sv.add_child(UiStyle.g_caption("Esta saída"))
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 10)
+	var badge := TyreBadge.new()
+	badge.custom_minimum_size = Vector2(40, 40)
+	top.add_child(badge)
+	var tv := VBoxContainer.new()
+	tv.add_theme_constant_override("separation", -4)
+	var tname := UiStyle.g_label("", 18, UiStyle.G_TEXT, "black")
+	var tsub := UiStyle.g_label("", UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold")
+	tv.add_child(tname)
+	tv.add_child(tsub)
+	top.add_child(tv)
+	sv.add_child(top)
+	var kv := {}
+	for k: Array in [["pred", "Tempo previsto"], ["cut", "Corte (agora)"], ["left", "Tempo de sessão"]]:
+		var r := HBoxContainer.new()
+		var l := UiStyle.g_label(k[1], UiStyle.FS_SMALL, Color("#c3c9d3"), "bold")
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		r.add_child(l)
+		var val := UiStyle.g_label("", UiStyle.FS_SMALL, UiStyle.G_TEXT, "black")
+		r.add_child(val)
+		sv.add_child(r)
+		kv[k[0]] = val
+	right.add_child(sum)
+	var go := CutButton.new()
+	go.text = "MANDAR PARA A PISTA"
+	go.custom_minimum_size = Vector2(300, UiStyle.TOUCH_MAIN)
+	go.add_theme_font_size_override("font_size", UiStyle.fs(17))
+	go.pressed.connect(_confirm_out)
+	right.add_child(go)
+	_out_choice["ui"] = {"badge": badge, "name": tname, "sub": tsub, "kv": kv, "go": go}
+	body.add_child(_alloc_row(car))
+	add_child(_out_sheet)
+	_update_out_summary()
+
+
+func _set_tile(car: CarState, g: Dictionary, group: ButtonGroup) -> Button:
+	var s: Dictionary = g["set"]
+	var c: Dictionary = q.tyres.compounds[s["compound"]]
+	var b := Button.new()
+	b.toggle_mode = true
+	b.button_group = group
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(250, 66)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.disabled = g["locked"]
+	for st: String in ["normal", "hover", "disabled"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE if st != "disabled" else UiStyle.G_OFF, 16, 0, 0))
+	for st: String in ["pressed", "hover_pressed"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT, 16, 0, 0))
+	var h := HBoxContainer.new()
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_theme_constant_override("separation", 10)
+	b.add_child(h)
+	h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	h.offset_left = 12
+	h.offset_right = -12
+	var badge := TyreBadge.new()
+	badge.custom_minimum_size = Vector2(34, 34)
+	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.set_compound(c["letter"], Color(c["color"]))
+	h.add_child(badge)
+	var v := VBoxContainer.new()
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_theme_constant_override("separation", 0)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var laps := int(s["laps"])
+	var title := "%s %s" % [c["name"], "novo" if laps == 0 else "usado"]
+	if int(g["count"]) > 1:
+		title += " ×%d" % int(g["count"])
+	var name_l := UiStyle.g_label(title, UiStyle.FS_SMALL + 1, UiStyle.G_TEXT, "black")
+	var sub_text := "guardado para o Q3" if g["locked"] else ("0 voltas" if laps == 0 else "%d voltas" % laps)
+	if s["q3"] and not g["locked"]:
+		sub_text = "jogo do Q3"
+	var sub_l := UiStyle.g_label(sub_text, UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold")
+	v.add_child(name_l)
+	v.add_child(sub_l)
+	var life := ProgressBar.new()
+	life.show_percentage = false
+	life.max_value = 1.0
+	life.custom_minimum_size = Vector2(90, 6)
+	life.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	life.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	life.value = clampf(1.0 - q.tyres.wear_per_lap(s["compound"]) * q.track.tyre_wear_factor * laps, 0.0, 1.0)
+	life.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.12), 3, 0, 0))
+	life.add_theme_stylebox_override("fill", UiStyle.g_box(UiStyle.G_UP, 3, 0, 0))
+	v.add_child(life)
+	h.add_child(v)
+	if g["locked"]:
+		h.add_child(ScreenKit.icon("lock", 18, UiStyle.G_TEXT_3))
+	var paint := func() -> void:
+		name_l.add_theme_color_override("font_color", UiStyle.G_INK if b.button_pressed else UiStyle.G_TEXT)
+		sub_l.add_theme_color_override("font_color", UiStyle.G_INK_2 if b.button_pressed else UiStyle.G_TEXT_2)
+	b.toggled.connect(func(_on: bool) -> void: paint.call())
+	b.button_pressed = int(s["id"]) == int(_out_choice["set"])
+	paint.call()
+	var sid := int(s["id"])
+	b.pressed.connect(func() -> void:
+		_out_choice["set"] = sid
+		_update_out_summary())
+	ScreenKit.press_feedback(b)
+	return b
+
+
+## Opção grande (ícone + título + explicação) num grupo exclusivo.
+func _option(info: Array, group: ButtonGroup, on: bool, pick: Callable) -> Button:
+	var b := Button.new()
+	b.toggle_mode = true
+	b.button_group = group
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(0, 96)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for st: String in ["normal", "hover"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE, 16, 0, 0))
+	for st: String in ["pressed", "hover_pressed"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT, 16, 0, 0))
+	var v := VBoxContainer.new()
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_theme_constant_override("separation", 2)
+	b.add_child(v)
+	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	v.offset_left = 14
+	v.offset_right = -14
+	v.offset_top = 10
+	var h := HBoxContainer.new()
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_theme_constant_override("separation", 8)
+	var ic := ScreenKit.icon(info[0], 20, UiStyle.G_TEXT)
+	h.add_child(ic)
+	var t := UiStyle.g_label(info[1], UiStyle.FS_BODY + 1, UiStyle.G_TEXT, "black")
+	h.add_child(t)
+	v.add_child(h)
+	var d := UiStyle.g_label(info[2], UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold")
+	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(d)
+	var paint := func() -> void:
+		var ink := b.button_pressed
+		t.add_theme_color_override("font_color", UiStyle.G_INK if ink else UiStyle.G_TEXT)
+		d.add_theme_color_override("font_color", UiStyle.G_INK_2 if ink else UiStyle.G_TEXT_2)
+		ic.modulate = UiStyle.G_INK if ink else UiStyle.G_TEXT
+	b.toggled.connect(func(_on: bool) -> void: paint.call())
+	b.button_pressed = on
+	paint.call()
+	b.pressed.connect(pick)
+	ScreenKit.press_feedback(b)
+	return b
+
+
+## Jogos do fim de semana: disponíveis de cada composto seco e quantos já foram devolvidos.
+func _alloc_row(car: CarState) -> Control:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 14)
+	h.add_child(UiStyle.g_caption("Fim de semana"))
+	var sm := q.alloc.summary(car.driver["id"])
+	for k: String in ["soft", "medium", "hard"]:
+		if not sm.has(k):
+			continue
+		var c: Dictionary = q.tyres.compounds[k]
+		var it := HBoxContainer.new()
+		it.add_theme_constant_override("separation", 6)
+		var bd := TyreBadge.new()
+		bd.custom_minimum_size = Vector2(22, 22)
+		bd.set_compound(c["letter"], Color(c["color"]))
+		it.add_child(bd)
+		it.add_child(UiStyle.g_label("%d de %d" % [sm[k][0], sm[k][1]], UiStyle.FS_SMALL, Color("#c3c9d3"), "black"))
+		h.add_child(it)
+	var ret := q.alloc.returned_count(car.driver["id"])
+	if ret > 0:
+		h.add_child(UiStyle.g_label("%d jogos devolvidos" % ret, UiStyle.FS_SMALL, UiStyle.G_TEXT_3, "bold"))
+	return h
+
+
+func _pick_out(key: String, value: Variant) -> void:
+	_out_choice[key] = value
+	_update_out_summary()
+
+
+func _update_out_summary() -> void:
+	if not _out_choice.has("ui"):
+		return
+	var ui: Dictionary = _out_choice["ui"]
+	var car: CarState = _out_choice["car"]
+	var s := q.alloc.get_set(car.driver["id"], int(_out_choice["set"]))
+	var go: Button = ui["go"]
+	go.disabled = s.is_empty()
+	if s.is_empty():
+		(ui["name"] as Label).text = "Escolha um jogo"
+		return
+	var c: Dictionary = q.tyres.compounds[s["compound"]]
+	(ui["badge"] as TyreBadge).set_compound(c["letter"], Color(c["color"]))
+	(ui["name"] as Label).text = "%s %s" % [c["name"], "novo" if int(s["laps"]) == 0 else "usado"]
+	(ui["sub"] as Label).text = "%s · %d volta%s" % [String(MODE_INFO[_out_choice["mode"]][1]).to_lower(), int(_out_choice["laps"]), "" if int(_out_choice["laps"]) == 1 else "s"]
+	var pred := q.expected_lap_time(car, s["compound"], int(s["laps"]) == 0)
+	pred += -QualiSim.LIMIT_TIME_S if _out_choice["mode"] == "limit" else QualiSim.SAFE_TIME_S
+	(ui["kv"]["pred"] as Label).text = UiStyle.format_time(pred)
+	(ui["kv"]["cut"] as Label).text = _cut_time_text()
+	var left := q.time_left_s()
+	(ui["kv"]["left"] as Label).text = "%d:%02d" % [int(left) / 60, int(left) % 60]
+
+
+## Tempo do último que passa de fase agora (ou "—" se ainda não há tempos suficientes / Q3).
+func _cut_time_text() -> String:
+	var adv: int = q.segments[q.segment]["advance"]
+	if adv <= 0:
+		return "—"
+	var order := q.segment_order()
+	if order.size() < adv:
+		return "—"
+	var t: float = q.best[order[adv - 1]][q.segment]
+	return UiStyle.format_time(t) if t < INF else "—"
+
+
+func _confirm_out() -> void:
+	var car: CarState = _out_choice["car"]
+	var laps := int(_out_choice["laps"])
+	if q.send_out_set(car, int(_out_choice["set"]), laps, String(_out_choice["mode"])):
+		_toasts.push("%s saiu para %s." % [car.code(), "a volta rápida" if laps == 1 else "duas voltas rápidas"], "hot")
+	if _out_sheet != null:
+		_out_sheet.queue_free()
 	_refresh_ui()
 
 
 func _process(delta: float) -> void:
 	if q == null:
 		return
-	if not q.is_over():
+	if not q.is_over() and _out_sheet == null:  # folha de saída aberta: a sessão espera a decisão
 		q.advance(delta * time_scale)
 	_refresh -= delta
 	if _refresh <= 0.0:
@@ -396,8 +651,6 @@ func _refresh_panel(p: Dictionary, order: Array[CarState]) -> void:
 	var lap: Label = p["lap"]
 	var bar: ProgressBar = p["bar"]
 	bar.visible = running
-	(p["row"] as Control).visible = garage
-	(p["plan_seg"] as Control).visible = garage
 	if garage:
 		lap.text = "%d jogo(s) de macios novos" % q.new_softs_left(car)
 		if car.last_lap_time > 0.0:
@@ -415,7 +668,7 @@ func _refresh_panel(p: Dictionary, order: Array[CarState]) -> void:
 	var go: Button = p["go"]
 	go.disabled = not q.can_go_out(car)
 	if garage:
-		go.text = "SAIR PARA VOLTA RÁPIDA" if q.time_left_s() > 0.0 else "TEMPO ESGOTADO"
+		go.text = "SAIR PARA A PISTA" if q.time_left_s() > 0.0 else "TEMPO ESGOTADO"
 	elif running:
 		go.text = "EM ANDAMENTO"
 	else:
