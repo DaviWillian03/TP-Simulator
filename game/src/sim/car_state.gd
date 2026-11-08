@@ -46,6 +46,9 @@ var pit_service_done := false
 var pit_stationary_s := 2.4
 var pit_stops := 0
 var ai_pit_wear := 0.7  ## desgaste em que a IA decide parar (varia por carro)
+var ai_plan: Array[int] = []  ## voltas planejadas das próximas paradas (IA; refeito depois de cada parada fora do plano)
+var ai_plan_stops := -1  ## pit_stops quando o plano foi feito (muda → refaz o plano)
+var ai_gamble := 0.0  ## 0..1: quanto a equipe aposta (estratégia alternativa, ficar fora no safety car)
 var plan: Dictionary = {}  ## plano da parada (PitStop.make_plan); vazio = parada padrão
 var wing_step := 0  ## ajuste da asa dianteira (−1..+2) em vigor
 var tyre_stock: Dictionary = {}  ## composto -> {"new": n, "used": n}; vazio = estoque ilimitado (IA)

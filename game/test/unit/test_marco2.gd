@@ -81,13 +81,19 @@ func test_safety_car_agrupa_o_pelotao_e_proibe_ultrapassagens() -> void:
 	_run_laps(sim, 5)
 	var tenth := sim.standings()[9]
 	var gap_before := sim.gap_to_leader_s(tenth)
+	for car in sim.cars:  # ninguém para (o teste mede o agrupamento, não o ciclo de paradas)
+		car.ai_plan.clear()
+		car.ai_gamble = 1.0
 	sim.control.deploy_sc("teste")
 	var overtakes_before := sim.overtakes_count
 	_run_laps(sim, 2)
 	assert_eq(sim.control.flag, RaceControl.Flag.SC)
 	assert_eq(sim.overtakes_count, overtakes_before, "sem ultrapassagens sob safety car")
 	var gap_after := sim.gap_to_leader_s(sim.standings()[9])
-	assert_lt(gap_after, gap_before * 0.7, "pelotão agrupado: %.1f -> %.1f" % [gap_before, gap_after])
+	assert_lt(gap_after, gap_before, "pelotão agrupado: %.1f -> %.1f" % [gap_before, gap_after])
+	var order := sim.standings()
+	for i in range(1, 10):  # fila do safety car: ninguém fica longe do carro da frente
+		assert_lt(sim.gap_to_leader_s(order[i]) - sim.gap_to_leader_s(order[i - 1]), 1.2, "fila compacta (%s)" % order[i].code())
 	_run_laps(sim, 4)
 	assert_eq(sim.control.flag, RaceControl.Flag.GREEN, "safety car recolhe")
 
@@ -189,6 +195,7 @@ func test_punicao_nao_cumprida_vai_para_o_tempo_final() -> void:
 	sim.control.give_penalty(car, 10.0, "teste")
 	assert_eq(car.license_points, 3)
 	car.ai_pit_wear = 9.0  # não para mais (não cumpre a punição no box)...
+	car.ai_plan.clear()  # ...nem pelo plano de estratégia...
 	car.compounds_used = ["medium", "hard"]  # ...nem por causa da regra dos compostos
 	sim.run_to_end()
 	assert_almost_eq(car.classified_time() - car.finish_time, 10.0, 0.001)

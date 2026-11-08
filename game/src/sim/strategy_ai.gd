@@ -15,6 +15,61 @@ static func choose_start_compound(grid_position: int, rng: RandomNumberGenerator
 	return "hard"
 
 
+const LATE_LAPS := 3  ## nas últimas voltas só para em emergência (pneu errado, asa, regra)
+const NO_GAMBLE_SC := 0.65  ## acima disso, a equipe tende a ficar fora no safety car para ganhar posição
+
+
+## Plano de corrida da equipe (decidido na largada): quantas paradas e em que voltas, com variação por equipe —
+## uns fazem a estratégia "padrão", outros apostam numa alternativa (uma parada a mais, com pneus mais macios, ou um
+## primeiro stint longo). Sorteio próprio (semente da corrida + carro): não muda o resto da simulação.
+static func make_plan(sim: RaceSim, car: CarState, seed_value: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("plan|%d|%d|%s" % [seed_value, car.index, String(car.driver.get("id", ""))])
+	car.ai_gamble = rng.randf()
+	_plan_from(sim, car, rng, car.laps_done)
+
+
+static func _plan_from(sim: RaceSim, car: CarState, rng: RandomNumberGenerator, from_lap: int) -> void:
+	car.ai_plan.clear()
+	car.ai_plan_stops = car.pit_stops
+	var total := sim.total_laps
+	var remaining := total - from_lap
+	if remaining <= LATE_LAPS or not sim.tyres.is_dry(car.tyre):
+		return
+	var mult := sim.wear_multiplier()
+	var life_now := sim.tyre_laps_left(car) if from_lap > 0 else sim.tyres.expected_life_laps(car.tyre, mult)
+	var hard: String = sim.tyres.dry_compounds()[sim.tyres.dry_compounds().size() - 1]
+	var life_hard := sim.tyres.expected_life_laps(hard, mult)
+	var need_rule := not sim.compound_rule_ok(car)
+	# mínimo de paradas para chegar ao fim (e cumprir a regra de compostos)
+	var stops := 0
+	if life_now < remaining:
+		stops = 1
+		while life_now + life_hard * stops < remaining and stops < 4:
+			stops += 1
+	elif need_rule:
+		stops = 1
+	# alternativa: uma parada a mais (pneus mais macios, ataque) para quem aposta, se a corrida for longa o bastante
+	if stops >= 1 and remaining >= 18 and car.ai_gamble > 0.78:
+		stops += 1
+	if stops == 0:
+		return
+	# janelas: stints quase iguais, o primeiro limitado pela vida do pneu atual, com variação da equipe
+	var first_max := maxf(life_now * rng.randf_range(0.82, 0.98), 2.0)
+	var last := from_lap
+	for i in range(1, stops + 1):
+		var ideal := from_lap + remaining * float(i) / float(stops + 1) * 0.92  # um pouco antes do meio: pneu novo vale (undercut)
+		var jitter := rng.randfn(0.0, maxf(remaining * 0.07, 0.8))
+		if car.ai_gamble > 0.7 and i == 1 and stops == 1:
+			jitter += remaining * 0.12  # primeiro stint longo (pneu duro na largada costuma fazer isso)
+		var lap := roundi(ideal + jitter)
+		if i == 1:
+			lap = mini(lap, from_lap + roundi(first_max))
+		lap = clampi(lap, last + 2, total - LATE_LAPS - (stops - i))
+		car.ai_plan.append(lap)
+		last = lap
+
+
 ## Chamado uma vez por volta (no ponto de decisão, antes da entrada do box).
 static func decide_pit(sim: RaceSim, car: CarState) -> void:
 	if car.pit_requested or car.in_pit or car.finished or car.retired:
@@ -22,6 +77,10 @@ static func decide_pit(sim: RaceSim, car: CarState) -> void:
 	var remaining := sim.total_laps - car.laps_done
 	if remaining <= 1:
 		return
+	if car.ai_plan_stops != car.pit_stops:  # parou fora do plano (clima, safety car, asa): refaz o plano do ponto atual
+		var rr := RandomNumberGenerator.new()
+		rr.seed = hash("replan|%d|%d|%d" % [car.index, car.laps_done, car.pit_stops])
+		_plan_from(sim, car, rr, car.laps_done)
 	# 1) clima: o tipo de pneu certo vale mais que tudo
 	var weather_choice := weather_compound(sim, car, remaining)
 	if weather_choice != "":
@@ -33,17 +92,27 @@ static func decide_pit(sim: RaceSim, car: CarState) -> void:
 		car.pit_compound = best_compound(sim, car, remaining)
 		car.pit_requested = true
 		return
-	# 3) desgaste normal e regra dos compostos (só em pista seca)
+	# 3) pista seca: segue o plano; o desgaste só antecipa a parada se o pneu acabar antes da janela
 	if not sim.tyres.is_dry(car.tyre):
 		return
 	var rule_ok := sim.compound_rule_ok(car)
 	var current_life_left := sim.tyre_laps_left(car)
-	var must_stop_for_rule := not rule_ok and remaining <= 3
-	var tyres_done := car.tyre_wear >= car.ai_pit_wear
 	var can_reach_end := current_life_left >= remaining
-	if must_stop_for_rule or (tyres_done and not (can_reach_end and rule_ok)):
-		car.pit_compound = choose_compound(sim, car, remaining)
+	var planned := not car.ai_plan.is_empty() and car.laps_done >= car.ai_plan[0]
+	if planned and rule_ok and can_reach_end and car.ai_plan.size() == 1 and remaining <= LATE_LAPS + 2:
+		car.ai_plan.clear()  # já cumpriu a regra e o pneu aguenta: não vale parar no fim
+		planned = false
+	var worn_out := car.tyre_wear >= car.ai_pit_wear + 0.08 and not can_reach_end
+	var must_stop_for_rule := not rule_ok and remaining <= LATE_LAPS
+	if planned or worn_out or must_stop_for_rule:
+		var stint := remaining
+		if car.ai_plan.size() >= 2:
+			stint = car.ai_plan[1] - car.laps_done
+		car.pit_compound = choose_compound(sim, car, stint)
 		car.pit_requested = true
+		if not car.ai_plan.is_empty():
+			car.ai_plan.remove_at(0)
+		car.ai_plan_stops = car.pit_stops + 1  # a parada já faz parte do plano (não precisa refazer)
 
 
 ## Se o tipo de pneu (slick/intermediário/chuva) está errado para a pista e trocar compensa,
@@ -78,9 +147,17 @@ static func on_neutralization(sim: RaceSim, car: CarState) -> void:
 	if remaining <= 2:
 		return
 	var best := sim.tyres.best_for_wetness(sim.weather.wetness)
-	var worth := car.tyre_wear > 0.35 or car.damage_wing > 0.15 \
-		or sim.tyres.tyre_class(best) != sim.tyres.tyre_class(car.tyre) \
-		or (not sim.compound_rule_ok(car) and remaining > 3)
+	var wrong_type := sim.tyres.tyre_class(best) != sim.tyres.tyre_class(car.tyre)
+	if wrong_type or car.damage_wing > 0.15:
+		car.pit_compound = best_compound(sim, car, remaining)
+		car.pit_requested = true
+		return
+	# parada barata: vale se a janela planejada está perto (ou o pneu já está gasto). Quem aposta pode ficar fora para
+	# ganhar posição; ninguém para no começo da corrida só para cumprir a regra.
+	var near_window := not car.ai_plan.is_empty() and car.ai_plan[0] - car.laps_done <= maxi(roundi(sim.total_laps * 0.2), 2)
+	var worth := car.tyre_wear > 0.45 or near_window or (not sim.compound_rule_ok(car) and remaining <= maxi(roundi(sim.total_laps * 0.35), 4))
+	if worth and car.ai_gamble > NO_GAMBLE_SC and car.tyre_wear < 0.55:
+		worth = false
 	if worth:
 		car.pit_compound = best_compound(sim, car, remaining)
 		car.pit_requested = true

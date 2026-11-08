@@ -79,6 +79,7 @@ var fastest_lap_time := INF
 var fastest_lap_car: CarState = null
 var overtakes_count := 0
 var rng := RandomNumberGenerator.new()
+var options_seed := 1  ## semente da corrida (planos de estratégia da IA usam um sorteio próprio)
 
 ## regulamento técnico (TechRules): mexe no tempo de volta, energia, ultrapassagem, desgaste e reabastecimento
 var tech: Dictionary = TechRules.DEFAULT.duplicate()
@@ -113,6 +114,7 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	sprint = bool(options.get("sprint", false))
 	total_laps = maxi(3, roundi(track.laps * duration_pct / (SPRINT_DISTANCE if sprint else 1.0)))
 	rng.seed = int(options.get("seed", 1))
+	options_seed = int(options.get("seed", 1))
 	_apply_tech(options.get("tech", {}))
 	var rain_p := float(options.get("rain_probability", track.rain_probability))
 	weather = WeatherModel.new(rain_p, total_laps * track.base_lap_time_s * 1.05, rng, options)
@@ -173,6 +175,7 @@ func _setup_grid(grid_ids: Array = []) -> void:
 			car.tyre_wear = PitStop.USED_SET_WEAR  # sem jogo novo: larga com um usado
 		car.pit_compound = "hard" if car.tyre != "hard" else "medium"
 		car.ai_pit_wear = rng.randf_range(0.66, 0.76)
+		StrategyAI.make_plan(self, car, int(options_seed))
 		car.lap_noise = rng.randfn(0.0, LAP_NOISE_SIGMA)
 
 

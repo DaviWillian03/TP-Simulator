@@ -552,3 +552,9 @@ Respostas do usuário:
   limitado ao teto) e gasta 70% em **pesquisa de peças** (a árvore agora só dá conhecimento); o diretor comercial fecha as
   zonas de patrocínio livres. Resultado (tools/season_audit.gd, Williams, 3 temporadas): caixa sempre positivo (111 → 82 → 72
   no fim de cada ano), carro +2,4 / +1,9 / +1,3, meta cumprida.
+- **IA de estratégia com plano de corrida** (2026-11-08, pedido do usuário + auditoria): cada carro da IA decide na largada
+  quantas paradas e em que voltas (stints quase iguais, um pouco antes do meio; variação por equipe; quem aposta faz uma parada a
+  mais ou um primeiro stint longo), refaz o plano depois de qualquer parada fora dele, não para nas 3 últimas voltas sem
+  emergência e, no safety car, só aproveita se a janela estiver perto ou o pneu gasto (quem aposta fica fora). Auditoria
+  (tools/strategy_audit.gd, 24 corridas curtas no seco): paradas nas últimas voltas 232 → 12; corridas inteiras com mistura de
+  1, 2 e 3 paradas espalhadas. Equilíbrio mantido: carro 56,4% / piloto 22,1% / resto 21,5%.
