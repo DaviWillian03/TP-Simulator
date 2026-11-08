@@ -18,15 +18,24 @@ const SHARE_LAPS := 12  ## um jogo do treino serve a outro bloco enquanto tiver 
 var sets: Dictionary = {}  ## id do piloto -> Array[{id, compound, laps, returned, q3}]
 
 
-static func make(driver_ids: Array, sprint: bool) -> TyreAllocation:
+var feeder := false  ## F2/F3: poucos jogos, sem devolução por treino e sem macio do Q3 (categories.json)
+var return_after := RETURN_AFTER_PRACTICE
+
+
+static func make(driver_ids: Array, sprint: bool, cat: String = "F1") -> TyreAllocation:
 	var a := TyreAllocation.new()
-	var dry: Dictionary = SPRINT if sprint else NORMAL
+	var r := CategoryRules.of(cat)
+	var dry: Dictionary = r["dry_sprint"] if sprint and r.has("dry_sprint") else r["dry"]
+	var wet: Dictionary = r["wet"]
+	a.feeder = CategoryRules.is_feeder(cat)
+	a.return_after = int(r.get("return_after_practice", RETURN_AFTER_PRACTICE))
 	for did: String in driver_ids:
 		var list: Array = []
 		for k: String in ["soft", "medium", "hard", "inter", "wet"]:
-			for i in int(dry.get(k, WET.get(k, 0))):
+			for i in int(dry.get(k, wet.get(k, 0))):
 				list.append({"id": list.size(), "compound": k, "laps": 0, "returned": false, "q3": false})
-		_keep_one_q3(list)  # o último macio fica guardado para o Q3
+		if bool(r.get("q3_reserve", false)):
+			_keep_one_q3(list)  # o último macio fica guardado para o Q3
 		a.sets[did] = list
 	return a
 
@@ -87,10 +96,13 @@ func _reserved_for_race(did: String, s: Dictionary) -> bool:
 func pick_for_practice(did: String, block: String, wet: bool = false) -> int:
 	var prefs: Array = ["inter", "wet"] if wet else PRACTICE_COMPOUND.get(block, ["medium"])
 	var share := block in ["aero", "mech"] or wet
+	if feeder:  # F2/F3: o treino inteiro roda num jogo só, do composto mais duro (sobram os outros para a corrida)
+		prefs = ["wet"] if wet else ["hard", "medium", "soft"]
+		share = true
 	for k: String in prefs:
 		if share:
 			for s: Dictionary in available(did):
-				if s["compound"] == k and int(s["laps"]) > 0 and int(s["laps"]) < SHARE_LAPS:
+				if s["compound"] == k and int(s["laps"]) > 0 and (feeder or int(s["laps"]) < SHARE_LAPS):
 					return int(s["id"])
 		for s: Dictionary in available(did):
 			if s["compound"] == k and int(s["laps"]) == 0 and not _reserved_for_race(did, s):
@@ -124,7 +136,7 @@ func return_after_practice(did: String) -> void:
 		if int(a["laps"]) != int(b["laps"]):
 			return int(a["laps"]) > int(b["laps"])
 		return a["compound"] == "soft" and b["compound"] != "soft")  # entre novos, devolve macio (há mais)
-	for i in mini(RETURN_AFTER_PRACTICE, cands.size()):
+	for i in mini(return_after, cands.size()):
 		cands[i]["returned"] = true
 
 

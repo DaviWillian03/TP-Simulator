@@ -22,6 +22,7 @@ const SESSION_SHORT := {
 	"sprint": "SPRINT", "quali": "CLASS", "race": "CORRIDA",
 }
 const NORMAL := ["fp1", "fp2", "fp3", "quali", "race"]
+const FEEDER_FORMAT := ["fp1", "quali", "sprint", "race"]  ## F2/F3: um treino, classificação única, sprint invertida e principal
 const SPRINT_FORMAT := ["fp1", "sprint_quali", "sprint", "quali", "race"]
 const DAYS := ["Sexta", "Sábado", "Domingo"]
 ## Modos de clima da configuração do GP
@@ -57,23 +58,33 @@ var points: Dictionary = {}  ## id do piloto -> pontos no fim de semana
 var forecast: Array[float] = []  ## chance de chuva por dia (sexta, sábado, domingo)
 var rng := RandomNumberGenerator.new()
 var quali_times: Dictionary = {}  ## "race"/"sprint" -> {id do piloto: {time, part}} (melhor volta na classificação; grid)
+var category := "F1"  ## "F1", "F2" ou "F3" (CategoryRules; decisões de 2026-11-08)
 var strategy: Dictionary = {}  ## id do piloto -> plano da corrida atual (RaceStrategy; passo antes da largada, v22-2)
 var show_practice_report := false  ## a tela do fim de semana abre a folha de resultado do treino (uma vez)
 var last_practice: Dictionary = {}  ## resultado do último treino (tela de resultado, v21): {session, drivers: {id: resumo}, times}
 
 
 ## options: player_team, duration_pct, weather ("realistic"/"dry"/"rain"/"variable"),
-##          format ("full"/"race_only"), seed, incident_rate, teams/drivers (grid da campanha).
+##          format ("full"/"race_only"), seed, incident_rate, teams/drivers (grid da campanha), category ("F1"/"F2"/"F3").
 func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	circuit = GameData.circuit(circuit_id)
 	track = TrackModel.new(circuit)
 	tyres = TyreModel.new(GameData.tyres())
-	teams = options.get("teams", GameData.teams())  # campanha: grid com a equipe criada
-	drivers = options.get("drivers", GameData.drivers())
+	category = String(options.get("category", "F1"))
+	var feeder := CategoryRules.is_feeder(category)
+	var grid: Dictionary = CategoryRules.feeder_grid(category) if feeder and not options.has("teams") else {}
+	teams = options.get("teams", grid.get("teams", GameData.teams()))  # campanha: grid com a equipe criada
+	drivers = options.get("drivers", grid.get("drivers", GameData.drivers()))
+	if feeder:
+		tyres.restrict_to(category)
+		for t: Dictionary in teams:
+			t["category"] = category
 	player_team = options.get("player_team", "")
 	seed_value = int(options.get("seed", 1))
 	# forma do fim de semana: cada equipe chega um pouco acima/abaixo da nota do carro (CarForm); "form": 0 desliga
-	teams = CarForm.apply(teams, circuit_id, seed_value, float(options.get("form", 1.0)), CarParts.profile_of(circuit))
+	# F2/F3: chassi igual — a forma da equipe no GP pesa bem menos (senão engoliria a diferença pequena entre os carros)
+	var form_scale := float(options.get("form", 1.0)) * float(CategoryRules.of(category).get("form_scale", 1.0))
+	teams = CarForm.apply(teams, circuit_id, seed_value, form_scale, {} if feeder else CarParts.profile_of(circuit))
 	for t: Dictionary in teams:  # fora da campanha: diretor de pista e engenheiros de corrida de 2026 acertam o carro
 		if not t.has("practice_skills"):
 			var ids: Array = drivers.filter(func(d: Dictionary) -> bool: return d["team"] == t["id"]).map(func(d: Dictionary) -> String: return d["id"])
@@ -90,12 +101,21 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	sprint_weekend = bool(options.get("sprint", circuit.get("sprint", false)))  # campanha: o Conselho pode mudar quais GPs têm sprint
 	points_race = options.get("points_race", RaceSim.RACE_POINTS)
 	points_sprint = options.get("points_sprint", RaceSim.SPRINT_POINTS)
+	if feeder:  # F2/F3: pontos da categoria; sempre tem sprint (grid invertido) e corrida principal
+		var sd: Dictionary = Series.data()["series"][category]
+		points_race = sd["points_feature"]
+		points_sprint = sd["points_sprint"]
+		sprint_weekend = false
 	tyres.min_dry_compounds = int(options.get("min_dry_compounds", tyres.min_dry_compounds))
+	if feeder and not bool(CategoryRules.of(category).get("compound_rule", true)):
+		tyres.min_dry_compounds = 1
 	if race_only:
 		sessions = ["race"]
+	elif feeder:
+		sessions.assign(FEEDER_FORMAT)
 	else:
 		sessions.assign(SPRINT_FORMAT if sprint_weekend else NORMAL)
-	tyre_alloc = TyreAllocation.make(drivers.map(func(x: Dictionary) -> String: return x["id"]), sprint_weekend)
+	tyre_alloc = TyreAllocation.make(drivers.map(func(x: Dictionary) -> String: return x["id"]), sprint_weekend, category)
 	for d: Dictionary in drivers:
 		setups[d["id"]] = CarSetup.random_start(rng)
 		points[d["id"]] = 0
@@ -129,6 +149,8 @@ func is_over() -> bool:
 func day_of(id: String) -> int:
 	if id == "race":
 		return 2
+	if CategoryRules.is_feeder(category):
+		return 0 if id in ["fp1", "quali"] else (1 if id == "sprint" else 2)
 	if sprint_weekend:
 		return 0 if id in ["fp1", "sprint_quali"] else 1
 	return 0 if id in ["fp1", "fp2"] else 1
@@ -167,7 +189,33 @@ func session_options(id: String) -> Dictionary:
 
 ## Programa do treino para um piloto do jogador (os outros usam o da IA).
 func set_program(driver_id: String, blocks: Array) -> void:
-	programs[driver_id] = PracticeSession.valid_program(blocks)
+	programs[driver_id] = PracticeSession.valid_program(blocks, practice_minutes())
+
+
+## Duração do treino livre (F1 60 min; F2/F3 45 min).
+func practice_minutes() -> int:
+	return int(CategoryRules.of(category)["practice_min"])
+
+
+## Nome da sessão na categoria ("Corrida principal" na F2/F3).
+func session_name(id: String) -> String:
+	if CategoryRules.is_feeder(category):
+		match id:
+			"fp1":
+				return "Treino livre"
+			"race":
+				return "Corrida principal"
+	return String(SESSION_NAMES.get(id, id))
+
+
+func session_short(id: String) -> String:
+	if CategoryRules.is_feeder(category):
+		match id:
+			"fp1":
+				return "TL"
+			"race":
+				return "PRINCIPAL"
+	return String(SESSION_SHORT.get(id, id))
 
 
 func program_of(driver_id: String) -> Array:
@@ -179,7 +227,9 @@ func make_practice() -> PracticeSession:
 	for d: Dictionary in drivers:
 		if d["team"] == player_team:
 			own[d["id"]] = program_of(d["id"])
-	return PracticeSession.new(track, tyres, teams, drivers, setups, own, session_options(session_id()))
+	var opts := session_options(session_id())
+	opts["minutes"] = practice_minutes()
+	return PracticeSession.new(track, tyres, teams, drivers, setups, own, opts)
 
 
 func make_quali(auto_player: bool = false) -> QualiSim:
@@ -189,6 +239,9 @@ func make_quali(auto_player: bool = false) -> QualiSim:
 	opts["championship"] = championship
 	opts["tech"] = tech
 	opts["tyre_alloc"] = tyre_alloc
+	if CategoryRules.is_feeder(category):  # F2/F3: sessão única
+		opts["single"] = true
+		opts["single_minutes"] = float(CategoryRules.of(category)["quali_min"])
 	return QualiSim.new(track, tyres, teams, drivers, setups, opts)
 
 
@@ -197,8 +250,11 @@ func race_context() -> Dictionary:
 	var id := session_id()
 	var is_sprint := id == "sprint"
 	var total := maxi(3, roundi(track.laps * duration_pct / (RaceSim.SPRINT_DISTANCE if is_sprint else 1.0)))
+	if CategoryRules.is_feeder(category):
+		total = maxi(3, roundi(CategoryRules.race_laps(category, track, is_sprint) * duration_pct))
 	var wear := track.tyre_wear_factor / pow(duration_pct, RaceSim.WEAR_SHORT_RACE_EXP) * float(TechRules.knobs(tech)["wear_k"])
-	return RaceStrategy.context(total, wear, track.pit_lane_loss_s, is_sprint)
+	var no_rule := is_sprint or not bool(CategoryRules.of(category).get("compound_rule", true))
+	return RaceStrategy.context(total, wear, track.pit_lane_loss_s, no_rule)
 
 
 ## Planos dos engenheiros para os pilotos do jogador (a tela de estratégia começa por eles).
@@ -226,6 +282,9 @@ func make_race(extra: Dictionary = {}) -> RaceSim:
 		opts["player_plans"] = plans
 	opts["duration_pct"] = duration_pct
 	opts["sprint"] = id == "sprint"
+	opts["category"] = category
+	if CategoryRules.is_feeder(category):
+		opts["laps"] = race_context()["total_laps"]
 	opts["setups"] = setups
 	opts["tyre_stock"] = race_tyre_stock(id != "sprint")
 	opts["tech"] = tech
@@ -267,6 +326,12 @@ func finish_quali(q: QualiSim) -> void:
 			times[car.driver["id"]] = {"time": t, "part": String(q.segments[part]["name"])}
 	quali_times["sprint" if session_id() == "sprint_quali" else "race"] = times
 	grids["sprint" if session_id() == "sprint_quali" else "race"] = q.grid_ids()
+	var rev := int(CategoryRules.of(category).get("reverse_top", 0))
+	if rev > 0 and CategoryRules.is_feeder(category):  # F2/F3: a sprint larga com os N primeiros invertidos
+		var g: Array = q.grid_ids()
+		var top := g.slice(0, rev)
+		top.reverse()
+		grids["sprint"] = top + g.slice(rev)
 	_next()
 
 

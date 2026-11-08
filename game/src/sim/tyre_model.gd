@@ -8,6 +8,19 @@ const WORN_OUT_PENALTY_S := 5.0  ## pneu totalmente gasto: perda grande e imedia
 var compounds: Dictionary = {}
 var min_dry_compounds := 2
 var exempt_if_wet_used := true
+var allowed: Array = []  ## compostos da categoria (F2: duro/macio/chuva; F3: médio/chuva); vazio = todos
+
+
+## Limita os compostos aos da categoria (CategoryRules: chaves de "dry" e "wet").
+func restrict_to(cat: String) -> void:
+	var r := CategoryRules.of(cat)
+	allowed = (r["dry"] as Dictionary).keys() + (r["wet"] as Dictionary).keys()
+	if not bool(r.get("compound_rule", true)):
+		min_dry_compounds = 1
+
+
+func has_compound(id: String) -> bool:
+	return compounds.has(id) and (allowed.is_empty() or allowed.has(id))
 
 
 func _init(data: Dictionary) -> void:
@@ -19,7 +32,7 @@ func _init(data: Dictionary) -> void:
 func dry_compounds() -> Array[String]:
 	var out: Array[String] = []
 	for id: String in ["soft", "medium", "hard"]:
-		if compounds.has(id):
+		if has_compound(id):
 			out.append(id)
 	return out
 
@@ -61,7 +74,9 @@ func wet_wear_multiplier(compound: String, wetness: float) -> float:
 
 ## Composto mais rápido para a umidade dada, entre os candidatos (padrão: todos).
 func best_for_wetness(wetness: float, candidates: Array = []) -> String:
-	var list: Array = candidates if not candidates.is_empty() else compounds.keys()
+	var list: Array = (candidates if not candidates.is_empty() else compounds.keys()).filter(func(c: String) -> bool: return has_compound(c))
+	if list.is_empty():  # categoria sem intermediário (F2/F3): só o de chuva
+		list = compounds.keys().filter(func(c: String) -> bool: return has_compound(c))
 	var best := ""
 	var best_t := INF
 	for c: String in list:

@@ -33,6 +33,8 @@ const DT := 0.1  ## segundos de corrida por passo
 const GRID_SPACING_M := 10.0
 const MIN_GAP_M := 9.0  ## sem ultrapassar, um carro não chega mais perto que isso do da frente
 const ATTACK_WINDOW_S := 1.0  ## a menos de 1 s do carro da frente: pode tentar ultrapassar
+const DRS_BONUS_S := 0.45  ## F2/F3: asa móvel aberta na zona (a menos de 1 s) vale essa vantagem na tentativa
+const DRS_FROM_LAP := 2  ## DRS só a partir da 3ª volta
 const DIRTY_AIR_S := 0.25  ## perda máxima por volta andando colado (ar turbulento)
 const STRATEGY_FRAC := 0.85  ## ponto da volta onde a IA decide se para no box
 const MODE_UPDATE_S := 2.0
@@ -80,6 +82,8 @@ var fastest_lap_time := INF
 var fastest_lap_car: CarState = null
 var overtakes_count := 0
 var rng := RandomNumberGenerator.new()
+var category := "F1"  ## F2/F3: sem sistema híbrido, com DRS e regra de compostos da categoria (CategoryRules)
+var drs := false
 var start_tyres: Dictionary = {}  ## id do piloto -> pneu de largada escolhido na estratégia do jogador
 var options_seed := 1  ## semente da corrida (planos de estratégia da IA usam um sorteio próprio)
 
@@ -115,10 +119,18 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	duration_pct = float(options.get("duration_pct", 1.0))
 	sprint = bool(options.get("sprint", false))
 	total_laps = maxi(3, roundi(track.laps * duration_pct / (SPRINT_DISTANCE if sprint else 1.0)))
+	category = String(options.get("category", "F1"))
+	if options.has("laps"):  # F2/F3: voltas pela distância da categoria (WeekendSim.race_context)
+		total_laps = maxi(3, int(options["laps"]))
 	rng.seed = int(options.get("seed", 1))
 	options_seed = int(options.get("seed", 1))
 	start_tyres = options.get("start_tyres", {})
 	_apply_tech(options.get("tech", {}))
+	if CategoryRules.is_feeder(category):
+		var cr := CategoryRules.of(category)
+		if not bool(cr["hybrid"]):
+			energy_k = 0.0  # sem bateria: Carregar/Usar não fazem diferença e não há modo de ultrapassagem
+		drs = bool(cr["drs"])
 	var rain_p := float(options.get("rain_probability", track.rain_probability))
 	weather = WeatherModel.new(rain_p, total_laps * track.base_lap_time_s * 1.05, rng, options)
 	control = RaceControl.new(self, float(options.get("incident_rate", 1.0)))
@@ -173,7 +185,7 @@ func _setup_grid(grid_ids: Array = []) -> void:
 		var car: CarState = scored[i][1]
 		car.grid_position = i
 		car.distance = -GRID_SPACING_M * i - 5.0
-		car.tyre = StrategyAI.choose_start_compound(i, rng)
+		car.tyre = StrategyAI.choose_start_compound(i, rng, tyres.dry_compounds())
 		if start_tyres.has(car.driver["id"]) and tyres.is_dry(String(start_tyres[car.driver["id"]])):
 			car.tyre = String(start_tyres[car.driver["id"]])
 		if weather.wetness >= 0.2:
@@ -181,7 +193,8 @@ func _setup_grid(grid_ids: Array = []) -> void:
 		car.compounds_used = [car.tyre]
 		if car.is_player and PitStop.take_set(car, car.tyre, false):
 			car.tyre_wear = PitStop.USED_SET_WEAR  # sem jogo novo: larga com um usado
-		car.pit_compound = "hard" if car.tyre != "hard" else "medium"
+		var dry := tyres.dry_compounds()
+		car.pit_compound = dry[dry.size() - 1] if car.tyre != dry[dry.size() - 1] else dry[0]
 		car.ai_pit_wear = rng.randf_range(0.66, 0.76)
 		StrategyAI.make_plan(self, car, int(options_seed))
 		car.lap_noise = rng.randfn(0.0, LAP_NOISE_SIGMA)
@@ -472,10 +485,12 @@ func _ideal_lap_time(car: CarState) -> float:
 
 ## Volta ideal sem pneu, combustível nem acerto: pista + carro + piloto.
 ## Compartilhada com treinos e classificação para que o carro rápido seja rápido em tudo.
+## F2/F3 (team["category"]): volta mais lenta e mais peso no piloto (~30% carro / 50% piloto; categories.json).
 static func base_lap_time(p_track: TrackModel, team: Dictionary, driver: Dictionary) -> float:
-	return p_track.base_lap_time_s \
-		+ (100.0 - float(team["car_rating"]) - float((team.get("car_delta", {}) as Dictionary).get(driver.get("id", ""), 0.0))) * CAR_K \
-		+ (100.0 - DriverStats.attr(driver, "pace")) * DRIVER_K
+	var cat := CategoryRules.of(String(team.get("category", "F1")))
+	return p_track.base_lap_time_s * float(cat["pace"]) \
+		+ (100.0 - float(team["car_rating"]) - float((team.get("car_delta", {}) as Dictionary).get(driver.get("id", ""), 0.0))) * CAR_K * float(cat["car_k"]) \
+		+ (100.0 - DriverStats.attr(driver, "pace")) * DRIVER_K * float(cat["driver_k"])
 
 
 ## Pontos pela posição final (1 = vencedor). Sprint: 8 primeiros; corrida: 10 primeiros.
@@ -486,7 +501,13 @@ static func points_for(position: int, is_sprint: bool) -> int:
 
 ## Regra dos 2 compostos secos (só na corrida principal, com pista seca).
 func compound_rule_ok(car: CarState) -> bool:
-	return sprint or tyres.rule_satisfied(car.compounds_used)
+	return sprint or not bool(CategoryRules.of(category).get("compound_rule", true)) or tyres.rule_satisfied(car.compounds_used)
+
+
+## DRS aberto agora para este carro (F2/F3: a menos de 1 s do da frente, a partir da 3ª volta, bandeira verde).
+func drs_open(car: CarState) -> bool:
+	return drs and car.laps_done >= DRS_FROM_LAP and control.flag == RaceControl.Flag.GREEN \
+		and car.gap_ahead_s >= 0.0 and car.gap_ahead_s <= ATTACK_WINDOW_S and not car.in_pit
 
 
 ## Tempo de volta no estado atual (bandeira verde). with_traffic inclui ruído e ar turbulento.
@@ -549,7 +570,9 @@ func _try_overtake(att: CarState, def: CarState, zone: Dictionary) -> bool:
 		+ maxf(0.0, track.overtaking_difficulty - 0.7) * OVERTAKE_HARD_TRACK_S) * overtake_k + (DEFEND_HARD_S if def.defend_hard else 0.0)
 	# modo de ultrapassagem: gasta bateria só quando faz diferença (sem ele faltaria vantagem) e no máximo uma
 	# vez por volta — antes era usado em toda tentativa e a bateria ficava sempre vazia
-	if att.battery > 0.1 and att.boost_lap != att.laps_done and advantage < required_base \
+	if drs and att.laps_done >= DRS_FROM_LAP and control.flag == RaceControl.Flag.GREEN:
+		advantage += DRS_BONUS_S
+	if energy_k > 0.0 and att.battery > 0.1 and att.boost_lap != att.laps_done and advantage < required_base \
 			and advantage + OVERTAKE_MODE_BONUS_S * energy_k > required_base - 2.0 * OVERTAKE_SCALE:
 		advantage += OVERTAKE_MODE_BONUS_S * energy_k
 		att.battery = maxf(0.0, att.battery - OVERTAKE_MODE_COST)

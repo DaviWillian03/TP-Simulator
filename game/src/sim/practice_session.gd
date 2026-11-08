@@ -11,7 +11,7 @@ signal lap_completed(car: CarState, lap_time: float)
 signal block_finished(car: CarState, block_id: String, text: String)
 signal session_finished
 
-const SESSION_S := 3600.0  ## treino livre de 60 minutos
+const SESSION_S := 3600.0  ## treino livre de 60 minutos (F1; F2/F3 têm 45 — options.minutes)
 const GARAGE_S := 120.0  ## tempo na garagem entre blocos (ajustes no carro)
 const DT := 1.0
 
@@ -50,6 +50,7 @@ var time_s := 0.0
 var _acc := 0.0
 var over := false
 var rng := RandomNumberGenerator.new()
+var session_s := SESSION_S
 var history: Array[Dictionary] = []  ## {car, block, text, kind ("ok"/"wet"/"spin"/"failure")} — resumo do treino
 var setups_before: Dictionary = {}  ## id do piloto -> cópia do CarSetup no começo do treino
 var block_log: Dictionary = {}  ## id do piloto -> [{block, laps, wet}] (gasto de pneus do treino, TyreAllocation)
@@ -67,7 +68,8 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	setups = p_setups
 	rng.seed = int(options.get("seed", 1))
 	var rain_p := float(options.get("rain_probability", track.rain_probability))
-	weather = WeatherModel.new(rain_p, SESSION_S, rng, options)
+	session_s = float(options.get("minutes", 60)) * 60.0
+	weather = WeatherModel.new(rain_p, session_s, rng, options)
 	var player_team: String = options.get("player_team", "")
 	for d: Dictionary in drivers:
 		var car := CarState.new()
@@ -82,21 +84,21 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		draws[d["id"]] = []
 		block_log[d["id"]] = []
 		var prog: Array = p_programs.get(d["id"], _ai_program())
-		programs[d["id"]] = valid_program(prog)
+		programs[d["id"]] = valid_program(prog, int(session_s / 60.0))
 		_plan[car] = {"queue": programs[d["id"]].duplicate(), "block": "", "block_end": 0.0, "next_lap": INF}
 		_start_next_block(car, rng.randf_range(0.0, 90.0))  # nem todos saem no primeiro minuto
 
 
 ## Corta o programa no que cabe nos 60 minutos (soma dos blocos; a garagem entre um bloco e
 ## outro sai do tempo do próprio treino e pode encurtar o último bloco).
-static func valid_program(prog: Array) -> Array[String]:
+static func valid_program(prog: Array, minutes: int = 60) -> Array[String]:
 	var out: Array[String] = []
 	var used := 0
 	for id: String in prog:
 		if not BLOCKS.has(id):
 			continue
 		var need := int(BLOCKS[id]["minutes"])
-		if used + need > int(SESSION_S / 60.0):
+		if used + need > minutes:
 			break
 		out.append(id)
 		used += need
@@ -146,20 +148,20 @@ func step() -> void:
 			_complete_lap(car, plan)
 		if time_s >= plan["block_end"]:
 			_finish_block(car, plan)
-	if time_s >= SESSION_S:
+	if time_s >= session_s:
 		over = true
 		session_finished.emit()
 
 
 func _start_next_block(car: CarState, delay: float) -> void:
 	var plan: Dictionary = _plan[car]
-	if plan["queue"].is_empty() or time_s + delay >= SESSION_S:
+	if plan["queue"].is_empty() or time_s + delay >= session_s:
 		plan["block"] = ""
 		return
 	var id: String = plan["queue"].pop_front()
 	plan["block"] = id
 	var full := float(BLOCKS[id]["minutes"]) * 60.0
-	plan["block_end"] = minf(SESSION_S, time_s + delay + full)
+	plan["block_end"] = minf(session_s, time_s + delay + full)
 	plan["block_share"] = clampf((plan["block_end"] - time_s - delay) / full, 0.0, 1.0)  # cortado pelo fim do treino
 	car.tyre = "soft" if id == "quali" else "medium"
 	car.tyre_wear = 0.0
@@ -313,7 +315,7 @@ func status_of(car: CarState) -> String:
 
 
 func time_left_s() -> float:
-	return maxf(0.0, SESSION_S - time_s)
+	return maxf(0.0, session_s - time_s)
 
 
 func is_over() -> bool:

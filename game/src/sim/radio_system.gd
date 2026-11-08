@@ -79,7 +79,10 @@ func on_lap(car: CarState) -> void:
 	var best_class := sim.tyres.tyre_class(sim.tyres.best_for_wetness(w + (0.08 if trend > 0.08 else -0.05)))
 	var cls := sim.tyres.tyre_class(car.tyre)
 	var who := car.display_name().get_slice(" ", 0)
-	if cls == "slick" and best_class != "slick":
+	if cls == "slick" and best_class != "slick" and not sim.tyres.has_compound("inter"):  # F2/F3: só pneu de chuva
+		ask(car, "Está começando a chover e a pista ficou escorregadia. Paro para pneus de chuva?",
+			[_opt("Box: chuva", "pit", "wet"), _opt("Fica na pista", "stay")], 0)
+	elif cls == "slick" and best_class != "slick":
 		ask(car, "Está começando a chover e a pista ficou escorregadia. Paro para intermediários?",
 			[_opt("Box: intermediários", "pit", "inter"), _opt("Fica na pista", "stay")], 0)
 	elif cls == "inter" and best_class == "wet":

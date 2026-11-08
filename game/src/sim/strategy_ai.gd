@@ -4,7 +4,14 @@ extends RefCounted
 ## qual composto colocar e os modos de ritmo/energia durante a corrida.
 
 
-static func choose_start_compound(grid_position: int, rng: RandomNumberGenerator) -> String:
+static func choose_start_compound(grid_position: int, rng: RandomNumberGenerator, dry: Array = ["soft", "medium", "hard"]) -> String:
+	var pick := _start_by_roll(grid_position, rng)
+	if dry.has(pick):
+		return pick
+	return String(dry[mini(grid_position / 8, dry.size() - 1)]) if dry.size() > 0 else pick
+
+
+static func _start_by_roll(grid_position: int, rng: RandomNumberGenerator) -> String:
 	var roll := rng.randf()
 	if grid_position < 10:
 		return "soft" if roll < 0.5 else "medium"

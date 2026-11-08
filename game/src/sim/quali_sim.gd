@@ -64,6 +64,7 @@ var seg_time := 0.0  ## relógio da parte atual (segundos desde o início)
 var total_time := 0.0
 var over := false
 var sprint := false
+var single := false  ## F2/F3: classificação de sessão única
 var auto_player := false  ## true = a IA também decide pelos carros do jogador (testes/simular)
 var incident_rate := 1.0
 var rng := RandomNumberGenerator.new()
@@ -102,6 +103,9 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	setups = p_setups
 	sprint = bool(options.get("sprint", false))
 	segments = SPRINT_SEGMENTS if sprint else SEGMENTS
+	single = bool(options.get("single", false))
+	if single:  # F2/F3: sessão única, sem eliminação (o grid sai da melhor volta)
+		segments = [{"name": "Classificação", "minutes": float(options.get("single_minutes", 30.0)), "advance": 0}]
 	auto_player = bool(options.get("auto_player", false))
 	championship = options.get("championship", {})
 	tech_lap_s = float(TechRules.knobs(options.get("tech", {}))["lap_s"])
@@ -131,7 +135,8 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		best[car] = [INF, INF, INF]
 		best_set_at[car] = [INF, INF, INF]
 		eliminated_in[car] = -1
-	_set_cuts(cars.size())
+	if not single:
+		_set_cuts(cars.size())
 	_begin_segment()
 
 
@@ -280,7 +285,8 @@ func best_set(car: CarState, compound: String) -> int:
 
 ## Jogos novos de macio que ainda dá para usar nesta parte.
 func new_softs_left(car: CarState) -> int:
-	return sets_for(car).filter(func(s: Dictionary) -> bool: return s["compound"] == "soft" and int(s["laps"]) == 0).size()
+	var softest: String = tyres.dry_compounds()[0]
+	return sets_for(car).filter(func(s: Dictionary) -> bool: return s["compound"] == softest and int(s["laps"]) == 0).size()
 
 
 func can_go_out(car: CarState) -> bool:
@@ -516,7 +522,7 @@ func _ai_wants_to_go(car: CarState) -> bool:
 func ai_compound(_car: CarState) -> String:
 	if weather.wetness >= 0.2:
 		return tyres.best_for_wetness(weather.wetness, ["inter", "wet"])
-	return "soft"
+	return tyres.dry_compounds()[0]  # o mais macio da categoria
 
 
 # --- partes -----------------------------------------------------------------------------
