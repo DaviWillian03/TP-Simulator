@@ -46,6 +46,8 @@ var _champ_last := {}  ## última ordem mostrada/considerada: {drivers: [...], t
 var _champ_title := {}  ## último estado de "título em jogo": {drivers: id, teams: id}
 const CHAMP_EVERY := 3
 const CHAMP_TOP := 5
+var _plan_box: VBoxContainer  ## avisos "hora de parar" da estratégia do jogador
+var _plan_banners: Dictionary = {}  ## CarState -> {node, lap}
 var _start_lights: StartLights = null  ## semáforo antes da largada (a corrida espera as luzes apagarem)
 
 
@@ -145,6 +147,11 @@ func _build_ui() -> void:
 	_toasts.position = Vector2(LEFT_W + 14.0, SIDE_TOP + 6.0)
 	_toasts.custom_minimum_size = Vector2(440, 0)
 	_layer.add_child(_toasts)
+	_plan_box = VBoxContainer.new()  # avisos da estratégia (v22-3), acima dos avisos rápidos
+	_plan_box.add_theme_constant_override("separation", 8)
+	_plan_box.position = Vector2(LEFT_W + 14.0, SIDE_TOP + 6.0)
+	_plan_box.custom_minimum_size = Vector2(470, 0)
+	_layer.add_child(_plan_box)
 
 	# cartões dos seus pilotos: coluna vertical à esquerda
 	var cards := VBoxContainer.new()
@@ -295,6 +302,12 @@ func _build_top_bar() -> void:
 func _connect_sim_signals() -> void:
 	sim.overtake.connect(_on_overtake)
 	sim.pit_stop.connect(_on_pit_stop)
+	sim.plan_stop_due.connect(_on_plan_due)
+	if Session.debug_ui == "plan":  # (captura) --ui=plan mostra o aviso da estratégia
+		for c in sim.cars:
+			if c.is_player:
+				_on_plan_due.call_deferred(c, c.laps_done + 1, "hard", true)
+				break
 	sim.pit_box_stop.connect(_on_pit_box_stop)
 	sim.fastest_lap.connect(_on_fastest_lap)
 	sim.race_finished.connect(_on_race_finished)
@@ -355,6 +368,7 @@ func _process(delta: float) -> void:
 
 
 func _refresh_ui() -> void:
+	_update_plan_banners()
 	var rain := sim.weather.rain_label()
 	_meta.text = sim.track.short_name
 	_weather_btn.text = " " + RadarWidget.chip_text(sim)
@@ -558,6 +572,54 @@ func _on_overtake(att: CarState, def: CarState, zone: String) -> void:
 		_toasts.push("%s passa %s! P%d" % [_surname(att), _surname(def), new_pos], "hot")
 	elif new_pos == 1:
 		_toasts.push("%s assume a liderança (%s)" % [_surname(att), zone])
+
+
+## Estratégia do jogador: a volta planejada chegou. Só avisa; a parada acontece se o jogador mandar para o box.
+func _on_plan_due(car: CarState, lap: int, compound: String, fresh: bool) -> void:
+	_close_plan_banner(car)
+	var c: Dictionary = sim.tyres.compounds[compound]
+	var card := PanelContainer.new()
+	var st := UiStyle.g_box(UiStyle.G_LIGHT, 18, 16, 10)
+	st.border_width_left = 6
+	st.border_color = UiStyle.RED
+	card.add_theme_stylebox_override("panel", st)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 12)
+	card.add_child(h)
+	var badge := TyreBadge.new()
+	badge.custom_minimum_size = Vector2(40, 40)
+	badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	badge.set_compound(c["letter"], Color(c["color"]))
+	h.add_child(badge)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", -2)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_child(UiStyle.g_caption("Plano · volta %d" % lap, UiStyle.G_INK_2))
+	v.add_child(UiStyle.g_label("%s: hora de parar" % _surname(car), 18, UiStyle.G_INK, "black"))
+	var sub := UiStyle.g_label("Plano: %s %s. Toque em P/ BOX para decidir." % [c["name"], "novo" if fresh else "usado"], UiStyle.FS_CAPTION, UiStyle.G_INK_2, "bold")
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(sub)
+	h.add_child(v)
+	var later := ScreenKit.light_button("DEPOIS")
+	later.custom_minimum_size = Vector2(100, UiStyle.TOUCH_MIN)
+	later.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	later.pressed.connect(_close_plan_banner.bind(car))
+	h.add_child(later)
+	_plan_box.add_child(card)
+	_plan_banners[car] = {"node": card, "lap": lap}
+
+
+func _close_plan_banner(car: CarState) -> void:
+	if _plan_banners.has(car):
+		(_plan_banners[car]["node"] as Control).queue_free()
+		_plan_banners.erase(car)
+
+
+## O aviso some quando o carro vai para o box ou quando a volta planejada passa.
+func _update_plan_banners() -> void:
+	for car: CarState in _plan_banners.keys():
+		if car.pit_requested or car.in_pit or car.retired or car.finished or car.laps_done >= int(_plan_banners[car]["lap"]):
+			_close_plan_banner(car)
 
 
 func _on_pit_stop(car: CarState, compound: String, stationary: float) -> void:

@@ -50,6 +50,10 @@ func setup(p_sim: RaceSim, p_car: CarState, view: TrackView3D, home: Control) ->
 		if c.is_player and c != car:
 			mate = c
 	_compound = _default_compound()
+	var next := sim.player_plan_next(car)  # estratégia do jogador: o box já abre com o pneu do plano
+	if not next.is_empty() and PitStop.sets_left(car, next["compound"]) > 0:
+		_compound = next["compound"]
+		_use_used = not (bool(next["new"]) and PitStop.has_set(car, _compound, false))
 	_wing = car.wing_step
 	_repair_wing = car.damage_wing > 0.0
 	_serve = car.penalty_pending_s > 0.0

@@ -57,3 +57,26 @@ func test_plano_chega_na_corrida_com_o_pneu_de_largada() -> void:
 		if car.driver["id"] == "albon":
 			assert_eq(car.tyre, String(chosen["stints"][0]["compound"]))
 			assert_false(car.player_plan.is_empty())
+
+
+func test_plano_so_avisa_na_volta_planejada() -> void:
+	var w := WeekendSim.new("interlagos", OPTS.merged({"seed": 8, "format": "race_only", "duration_pct": 0.3}))
+	var plan: Dictionary = w.engineer_strategy()["albon"][0]
+	w.strategy = {"albon": plan}
+	var sim := w.make_race({"radio": false})
+	var me: CarState = null
+	for c in sim.cars:
+		if c.driver["id"] == "albon":
+			me = c
+	var due: Array = []
+	sim.plan_stop_due.connect(func(car: CarState, lap: int, _k: String, _f: bool) -> void:
+		if car == me:
+			due.append([lap, car.laps_done]))
+	var first_stop: int = RaceStrategy.stop_laps(plan)[0]
+	while me.laps_done < first_stop + 2 and not sim.is_over():
+		sim.step()
+	assert_eq(due.size(), 1, "avisou uma vez")
+	assert_eq(due[0][0], first_stop)
+	assert_eq(due[0][1], first_stop - 1, "no começo da volta planejada")
+	assert_eq(me.pit_stops, 0, "o plano não para sozinho: só avisa")
+	assert_eq(String(sim.player_plan_next(me)["compound"]), String(plan["stints"][1]["compound"]))

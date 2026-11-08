@@ -26,6 +26,7 @@ signal radio_answered(message: Dictionary)
 signal car_finished(car: CarState, position: int)
 signal pit_box_stop(car: CarState, hold_s: float)  ## carro parou no box (a tela pode abrir o mini-jogo)
 signal race_finished
+signal plan_stop_due(car: CarState, lap: int, compound: String, fresh: bool)  ## estratégia do jogador: hora de parar (só avisa)
 
 const WEAR_SHORT_RACE_EXP := 0.5  ## quanto o desgaste cresce em corridas curtas (1 = proporcional)
 const DT := 0.1  ## segundos de corrida por passo
@@ -706,6 +707,29 @@ func _service_car(car: CarState) -> void:
 	pit_stop.emit(car, car.tyre, car.pit_stationary_s)
 
 
+## Próxima parada da estratégia do jogador ({lap, compound, new}), ou {} se o plano acabou ou não existe.
+func player_plan_next(car: CarState) -> Dictionary:
+	if car.player_plan.is_empty():
+		return {}
+	var laps := RaceStrategy.stop_laps(car.player_plan)
+	var i := car.pit_stops
+	if i >= laps.size():
+		return {}
+	var st: Dictionary = car.player_plan["stints"][i + 1]
+	return {"lap": int(laps[i]), "compound": String(st["compound"]), "new": bool(st.get("new", true))}
+
+
+## Começo da volta planejada: avisa a tela (decisão de 2026-11-08: o plano só avisa; quem para é o jogador no box).
+func _check_player_plan(car: CarState) -> void:
+	var next := player_plan_next(car)
+	if next.is_empty() or car.pit_requested or car.in_pit:
+		return
+	var lap: int = next["lap"]
+	if car.laps_done + 1 == lap and not car.plan_notified.has(lap):
+		car.plan_notified.append(lap)
+		plan_stop_due.emit(car, lap, next["compound"], next["new"])
+
+
 func _complete_lap(car: CarState, lap_number: int, cross_time: float) -> void:
 	car.laps_done = lap_number
 	if car.pit_defer_laps >= 0 and lap_number >= car.pit_defer_laps:
@@ -732,6 +756,7 @@ func _complete_lap(car: CarState, lap_number: int, cross_time: float) -> void:
 		_finish(car, cross_time)
 	elif car.is_player:
 		radio.on_lap(car)
+		_check_player_plan(car)
 
 
 func _finish(car: CarState, cross_time: float) -> void:
