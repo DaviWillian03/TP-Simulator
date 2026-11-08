@@ -10,6 +10,7 @@ const FORMATS := [["full", "Fim de semana"], ["race_only", "Só a corrida"]]
 const MONTHS := ["", "JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"]
 
 var _calendar: Array = []
+var _cat := "F1"
 var _page: Dictionary
 var _rows: Dictionary = {}  # id do circuito -> cartão (Button) do carrossel
 var _card_group := ButtonGroup.new()
@@ -26,6 +27,17 @@ var _go: CutButton
 
 func _ready() -> void:
 	_calendar = GameData.load_json(GameData.DATA_DIR + "calendar_2026.json")["rounds"]
+	_cat = GameData.category_of(Session.player_team)
+	Session.category = _cat
+	if CategoryRules.is_feeder(_cat):  # F2/F3: só as etapas da categoria (decisão de 2026-11-08)
+		var rounds := CategoryRules.rounds(_cat)
+		var list: Array = []
+		for i in _calendar.size():
+			if rounds.has(i):
+				var r: Dictionary = (_calendar[i] as Dictionary).duplicate()
+				r["stage"] = list.size() + 1
+				list.append(r)
+		_calendar = list
 	_page = ScreenKit.garage_page(self, Session.player_team)
 	var bd: GarageBackdrop = _page["backdrop"]
 	bd.floor_ratio = 1.0
@@ -44,8 +56,8 @@ func _ready() -> void:
 	head.add_child(back)
 	var titles := VBoxContainer.new()
 	titles.add_theme_constant_override("separation", -2)
-	titles.add_child(UiStyle.g_caption("Grande Prêmio · temporada 2026"))
-	titles.add_child(UiStyle.g_label("ESCOLHA O FIM DE SEMANA", 30, UiStyle.G_TEXT, "black"))
+	titles.add_child(UiStyle.g_caption("Grande Prêmio · %stemporada 2026" % ("" if _cat == "F1" else String(CategoryRules.of(_cat)["name"]) + " · ")))
+	titles.add_child(UiStyle.g_label("ESCOLHA O FIM DE SEMANA" if _cat == "F1" else "ESCOLHA A ETAPA", 30, UiStyle.G_TEXT, "black"))
 	head.add_child(titles)
 	ScreenKit.place(head, layer, Control.PRESET_TOP_LEFT, Vector2(44, 26))
 
@@ -90,6 +102,9 @@ func _ready() -> void:
 	swap.pressed.connect(func() -> void: ScreenKit.open_team_picker(self, _on_team_changed))
 	team_row.add_child(swap)
 	panel.add_child(team_row)
+	var cat_seg := ScreenKit.segmented([["F1", "F1"], ["F2", "F2"], ["F3", "F3"]], _cat, _change_category)  # categoria (v23-2)
+	cat_seg.custom_minimum_size = Vector2(240, 0)
+	ScreenKit.place(cat_seg, layer, Control.PRESET_TOP_RIGHT, Vector2(-40, 26))
 	panel.add_child(_gap(4))
 	panel.add_child(UiStyle.g_caption("Duração da corrida"))
 	panel.add_child(ScreenKit.segmented([[0.25, "25%"], [0.5, "50%"], [1.0, "100%"]], Session.duration_pct, func(v: float) -> void:
@@ -183,6 +198,8 @@ func _card(r: Dictionary) -> Button:
 	v.offset_top = 10
 	var date: String = r["date"]
 	var cap := UiStyle.g_caption("RD %d · %s %s" % [int(r["round"]), date.substr(8, 2), MONTHS[int(date.substr(5, 2))]])
+	if r.has("stage"):
+		cap.text = "%s · ETAPA %d" % [_cat, int(r["stage"])]
 	var city := UiStyle.g_label(circuit.get("city", circuit.get("short_name", "")), 17, UiStyle.G_TEXT, "black")
 	city.custom_minimum_size = Vector2(150, 0)
 	city.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -190,7 +207,7 @@ func _card(r: Dictionary) -> Button:
 	v.add_child(city)
 	var chips := HBoxContainer.new()
 	chips.add_theme_constant_override("separation", 4)
-	if r.get("sprint", false):
+	if r.get("sprint", false) and _cat == "F1":
 		chips.add_child(_chip("Sprint", UiStyle.RED, Color.WHITE))
 	if r.get("night", false):
 		chips.add_child(_chip("Noite", Color("#26324a"), Color("#ffd36b")))
@@ -258,12 +275,16 @@ func _select(circuit_id: String) -> void:
 	for ch in _badge_box.get_children():
 		ch.queue_free()
 	var date: String = r.get("date", "")
-	_badge_box.add_child(ScreenKit.badge("RD %d · %s %s" % [int(r.get("round", 0)), date.substr(8, 2), MONTHS[int(date.substr(5, 2))]],
-		UiStyle.team_color(Session.player_team), "flag"))
+	var btxt := "RD %d · %s %s" % [int(r.get("round", 0)), date.substr(8, 2), MONTHS[int(date.substr(5, 2))]]
+	if r.has("stage"):
+		btxt = "%s · ETAPA %d DE %d" % [_cat, int(r["stage"]), _calendar.size()]
+	_badge_box.add_child(ScreenKit.badge(btxt, UiStyle.team_color(Session.player_team), "flag"))
 	var title := String(c["grand_prix"]).to_upper()
 	_gp_title.text = title
 	_gp_title.add_theme_font_size_override("font_size", UiStyle.fs(UiStyle.FS_DISPLAY if title.length() <= 16 else 40))
 	var fmt := "fim de semana sprint" if c.get("sprint", false) else "fim de semana normal"
+	if _cat != "F1":
+		fmt = "formato da %s" % _cat
 	if c.get("night", false):
 		fmt += " · noturna"
 	_gp_sub.text = "%s\n%s, %s · %s" % [c["name"], c["short_name"], c.get("country", ""), fmt]
@@ -272,15 +293,34 @@ func _select(circuit_id: String) -> void:
 	var diff := float(c["overtaking_difficulty"])
 	var ov := "FÁCIL" if diff < 0.3 else ("MÉDIA" if diff < 0.6 else "DIFÍCIL")
 	_stats.add_child(ScreenKit.stat(String.num(float(c["length_m"]) / 1000.0, 3).replace(".", ","), "km"))
-	_stats.add_child(ScreenKit.stat(str(int(c["laps"])), "voltas"))
+	if _cat == "F1":
+		_stats.add_child(ScreenKit.stat(str(int(c["laps"])), "voltas"))
+	else:
+		var tm := TrackModel.new(c)
+		_stats.add_child(ScreenKit.stat(str(CategoryRules.race_laps(_cat, tm, false)), "voltas · principal"))
 	_stats.add_child(ScreenKit.stat("%d%%" % roundi(float(c["rain_probability"]) * 100), "chance de chuva"))
 	_stats.add_child(ScreenKit.stat(ov, "ultrapassagem"))
 	_refresh_laps()
 
 
 func _refresh_laps() -> void:
-	var laps := int(GameData.circuit(Session.circuit_id).get("laps", 0))
+	var c := GameData.circuit(Session.circuit_id)
+	if _cat != "F1":
+		var tm := TrackModel.new(c)
+		_laps.text = "%d voltas na sprint · %d na principal" % [maxi(3, roundi(CategoryRules.race_laps(_cat, tm, true) * Session.duration_pct)),
+			maxi(3, roundi(CategoryRules.race_laps(_cat, tm, false) * Session.duration_pct))]
+		return
+	var laps := int(c.get("laps", 0))
 	_laps.text = "%d voltas na corrida" % maxi(3, roundi(laps * Session.duration_pct))
+
+
+## Troca de categoria: a equipe passa a ser a primeira da categoria nova e a tela recarrega com o calendário dela.
+func _change_category(cat: String) -> void:
+	if cat == _cat:
+		return
+	Session.category = cat
+	Session.player_team = String(GameData.category_teams(cat)[0]["id"])
+	get_tree().change_scene_to_file.call_deferred(Session.GP_SETUP_SCENE)
 
 
 func _refresh_cta() -> void:

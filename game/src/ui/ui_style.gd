@@ -372,7 +372,7 @@ static func g_caption(text: String, color: Color = G_TEXT_3) -> Label:
 
 ## Cor da equipe (destaques de seleção, brilho atrás do carro).
 static func team_color(team_id: String) -> Color:
-	var t := GameData.team_by_id(GameData.teams(), team_id)
+	var t := GameData.any_team(team_id)
 	if t.is_empty() and Session.campaign != null:  # equipe criada na campanha
 		t = Session.campaign.team()
 	return Color(t.get("color", "#1868DB"))

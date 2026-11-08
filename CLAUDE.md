@@ -64,7 +64,7 @@ Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--
 `--pause` (começa pausado: grid parado), `--circuit=<id>`, câmera 3D `--cam=<n> --yaw --pitch --dist`
 (a câmera vai direto ao alvo nas capturas). Grande Prêmio: `--gp` (configuração), `--weekend`
 (painel) e `--play` (sessão atual ao vivo; num treino, simula e abre a folha de resultado), com `--skip=<n>` para simular as n primeiras sessões
-(ex.: `--play --circuit=shanghai --skip=2` abre a sprint; `--grid` abre a animação do grid); `--advance` vale também na
+(ex.: `--play --circuit=shanghai --skip=2` abre a sprint; `--grid` abre a animação do grid; `--live` vai direto à corrida com o plano dos engenheiros; `--team=f2_<equipe>` joga a F2/F3); `--advance` vale também na
 classificação. Capturas de interface: `--ui=team` (folha da tela inicial), `--ui=out` (folha de saída da classificação), `--ui=plan` (aviso da estratégia na corrida), `--ui=gallery`
 (estados dos componentes), `--view-only` (só o 3D, base de mockups). Escolha de equipe: `--teamselect=campaign|gp` (com `--team=<id>`). Campanha: `--campaign`, `--car` (peças), `--rd` (árvore),
 `--creator [--ui=<passo 0..3>]`, `--hub` e `--camp-race` (usam a campanha salva; `tools/make_demo_campaign.gd -- --round=<n>` grava uma campanha de reta final).

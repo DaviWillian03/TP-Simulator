@@ -232,3 +232,28 @@ func test_grid_mostra_da_ultima_fila_para_a_primeira_e_larga() -> void:
 	assert_eq(screen.row, screen.rows - 2)
 	assert_true(w.quali_times["race"].size() > 0, "tempos da classificação para os cartões")
 	assert_eq(screen.order[0].driver["id"], w.grids["race"][0], "a ordem é a do grid")
+
+
+func test_escolha_de_equipe_troca_para_a_f2() -> void:
+	var before_team := Session.player_team
+	var before_cat := Session.category
+	Session.team_select_mode = "gp"
+	Session.category = "F1"
+	var screen: Control = await _open("res://src/ui/team_select_screen.tscn")
+	screen._set_category("F2")
+	await wait_process_frames(1)
+	assert_eq(screen._teams.size(), 11)
+	assert_true(String(screen._team).begins_with("f2_"))
+	assert_eq(screen._strip.get_child_count(), 11)
+	Session.player_team = before_team
+	Session.category = before_cat
+
+
+func test_gp_da_f2_mostra_so_as_etapas_da_categoria() -> void:
+	var before_team := Session.player_team
+	Session.player_team = "f2_camposracing"
+	var screen: Control = await _open("res://src/ui/gp_setup_screen.tscn")
+	assert_eq(screen._calendar.size(), 14)
+	assert_eq(Session.category, "F2")
+	Session.player_team = before_team
+	Session.category = "F1"

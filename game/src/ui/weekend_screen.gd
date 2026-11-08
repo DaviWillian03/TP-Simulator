@@ -56,8 +56,8 @@ func _ready() -> void:
 	for i in weekend.sessions.size():
 		var id: String = weekend.sessions[i]
 		var state := "done" if i < weekend.current else ("now" if i == weekend.current else "next")
-		var letter: String = {"quali": "Q", "sprint_quali": "SQ", "sprint": "S", "race": "R"}.get(id, str(i + 1))
-		steps.append([WeekendSim.SESSION_SHORT[id], letter, state])
+		var letter: String = {"quali": "Q", "sprint_quali": "SQ", "sprint": "S", "race": "P" if CategoryRules.is_feeder(weekend.category) else "R"}.get(id, str(i + 1))
+		steps.append([weekend.session_short(id), letter, state])
 	var bar := ScreenKit.step_bar(steps)
 	layer.add_child(bar)
 	bar.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
@@ -115,7 +115,7 @@ func _next_card() -> Control:
 	v.add_child(UiStyle.g_caption("Próxima sessão · agora", UiStyle.G_INK_2))
 	v.add_child(UiStyle.g_label(_session_title(id).to_upper(), 44, UiStyle.G_INK, "black"))
 	var kind := "practice" if weekend.is_practice(id) else id
-	var desc := UiStyle.g_label(SESSION_DESC.get(kind, ""), UiStyle.FS_BODY, UiStyle.G_INK_2)
+	var desc := UiStyle.g_label(_session_desc(kind), UiStyle.FS_BODY, UiStyle.G_INK_2)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.custom_minimum_size = Vector2(440, 0)
 	v.add_child(desc)
@@ -127,7 +127,7 @@ func _next_card() -> Control:
 	if weekend.is_practice(id):  # treino é sempre simulado (decisão de 2026-11-08)
 		v.add_child(_practice_tiles())
 		var run := CutButton.new()
-		run.text = "SIMULAR %s" % WeekendSim.SESSION_NAMES[id].to_upper()
+		run.text = "SIMULAR %s" % weekend.session_name(id).to_upper()
 		run.custom_minimum_size = Vector2(360, UiStyle.TOUCH_MAIN)
 		run.add_theme_font_size_override("font_size", UiStyle.fs(19))
 		run.pressed.connect(_on_simulate)
@@ -155,7 +155,54 @@ func _next_card() -> Control:
 
 
 ## Treino: diretor de engenharia de pista da equipe e chance de chuva no dia (mockup v21).
+## Descrição da sessão (F2/F3: o formato da categoria; mockup v23-4).
+func _session_desc(kind: String) -> String:
+	if CategoryRules.is_feeder(weekend.category):
+		var rev := int(CategoryRules.of(weekend.category)["reverse_top"])
+		match kind:
+			"practice":
+				return "%d minutos, simulados. Depois: classificação de sessão única, sprint com os %d primeiros invertidos e corrida principal." % [weekend.practice_minutes(), rev]
+			"quali":
+				return "Sessão única de %d minutos: a melhor volta define o grid da principal; a sprint inverte os %d primeiros." % [int(CategoryRules.of(weekend.category)["quali_min"]), rev]
+			"sprint":
+				return "Sprint sem parada obrigatória, com os %d primeiros da classificação invertidos." % rev
+			"race":
+				return "Corrida principal: %s." % ("parada obrigatória usando os dois compostos" if bool(CategoryRules.of(weekend.category)["compound_rule"]) else "sem parada obrigatória")
+	return SESSION_DESC.get(kind, "")
+
+
+## F2/F3: regras da categoria no destaque do treino (jogos de pneus, sprint e principal).
+func _feeder_tiles() -> Control:
+	var r := CategoryRules.of(weekend.category)
+	var dry: Dictionary = r["dry"]
+	var parts: Array = []
+	for k: String in ["hard", "medium", "soft"]:
+		if dry.has(k):
+			parts.append("%d %s" % [int(dry[k]), String(weekend.tyres.compounds[k]["name"]).to_lower() + ("s" if int(dry[k]) > 1 else "")])
+	var total := 0
+	for k: String in dry:
+		total += int(dry[k])
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 10)
+	for t: Array in [["%d jogos secos" % total, " + ".join(parts)], ["Sprint", "sem parada · %d primeiros invertidos" % int(r["reverse_top"])],
+			["Principal", "parada obrigatória · 2 compostos" if bool(r["compound_rule"]) else "sem parada obrigatória"]]:
+		var tile := PanelContainer.new()
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tile.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#e3e6eb"), 14, 12, 8))
+		var tv := VBoxContainer.new()
+		tv.add_theme_constant_override("separation", -2)
+		tv.add_child(UiStyle.g_label(t[0], UiStyle.FS_BODY, UiStyle.G_INK, "black"))
+		var cap := UiStyle.g_label(t[1], UiStyle.FS_CAPTION, UiStyle.G_INK_2, "bold")
+		cap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tv.add_child(cap)
+		tile.add_child(tv)
+		h.add_child(tile)
+	return h
+
+
 func _practice_tiles() -> Control:
+	if CategoryRules.is_feeder(weekend.category):
+		return _feeder_tiles()
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 10)
 	var sk := _skills_of(_my_drivers()[0]["id"]) if not _my_drivers().is_empty() else {}
@@ -198,8 +245,10 @@ func _skills_of(driver_id: String) -> Dictionary:
 func _session_title(id: String) -> String:
 	if weekend.is_race(id):
 		var laps := maxi(3, roundi(weekend.track.laps * weekend.duration_pct / (RaceSim.SPRINT_DISTANCE if id == "sprint" else 1.0)))
-		return "%s · %d voltas" % [WeekendSim.SESSION_NAMES[id], laps]
-	return WeekendSim.SESSION_NAMES[id]
+		if CategoryRules.is_feeder(weekend.category):
+			laps = int(weekend.race_context()["total_laps"])
+		return "%s · %d voltas" % [weekend.session_name(id), laps]
+	return weekend.session_name(id)
 
 
 func _forecast_row() -> Control:
@@ -368,10 +417,10 @@ func _refresh_program(driver_id: String) -> void:
 	if prog.is_empty():
 		chips.add_child(UiStyle.g_label("Programa vazio: o piloto fica na garagem.", UiStyle.FS_BODY, UiStyle.G_TEXT_3))
 	var used := PracticeSession.program_minutes(prog)
-	(box["minutes"] as Label).text = "%d / 60 min · toque num bloco para tirar" % used
+	(box["minutes"] as Label).text = "%d / %d min · toque num bloco para tirar" % [used, weekend.practice_minutes()]
 	for b: Button in (box["add"] as HBoxContainer).get_children():
 		var id: String = ["aero", "mech", "race", "quali"][b.get_index()]
-		b.disabled = used + int(PracticeSession.BLOCKS[id]["minutes"]) > 60
+		b.disabled = used + int(PracticeSession.BLOCKS[id]["minutes"]) > weekend.practice_minutes()
 
 
 # --- seus carros ------------------------------------------------------------------------
@@ -489,7 +538,7 @@ func _open_practice_report() -> void:
 	var rep: Dictionary = weekend.last_practice
 	var sh := ScreenKit.sheet("Resultado do treino", 1080)
 	var body: VBoxContainer = sh["body"]
-	body.add_child(UiStyle.g_caption("%s · simulado" % WeekendSim.SESSION_NAMES.get(rep.get("session", ""), "Treino livre")))
+	body.add_child(UiStyle.g_caption("%s · simulado" % weekend.session_name(String(rep.get("session", "fp1")))))
 	var cols := HBoxContainer.new()
 	cols.add_theme_constant_override("separation", UiStyle.SP_L)
 	body.add_child(cols)
@@ -602,7 +651,7 @@ func _last_result(driver_id: String) -> String:
 	for i in range(weekend.current - 1, -1, -1):
 		var id: String = weekend.sessions[i]
 		if weekend.results.has(id):
-			return "%s · %dº" % [WeekendSim.SESSION_SHORT[id], weekend.results[id].find(driver_id) + 1]
+			return "%s · %dº" % [weekend.session_short(id), weekend.results[id].find(driver_id) + 1]
 	return ""
 
 

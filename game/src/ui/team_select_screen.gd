@@ -9,6 +9,7 @@ extends Control
 const TRAITS := [["straight", "Reta", "#ffd24a"], ["slow", "Curvas lentas", "#ff6a5a"], ["fast", "Curvas rápidas", "#5c93ea"], ["rel", "Confiabilidade", "#3c9d5d"]]
 
 var _mode := "gp"
+var _cat := "F1"  ## categoria mostrada (F1/F2/F3; mockup v23-1)
 var _team := ""
 var _teams: Array = []
 var _layer: Control
@@ -21,11 +22,13 @@ var _info: VBoxContainer
 var _drivers: VBoxContainer
 var _goal: PanelContainer
 var _strip: HBoxContainer
+var _mode_label: Label
 
 
 func _ready() -> void:
 	_mode = Session.team_select_mode
-	_teams = GameData.teams()
+	_cat = Session.category if _mode == "gp" else "F1"
+	_teams = GameData.category_teams(_cat)
 	_team = Session.player_team if not GameData.team_by_id(_teams, Session.player_team).is_empty() else String(_teams[0]["id"])
 	var page := ScreenKit.garage_page(self, _team)
 	_backdrop = page["backdrop"]
@@ -54,8 +57,13 @@ func _ready() -> void:
 	head.add_child(tag)
 	_name = UiStyle.g_label("", 40, UiStyle.G_TEXT, "black")
 	head.add_child(_name)
-	head.add_child(UiStyle.g_label({"campaign": "CAMPANHA · EQUIPE REAL", "gp": "GRANDE PRÊMIO"}.get(_mode, ""), 13, Color("#c3c9d3"), "bold"))
+	_mode_label = UiStyle.g_label("", 13, Color("#c3c9d3"), "bold")
+	head.add_child(_mode_label)
 	ScreenKit.place(head, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 26))
+	if _mode == "gp":  # F1 / F2 / F3 (decisão de 2026-11-08)
+		var seg := ScreenKit.segmented([["F1", "F1"], ["F2", "F2"], ["F3", "F3"]], _cat, _set_category)
+		seg.custom_minimum_size = Vector2(240, 0)
+		ScreenKit.place(seg, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 30))
 
 	_car = CarHero.new()
 	_layer.add_child(_car)
@@ -93,6 +101,15 @@ func _ready() -> void:
 	_apply()
 
 
+func _set_category(cat: String) -> void:
+	_cat = cat
+	Session.category = cat
+	_teams = GameData.category_teams(cat)
+	if GameData.team_by_id(_teams, _team).is_empty():
+		_team = String(_teams[0]["id"])
+	_apply()
+
+
 func _glass(content: Control) -> PanelContainer:
 	var p := PanelContainer.new()
 	var st := UiStyle.g_box(Color(0.03, 0.035, 0.047, 0.74), 20, 14, 12)
@@ -122,14 +139,16 @@ func _apply() -> void:
 	_slab.add_theme_stylebox_override("panel", sb)
 	var nm := String(t["name"]).to_upper()
 	_name.text = nm
+	var base_label: String = {"campaign": "CAMPANHA · EQUIPE REAL", "gp": "GRANDE PRÊMIO"}.get(_mode, "")
+	_mode_label.text = base_label + ("" if _cat == "F1" else " · " + String(CategoryRules.of(_cat)["name"]).to_upper())
 	_giant.text = nm
 	var fs := 178
 	while fs > 80 and UiStyle.G_BLACK.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > 1220:
 		fs -= 6
 	_giant.add_theme_font_size_override("font_size", fs)
-	var drivers: Array = GameData.drivers().filter(func(d: Dictionary) -> bool: return d["team"] == _team)
+	var drivers: Array = GameData.category_drivers(_cat).filter(func(d: Dictionary) -> bool: return d["team"] == _team)
 	var c2 := Color(t.get("color2", "#ffffff"))
-	_car.set_team(_team, int(drivers[0]["number"]) if not drivers.is_empty() else 0, c2 if c2.get_luminance() > 0.35 else Color.WHITE)
+	_car.set_team(_team, int(drivers[0]["number"]) if not drivers.is_empty() else 0, c2 if c2.get_luminance() > 0.35 else Color.WHITE, t)
 	_fill_info(t)
 	_fill_drivers(drivers, col)
 	if _goal != null:
@@ -152,6 +171,9 @@ func _apply() -> void:
 func _fill_info(t: Dictionary) -> void:
 	for c in _info.get_children():
 		c.queue_free()
+	if CategoryRules.is_feeder(_cat):
+		_fill_feeder_info(t)
+		return
 	_info.add_child(UiStyle.g_caption("Carro %d" % 2026))
 	var big := HBoxContainer.new()
 	big.add_theme_constant_override("separation", 8)
@@ -194,6 +216,27 @@ func _fill_info(t: Dictionary) -> void:
 		_info.add_child(h2)
 
 
+## F2/F3: o chassi é igual para todos; a nota é a operação da equipe (mockup v23-1).
+func _fill_feeder_info(t: Dictionary) -> void:
+	_info.add_child(UiStyle.g_caption("Carro 2026 · %s" % _cat))
+	var big := HBoxContainer.new()
+	big.add_theme_constant_override("separation", 8)
+	big.add_child(UiStyle.g_label("%d" % CategoryRules.operation_score(t, _teams), 32, UiStyle.G_TEXT, "black"))
+	var bl := UiStyle.g_label("operação da equipe · %dº" % _team_rank(_team), 12, UiStyle.G_TEXT_2, "bold")
+	bl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	big.add_child(bl)
+	_info.add_child(big)
+	var lv := CategoryRules.operation_levels(t, _teams)
+	for kv: Array in [["Chassi", "Dallara %s (igual para todos)" % _cat], ["Motor", "Mecachrome V6"],
+			["Engenharia", "nível %d" % int(lv["eng"])], ["Mecânicos", "nível %d" % int(lv["mech"])], ["Simulador", "nível %d" % int(lv["sim"])]]:
+		var h2 := HBoxContainer.new()
+		var k := UiStyle.g_label(kv[0], 12, UiStyle.G_TEXT_2, "bold")
+		k.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h2.add_child(k)
+		h2.add_child(UiStyle.g_label(String(kv[1]), 12, UiStyle.G_TEXT, "black"))
+		_info.add_child(h2)
+
+
 func _fill_drivers(drivers: Array, col: Color) -> void:
 	for c in _drivers.get_children():
 		c.queue_free()
@@ -225,10 +268,13 @@ func _fill_drivers(drivers: Array, col: Color) -> void:
 		var chips := HBoxContainer.new()
 		chips.add_theme_constant_override("separation", 6)
 		var nt := int(d.get("titles", 0))
-		for txt: String in ["Nota %d" % int(d.get("rating", 0)), "%d título%s" % [nt, "" if nt == 1 else "s"]]:
+		var chip_texts: Array = ["Nota %d" % int(d.get("rating", 0)), "%d título%s" % [nt, "" if nt == 1 else "s"]]
+		if CategoryRules.is_feeder(_cat):  # piloto pagante: quanto traz por ano
+			chip_texts[1] = "traz US$ %s mi" % String.num(CategoryRules.pay_musd(_cat, float(d.get("rating", 60))), 1).replace(".", ",")
+		for i in chip_texts.size():
 			var p := PanelContainer.new()
 			p.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.1), 6, 6, 1))
-			p.add_child(UiStyle.g_label(txt, 11, UiStyle.G_TEXT, "black"))
+			p.add_child(UiStyle.g_label(chip_texts[i], 12, UiStyle.G_UP if (i == 1 and CategoryRules.is_feeder(_cat)) else UiStyle.G_TEXT, "black"))
 			chips.add_child(p)
 		v.add_child(chips)
 		h.add_child(v)
@@ -275,6 +321,8 @@ func _fill_strip() -> void:
 
 func _confirm() -> void:
 	Session.player_team = _team
+	if _mode == "gp":
+		Session.category = _cat
 	match _mode:
 		"campaign":
 			Session.start_campaign(Campaign.new_real(_team))

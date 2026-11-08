@@ -53,6 +53,7 @@ var debug_skip_podium := false  ## --no-podium: vai direto à tabela de resultad
 var debug_profile := ""  ## --profile=<id do piloto>: abre a ficha na tela Pessoal
 var debug_pit := false  ## --pit: abre a tela do box na corrida
 var debug_tap := false  ## --tap: leva um carro ao box e abre o mini-jogo de toque
+var category := "F1"  ## categoria escolhida (F1/F2/F3) para o Grande Prêmio (e a campanha); decisões de 2026-11-08
 var team_select_mode := "gp"  ## escolha de equipe: "campaign" | "gp"
 var debug_ui := ""  ## --ui=team (abre a folha na tela inicial) · --ui=gallery (estados dos componentes)
 var debug_view_only := false  ## --view-only: só o cenário 3D em tela cheia (base para mockups)
@@ -73,6 +74,7 @@ func _ready() -> void:
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else ""
 	player_team = args.get("team", player_team)
+	category = String(args.get("category", GameData.category_of(player_team)))  # --category=F2 (com --team=f2_...)
 	duration_pct = float(args.get("pct", duration_pct))
 	debug_advance_s = float(args.get("advance", "0"))
 	debug_pause = args.has("pause")
@@ -208,15 +210,20 @@ func _ready() -> void:
 			start_campaign.call_deferred(c)
 	elif args.has("gp"):
 		get_tree().change_scene_to_file.call_deferred(GP_SETUP_SCENE)
-	elif args.has("weekend") or args.has("practice") or args.has("quali") or args.has("play") or args.has("grid"):
+	elif args.has("weekend") or args.has("practice") or args.has("quali") or args.has("play") or args.has("grid") or args.has("live"):
 		var opts := {"player_team": player_team, "duration_pct": duration_pct, "seed": int(args.get("seed", "1")),
-			"weather": args.get("weather", "realistic")}
+			"weather": args.get("weather", "realistic"), "category": category}
 		opts.merge(sim_overrides.duplicate(), false)
 		weekend = WeekendSim.new(circuit_id, opts)
 		for i in int(args.get("skip", "0")):
 			weekend.simulate_current()
 		if args.has("grid"):  # (captura) --grid abre a animação do grid da corrida atual
 			get_tree().change_scene_to_file.call_deferred(GRID_SCENE)
+		elif args.has("live") and weekend.is_race(weekend.session_id()):  # (captura) --live: corrida direto, plano dos engenheiros
+			var plans := weekend.engineer_strategy()
+			for did: String in plans:
+				weekend.strategy[did] = plans[did][0]
+			start_race_from_grid.call_deferred(weekend.make_race())
 		elif args.has("practice") or args.has("quali") or args.has("play"):
 			play_session.call_deferred()
 		else:
@@ -266,7 +273,7 @@ func open_gp_setup() -> void:
 ## Cria o fim de semana com as escolhas da configuração e abre o painel.
 func start_gp() -> void:
 	var opts := {"player_team": player_team, "duration_pct": duration_pct, "weather": gp_weather,
-		"format": gp_format, "seed": randi()}
+		"format": gp_format, "seed": randi(), "category": category}
 	opts.merge(sim_overrides.duplicate(), false)
 	weekend = WeekendSim.new(circuit_id, opts)
 	go_to_weekend()

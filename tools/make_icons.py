@@ -46,6 +46,7 @@ ICONS = {
     "person": '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>',
     "dice": '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="15" cy="9" r="1.2"/><circle cx="9" cy="15" r="1.2"/>',
     "spin": '<path d="M20 12a8 8 0 1 1-3-6.3M20 4v5h-5"/>',
+    "drs": '<rect x="3" y="8" width="18" height="8" rx="2"/><path d="M7 12h10"/>',
     "fire": '<path d="M12 3c1 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 3 3 5 1-2 1-6 1-9z"/>',
 }
 

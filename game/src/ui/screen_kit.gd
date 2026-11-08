@@ -381,7 +381,7 @@ static func update_team_pill(p: PanelContainer, team_id: String) -> void:
 	var h: HBoxContainer = p.get_child(0)
 	for c in h.get_children():
 		c.queue_free()
-	var team := GameData.team_by_id(GameData.teams(), team_id)
+	var team := GameData.any_team(team_id)
 	var emb := TeamEmblems.make_rect(team_id, 32)
 	emb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(emb)
@@ -390,7 +390,7 @@ static func update_team_pill(p: PanelContainer, team_id: String) -> void:
 	v.add_theme_constant_override("separation", -2)
 	v.add_child(UiStyle.g_label(team.get("name", ""), 17, UiStyle.G_TEXT, "black"))
 	var names: Array[String] = []
-	for d: Dictionary in GameData.drivers():
+	for d: Dictionary in GameData.category_drivers(GameData.category_of(team_id)):
 		if d["team"] == team_id:
 			names.append(String(d["name"]).get_slice(" ", String(d["name"]).get_slice_count(" ") - 1))
 	v.add_child(UiStyle.g_label(" · ".join(names), 13, UiStyle.G_TEXT_2))
@@ -554,7 +554,7 @@ static func open_team_picker(screen: Control, on_pick: Callable) -> void:
 	grid.add_theme_constant_override("v_separation", UiStyle.SP_M)
 	(s["body"] as VBoxContainer).add_child(grid)
 	var group := ButtonGroup.new()
-	for t: Dictionary in GameData.teams():
+	for t: Dictionary in GameData.category_teams(Session.category):
 		var b := Button.new()
 		b.toggle_mode = true
 		b.button_group = group

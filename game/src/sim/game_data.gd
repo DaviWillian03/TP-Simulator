@@ -40,3 +40,26 @@ static func team_by_id(team_list: Array, team_id: String) -> Dictionary:
 		if t["id"] == team_id:
 			return t
 	return {}
+
+
+## Categoria de uma equipe pelo id ("f2_..." / "f3_..." = categorias de base; o resto é F1).
+static func category_of(team_id: String) -> String:
+	if team_id.begins_with("f2_"):
+		return "F2"
+	if team_id.begins_with("f3_"):
+		return "F3"
+	return "F1"
+
+
+## Equipes e pilotos de 2026 de uma categoria (F1 dos dados; F2/F3 do grid real das categorias de base).
+static func category_teams(cat: String) -> Array:
+	return teams() if not CategoryRules.is_feeder(cat) else CategoryRules.feeder_grid(cat)["teams"]
+
+
+static func category_drivers(cat: String) -> Array:
+	return drivers() if not CategoryRules.is_feeder(cat) else CategoryRules.feeder_grid(cat)["drivers"]
+
+
+## Equipe de qualquer categoria pelo id.
+static func any_team(team_id: String) -> Dictionary:
+	return team_by_id(category_teams(category_of(team_id)), team_id)

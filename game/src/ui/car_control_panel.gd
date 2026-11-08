@@ -21,6 +21,10 @@ var _sub_label: Label
 var _num_label: Label
 var _tyre_badge: TyreBadge
 var _tyre_label: Label
+var _drs_box: PanelContainer
+var _drs_icon: TextureRect
+var _drs_title: Label
+var _drs_sub: Label
 var _life_bar: StandingsPanel.LifeBar
 var _life_label: Label
 var _battery: BatteryIcon
@@ -136,6 +140,25 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	energy_row.add_child(_segment([["Carregar", CarState.EnergyMode.HARVEST], ["Equil.", CarState.EnergyMode.BALANCED], ["Usar", CarState.EnergyMode.DEPLOY]],
 		car.energy_mode, _energy_buttons, func(m: int) -> void: sim.set_energy_mode(car, m)))
 	v.add_child(energy_row)
+	energy_row.visible = sim.energy_k > 0.0  # F2/F3: sem sistema híbrido (decisão de 2026-11-08)
+	if sim.drs:  # F2/F3: DRS automático nas zonas
+		_drs_box = PanelContainer.new()
+		_drs_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var dh := HBoxContainer.new()
+		dh.add_theme_constant_override("separation", 8)
+		dh.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_drs_icon = ScreenKit.icon("drs", 22, UiStyle.G_TEXT_3)
+		dh.add_child(_drs_icon)
+		var dv := VBoxContainer.new()
+		dv.add_theme_constant_override("separation", -3)
+		dv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_drs_title = UiStyle.g_label("DRS", 13, UiStyle.G_TEXT_2, "black")
+		_drs_sub = UiStyle.g_label("", 11, UiStyle.G_TEXT_3, "bold")
+		dv.add_child(_drs_title)
+		dv.add_child(_drs_sub)
+		dh.add_child(dv)
+		_drs_box.add_child(dh)
+		v.add_child(_drs_box)
 
 	# avisos (regra dos compostos, dano na asa) só ocupam espaço quando existem
 	_hint_label = UiStyle.g_label("", 12, Color("#ffb4a8"), "bold")
@@ -238,6 +261,18 @@ func refresh(race_position: int) -> void:
 	var c: Dictionary = sim.tyres.compounds[car.tyre]
 	_tyre_badge.set_compound(c["letter"], Color(c["color"]))
 	_tyre_label.text = "%s · %dv" % [c["name"], car.tyre_laps]
+	if _drs_box != null:
+		var open := sim.drs_open(car)
+		_drs_box.add_theme_stylebox_override("panel", UiStyle.g_box(Color(UiStyle.G_UP, 0.15) if open else Color(1, 1, 1, 0.05), 12, 10, 6))
+		_drs_icon.modulate = UiStyle.G_UP if open else UiStyle.G_TEXT_3
+		_drs_title.text = "DRS ABERTO" if open else "DRS"
+		_drs_title.add_theme_color_override("font_color", UiStyle.G_UP if open else UiStyle.G_TEXT_2)
+		if open:
+			_drs_sub.text = "a %s s do P%d" % [String.num(car.gap_ahead_s, 1).replace(".", ","), maxi(race_position - 1, 1)]
+		elif car.laps_done < RaceSim.DRS_FROM_LAP:
+			_drs_sub.text = "liberado a partir da volta %d" % (RaceSim.DRS_FROM_LAP + 1)
+		else:
+			_drs_sub.text = "abre a menos de 1 s do carro da frente"
 	var life := 1.0 - clampf(car.tyre_wear, 0.0, 1.0)
 	_life_bar.set_life(life)
 	_life_label.text = "%d%%" % roundi(life * 100.0)

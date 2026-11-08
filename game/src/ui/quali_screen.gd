@@ -145,7 +145,7 @@ func _build_top_bar(layer: Control) -> void:
 	back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	back.pressed.connect(Session.go_to_weekend)
 	bar.add_child(back)
-	var head := ScreenKit.flag_title(String(WeekendSim.SESSION_NAMES[weekend.session_id()]).to_upper(), 20, String(weekend.circuit.get("country_code", "")))
+	var head := ScreenKit.flag_title((("" if weekend.category == "F1" else weekend.category + " · ") + weekend.session_name(weekend.session_id())).to_upper(), 20, String(weekend.circuit.get("country_code", "")))
 	_sub = head["sub"]
 	bar.add_child(head["box"])
 

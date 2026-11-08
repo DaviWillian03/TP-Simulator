@@ -161,7 +161,8 @@ func _card(car: CarState, pos: int) -> Control:
 	team.add_child(stripe)
 	team.add_child(UiStyle.g_label(String(car.team.get("name", "")), UiStyle.FS_BODY, Color("#c3c9d3"), "black"))
 	v.add_child(team)
-	var qt: Dictionary = weekend.quali_times.get("sprint" if sim.sprint else "race", {}).get(d["id"], {})
+	var key := "sprint" if sim.sprint and weekend.quali_times.has("sprint") else "race"  # F2/F3: uma classificação para as duas
+	var qt: Dictionary = weekend.quali_times.get(key, {}).get(d["id"], {})
 	if not qt.is_empty():  # sem classificação (só a corrida): não mostra nada no lugar (decisão do usuário)
 		var gap := Control.new()
 		gap.custom_minimum_size = Vector2(0, 24)

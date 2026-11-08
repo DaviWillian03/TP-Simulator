@@ -43,7 +43,7 @@ func _ready() -> void:
 	titles.add_theme_constant_override("separation", -2)
 	var rain := int(roundf(weekend.forecast[2] * 100)) if weekend.forecast.size() > 2 else 0
 	titles.add_child(UiStyle.g_caption("Antes da largada · %d voltas · %d%% chuva" % [int(ctx["total_laps"]), rain]))
-	titles.add_child(UiStyle.g_label("ESTRATÉGIA DA %s" % ("SPRINT" if bool(ctx["sprint"]) else "CORRIDA"), 30, UiStyle.G_TEXT, "black"))
+	titles.add_child(UiStyle.g_label("ESTRATÉGIA DA %s" % ("SPRINT" if bool(ctx.get("is_sprint", ctx["sprint"])) else "CORRIDA"), 30, UiStyle.G_TEXT, "black"))
 	head.add_child(titles)
 	ScreenKit.place(head, layer, Control.PRESET_TOP_LEFT, Vector2(44, 22))
 	var hint := HBoxContainer.new()
@@ -135,7 +135,7 @@ func _build_col(d: Dictionary) -> void:
 	for i in stints.size():
 		col.add_child(_stint_row(did, i, stints[i], lap))
 		lap += int(stints[i]["laps"])
-	col.add_child(UiStyle.g_caption("Estoque para a %s" % ("sprint" if bool(ctx["sprint"]) else "corrida")))
+	col.add_child(UiStyle.g_caption("Estoque para a %s" % ("sprint" if bool(ctx.get("is_sprint", ctx["sprint"])) else "corrida")))
 	col.add_child(_stock_row(did))
 	var warn := RaceStrategy.warning(plan, weekend.tyres, ctx, stocks[did])
 	var w := HBoxContainer.new()

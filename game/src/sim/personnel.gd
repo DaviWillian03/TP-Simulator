@@ -94,6 +94,8 @@ static func team_staff(team_id: String) -> Dictionary:
 ## Quem acerta o carro no treino (decisão de 2026-11-08): {id do piloto: {director, engineer, engineer_name}} — o diretor de
 ## engenharia de pista da equipe e o engenheiro de corrida do carro (1º piloto = carro 1). camp = null: dados de 2026.
 static func practice_skills_for(camp: Campaign, team_id: String, driver_ids: Array) -> Dictionary:
+	if (camp == null or camp.personnel == null) and GameData.category_of(team_id) != "F1":
+		return feeder_skills(team_id, driver_ids)
 	var out := {}
 	var st := {}
 	if camp == null or camp.personnel == null:
@@ -105,6 +107,29 @@ static func practice_skills_for(camp: Campaign, team_id: String, driver_ids: Arr
 		out[driver_ids[i]] = {"director": float(dir_p.get("skill", 55)), "engineer": float(eng_p.get("skill", 55)),
 			"engineer_name": String(eng_p.get("name", "")), "director_name": String(dir_p.get("name", ""))}
 	return out
+
+
+## F2/F3 fora da campanha: chefe de engenharia e engenheiros genéricos (nomes do name_pool), fixos por equipe.
+static func feeder_skills(team_id: String, driver_ids: Array) -> Dictionary:
+	var out := {}
+	var chief := generic_person("chief|" + team_id)
+	for i in driver_ids.size():
+		var eng := generic_person("eng%d|%s" % [i, team_id])
+		out[driver_ids[i]] = {"director": float(chief["skill"]), "engineer": float(eng["skill"]),
+			"engineer_name": eng["name"], "director_name": chief["name"]}
+	return out
+
+
+## Pessoa genérica determinística (nome do name_pool e nota 58-74) a partir de uma chave.
+static func generic_person(key: String) -> Dictionary:
+	var pool: Dictionary = GameData.load_json(GameData.DATA_DIR + "name_pool.json")["nationalities"]
+	var nats: Array = pool.keys()
+	nats.sort()
+	var h := absi(hash(key))
+	var nat: String = nats[h % nats.size()]
+	var firsts: Array = pool[nat]["first"]
+	var lasts: Array = pool[nat]["last"]
+	return {"name": "%s %s" % [firsts[(h / 7) % firsts.size()], lasts[(h / 131) % lasts.size()]], "nationality": nat, "skill": 58 + (h / 17) % 17}
 
 
 ## Multiplicador do ganho dos treinos pela nota da engenharia de pista (0 = vaga: um pouco pior).

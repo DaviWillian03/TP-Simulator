@@ -5,6 +5,7 @@ extends RefCounted
 ## classificação de sessão única, sprint com grid invertido e corrida principal.
 
 static var _data: Dictionary = {}
+static var _grids: Dictionary = {}  ## cache do grid de cada categoria de base (cópia a cada pedido)
 
 
 static func all() -> Dictionary:
@@ -33,6 +34,41 @@ static func race_laps(cat: String, track: TrackModel, sprint: bool) -> int:
 ## Grid de uma categoria de base em 2026 (modo Grande Prêmio e corrida rápida): equipes e pilotos com vaga.
 ## Os números seguem a ordem das equipes nos dados (1, 2, 3...).
 static func feeder_grid(cat: String) -> Dictionary:
+	if not _grids.has(cat):
+		_grids[cat] = _build_grid(cat)
+	return (_grids[cat] as Dictionary).duplicate(true)
+
+
+## Pilotos pagantes (F2/F3, decisão de 2026-11-08): quanto o piloto traz por ano (US$ mi) — quanto melhor, menos paga.
+static func pay_musd(cat: String, rating: float) -> float:
+	if cat == "F2":
+		return snappedf(clampf(3.2 - (rating - 64.0) * 0.17, 0.3, 3.2), 0.1)
+	if cat == "F3":
+		return snappedf(clampf(1.4 - (rating - 50.0) * 0.06, 0.2, 1.4), 0.1)
+	return 0.0
+
+
+## Nota de operação da equipe (60-85 dentro da categoria) — o "carro" na F2/F3.
+static func operation_score(team: Dictionary, teams: Array) -> int:
+	var lo := INF
+	var hi := -INF
+	for t: Dictionary in teams:
+		lo = minf(lo, float(t["car_rating"]))
+		hi = maxf(hi, float(t["car_rating"]))
+	return roundi(60.0 + 25.0 * (float(team["car_rating"]) - lo) / maxf(hi - lo, 0.01))
+
+
+## Níveis iniciais de operação (1-4) de uma equipe real: engenharia, mecânicos e simulador, pela nota de operação.
+static func operation_levels(team: Dictionary, teams: Array) -> Dictionary:
+	var score := operation_score(team, teams)
+	var out := {}
+	for area: String in ["eng", "mech", "sim"]:
+		var offs := (absi(hash(area + String(team["id"]))) % 3) - 1
+		out[area] = clampi(1 + roundi((score - 60) / 25.0 * 3.0) + offs, 1, 4)
+	return out
+
+
+static func _build_grid(cat: String) -> Dictionary:
 	var sd: Dictionary = Series.data()["series"][cat]
 	var teams: Array = []
 	for t: Dictionary in sd["teams"]:
