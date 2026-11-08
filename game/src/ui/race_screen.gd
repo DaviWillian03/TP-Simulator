@@ -305,6 +305,25 @@ func _connect_sim_signals() -> void:
 	sim.overtake.connect(_on_overtake)
 	sim.pit_stop.connect(_on_pit_stop)
 	sim.plan_stop_due.connect(_on_plan_due)
+	if Session.debug_ui.begins_with("champ"):  # (captura) --ui=champ (pista) / --ui=champ-poster (pôster) / --ui=champ-teams
+		var champ_car: CarState = sim.cars[0]
+		for c in sim.cars:
+			if c.driver["id"] == "norris":
+				champ_car = c
+		var demo := {"kind": "teams" if Session.debug_ui == "champ-teams" else "drivers", "season": 2027, "name": champ_car.driver["name"],
+			"driver": champ_car.driver, "color": UiStyle.team_color(String(champ_car.team["id"])), "titles": 2, "team_name": champ_car.team["name"],
+			"place": "%s · volta %d de %d" % [sim.track.grand_prix, sim.total_laps, sim.total_laps], "mine": true,
+			"stats": [["VITÓRIAS", 9], ["POLES", 7], ["PÓDIOS", 18], ["PONTOS", 431]],
+			"note": "Garantido com uma etapa de antecedência. No ano que vem, o carro de Norris leva o número 1."}
+		if Session.debug_ui == "champ-teams":
+			demo.merge({"name": champ_car.team["name"], "team": champ_car.team, "titles": 11, "stats": [["VITÓRIAS", 12], ["PÓDIOS", 30], ["PONTOS", 812]],
+				"note": "Garantido com duas etapas de antecedência."}, true)
+		_track_view.follow(champ_car)
+		var cel := ChampionCelebration.new()
+		_layer.add_child.call_deferred(cel)
+		cel.setup.call_deferred(demo)
+		if Session.debug_ui != "champ":
+			cel._show_poster.call_deferred()
 	if Session.debug_ui == "plan":  # (captura) --ui=plan mostra o aviso da estratégia
 		for c in sim.cars:
 			if c.is_player:
@@ -489,6 +508,89 @@ func _show_title(kind: String, cl: Dictionary, lap_text: String) -> void:
 			"%s não alcança mais nos construtores." % String(rt.get("name", "")), true, String(cl["id"]))
 
 
+## Títulos (pilotos/construtores) que esta corrida decidiu: [{kind, id}] — não repete se já estava decidido antes.
+func _titles_decided_now() -> Array:
+	var out: Array = []
+	if _champ == null or Session.campaign == null:
+		return out
+	var order: Array = []
+	var dnf := {}
+	for c in sim.standings():
+		order.append(c.driver["id"])
+		if c.retired or c.disqualified:
+			dnf[c.driver["id"]] = true
+	var proj := _champ.project(order, dnf)
+	for kind: String in ["drivers", "teams"]:
+		var cl := _champ.clinch(proj[kind], kind)
+		if cl.is_empty():
+			continue
+		var src: Dictionary = _champ.driver_points if kind == "drivers" else _champ.team_points
+		var vals: Array = src.values().map(func(x: Variant) -> int: return int(x))
+		vals.sort()
+		vals.reverse()
+		var this_top := int(_champ.table[0]) if not _champ.table.is_empty() else 25
+		var left_before := (_champ.max_remaining() + this_top) * (2 if kind == "teams" else 1)
+		if vals.size() >= 2 and int(vals[0]) - int(vals[1]) > left_before:
+			continue  # já estava decidido antes desta corrida
+		out.append({"kind": kind, "id": String(cl["id"]), "left": _champ.max_remaining(), "rows": proj[kind]})
+	return out
+
+
+func _play_celebrations(titles: Array) -> void:
+	if titles.is_empty():
+		_show_podium()
+		return
+	var t: Dictionary = titles.pop_front()
+	var camp: Campaign = Session.campaign
+	var data := {"kind": t["kind"], "season": camp.season, "place": "%s · volta %d de %d" % [sim.track.grand_prix, sim.total_laps, sim.total_laps]}
+	var after := 0
+	for r: Array in t["rows"]:
+		if r[0] == t["id"]:
+			after = int(r[2])
+	var left := int(t["left"])
+	var races_left: int = int(camp.remaining_after_current()["races"]) + (1 if sim.sprint else 0)
+	var order := sim.standings()
+	if t["kind"] == "drivers":
+		var d := _champ_drivers().get(t["id"], {}) as Dictionary
+		var sl: Dictionary = camp.season_log.get(t["id"], {})
+		var pos := -1
+		for i in order.size():
+			if order[i].driver["id"] == t["id"]:
+				pos = i + 1
+		var won := pos == 1 and not sim.sprint
+		data.merge({"name": d.get("name", ""), "driver": d, "color": UiStyle.team_color_from(camp.teams(), String(d.get("team", ""))),
+			"titles": int(camp.career_of(d)["titles"]) + 1, "team_name": String(GameData.team_by_id(camp.teams(), String(d.get("team", ""))).get("name", "")),
+			"mine": String(d.get("team", "")) == camp.player_team,
+			"stats": [["VITÓRIAS", int(sl.get("wins", 0)) + (1 if won else 0)], ["POLES", int(sl.get("poles", 0))],
+				["PÓDIOS", int(sl.get("podiums", 0)) + (1 if pos >= 1 and pos <= 3 and not sim.sprint else 0)], ["PONTOS", after]]})
+		var last := String(d.get("name", "")).get_slice(" ", String(d.get("name", "")).get_slice_count(" ") - 1)
+		data["note"] = ("Decidido na última etapa." if races_left <= 0 else "Garantido com %d etapa%s de antecedência." % [races_left, "" if races_left == 1 else "s"]) \
+			+ " No ano que vem, o carro de %s leva o número 1." % last
+	else:
+		var team := GameData.team_by_id(camp.teams(), String(t["id"]))
+		var wins := 0
+		var pods := 0
+		for did: String in camp.season_log:
+			if camp.team_of(did) == t["id"]:
+				wins += int(camp.season_log[did].get("wins", 0))
+				pods += int(camp.season_log[did].get("podiums", 0))
+		var prev := int(team.get("constructors_titles", 0) if team.get("constructors_titles") != null else 0)
+		for ch: Dictionary in camp.champions:
+			if String(ch.get("team", "")) == t["id"]:
+				prev += 1
+		data.merge({"name": team.get("name", ""), "team": team, "color": Color(team.get("color", "#888888")), "titles": prev + 1,
+			"mine": t["id"] == camp.player_team, "stats": [["VITÓRIAS", wins], ["PÓDIOS", pods], ["PONTOS", after]],
+			"note": "Decidido na última etapa." if races_left <= 0 else "Garantido com %d etapa%s de antecedência." % [races_left, "" if races_left == 1 else "s"]})
+	if t["kind"] == "drivers":  # a câmera fecha no carro do campeão
+		for c in sim.cars:
+			if c.driver["id"] == t["id"]:
+				_track_view.follow(c)
+	var cel := ChampionCelebration.new()
+	_layer.add_child(cel)
+	cel.setup(data)
+	cel.done.connect(_play_celebrations.bind(titles))
+
+
 ## Selo de bandeira na barra de topo (some com a pista liberada).
 func _refresh_flag() -> void:
 	var f := sim.control.flag
@@ -666,6 +768,14 @@ func _on_race_finished() -> void:
 	_refresh_ui()
 	_radio.visible = false
 	_drawer.visible = false
+	var titles := _titles_decided_now()  # campeão decidido nesta corrida: a animação vem antes do pódio (v24-4/5)
+	if not titles.is_empty():
+		_play_celebrations(titles)
+		return
+	_show_podium()
+
+
+func _show_podium() -> void:
 	# pódio animado primeiro (com a torcida); o botão dele abre a tabela completa
 	var order := sim.standings()
 	var top3: Array[CarState] = []

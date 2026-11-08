@@ -119,8 +119,10 @@ Ordem de chegada dos pedidos ainda abertos (o que já foi feito está nas seçõ
    (operação, pilotos pagantes, pessoal enxuto), F1 simulada rápida enquanto o jogador está na base, acesso automático com
    verba de entrada (F3→F2; F2→F1 vira a campanha da F1). Pendente: equipe CRIADA começando na F2/F3; mercado de pilotos da
    base para o jogador; F1 congelada (sem virada de pilotos) enquanto o jogador está na base.
-9. 2026-11-04 — **Aba Histórico** (Lendas, Pilotos atuais com números até 2025, Campeonatos).
-10. 2026-11-04 — **Animação de campeão**.
+9. 2026-11-04 — ✅ (2026-11-08, v24) **Aba Histórico** (15 Lendas + aposentados da campanha, Pilotos atuais com números até
+   2025 + campanha, Campeonatos). Fotos das lendas: só locais (`game/local/legends/`).
+10. 2026-11-04 — ✅ (2026-11-08, v24) **Animação de campeão** (pista + pôster; pilotos e construtores da F1). Pendente: campeões
+   da F2/F3 quando o jogador está na base.
 11. 2026-11-04 — **Complementos da campanha** (✅ 2026-11-08: número 1 do campeão, números dos novatos, idade mínima de 18;
     ✅ IA de estratégia com plano de corrida; ✅ treinos sempre simulados com acerto sorteado — diretor 35 / engenheiro de corrida 30 /
     piloto 15 / sorte 20 — e engenheiros de corrida reais de 2026 nos cargos race1/race2, no mercado e na IA; mockup v21).
