@@ -19,10 +19,17 @@ static func has_photo(driver_id: String) -> bool:
 static func avatar_texture(driver_id: String, team_color: Color) -> Texture2D:
 	if not has_photo(driver_id):
 		return null
-	var key := "%s:%s" % [driver_id, team_color.to_html(false)]
+	return circle_texture(LOCAL_DIR + driver_id + "_face.png", team_color)
+
+
+## Qualquer foto local recortada em círculo sobre uma cor (lendas do Histórico usam também).
+static func circle_texture(path: String, team_color: Color) -> Texture2D:
+	if not (use_local and ResourceLoader.exists(path)):
+		return null
+	var key := "%s:%s" % [path, team_color.to_html(false)]
 	if _cache.has(key):
 		return _cache[key]
-	var face: Image = (load(LOCAL_DIR + driver_id + "_face.png") as Texture2D).get_image()
+	var face: Image = (load(path) as Texture2D).get_image()
 	face.decompress()
 	face.convert(Image.FORMAT_RGBA8)
 	face.resize(AVATAR_PX, AVATAR_PX, Image.INTERPOLATE_LANCZOS)

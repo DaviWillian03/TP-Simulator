@@ -136,13 +136,14 @@ func _legend_face(l: Dictionary, size: int) -> Control:
 	var id := String(l.get("id", ""))
 	if bool(l.get("from_campaign", false)):
 		return DriverPhotos.make_avatar({"id": id, "name": l["name"]}, Color("#3a3f4b"), size)
-	if DriverPhotos.use_local and ResourceLoader.exists(LEGEND_DIR + id + ".png"):
+	var tex := DriverPhotos.circle_texture(LEGEND_DIR + id + ".png", Color("#3a3f4b"))
+	if tex != null:
 		var r := TextureRect.new()
-		r.texture = load(LEGEND_DIR + id + ".png")
+		r.texture = tex
 		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		r.custom_minimum_size = Vector2(size, size)
-		r.clip_contents = true
+		r.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		return r
 	return DriverPhotos.make_avatar({"id": "", "name": l["name"]}, Color("#3a3f4b"), size)
 
