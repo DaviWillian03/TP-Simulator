@@ -1,0 +1,349 @@
+{
+ "_notas": "Nomes reais com fonte (pesquisa de 08/11/2026: motorsport.com \"Every race engineer in F1 2026\", Motor Sport Magazine, Notas estimadas (PROVISÓRIO).",
+ "sources": [
+  "https://au.motorsport.com/f1/news/every-race-engineer-f1-2026/10807005/",
+  "https://www.motorsportmagazine.com/articles/single-seaters/f1/who-are-all-the-f1-race-engineers-in-2026/",
+  "https://www.gpfans.com/en/f1-news/1076588/f1-race-engineers/",
+  "https://www.gpfans.com/en/f1-news/1075867/lewis-hamilton-ferrari-f1-race-engineer-carlo-santi-interim/"
+ ],
+ "people": [
+  {
+   "id": "re_will_joseph",
+   "name": "Will Joseph",
+   "role": "race_engineer",
+   "team": "mclaren",
+   "driver": "norris",
+   "skill": 88,
+   "real": true
+  },
+  {
+   "id": "re_tom_stallard",
+   "name": "Tom Stallard",
+   "role": "race_engineer",
+   "team": "mclaren",
+   "driver": "piastri",
+   "skill": 86,
+   "real": true
+  },
+  {
+   "id": "re_gianpiero_lambiase",
+   "name": "Gianpiero Lambiase",
+   "role": "race_engineer",
+   "team": "redbull",
+   "driver": "verstappen",
+   "skill": 93,
+   "real": true
+  },
+  {
+   "id": "re_richard_wood",
+   "name": "Richard Wood",
+   "role": "race_engineer",
+   "team": "redbull",
+   "driver": "hadjar",
+   "skill": 80,
+   "real": true
+  },
+  {
+   "id": "re_bryan_bozzi",
+   "name": "Bryan Bozzi",
+   "role": "race_engineer",
+   "team": "ferrari",
+   "driver": "leclerc",
+   "skill": 85,
+   "real": true
+  },
+  {
+   "id": "re_carlo_santi",
+   "name": "Carlo Santi",
+   "role": "race_engineer",
+   "team": "ferrari",
+   "driver": "hamilton",
+   "skill": 76,
+   "real": true
+  },
+  {
+   "id": "re_marcus_dudley",
+   "name": "Marcus Dudley",
+   "role": "race_engineer",
+   "team": "mercedes",
+   "driver": "russell",
+   "skill": 84,
+   "real": true
+  },
+  {
+   "id": "re_peter_bonnington",
+   "name": "Peter Bonnington",
+   "role": "race_engineer",
+   "team": "mercedes",
+   "driver": "antonelli",
+   "skill": 91,
+   "real": true
+  },
+  {
+   "id": "re_james_urwin",
+   "name": "James Urwin",
+   "role": "race_engineer",
+   "team": "williams",
+   "driver": "albon",
+   "skill": 82,
+   "real": true
+  },
+  {
+   "id": "re_gaetan_jago",
+   "name": "Gaëtan Jago",
+   "role": "race_engineer",
+   "team": "williams",
+   "driver": "sainz",
+   "skill": 82,
+   "real": true
+  },
+  {
+   "id": "re_chris_cronin",
+   "name": "Chris Cronin",
+   "role": "race_engineer",
+   "team": "astonmartin",
+   "driver": "alonso",
+   "skill": 81,
+   "real": true
+  },
+  {
+   "id": "re_gary_gannon",
+   "name": "Gary Gannon",
+   "role": "race_engineer",
+   "team": "astonmartin",
+   "driver": "stroll",
+   "skill": 79,
+   "real": true
+  },
+  {
+   "id": "re_alexandre_iliopoulos",
+   "name": "Alexandre Iliopoulos",
+   "role": "race_engineer",
+   "team": "racingbulls",
+   "driver": "lawson",
+   "skill": 76,
+   "real": true
+  },
+  {
+   "id": "re_pierre_hamelin",
+   "name": "Pierre Hamelin",
+   "role": "race_engineer",
+   "team": "racingbulls",
+   "driver": "lindblad",
+   "skill": 78,
+   "real": true
+  },
+  {
+   "id": "re_josh_peckett",
+   "name": "Josh Peckett",
+   "role": "race_engineer",
+   "team": "alpine",
+   "driver": "gasly",
+   "skill": 79,
+   "real": true
+  },
+  {
+   "id": "re_stuart_barlow",
+   "name": "Stuart Barlow",
+   "role": "race_engineer",
+   "team": "alpine",
+   "driver": "colapinto",
+   "skill": 78,
+   "real": true
+  },
+  {
+   "id": "re_laura_mueller",
+   "name": "Laura Mueller",
+   "role": "race_engineer",
+   "team": "haas",
+   "driver": "ocon",
+   "skill": 80,
+   "real": true
+  },
+  {
+   "id": "re_ronan_ohare",
+   "name": "Ronan O'Hare",
+   "role": "race_engineer",
+   "team": "haas",
+   "driver": "bearman",
+   "skill": 78,
+   "real": true
+  },
+  {
+   "id": "re_carlo_pasetti",
+   "name": "Carlo Pasetti",
+   "role": "race_engineer",
+   "team": "cadillac",
+   "driver": "perez",
+   "skill": 80,
+   "real": true
+  },
+  {
+   "id": "re_john_howard",
+   "name": "John Howard",
+   "role": "race_engineer",
+   "team": "cadillac",
+   "driver": "bottas",
+   "skill": 79,
+   "real": true
+  },
+  {
+   "id": "re_steven_petrik",
+   "name": "Steven Petrik",
+   "role": "race_engineer",
+   "team": "audi",
+   "driver": "hulkenberg",
+   "skill": 79,
+   "real": true
+  },
+  {
+   "id": "re_jose_manuel_lopez",
+   "name": "José Manuel López",
+   "role": "race_engineer",
+   "team": "audi",
+   "driver": "bortoleto",
+   "skill": 79,
+   "real": true
+  },
+  {
+   "id": "re_gen_0",
+   "name": "Davi Moraes",
+   "nationality": "Brasil",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 78,
+   "real": false
+  },
+  {
+   "id": "re_gen_1",
+   "name": "Murilo Teixeira",
+   "nationality": "Brasil",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 81,
+   "real": false
+  },
+  {
+   "id": "re_gen_2",
+   "name": "Tygo Wouters",
+   "nationality": "Países Baixos",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 77,
+   "real": false
+  },
+  {
+   "id": "re_gen_3",
+   "name": "Jakub Adamczyk",
+   "nationality": "Polônia",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 81,
+   "real": false
+  },
+  {
+   "id": "re_gen_4",
+   "name": "Flynn Galloway",
+   "nationality": "Austrália",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 65,
+   "real": false
+  },
+  {
+   "id": "re_gen_5",
+   "name": "Bartosz Michalski",
+   "nationality": "Polônia",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 83,
+   "real": false
+  },
+  {
+   "id": "re_gen_6",
+   "name": "Edoardo Marchetti",
+   "nationality": "Itália",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 70,
+   "real": false
+  },
+  {
+   "id": "re_gen_7",
+   "name": "Riku Okada",
+   "nationality": "Japão",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 78,
+   "real": false
+  },
+  {
+   "id": "re_gen_8",
+   "name": "Mitchell Brennan",
+   "nationality": "Austrália",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 79,
+   "real": false
+  },
+  {
+   "id": "re_gen_9",
+   "name": "Louis Mercier",
+   "nationality": "França",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 66,
+   "real": false
+  },
+  {
+   "id": "re_gen_10",
+   "name": "Arthur Guérin",
+   "nationality": "França",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 73,
+   "real": false
+  },
+  {
+   "id": "re_gen_11",
+   "name": "Oskar Bielecki",
+   "nationality": "Polônia",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 74,
+   "real": false
+  },
+  {
+   "id": "re_gen_12",
+   "name": "Finley Holloway",
+   "nationality": "Reino Unido",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 78,
+   "real": false
+  },
+  {
+   "id": "re_gen_13",
+   "name": "Rory Pickering",
+   "nationality": "Reino Unido",
+   "role": "race_engineer",
+   "team": "",
+   "driver": "",
+   "skill": 70,
+   "real": false
+  }
+ ]
+}

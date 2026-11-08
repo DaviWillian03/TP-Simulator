@@ -1,0 +1,136 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>V21 · Resultado do treino</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:1280px;height:720px;overflow:hidden}.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.scene{background:#0b0c0f;color:#eef0f3;font-family:Titillium;font-weight:600}
+.wall{position:absolute;inset:0 0 250px 0;background:linear-gradient(#1b1e24,#111318 80%)}
+.wall:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:250px;background:linear-gradient(#181a1f,#0a0b0d)}
+.lamp{position:absolute;top:0;height:6px;background:#f4f6fa;border-radius:0 0 4px 4px;box-shadow:0 0 34px 10px rgba(240,245,255,.22)}
+.glow{position:absolute;inset:0;background:radial-gradient(ellipse 46% 40% at 64% 66%,rgba(24,104,219,.42),transparent 70%)}
+.cone{position:absolute;left:470px;top:0;width:560px;height:720px;background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0) 75%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%)}
+.car{position:absolute}.refl{position:absolute;transform:scaleY(-1);opacity:.13;-webkit-mask:linear-gradient(transparent 55%,#000)}
+.logo{position:absolute;left:52px;top:34px;height:74px}
+.season{position:absolute;left:56px;top:118px;font-size:13px;letter-spacing:3px;color:#9aa3b2}
+.modes{position:absolute;left:52px;top:168px;width:388px;display:flex;flex-direction:column;gap:12px}
+.mode{display:flex;align-items:center;gap:16px;border-radius:16px;padding:0 20px;background:rgba(255,255,255,.06)}
+.mode b{display:block;font-weight:900;font-size:24px;letter-spacing:.5px;line-height:1}.mode small{display:block;font-size:15px;color:#a8b0bd;margin-top:5px}
+.mode .go{margin-left:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.mode.main{height:112px;background:#f3f4f6;color:#11141a;position:relative;overflow:hidden}
+.mode.main:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:#E10600}
+.mode.main b{font-size:34px}.mode.main small{color:#4b5260}.mode.main .go{background:#E10600;color:#fff;width:54px;height:54px}
+.mode.alt{height:84px}
+.mode.lock svg{flex:none}.mode.lock{height:50px;white-space:nowrap;background:none;color:#6c7380;padding-left:20px}.mode.lock b{font-size:18px;color:#7b8290}
+.tag{font-size:12px;letter-spacing:2px;border-radius:20px;padding:4px 10px;background:rgba(255,255,255,.07);color:#8a92a0;margin-left:auto}
+.pill{display:flex;align-items:center;gap:12px;border-radius:40px;padding:8px 18px 8px 10px;background:rgba(255,255,255,.07)}
+.pill b{display:block;font-size:17px;font-weight:900;letter-spacing:1px}.pill small{display:block;font-size:13px;color:#a8b0bd}
+.top{position:absolute;right:44px;top:40px;display:flex;align-items:center;gap:12px}
+.swap{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07)}
+.plates{position:absolute;right:56px;bottom:40px;display:flex;gap:44px}
+.plate{display:flex;align-items:flex-end;gap:12px}.plate .n{font-weight:900;font-size:62px;line-height:.8;color:transparent;-webkit-text-stroke:2px #5c93ea}
+.plate b{display:block;font-size:20px;font-weight:900}.plate small{display:block;font-size:13px;color:#9aa3b2;letter-spacing:1.5px}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#5d6574}
+/* configuração */
+.hdr{position:absolute;left:44px;top:30px;display:flex;align-items:center;gap:16px}
+.round{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.hdr b{font-size:15px;letter-spacing:3px;font-weight:700;color:#9aa3b2;display:block}.hdr h1{font-size:30px;font-weight:900;letter-spacing:1px}
+.map{position:absolute;left:30px;top:96px;width:830px;height:420px}
+.map svg.trk{position:absolute;left:340px;top:6px;filter:drop-shadow(0 0 10px rgba(110,170,255,.55))}
+.badge{display:inline-flex;gap:8px;align-items:center;border-radius:20px;padding:5px 12px;font-size:13px;letter-spacing:2px;font-weight:700}
+.gpname{position:absolute;left:14px;top:40px;width:420px}
+.gpname h2{font-size:50px;font-weight:900;line-height:.95;margin:14px 0 8px}.gpname p{font-size:16px;color:#a8b0bd}
+.stats{position:absolute;left:14px;top:268px;display:grid;grid-template-columns:repeat(2,170px);gap:22px 26px}
+.stat b{display:block;font-size:40px;font-weight:900;line-height:1}.stat small{font-size:12px;letter-spacing:2px;color:#8f98a7}
+.panel{position:absolute;right:40px;top:92px;width:360px;display:flex;flex-direction:column;gap:13px}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#8f98a7;margin-bottom:8px}
+.seg{display:flex;background:rgba(255,255,255,.07);border-radius:28px;padding:4px;gap:4px}
+.seg span{flex:1;height:44px;border-radius:24px;display:grid;place-items:center;font-size:16px;font-weight:700;color:#c3c9d3}
+.seg span.on{background:#f3f4f6;color:#11141a}
+.wx{display:flex;gap:8px}.wx span{flex:1;height:58px;border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:#c3c9d3}
+.wx span.on{background:#f3f4f6;color:#11141a}
+.cta{height:60px;margin-top:2px;background:#E10600;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;font-weight:900;letter-spacing:1px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%);border-radius:14px 0 14px 14px}
+.cal{position:absolute;left:0;right:0;bottom:16px;height:108px;display:flex;gap:12px;padding-left:44px}
+.card{flex:0 0 172px;border-radius:16px;background:rgba(255,255,255,.055);padding:12px 14px;position:relative}
+.card .rd{font-size:12px;letter-spacing:2px;color:#8f98a7}.card b{display:block;font-size:17px;font-weight:900;margin-top:2px;white-space:nowrap}
+.card small{font-size:13px;color:#a8b0bd}.card svg{position:absolute;right:10px;bottom:10px;opacity:.75}
+.card.on{background:#f3f4f6;color:#11141a}.card.on small,.card.on .rd{color:#4b5260}.card.on:before{content:"";position:absolute;left:14px;right:14px;top:0;height:4px;border-radius:0 0 4px 4px;background:#1868DB}
+.chip{font-size:10px;letter-spacing:1.5px;border-radius:10px;padding:2px 7px;margin-left:4px;vertical-align:middle;font-weight:700}
+.chip.s{background:#E10600;color:#fff}.chip.n{background:#26324a;color:#ffd36b}
+.fade{position:absolute;right:0;bottom:0;width:160px;height:170px;background:linear-gradient(90deg,transparent,#0b0c0f)}
+
+.scene{background:#0b0c0f}
+.bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 30% 30%,#1b2a55,#0b0c0f 72%)}
+.hd{position:absolute;left:44px;top:22px;right:44px;display:flex;align-items:center;gap:14px}
+.rb{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center}
+.hd h1{font-size:28px;font-weight:900;line-height:1}.hd small{display:block;font-size:12px;letter-spacing:3px;color:#8f98a7;font-weight:900}
+.steps{position:absolute;left:44px;right:44px;top:100px;display:flex;align-items:center;gap:10px;font-weight:900;font-size:15px;color:#8f98a7}
+.steps i{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center;font-style:normal;font-size:13px}
+.steps .on i{background:#E10600;color:#fff}.steps .on{color:#fff}.steps .ln{flex:1;height:2px;background:rgba(255,255,255,.1)}
+.hero{position:absolute;left:44px;top:150px;width:470px;border-radius:22px;background:#f3f4f6;color:#11141a;padding:18px 22px;box-shadow:inset 6px 0 0 #E10600}
+.hero h2{font-size:34px;font-weight:900;line-height:1;margin:6px 0}.hero p{font-size:14px;color:#4b5260;font-weight:700;line-height:1.4}
+.cta{height:56px;background:#E10600;color:#fff;font-weight:900;font-size:19px;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;
+ clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%);border-radius:14px 0 14px 14px}
+.cap{font-size:12px;letter-spacing:3px;color:#8f98a7;font-weight:900}
+.dcard{position:absolute;width:350px;border-radius:22px;background:rgba(255,255,255,.06);padding:14px 16px}
+.dh{display:flex;align-items:center;gap:10px}.dh strong{font-size:18px;font-weight:900}.dh small{display:block;font-size:12px;color:#a8b0bd;font-weight:800}
+.fc{border-radius:50%;overflow:hidden;display:block;flex:none}
+.eng{display:flex;align-items:center;gap:10px;border-radius:14px;background:rgba(0,0,0,.25);padding:8px 10px;margin-top:10px}
+.eng .av{width:36px;height:36px;border-radius:50%;background:#5c93ea33;display:grid;place-items:center}
+.eng strong{display:block;font-size:14px;font-weight:900}.eng small{display:block;font-size:11px;color:#a8b0bd;font-weight:700}
+.eng b{margin-left:auto;font-size:22px;font-weight:900}
+.prog{display:flex;gap:6px;margin-top:10px}
+.blk{flex:1;border-radius:12px;background:rgba(255,255,255,.08);padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:900;text-align:center}
+.blk small{font-size:10px;color:#a8b0bd;font-weight:800}
+.blk.add{background:none;border:2px dashed rgba(255,255,255,.15);color:#8f98a7}
+.chance{margin-top:12px}
+.meter{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:6px 0}
+.meter i{display:block;height:100%}
+.leg{display:flex;justify-content:space-between;font-size:11px;font-weight:900;color:#c3c9d3}
+.leg span{display:flex;align-items:center;gap:4px}
+.big{font-size:26px;font-weight:900}
+/* resultado */
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+.sheet{position:absolute;left:120px;top:60px;width:1040px;border-radius:24px;background:#17191e;padding:22px 26px}
+.sheet h2{font-size:28px;font-weight:900}
+.cols{display:flex;gap:16px;margin-top:12px}
+.res{flex:1;border-radius:18px;background:rgba(255,255,255,.05);padding:14px}
+.bar{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:13px;font-weight:800}
+.bar .t{flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.1);position:relative;overflow:hidden}
+.bar .t i{position:absolute;top:0;bottom:0;left:0;border-radius:5px}
+.bar b{width:120px;text-align:right;white-space:nowrap}
+.up{color:#7fe0b1}.dn{color:#ff8a80}
+.ev{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:#c3c9d3;margin-top:8px}
+.grade{display:flex;align-items:center;gap:12px;border-radius:14px;padding:10px 12px;margin-top:10px}
+.grade b{font-size:30px;font-weight:900}.grade small{display:block;font-size:12px;font-weight:800;color:#c3c9d3}
+.times{width:300px;border-radius:18px;background:rgba(255,255,255,.05);padding:14px}
+.tr{display:flex;align-items:center;gap:8px;height:30px;font-size:13px;font-weight:900;border-top:1px solid rgba(255,255,255,.06)}
+.tr.me{background:rgba(19,71,245,.25);border-radius:8px}
+.tr span:last-child{margin-left:auto;color:#c3c9d3}
+</style></head><body><div class="scene"><div class="bg"></div>
+<div class="dim"></div><div class="sheet"><div style="display:flex;align-items:center"><div><div class="cap">TREINO LIVRE 1 · SIMULADO</div><h2>RESULTADO DO TREINO</h2></div>
+<span class="rb" style="margin-left:auto">✕</span></div>
+<div class="cols"><div class="res"><div class="dh"><span class="fc" style="width:44px;height:44px;background:#1347F5"></span><div><strong>Alexander Albon</strong><small>com James Urwin</small></div></div>
+<div class="grade" style="background:#3c9d5d22"><b style="color:#3c9d5d">A</b><div><strong style="font-size:15px">Ótimo acerto</strong><small>acerto sorteado: diretor + engenheiro + piloto + sorte</small></div></div>
+<div class="bar"><span style="width:96px">Aerodinâmica</span><div class="t"><i style="width:45%;background:rgba(92,147,234,.45)"></i><i style="width:78%;background:#5c93ea"></i></div><b>45% → 78% <span class="up">+33</span></b></div><div class="bar"><span style="width:96px">Mecânico</span><div class="t"><i style="width:42%;background:rgba(92,147,234,.45)"></i><i style="width:71%;background:#5c93ea"></i></div><b>42% → 71% <span class="up">+29</span></b></div><div class="bar"><span style="width:96px">Equilíbrio</span><div class="t"><i style="width:40%;background:rgba(92,147,234,.45)"></i><i style="width:66%;background:#5c93ea"></i></div><b>40% → 66% <span class="up">+26</span></b></div><div class="ev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7fe0b1" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M5 12l5 5 9-10"/></svg>Simulação de corrida concluída: dados de pneus para domingo</div></div>
+<div class="res"><div class="dh"><span class="fc" style="width:44px;height:44px;background:#1347F5"></span><div><strong>Carlos Sainz</strong><small>com Gaëtan Jago</small></div></div>
+<div class="grade" style="background:#ffd24a22"><b style="color:#ffd24a">C</b><div><strong style="font-size:15px">Acerto regular</strong><small>acerto sorteado: diretor + engenheiro + piloto + sorte</small></div></div>
+<div class="bar"><span style="width:96px">Aerodinâmica</span><div class="t"><i style="width:47%;background:rgba(92,147,234,.45)"></i><i style="width:63%;background:#5c93ea"></i></div><b>47% → 63% <span class="up">+16</span></b></div><div class="bar"><span style="width:96px">Mecânico</span><div class="t"><i style="width:48%;background:rgba(92,147,234,.45)"></i><i style="width:52%;background:#5c93ea"></i></div><b>48% → 52% <span class="up">+4</span></b></div><div class="bar"><span style="width:96px">Equilíbrio</span><div class="t"><i style="width:40%;background:rgba(92,147,234,.45)"></i><i style="width:47%;background:#5c93ea"></i></div><b>40% → 47% <span class="up">+7</span></b></div><div class="ev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff8a80" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M20 12a8 8 0 1 1-3-6.3M20 4v5h-5"/></svg>Rodou na curva 4 e perdeu parte do bloco de aero</div></div>
+<div class="times"><div class="cap">MELHORES VOLTAS</div><div class="tr"><span style="width:24px">1</span>NOR<span>1:10.912</span></div><div class="tr"><span style="width:24px">2</span>ANT<span>1:11.004</span></div><div class="tr"><span style="width:24px">3</span>PIA<span>1:11.081</span></div><div class="tr"><span style="width:24px">4</span>RUS<span>1:11.130</span></div><div class="tr"><span style="width:24px">5</span>VER<span>1:11.244</span></div><div class="tr"><span style="width:24px">6</span>LEC<span>1:11.301</span></div><div class="tr me"><span style="width:24px">7</span>SAI<span>1:11.420</span></div><div class="tr"><span style="width:24px">8</span>HAM<span>1:11.455</span></div><div class="tr me"><span style="width:24px">9</span>ALB<span>1:11.497</span></div><div class="tr"><span style="width:24px">10</span>HAD<span>1:11.530</span></div></div></div>
+<div class="cta" style="width:320px;margin-left:auto">PRÓXIMA SESSÃO <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></div></div></div></body></html>
