@@ -385,8 +385,23 @@ func evaluate(camp: Campaign, id: String, salary: float, years: int) -> Dictiona
 
 
 ## Pode negociar? {ok, reason, buyout}. reason: "pending", "caixa", "".
+## Menores de 18 anos não podem ser contratados para a F1 (decisão do usuário, 2026-11-04): vale a idade na temporada
+## em que o contrato começa (a seguinte).
+const F1_MIN_AGE := 18
+
+
+static func old_enough(p: Dictionary, season: int) -> bool:
+	var a := DriverCareer.age_in(p, season)
+	return a == 0 or a >= F1_MIN_AGE  # sem data de nascimento: não bloqueia
+
+
 func can_negotiate(camp: Campaign, id: String) -> Dictionary:
 	var info := {"ok": true, "reason": "", "buyout": buyout_cost(id, camp)}
+	var who := person(id, camp)
+	if who.get("kind", "") == "driver" and not is_mine(camp, id) and not old_enough(who, camp.season + 1):
+		info["ok"] = false
+		info["reason"] = "menor de 18 anos"
+		return info
 	if pending.has(id):
 		info["ok"] = false
 		info["reason"] = "pending"
@@ -587,6 +602,7 @@ func _ai_staff(camp: Campaign) -> void:
 
 func _release_to_pool(camp: Campaign, d: Dictionary) -> void:
 	camp._drivers.erase(d)
+	camp.free_number(int(d.get("number", 0)))
 	if _find(feeder(), d["id"]).is_empty() and _find(outside(), d["id"]).is_empty():
 		var e := {"name": d["name"], "nationality": d["nationality"], "rating": int(d["rating"]), "number": int(d["number"]), "code": d["code"]}
 		for k: String in ["attrs", "birth", "titles", "potential", "height_cm", "weight_kg", "career"]:
@@ -621,6 +637,8 @@ func _available_drivers(camp: Campaign) -> Array[Dictionary]:
 	for id in ids:
 		if seated.has(id) or pending.has(id):
 			continue
+		if not old_enough(person(id, camp), camp.season + 1):  # menor de 18: não pode ir para a F1
+			continue
 		var c: Dictionary = contracts.get(id, {})
 		if c.is_empty() or (c["team"] != "" and int(c["until"]) > camp.season):
 			continue
@@ -637,14 +655,7 @@ func _seat_driver(camp: Campaign, id: String, team_id: String) -> void:
 			d["team"] = team_id
 			return
 	var p := person(id, camp)
-	var used: Array = []
-	for d: Dictionary in camp.drivers():
-		used.append(int(d["number"]))
-	var number := int(p.get("number", 0))
-	if number <= 0 or used.has(number):
-		number = 2
-		while used.has(number):
-			number += 1
+	var number := camp.rookie_number(p)
 	var nd := {"id": id, "name": p["name"], "code": Campaign.driver_code(p["name"]), "number": number,
 		"nationality": p["nationality"], "team": team_id, "rating": int(p["rating"]), "from": p.get("category", "F2")}
 	for k: String in ["attrs", "birth", "titles", "potential", "height_cm", "weight_kg", "career"]:
@@ -781,6 +792,7 @@ func _set_series(x: Dictionary, team: String, season: int) -> void:
 
 func _retire(camp: Campaign, d: Dictionary, f1: bool) -> void:
 	camp._drivers.erase(d)
+	camp.free_number(int(d.get("number", 0)))
 	contracts.erase(d["id"])
 	_retire_record(d, camp.season, f1)
 

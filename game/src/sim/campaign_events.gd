@@ -137,6 +137,8 @@ func _stand_in(camp: Campaign) -> Dictionary:
 	for e in camp.personnel.market(camp, "driver", "feeder"):
 		if camp.personnel.pending.has(e["id"]) or camp.personnel.is_mine(camp, e["id"]):
 			continue
+		if not Personnel.old_enough(e, camp.season):  # reserva também precisa ter 18 anos
+			continue
 		best = e
 		break
 	return best

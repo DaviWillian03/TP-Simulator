@@ -558,3 +558,7 @@ Respostas do usuário:
   emergência e, no safety car, só aproveita se a janela estiver perto ou o pneu gasto (quem aposta fica fora). Auditoria
   (tools/strategy_audit.gd, 24 corridas curtas no seco): paradas nas últimas voltas 232 → 12; corridas inteiras com mistura de
   1, 2 e 3 paradas espalhadas. Equilíbrio mantido: carro 56,4% / piloto 22,1% / resto 21,5%.
+- **Números e idade (implementado 2026-11-08)**: o campeão de pilotos usa o 1 no ano seguinte; quem tinha o 1 volta ao número
+  de carreira (Norris = 4). Novato que chega à F1: 50% mantém o número da categoria de base, 50% herda o de um piloto que
+  saiu (sem repetir número em uso). Menores de 18 anos (na temporada do contrato) não entram no mercado da F1, não assinam e
+  não servem de reserva.

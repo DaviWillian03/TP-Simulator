@@ -52,6 +52,9 @@ const BANK_TERMS := [[5, 0.04], [11, 0.08], [0, 0.15]]  ## [corridas, juros]; 0 
 const DEBT_TRUST_LIMIT := 40.0  ## dívida acima disso: −3 de confiança ao pedir
 const ADVANCE_SHARE := 0.5  ## adiantamento: até 50% do patrocínio que ainda falta receber nesta temporada
 const ATR_RANGE := [0.70, 1.15]  ## tempo de pesquisa aerodinâmica do 1º ao último do ano anterior
+const PERMANENT_NUMBERS := {"norris": 4}  ## número de carreira de quem começa 2026 com o 1 (campeão de 2025)
+const KEEP_SERIES_NUMBER_CHANCE := 0.5  ## novato: 50% mantém o número da categoria de base, 50% herda o de quem saiu
+var freed_numbers: Array = []  ## números de quem saiu da F1 (mais recentes primeiro): novatos podem herdar
 var series: Dictionary = {}  ## "F2"/"F3" -> Series (campeonatos de base correndo em paralelo; 3 categorias fase 1)
 var moves: Dictionary = {}  ## acesso/rebaixamento decididos no fim do ano: {up_f1, down_f2, up_f2, down_f3}
 const ENTRY_GRANT_MUSD := 60.0  ## verba de entrada de quem sobe para a F1 (só importa para o jogador; fase 2)
@@ -382,6 +385,53 @@ func decide_moves() -> Dictionary:
 	return moves
 
 
+## Número do novato que chega à F1: herda o de um piloto que saiu ou mantém o da categoria anterior (sorteado, as duas
+## opções valem — decisão do usuário). Nunca o 1 (é do campeão) nem um número em uso.
+func rookie_number(p: Dictionary) -> int:
+	var used := {1: true}
+	for d: Dictionary in _drivers:
+		used[int(d.get("number", 0))] = true
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("num|%s|%d" % [String(p.get("id", "")), season])
+	var own := int(p.get("number", 0))
+	if own <= 1:
+		own = 2 + absi(hash("serie|" + String(p.get("id", "")))) % 98  # número que usava na base
+	var inherited := -1
+	for n: int in freed_numbers:
+		if not used.has(n):
+			inherited = n
+			break
+	var pick := own if (rng.randf() < KEEP_SERIES_NUMBER_CHANCE or inherited < 0) else inherited
+	if used.has(pick):
+		pick = inherited if inherited > 0 and not used.has(inherited) else _free_number()
+	freed_numbers.erase(pick)
+	return pick
+
+
+func free_number(n: int) -> void:
+	if n > 1 and not freed_numbers.has(n):
+		freed_numbers.push_front(n)
+
+
+## Virada: o campeão de pilotos usa o 1; quem tinha o 1 e não ganhou volta ao seu número de carreira.
+func _apply_champion_number(champion: String) -> void:
+	var holder := {}
+	var champ := {}
+	for d: Dictionary in _drivers:
+		if int(d.get("number", 0)) == 1:
+			holder = d
+		if d["id"] == champion:
+			champ = d
+	if not holder.is_empty() and holder != champ:
+		var back := int(holder.get("perm_number", PERMANENT_NUMBERS.get(holder["id"], 0)))
+		var taken := _drivers.any(func(x: Dictionary) -> bool: return x != holder and int(x.get("number", 0)) == back)
+		holder["number"] = back if back > 1 and not taken else _free_number()
+	if not champ.is_empty() and int(champ.get("number", 0)) != 1:
+		champ["perm_number"] = int(champ["number"])
+		free_number(int(champ["number"]))
+		champ["number"] = 1
+
+
 func _free_number() -> int:
 	var used := {}
 	for d: Dictionary in _drivers:
@@ -479,7 +529,7 @@ func _promote_to_f1(team_id: String, f2: Series) -> void:
 		if p.is_empty():
 			continue
 		personnel.feeder().erase(p)
-		_drivers.append({"id": p["id"], "name": p["name"], "code": driver_code(String(p["name"])), "number": _free_number(),
+		_drivers.append({"id": p["id"], "name": p["name"], "code": driver_code(String(p["name"])), "number": rookie_number(p),
 			"nationality": p.get("nationality", ""), "team": team_id, "rating": int(p.get("rating", 70)), "birth": p.get("birth", ""), "from": "F2"})
 		personnel.contracts[p["id"]] = {"team": team_id, "salary": Personnel.driver_ask(float(p.get("rating", 70))), "until": season + 2}
 	events._add(self, {"day": day, "cat": "calendar", "id": "promotion", "title": "%s SOBE PARA A F1" % String(st["name"]).to_upper(),
@@ -751,7 +801,7 @@ func to_dict() -> Dictionary:
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
 		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict(),
 		"series": series.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (series[k] as Series).to_dict(); return acc, {}),
-		"moves": moves, "teams_grid": _teams, "file_ratings": _file_ratings,
+		"moves": moves, "teams_grid": _teams, "freed_numbers": freed_numbers, "file_ratings": _file_ratings,
 		"livery": livery.to_dict(), "loans": loans, "advance": advance, "last_positions": last_positions,
 		"parts": parts.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (parts[k] as CarParts).to_dict(); return acc, {})}
 
@@ -822,6 +872,7 @@ static func from_dict(d: Dictionary) -> Campaign:
 		for k: String in d["series"]:
 			c.series[k] = Series.from_dict(d["series"][k])
 	c.moves = d.get("moves", {})
+	c.freed_numbers = (d.get("freed_numbers", []) as Array).map(func(x: Variant) -> int: return int(x))
 	c.loans = d.get("loans", [])
 	for l: Dictionary in c.loans:
 		l["races_left"] = int(l["races_left"])
@@ -1140,6 +1191,8 @@ func close_season() -> Dictionary:
 
 ## Começa a próxima temporada (mesmo grid: o mercado de pilotos chega na camada de contratos).
 func start_next_season() -> void:
+	var drs := driver_standings()
+	var champion: String = drs[0][0] if not drs.is_empty() and int(drs[0][1]) > 0 else ""
 	last_positions = {}  # restrição de túnel do ano novo: posição final deste ano
 	var rows := team_standings()
 	for i in rows.size():
@@ -1147,6 +1200,8 @@ func start_next_season() -> void:
 	events.reset_for_new_season(self)  # lesionados voltam ao carro e o calendário cancelado zera antes do mercado
 	apply_moves()
 	personnel.rollover(self)
+	if champion != "":
+		_apply_champion_number(champion)
 	for s: Series in series.values():
 		s.reset_season()
 		s.assign_seats(personnel.feeder())
