@@ -21,14 +21,14 @@ func test_real_names_have_titles_and_generic_ones_do_not() -> void:
 	assert_gt(reals, 30, "a maioria dos cargos com nome real")
 
 
-func test_trackside_engineering_changes_practice_gain() -> void:
-	assert_gt(Personnel.practice_mult(90.0), Personnel.practice_mult(75.0))
-	assert_lt(Personnel.practice_mult(0.0), 1.0, "vaga: treino rende menos")
+func test_trackside_engineering_changes_practice_skills() -> void:
 	var camp := Campaign.new_real("williams")
-	var before := float(camp.team()["practice_gain_mult"])
+	var albon: Dictionary = camp.team()["practice_skills"]["albon"]
+	var before := float(albon["director"])
 	camp.personnel.staff["trackside"] = Personnel.team_staff("mercedes")["trackside"]["id"]  # Shovlin
 	camp.refresh_rating()
-	assert_gt(float(camp.team()["practice_gain_mult"]), before)
+	assert_ne(float(camp.team()["practice_skills"]["albon"]["director"]), before)
+	assert_eq(String(camp.team()["practice_skills"]["albon"]["engineer_name"]), "James Urwin")
 
 
 func test_better_ai_staff_develops_faster() -> void:

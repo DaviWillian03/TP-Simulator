@@ -1,18 +1,21 @@
 extends Control
 ## Painel do fim de semana — direção Garagem (mockup design/mockups/v4-1-garagem-fim-de-semana.html).
 ##
-## Destaque: a próxima sessão (jogar ou simular). Acima, a progressão do evento; abaixo, a
+## Destaque: a próxima sessão (jogar ou simular; treinos só simulados — v21). Acima, a progressão do evento; abaixo, a
 ## previsão por dia e o programa do treino (blocos que se acrescentam e tiram); à direita, os
-## dois carros com o acerto, o comentário do piloto e o resultado da última sessão.
+## dois carros com o acerto, o engenheiro de corrida, a chance de bom acerto e o resultado da última sessão.
+## Depois de um treino, abre a folha de resultado (acerto antes → depois, nota A–D e melhores voltas).
 
 const SESSION_DESC := {
-	"practice": "60 minutos. Seus pilotos seguem o programa abaixo; jogue para acompanhar ou simule para ver o resultado.",
+	"practice": "60 minutos, sempre simulados. Os pilotos seguem o programa; o acerto sai do diretor de engenharia de pista, dos engenheiros de corrida e dos pilotos — e um pouco de sorte.",
 	"quali": "Q1, Q2 e Q3 com eliminação. Você escolhe o pneu e o momento de sair para a volta rápida.",
 	"sprint_quali": "SQ1, SQ2 e SQ3, mais curtas. Define o grid da sprint.",
 	"sprint": "Cerca de 1/3 da distância, sem parada obrigatória. Pontos para os 8 primeiros.",
 	"race": "A corrida que vale o fim de semana. Pontos para os 10 primeiros.",
 }
 const BLOCK_SHORT := {"aero": "Aero", "mech": "Mecânico", "race": "Corrida", "quali": "Volta rápida"}
+const GRADE_TEXT := {"A": "Ótimo acerto", "B": "Bom acerto", "C": "Acerto regular", "D": "Acerto ruim"}
+const EVENT_ICON := {"ok": "check", "wet": "rain", "spin": "spin", "failure": "wrench"}
 
 var weekend: WeekendSim
 var _program_boxes: Dictionary = {}  # id do piloto -> {editor, chips, minutes, add}
@@ -77,12 +80,15 @@ func _ready() -> void:
 
 	var cars := VBoxContainer.new()
 	cars.add_theme_constant_override("separation", 12)
-	ScreenKit.place(cars, layer, Control.PRESET_TOP_RIGHT, Vector2(-40, 156), Vector2(450, 0))
+	ScreenKit.scroll_column(cars, layer, Vector2(1280 - 40 - 450, 156), Vector2(450, 720 - 156 - 8))
 	for d: Dictionary in weekend.drivers:
 		if d["team"] == weekend.player_team:
 			cars.add_child(_car_card(d))
 	layer.modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
+	if weekend.show_practice_report and not weekend.last_practice.is_empty():
+		weekend.show_practice_report = false
+		_open_practice_report()
 
 
 # --- próxima sessão ---------------------------------------------------------------------
@@ -118,15 +124,24 @@ func _next_card() -> Control:
 	v.add_child(spacer)
 	var acts := HBoxContainer.new()
 	acts.add_theme_constant_override("separation", UiStyle.SP_M)
-	var play := CutButton.new()
-	play.text = "JOGAR"
-	play.custom_minimum_size = Vector2(150, UiStyle.TOUCH_MAIN)
-	play.add_theme_font_size_override("font_size", UiStyle.fs(19))
-	play.pressed.connect(Session.play_session)
-	acts.add_child(play)
-	var sim := ScreenKit.light_button("SIMULAR")
-	sim.pressed.connect(_on_simulate)
-	acts.add_child(sim)
+	if weekend.is_practice(id):  # treino é sempre simulado (decisão de 2026-11-08)
+		v.add_child(_practice_tiles())
+		var run := CutButton.new()
+		run.text = "SIMULAR %s" % WeekendSim.SESSION_NAMES[id].to_upper()
+		run.custom_minimum_size = Vector2(360, UiStyle.TOUCH_MAIN)
+		run.add_theme_font_size_override("font_size", UiStyle.fs(19))
+		run.pressed.connect(_on_simulate)
+		acts.add_child(run)
+	else:
+		var play := CutButton.new()
+		play.text = "JOGAR"
+		play.custom_minimum_size = Vector2(150, UiStyle.TOUCH_MAIN)
+		play.add_theme_font_size_override("font_size", UiStyle.fs(19))
+		play.pressed.connect(Session.play_session)
+		acts.add_child(play)
+		var sim := ScreenKit.light_button("SIMULAR")
+		sim.pressed.connect(_on_simulate)
+		acts.add_child(sim)
 	v.add_child(acts)
 	var trk := TrackOutline.new()
 	trk.line_color = UiStyle.G_INK
@@ -137,6 +152,47 @@ func _next_card() -> Control:
 	trk.set_circuit(weekend.circuit)
 	row.add_child(trk)
 	return card
+
+
+## Treino: diretor de engenharia de pista da equipe e chance de chuva no dia (mockup v21).
+func _practice_tiles() -> Control:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 10)
+	var sk := _skills_of(_my_drivers()[0]["id"]) if not _my_drivers().is_empty() else {}
+	var dname := String(sk.get("director_name", ""))
+	var p: float = weekend.forecast[weekend.day_of(weekend.session_id())]
+	for t: Array in [["shield", str(roundi(float(sk.get("director", 0)))), "Diretor de engenharia de pista" + (" · " + dname if dname != "" else "")],
+			["rain", "%d%%" % roundi(p * 100), "chance de chuva · %s" % String(WeekendSim.DAYS[weekend.day_of(weekend.session_id())]).to_lower()]]:
+		var tile := PanelContainer.new()
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tile.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#e3e6eb"), 14, 12, 8))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", UiStyle.SP_S)
+		row.add_child(ScreenKit.icon(t[0], 22, UiStyle.G_INK))
+		var tv := VBoxContainer.new()
+		tv.add_theme_constant_override("separation", -4)
+		tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tv.add_child(UiStyle.g_label(t[1], 20, UiStyle.G_INK, "black"))
+		var cap := UiStyle.g_label(t[2], UiStyle.FS_CAPTION, UiStyle.G_INK_2, "bold")
+		cap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tv.add_child(cap)
+		row.add_child(tv)
+		tile.add_child(row)
+		h.add_child(tile)
+	return h
+
+
+func _my_drivers() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for d: Dictionary in weekend.drivers:
+		if d["team"] == weekend.player_team:
+			out.append(d)
+	return out
+
+
+func _skills_of(driver_id: String) -> Dictionary:
+	var team := GameData.team_by_id(weekend.teams, weekend.player_team)
+	return (team.get("practice_skills", {}) as Dictionary).get(driver_id, {})
 
 
 func _session_title(id: String) -> String:
@@ -344,6 +400,9 @@ func _car_card(d: Dictionary) -> Control:
 		var r := ScreenKit.g_percent_row(v, row[0], color)
 		r["bar"].value = row[1]
 		r["value"].text = "%d%%" % roundi(row[1] * 100)
+	if _practice_left():
+		v.add_child(_engineer_row(d))
+		v.add_child(_chance_meter(d))
 	var q := HBoxContainer.new()
 	q.add_theme_constant_override("separation", 10)
 	q.add_child(UiStyle.g_label("“", 26, color.lightened(0.25), "black"))
@@ -362,6 +421,182 @@ func _car_card(d: Dictionary) -> Control:
 	return card
 
 
+## Engenheiro de corrida do carro (nome + nota).
+func _engineer_row(d: Dictionary) -> Control:
+	var sk := _skills_of(d["id"])
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UiStyle.g_box(Color(0, 0, 0, 0.25), 14, 10, 6))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	row.add_child(ScreenKit.icon("headset", 26, UiStyle.G_ENGINEER))
+	var tv := VBoxContainer.new()
+	tv.add_theme_constant_override("separation", -4)
+	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var ename := String(sk.get("engineer_name", ""))
+	tv.add_child(UiStyle.g_label(ename if ename != "" else "Vaga aberta", UiStyle.FS_SMALL + 1, UiStyle.G_TEXT, "black"))
+	tv.add_child(UiStyle.g_label("engenheiro de corrida", UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold"))
+	row.add_child(tv)
+	row.add_child(UiStyle.g_label(str(roundi(float(sk.get("engineer", 0)))), 22, UiStyle.G_TEXT, "black"))
+	box.add_child(row)
+	return box
+
+
+## Medidor "chance de bom acerto": diretor 35 + engenheiro 30 + piloto 15 + sorte 20 (a sorte entra pela média).
+func _chance_meter(d: Dictionary) -> Control:
+	var sk := _skills_of(d["id"])
+	var ab := PracticeSession.setup_ability(sk, d)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	var top := HBoxContainer.new()
+	var cap := UiStyle.g_caption("Chance de bom acerto")
+	cap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(cap)
+	top.add_child(UiStyle.g_label("%d%%" % roundi(PracticeSession.setup_chance(sk, d) * 100), 22, UiStyle.G_TEXT, "black"))
+	v.add_child(top)
+	var bar := HBoxContainer.new()
+	bar.add_theme_constant_override("separation", 0)
+	bar.custom_minimum_size = Vector2(0, 10)
+	var used := 0.0
+	for part: Array in [["director", UiStyle.G_DIRECTOR], ["engineer", UiStyle.G_ENGINEER], ["driver", UiStyle.G_DRIVER], ["luck", UiStyle.G_LUCK]]:
+		var seg := ColorRect.new()
+		seg.color = part[1]
+		seg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		seg.size_flags_stretch_ratio = maxf(float(ab[part[0]]), 0.001)
+		used += float(ab[part[0]])
+		bar.add_child(seg)
+	var rest := ColorRect.new()
+	rest.color = Color(1, 1, 1, 0.1)
+	rest.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rest.size_flags_stretch_ratio = maxf(1.0 - used, 0.001)
+	bar.add_child(rest)
+	v.add_child(bar)
+	var leg := HBoxContainer.new()
+	leg.add_theme_constant_override("separation", 10)
+	for part: Array in [["shield", UiStyle.G_DIRECTOR, "Diretor 35"], ["headset", UiStyle.G_ENGINEER, "Engenheiro 30"],
+			["person", UiStyle.G_DRIVER, "Piloto 15"], ["dice", UiStyle.G_LUCK, "Sorte 20"]]:
+		var it := HBoxContainer.new()
+		it.add_theme_constant_override("separation", 3)
+		it.add_child(ScreenKit.icon(part[0], 14, part[1]))
+		it.add_child(UiStyle.g_label(part[2], UiStyle.FS_CAPTION, Color("#c3c9d3"), "bold"))
+		leg.add_child(it)
+	v.add_child(leg)
+	return v
+
+
+# --- resultado do treino (mockup v21-2) ----------------------------------------------------
+
+func _open_practice_report() -> void:
+	var rep: Dictionary = weekend.last_practice
+	var sh := ScreenKit.sheet("Resultado do treino", 1080)
+	var body: VBoxContainer = sh["body"]
+	body.add_child(UiStyle.g_caption("%s · simulado" % WeekendSim.SESSION_NAMES.get(rep.get("session", ""), "Treino livre")))
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", UiStyle.SP_L)
+	body.add_child(cols)
+	for d: Dictionary in _my_drivers():
+		if (rep["drivers"] as Dictionary).has(d["id"]):
+			cols.add_child(_report_card(d, rep["drivers"][d["id"]]))
+	cols.add_child(_report_times(rep["times"]))
+	var next := CutButton.new()
+	next.text = "CONTINUAR"
+	next.custom_minimum_size = Vector2(300, UiStyle.TOUCH_MAIN)
+	next.size_flags_horizontal = Control.SIZE_SHRINK_END
+	next.pressed.connect((sh["root"] as Control).queue_free)
+	body.add_child(next)
+	add_child(sh["root"])
+	_report_root = sh["root"]
+
+
+var _report_root: Control
+
+
+func _report_card(d: Dictionary, s: Dictionary) -> Control:
+	var card := ScreenKit.g_card(UiStyle.G_SURFACE, 18, 14, 12)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.custom_minimum_size = Vector2(330, 0)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	card.add_child(v)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 10)
+	top.add_child(DriverPhotos.make_avatar(d, UiStyle.team_color(weekend.player_team), 44))
+	var tv := VBoxContainer.new()
+	tv.add_theme_constant_override("separation", -4)
+	tv.add_child(UiStyle.g_label(d["name"], 19, UiStyle.G_TEXT, "black"))
+	var ename := String((s.get("skills", {}) as Dictionary).get("engineer_name", ""))
+	tv.add_child(UiStyle.g_label("com " + ename if ename != "" else "sem engenheiro de corrida", UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold"))
+	top.add_child(tv)
+	v.add_child(top)
+	var gcol: Color = UiStyle.G_GRADE[s["grade"]]
+	var gb := PanelContainer.new()
+	gb.add_theme_stylebox_override("panel", UiStyle.g_box(Color(gcol, 0.14), 14, 12, 8))
+	var gr := HBoxContainer.new()
+	gr.add_theme_constant_override("separation", 12)
+	gr.add_child(UiStyle.g_label(s["grade"], 30, gcol, "black"))
+	var gt := VBoxContainer.new()
+	gt.add_theme_constant_override("separation", -4)
+	gt.add_child(UiStyle.g_label(GRADE_TEXT[s["grade"]], UiStyle.FS_BODY, UiStyle.G_TEXT, "black"))
+	gt.add_child(UiStyle.g_label("sorteio do treino: %d%%" % roundi(float(s["draw"]) * 100), UiStyle.FS_CAPTION, Color("#c3c9d3"), "bold"))
+	gr.add_child(gt)
+	gb.add_child(gr)
+	v.add_child(gb)
+	for k: Array in [["aero", "Aerodinâmica"], ["mech", "Mecânico"], ["balance", "Equilíbrio"]]:
+		var a := roundi(float(s["before"][k[0]]) * 100)
+		var b := roundi(float(s["after"][k[0]]) * 100)
+		var r := ScreenKit.g_percent_row(v, k[1], UiStyle.G_ENGINEER)
+		r["bar"].value = float(s["after"][k[0]])
+		r["value"].text = "%d → %d%%" % [a, b]
+		r["value"].add_theme_color_override("font_color", UiStyle.G_UP if b > a else UiStyle.G_TEXT_2)
+	var shown := 0
+	for e: Dictionary in s["events"]:
+		if e["kind"] == "ok" and shown > 0:
+			continue
+		if shown >= 2:
+			break
+		var er := HBoxContainer.new()
+		er.add_theme_constant_override("separation", 8)
+		er.add_child(ScreenKit.icon(EVENT_ICON.get(e["kind"], "check"), 16, UiStyle.G_UP if e["kind"] == "ok" else UiStyle.G_DOWN))
+		var el := UiStyle.g_label(e["text"], UiStyle.FS_CAPTION, Color("#c3c9d3"), "bold")
+		el.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		el.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		er.add_child(el)
+		v.add_child(er)
+		shown += 1
+	return card
+
+
+func _report_times(times: Array) -> Control:
+	var card := ScreenKit.g_card(UiStyle.G_SURFACE, 18, 14, 12)
+	card.custom_minimum_size = Vector2(260, 0)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 2)
+	card.add_child(v)
+	v.add_child(UiStyle.g_caption("Melhores voltas"))
+	var best := float(times[0]["best"]) if not times.is_empty() else 0.0
+	var rows := 0
+	for i in times.size():
+		var t: Dictionary = times[i]
+		var mine := String(t["team"]) == weekend.player_team
+		if i >= 8 and not mine:
+			continue
+		if rows >= 10:
+			break
+		var row := HBoxContainer.new()
+		row.custom_minimum_size = Vector2(0, 26)
+		row.add_theme_constant_override("separation", 8)
+		var col := UiStyle.G_TEXT if mine else Color("#c3c9d3")
+		row.add_child(UiStyle.g_label("%2d" % (i + 1), UiStyle.FS_SMALL, UiStyle.G_TEXT_3, "black"))
+		var code := UiStyle.g_label(String(t["code"]), UiStyle.FS_SMALL, col, "black")
+		code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(code)
+		var tm := float(t["best"])
+		var txt := "—" if tm == INF else (UiStyle.format_time(tm) if i == 0 else "+%.3f" % (tm - best))
+		row.add_child(UiStyle.g_label(txt, UiStyle.FS_SMALL, UiStyle.team_color(weekend.player_team).lightened(0.3) if mine else col, "bold"))
+		v.add_child(row)
+		rows += 1
+	return card
+
+
 ## Resultado do piloto na última sessão concluída ("TL1 · 3º").
 func _last_result(driver_id: String) -> String:
 	for i in range(weekend.current - 1, -1, -1):
@@ -372,6 +607,7 @@ func _last_result(driver_id: String) -> String:
 
 
 func _on_simulate() -> void:
+	weekend.show_practice_report = weekend.is_practice(weekend.session_id())
 	weekend.simulate_current()
 	Session.go_to_weekend()
 

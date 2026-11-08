@@ -25,7 +25,7 @@ func test_montagem_cria_contratos_e_equipe_tecnica() -> void:
 	for d: Dictionary in camp.drivers():
 		assert_true(camp.personnel.contracts.has(d["id"]), d["id"])
 		assert_gt(float(camp.personnel.contracts[d["id"]]["salary"]), 0.0)
-	assert_eq(Personnel.ROLES.size(), 4, "só 4 cargos além do chefe de equipe e dos pilotos")
+	assert_eq(Personnel.ROLES.size(), 6, "4 técnicos + 2 engenheiros de corrida (2026-11-08) além do chefe de equipe e dos pilotos")
 	for role: String in Personnel.ROLES:
 		assert_ne(camp.personnel.staff[role], "", role)
 	assert_eq(camp.personnel.person(camp.personnel.staff["director"])["name"], "Pat Fry", "equipe real: técnicos reais de 2026")

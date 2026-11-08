@@ -24,7 +24,7 @@ das escolhas técnicas.
   user://campaign.json), `CarDevelopment` (árvore de P&D em `data/rd_tree.json`, gerada por
   `tools/make_rd_tree.py`, e fábrica em `data/factory.json`). Passo fixo `DT`, semente
   determinística. Regras novas entram aqui, com teste.
-- Telas do GP: `gp_setup_screen`, `weekend_screen`, `practice_screen`, `quali_screen` (peças comuns
+- Telas do GP: `gp_setup_screen`, `weekend_screen` (treino é sempre simulado: engenheiro, chance de acerto e folha de resultado), `quali_screen` (peças comuns
   em `ScreenKit`); o fim de semana ativo fica em `Session.weekend`.
   Módulos que guardam o RaceSim usam `WeakRef` (ciclo de referência vazaria memória).
 - `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). **Todas** as
@@ -61,8 +61,8 @@ Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--
 `--incidents=<mult>`, `--sc` (aciona safety car), `--data` (abre o menu DADOS), `--seed`, `--pct`,
 `--pause` (começa pausado: grid parado), `--circuit=<id>`, câmera 3D `--cam=<n> --yaw --pitch --dist`
 (a câmera vai direto ao alvo nas capturas). Grande Prêmio: `--gp` (configuração), `--weekend`
-(painel) e `--play` (sessão atual ao vivo), com `--skip=<n>` para simular as n primeiras sessões
-(ex.: `--play --circuit=shanghai --skip=2` abre a sprint); `--advance` vale também no treino e na
+(painel) e `--play` (sessão atual ao vivo; num treino, simula e abre a folha de resultado), com `--skip=<n>` para simular as n primeiras sessões
+(ex.: `--play --circuit=shanghai --skip=2` abre a sprint); `--advance` vale também na
 classificação. Capturas de interface: `--ui=team|quick` (folhas da tela inicial), `--ui=gallery`
 (estados dos componentes), `--view-only` (só o 3D, base de mockups). Escolha de equipe: `--teamselect=campaign|gp|quick` (com `--team=<id>`). Campanha: `--campaign`, `--car` (peças), `--rd` (árvore),
 `--creator [--ui=<passo 0..3>]`, `--hub` e `--camp-race` (usam a campanha salva; `tools/make_demo_campaign.gd -- --round=<n>` grava uma campanha de reta final).

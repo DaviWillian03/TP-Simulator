@@ -49,6 +49,22 @@ func apply_to(car: CarState) -> void:
 	car.wear_factor = wear_factor()
 
 
+## Qualidade do acerto (0..1): média de aerodinâmica, mecânico e equilíbrio.
+func quality() -> float:
+	return (aero + mech + balance) / 3.0
+
+
+## Nota do acerto para a tela (decisão de 2026-11-08): A ótimo, B bom, C regular, D ruim.
+static func grade(q: float) -> String:
+	if q >= 0.75:
+		return "A"
+	if q >= 0.6:
+		return "B"
+	if q >= 0.45:
+		return "C"
+	return "D"
+
+
 ## O que o piloto diz do carro: fala da área mais longe do ideal.
 func feedback() -> String:
 	var worst := minf(aero, minf(mech, balance))

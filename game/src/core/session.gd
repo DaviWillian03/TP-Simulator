@@ -21,7 +21,6 @@ const TITLE_SCENE := "res://src/ui/title_screen.tscn"
 const RACE_SCENE := "res://src/ui/race_screen.tscn"
 const GP_SETUP_SCENE := "res://src/ui/gp_setup_screen.tscn"
 const WEEKEND_SCENE := "res://src/ui/weekend_screen.tscn"
-const PRACTICE_SCENE := "res://src/ui/practice_screen.tscn"
 const QUALI_SCENE := "res://src/ui/quali_screen.tscn"
 const TEAM_SELECT_SCENE := "res://src/ui/team_select_screen.tscn"
 const CAMPAIGN_ENTRY_SCENE := "res://src/ui/campaign_entry_screen.tscn"
@@ -391,8 +390,10 @@ func go_to_weekend() -> void:
 ## Abre a tela da sessão atual do fim de semana (treino, classificação ou corrida).
 func play_session() -> void:
 	var id := weekend.session_id()
-	if weekend.is_practice(id):
-		get_tree().change_scene_to_file(PRACTICE_SCENE)
+	if weekend.is_practice(id):  # treino é sempre simulado (decisão de 2026-11-08): resultado no painel do fim de semana
+		weekend.simulate_current()
+		weekend.show_practice_report = true
+		get_tree().change_scene_to_file(WEEKEND_SCENE)
 	elif weekend.is_quali(id):
 		get_tree().change_scene_to_file(QUALI_SCENE)
 	elif weekend.is_race(id):

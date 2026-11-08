@@ -46,16 +46,20 @@ func test_painel_monta_o_programa_do_treino_com_blocos() -> void:
 	assert_true((screen._program_boxes[albon]["minutes"].text as String).begins_with("45 / 60 min"))
 
 
-func test_treino_ao_vivo_usa_o_programa_e_termina() -> void:
+func test_treino_simulado_usa_o_programa_e_mostra_o_resultado() -> void:
 	var w := _weekend_at("fp1")
 	w.set_program("albon", ["race", "race", "race"])
-	var screen: Control = await _open("res://src/ui/practice_screen.tscn")
-	assert_eq(screen.p.programs["albon"], ["race", "race", "race"] as Array[String])
-	screen.p.run_to_end()
-	screen._refresh_ui()
-	assert_true(screen._end_card.visible)
-	var before: float = w.setups["albon"].race_prep
-	assert_gt(before, 0.3, "três simulações de corrida preparam o ritmo de corrida")
+	var screen: Control = await _open("res://src/ui/weekend_screen.tscn")
+	assert_eq(screen.find_children("*", "Button", true, false).filter(func(b: Button) -> bool: return b.text == "JOGAR").size(), 0,
+		"treino não tem JOGAR (sempre simulado)")
+	w.show_practice_report = true  # o que o botão SIMULAR faz antes de recarregar o painel
+	w.simulate_current()
+	assert_gt(float(w.setups["albon"].race_prep), 0.3, "três simulações de corrida preparam o ritmo de corrida")
+	assert_true((w.last_practice["drivers"] as Dictionary).has("albon"))
+	assert_true(String(w.last_practice["drivers"]["albon"]["grade"]) in ["A", "B", "C", "D"])
+	var again: Control = await _open("res://src/ui/weekend_screen.tscn")
+	assert_not_null(again._report_root, "abre a folha de resultado do treino")
+	assert_false(w.show_practice_report, "a folha abre uma vez só")
 
 
 func test_classificacao_ao_vivo_manda_o_carro_para_a_pista() -> void:

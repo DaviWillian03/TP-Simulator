@@ -8,8 +8,9 @@ extends RefCounted
 ## Valores PROVISÓRIOS. Técnicos e engenheiros são FICTÍCIOS (data/staff_pool.json).
 
 ## Os 4 cargos técnicos de cada equipe (decisão do usuário, 2026-11-04; nomes reais em data/staff_2026.json).
-const ROLES := ["director", "aero", "designer", "trackside"]
+const ROLES := ["director", "aero", "designer", "trackside", "race1", "race2"]
 const ROLE_NAMES := {"director": "Diretor técnico", "aero": "Chefe de aerodinâmica", "designer": "Projetista-chefe",
+	"race1": "Engenheiro de corrida · carro 1", "race2": "Engenheiro de corrida · carro 2",
 	"trackside": "Diretor de engenharia de pista"}
 ## Efeitos (PROVISÓRIO): diretor = todos os departamentos de P&D; aerodinâmica = depto. aero; projetista = chassi,
 ## durabilidade e motor; engenharia de pista = ganho dos treinos livres (acerto).
@@ -43,14 +44,42 @@ static var _free_agents: Array = []
 ## Todos os técnicos: os 44 das equipes de 2026 (reais ou genéricos) + os do mercado (fictícios).
 static func staff_pool() -> Array:
 	if _staff_pool.is_empty():
-		_staff_pool = team_staff_data() + GameData.load_json(GameData.DATA_DIR + "staff_pool.json")["people"]
+		_staff_pool = team_staff_data() + GameData.load_json(GameData.DATA_DIR + "staff_pool.json")["people"] + _race_engineers(false)
 	return _staff_pool
 
 
 static func team_staff_data() -> Array:
 	if _team_staff_data.is_empty():
-		_team_staff_data = GameData.load_json(GameData.DATA_DIR + "staff_2026.json")["people"]
+		_team_staff_data = GameData.load_json(GameData.DATA_DIR + "staff_2026.json")["people"] + _race_engineers(true)
 	return _team_staff_data
+
+
+## Engenheiros de corrida (decisão de 2026-11-08): os de 2026 viram os cargos race1/race2 da equipe (pela ordem dos pilotos
+## nos dados); os genéricos ficam no mercado (sem "team"), alternando carro 1 / carro 2.
+static func _race_engineers(with_team: bool) -> Array:
+	var out: Array = []
+	var order := {}
+	for d: Dictionary in GameData.drivers():
+		var t: String = d["team"]
+		order[d["id"]] = int(order.get("_n_" + t, 0))
+		order["_n_" + t] = int(order.get("_n_" + t, 0)) + 1
+	var i := 0
+	for p: Dictionary in GameData.load_json(GameData.DATA_DIR + "race_engineers_2026.json")["people"]:
+		var e := {"id": p["id"], "name": p["name"], "nationality": String(p.get("nationality", "—")), "skill": int(p["skill"]), "real": bool(p.get("real", false))}
+		if e["real"]:
+			e["real_title"] = "Engenheiro de corrida"
+		if String(p.get("team", "")) != "":
+			if not with_team:
+				continue
+			e["team"] = p["team"]
+			e["role"] = "race1" if int(order.get(p.get("driver", ""), 0)) == 0 else "race2"
+		else:
+			if with_team:
+				continue
+			e["role"] = "race1" if i % 2 == 0 else "race2"
+			i += 1
+		out.append(e)
+	return out
 
 
 ## Técnicos de uma equipe no início de 2026: cargo -> pessoa.
@@ -59,6 +88,22 @@ static func team_staff(team_id: String) -> Dictionary:
 	for p: Dictionary in team_staff_data():
 		if p["team"] == team_id:
 			out[p["role"]] = p
+	return out
+
+
+## Quem acerta o carro no treino (decisão de 2026-11-08): {id do piloto: {director, engineer, engineer_name}} — o diretor de
+## engenharia de pista da equipe e o engenheiro de corrida do carro (1º piloto = carro 1). camp = null: dados de 2026.
+static func practice_skills_for(camp: Campaign, team_id: String, driver_ids: Array) -> Dictionary:
+	var out := {}
+	var st := {}
+	if camp == null or camp.personnel == null:
+		st = team_staff(team_id)
+	for i in driver_ids.size():
+		var role := "race1" if i == 0 else "race2"
+		var dir_p: Dictionary = st.get("trackside", {}) if camp == null or camp.personnel == null else camp.personnel.staff_of(camp, team_id, "trackside")
+		var eng_p: Dictionary = st.get(role, {}) if camp == null or camp.personnel == null else camp.personnel.staff_of(camp, team_id, role)
+		out[driver_ids[i]] = {"director": float(dir_p.get("skill", 55)), "engineer": float(eng_p.get("skill", 55)),
+			"engineer_name": String(eng_p.get("name", "")), "director_name": String(dir_p.get("name", ""))}
 	return out
 
 
@@ -163,25 +208,32 @@ func _assign_staff(camp: Campaign) -> void:
 			if own.has(role):
 				staff[role] = own[role]["id"]
 	else:  # equipe criada: técnicos do mercado no nível da estrutura
-		var target := clampf(float(camp.base_rating) - 5.0, 55.0, 88.0)
 		for role: String in ROLES:
-			var best := ""
-			var best_gap := 999.0
-			for p: Dictionary in staff_pool():
-				if p["role"] != role or taken.has(p["id"]) or p.has("team"):
-					continue
-				var gap := absf(float(p["skill"]) - target) + float(_h(p["id"]) % 5)
-				if gap < best_gap:
-					best_gap = gap
-					best = p["id"]
-			if best != "":
-				staff[role] = best
-				taken[best] = true
-				contracts[best] = {"team": camp.player_team, "salary": staff_ask(float(person(best)["skill"])), "until": camp.season + 1 + (_h(best) % 3)}
+			_hire_market_for(camp, role, taken)
 	# mercado: os fictícios sem equipe são agentes livres
 	for p: Dictionary in staff_pool():
 		if not taken.has(p["id"]):
 			contracts[p["id"]] = {"team": "", "salary": staff_ask(float(p["skill"])), "until": camp.season}
+
+
+## Equipe criada (ou cargo novo num save antigo): contrata do mercado alguém no nível da estrutura.
+func _hire_market_for(camp: Campaign, role: String, taken: Dictionary) -> void:
+	var target := clampf(float(camp.base_rating) - 5.0, 55.0, 88.0)
+	var best := ""
+	var best_gap := 999.0
+	for p: Dictionary in staff_pool():
+		if p["role"] != role or taken.has(p["id"]) or p.has("team"):
+			continue
+		if String(contracts.get(p["id"], {}).get("team", "")) != "":
+			continue
+		var gap := absf(float(p["skill"]) - target) + float(_h(p["id"]) % 5)
+		if gap < best_gap:
+			best_gap = gap
+			best = p["id"]
+	if best != "":
+		staff[role] = best
+		taken[best] = true
+		contracts[best] = {"team": camp.player_team, "salary": staff_ask(float(person(best)["skill"])), "until": camp.season + 1 + (_h(best) % 3)}
 
 
 ## Técnico de uma equipe num cargo (quem tem contrato com ela), ou {}.
@@ -213,19 +265,38 @@ func team_practice_mult(camp: Campaign, team_id: String) -> float:
 	return practice_mult(float(staff_of(camp, team_id, "trackside").get("skill", 0)))
 
 
+## Engenheiro de corrida de um carro (slot 0 = carro 1).
+func race_engineer_of(camp: Campaign, team_id: String, slot: int) -> Dictionary:
+	return staff_of(camp, team_id, "race1" if slot == 0 else "race2")
+
+
 ## Saves antigos (cargos de antes de 2026-11-04 ou técnicos que não existem mais): refaz o corpo técnico.
 func repair_staff(camp: Campaign) -> void:
-	var ok := staff.size() == ROLES.size()
-	for role: String in ROLES:
-		var id: String = staff.get(role, "")
-		if id != "" and person(id).is_empty():
-			ok = false
-	for p: Dictionary in team_staff_data():
-		if not contracts.has(p["id"]):
+	var ok := not staff.is_empty()
+	for role: String in staff:
+		var id: String = staff[role]
+		if not ROLES.has(role) or (id != "" and person(id).is_empty()):
 			ok = false
 	if not ok:
 		staff.clear()
 		_assign_staff(camp)
+		return
+	# saves de antes dos engenheiros de corrida (2026-11-08): só completa o que falta, sem mexer no resto
+	for p: Dictionary in team_staff_data():
+		if not contracts.has(p["id"]) and not GameData.team_by_id(camp.teams(), p["team"]).is_empty():
+			contracts[p["id"]] = {"team": p["team"], "salary": staff_ask(float(p["skill"])), "until": camp.season + 1 + (_h(p["id"]) % 3)}
+	for p: Dictionary in staff_pool():
+		if not contracts.has(p["id"]):
+			contracts[p["id"]] = {"team": "", "salary": staff_ask(float(p["skill"])), "until": camp.season}
+	var own := team_staff(camp.player_team)
+	for role: String in ROLES:
+		if staff.has(role):
+			continue
+		staff[role] = ""
+		if own.has(role) and String(contracts.get(own[role]["id"], {}).get("team", "")) == camp.player_team:
+			staff[role] = own[role]["id"]
+		else:
+			_hire_market_for(camp, role, {})
 
 
 # --- pessoas --------------------------------------------------------------------------------
@@ -307,7 +378,7 @@ func market(camp: Campaign, kind: String, filter: String = "all", role: String =
 		var p := person(id, camp)
 		if p.is_empty() or p["kind"] != kind:
 			continue
-		if kind == "staff" and role != "" and p["role"] != role:
+		if kind == "staff" and role != "" and not String(p["role"]).begins_with(role):  # "race" = engenheiros dos dois carros
 			continue
 		var c := contract_of(id)
 		var team: String = c.get("team", "")

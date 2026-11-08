@@ -119,10 +119,9 @@ Ordem de chegada dos pedidos ainda abertos (o que já foi feito está nas seçõ
 9. 2026-11-04 — **Aba Histórico** (Lendas, Pilotos atuais com números até 2025, Campeonatos).
 10. 2026-11-04 — **Animação de campeão**.
 11. 2026-11-04 — **Complementos da campanha** (✅ 2026-11-08: número 1 do campeão, números dos novatos, idade mínima de 18;
-    ✅ IA de estratégia com plano de corrida). Pendente: número 1 do campeão (Norris volta ao 4), números dos novatos (herdar de quem
-    saiu ou manter o da categoria), idade mínima de 18 anos na F1, treinos livres sempre simulados com programas e acerto
-    sorteado pela capacidade de pilotos/engenheiros/diretor, IA de estratégia mais esperta e variada, sede e fábrica com
-    prédios virtuais.
+    ✅ IA de estratégia com plano de corrida; ✅ treinos sempre simulados com acerto sorteado — diretor 35 / engenheiro de corrida 30 /
+    piloto 15 / sorte 20 — e engenheiros de corrida reais de 2026 nos cargos race1/race2, no mercado e na IA; mockup v21).
+    Pendente: sede e fábrica com prédios virtuais.
 
 ## O que falta para o jogo ficar completo (revisão geral, 2026-11-02)
 Revisão de todos os pedidos (`docs/IDEAS.md` #1–#6, propostas aprovadas P1–P14, decisões e mensagens da sessão) contra o que existe.

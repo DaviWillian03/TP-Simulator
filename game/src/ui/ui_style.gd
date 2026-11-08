@@ -263,6 +263,14 @@ const G_INK_2 := Color("#4b5260")
 const G_RED_PRESS := Color("#b30500")
 const G_GLASS := Color(0.043, 0.051, 0.071, 0.86)  ## painel escuro translúcido sobre a pista em tela cheia
 const G_OFF := Color(1, 1, 1, 0.04)  ## fundo de controle desabilitado
+## Treino simulado (mockup v21): partes do medidor "chance de bom acerto" e as notas do resultado
+const G_DIRECTOR := Color("#ffd24a")
+const G_ENGINEER := Color("#5c93ea")
+const G_DRIVER := Color("#3c9d5d")
+const G_LUCK := Color("#8f98a7")
+const G_UP := Color("#7fe0b1")  ## melhora
+const G_DOWN := Color("#ff8a80")  ## piora / problema
+const G_GRADE := {"A": Color("#3c9d5d"), "B": Color("#5c93ea"), "C": Color("#ffd24a"), "D": Color("#ff8a80")}
 
 const R_TILE := 16  ## blocos de modo, cartões
 const R_CHIP := 14  ## opções em bloco (clima)

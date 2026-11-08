@@ -56,6 +56,8 @@ var grids: Dictionary = {}  ## "sprint"/"race" -> Array de ids na ordem de larga
 var points: Dictionary = {}  ## id do piloto -> pontos no fim de semana
 var forecast: Array[float] = []  ## chance de chuva por dia (sexta, sábado, domingo)
 var rng := RandomNumberGenerator.new()
+var show_practice_report := false  ## a tela do fim de semana abre a folha de resultado do treino (uma vez)
+var last_practice: Dictionary = {}  ## resultado do último treino (tela de resultado, v21): {session, drivers: {id: resumo}, times}
 
 
 ## options: player_team, duration_pct, weather ("realistic"/"dry"/"rain"/"variable"),
@@ -70,9 +72,10 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	seed_value = int(options.get("seed", 1))
 	# forma do fim de semana: cada equipe chega um pouco acima/abaixo da nota do carro (CarForm); "form": 0 desliga
 	teams = CarForm.apply(teams, circuit_id, seed_value, float(options.get("form", 1.0)), CarParts.profile_of(circuit))
-	for t: Dictionary in teams:  # fora da campanha: engenharia de pista de 2026 define o ganho dos treinos
-		if not t.has("practice_gain_mult"):
-			t["practice_gain_mult"] = Personnel.practice_mult(float(Personnel.team_staff(String(t["id"])).get("trackside", {}).get("skill", 75)))
+	for t: Dictionary in teams:  # fora da campanha: diretor de pista e engenheiros de corrida de 2026 acertam o carro
+		if not t.has("practice_skills"):
+			var ids: Array = drivers.filter(func(d: Dictionary) -> bool: return d["team"] == t["id"]).map(func(d: Dictionary) -> String: return d["id"])
+			t["practice_skills"] = Personnel.practice_skills_for(null, String(t["id"]), ids)
 	duration_pct = float(options.get("duration_pct", 1.0))
 	weather_mode = options.get("weather", "realistic")
 	race_only = options.get("format", "full") == "race_only"
@@ -202,6 +205,14 @@ func make_race(extra: Dictionary = {}) -> RaceSim:
 # --- fim de cada sessão -----------------------------------------------------------------
 
 func finish_practice(p: PracticeSession) -> void:
+	var own := {}
+	for c in p.cars:
+		if c.team["id"] == player_team:
+			own[c.driver["id"]] = p.summary_of(c.driver["id"])
+	var times: Array = []
+	for c in p.standings():
+		times.append({"id": c.driver["id"], "code": String(c.driver.get("code", "")), "team": c.team["id"], "best": c.best_lap_time})
+	last_practice = {"session": session_id(), "drivers": own, "times": times}
 	_store(p.standings())
 	_next()
 

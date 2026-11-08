@@ -5,8 +5,9 @@ extends Control
 ## A troca só vale na virada de temporada (contratos assinados ficam "para o próximo ano").
 
 const ROLE_SHORT := {"director": "DIRETOR\nTÉCNICO", "aero": "CHEFE DE\nAERODINÂMICA", "designer": "PROJETISTA-\nCHEFE",
-	"trackside": "ENGENHARIA\nDE PISTA"}
-const ROLE_COLOR := {"director": Color("#ffd24a"), "aero": Color("#5c93ea"), "designer": Color("#3c9d5d"), "trackside": Color("#ff6a5a")}
+	"trackside": "ENGENHARIA\nDE PISTA", "race1": "ENG. CORRIDA\nCARRO 1", "race2": "ENG. CORRIDA\nCARRO 2"}
+const ROLE_COLOR := {"director": Color("#ffd24a"), "aero": Color("#5c93ea"), "designer": Color("#3c9d5d"), "trackside": Color("#ff6a5a"),
+	"race1": Color("#5c93ea"), "race2": Color("#5c93ea")}
 
 var campaign: Campaign
 var pe: Personnel
@@ -208,7 +209,9 @@ func _effect_text(role: String, skill: float) -> String:
 	var days := 0.0
 	var success := 0.0
 	if role == "trackside":
-		return "%+d%% no ganho dos treinos livres" % roundi((Personnel.practice_mult(skill) - 1.0) * 100.0)
+		return "35% do acerto sorteado nos treinos (os dois carros)"
+	if role.begins_with("race"):
+		return "30%% do acerto sorteado nos treinos (carro %s)" % role.substr(4)
 	if role == "director":
 		days = maxf(skill - 50.0, 0.0) / 600.0
 		success = maxf(skill - 50.0, 0.0) * 0.05
@@ -305,7 +308,7 @@ func _build_market() -> void:
 	if _kind == "driver":
 		opts = [["all", "Todos"], ["free", "Livres"], ["feeder", "F2/F3 e outras"], ["teams", "Outras equipes"]]
 	else:
-		opts = [["", "Todos"], ["director", "Diretor"], ["aero", "Aero"], ["designer", "Projeto"], ["trackside", "Pista"]]
+		opts = [["", "Todos"], ["director", "Diretor"], ["aero", "Aero"], ["designer", "Projeto"], ["trackside", "Pista"], ["race", "Eng. corrida"]]
 	for o: Array in opts:
 		var on: bool = (_role == o[0]) if _kind == "staff" else (_filter == o[0])
 		var b := Button.new()

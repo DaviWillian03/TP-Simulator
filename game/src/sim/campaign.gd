@@ -164,11 +164,12 @@ func refresh_rating() -> void:
 			t["failure_mult"] = dev.failure_mult()
 			dev.staff_mod = personnel.staff_effects(self)
 			dev.atr = atr_mult(player_team)
-			t["practice_gain_mult"] = dev.practice_gain_mult() * float(dev.staff_mod.get("practice", 1.0))
+			t["practice_gain_mult"] = dev.practice_gain_mult()  # simulador da fábrica; o pessoal entra em practice_skills
 		else:  # equipes da IA também desenvolvem o carro ao longo da temporada (mais rápido com um bom corpo técnico)
 			t["car_rating"] = float(_file_ratings.get(t["id"], t["car_rating"])) + float(rival_carry.get(t["id"], 0.0)) + pe
-			if personnel != null:
-				t["practice_gain_mult"] = personnel.team_practice_mult(self, t["id"])
+			t["practice_gain_mult"] = 1.0
+		if personnel != null:
+			t["practice_skills"] = Personnel.practice_skills_for(self, t["id"], team_driver_ids(t["id"]))
 
 
 ## Quanto da temporada já passou (0 = véspera da primeira rodada, 1 = depois da última).

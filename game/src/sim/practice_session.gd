@@ -4,8 +4,8 @@ extends RefCounted
 ## acerto mecânico, simulação de corrida, volta rápida). Cada bloco aproxima o acerto do ideal,
 ## com resultado aleatório (o piloto pode errar, o carro pode quebrar).
 ##
-## "Jogar" e "simular" usam o mesmo código: jogar avança aos poucos (advance) e a tela mostra
-## os tempos e os avisos; simular chama run_to_end. Com a mesma semente, o resultado é igual.
+## Desde 2026-11-08 o treino é sempre simulado (run_to_end). Quanto cada bloco acerta o carro sai de quem trabalha nele:
+## diretor de engenharia de pista 35%, engenheiro de corrida do carro 30%, piloto 15% e sorte 20% (team.practice_skills).
 
 signal lap_completed(car: CarState, lap_time: float)
 signal block_finished(car: CarState, block_id: String, text: String)
@@ -25,8 +25,14 @@ const BLOCKS := {
 const DEFAULT_PROGRAM := ["aero", "mech", "race", "quali"]
 
 ## Efeitos (PROVISÓRIOS)
-const GAIN_MIN := 0.35  ## cada bloco cobre de 35% a 65% do que falta para o ideal
-const GAIN_MAX := 0.65
+const W_DIRECTOR := 0.35  ## pesos do acerto sorteado (decisão do usuário, 2026-11-08)
+const W_ENGINEER := 0.30
+const W_DRIVER := 0.15
+const W_LUCK := 0.20
+const SKILL_LOW := 40.0  ## nota que vale 0 na conta (e SKILL_LOW + SKILL_SPAN vale 1)
+const SKILL_SPAN := 55.0
+const GAIN_MIN := 0.25  ## cada bloco cobre de 25% (tudo ruim) a 75% (tudo ótimo) do que falta para o ideal
+const GAIN_SPAN := 0.5
 const BALANCE_SHARE := 0.4  ## acertar aero/mecânico também melhora o equilíbrio
 const PROBLEM_BASE := 0.08  ## chance de um bloco dar errado (mais para pilotos menos precisos)
 const PROBLEM_PER_RATING := 0.004
@@ -44,7 +50,9 @@ var time_s := 0.0
 var _acc := 0.0
 var over := false
 var rng := RandomNumberGenerator.new()
-var history: Array[Dictionary] = []  ## {car, block, text} — resumo do treino
+var history: Array[Dictionary] = []  ## {car, block, text, kind ("ok"/"wet"/"spin"/"failure")} — resumo do treino
+var setups_before: Dictionary = {}  ## id do piloto -> cópia do CarSetup no começo do treino
+var draws: Dictionary = {}  ## id do piloto -> Array das notas sorteadas (0..1) de cada bloco
 
 var _plan: Dictionary = {}  # CarState -> {queue, block, block_end, next_lap}
 
@@ -69,6 +77,8 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		cars.append(car)
 		if not setups.has(d["id"]):
 			setups[d["id"]] = CarSetup.random_start(rng)
+		setups_before[d["id"]] = (setups[d["id"]] as CarSetup).copy()
+		draws[d["id"]] = []
 		var prog: Array = p_programs.get(d["id"], _ai_program())
 		programs[d["id"]] = valid_program(prog)
 		_plan[car] = {"queue": programs[d["id"]].duplicate(), "block": "", "block_end": 0.0, "next_lap": INF}
@@ -180,22 +190,59 @@ func practice_lap_time(car: CarState, block_id: String) -> float:
 	return t
 
 
+## Capacidade de acerto do piloto (0..1): regularidade e gestão de pneus (quem sente o carro e explica o que falta).
+static func driver_setup_skill(driver: Dictionary) -> float:
+	return (DriverStats.attr(driver, "consistency") + DriverStats.attr(driver, "tyres")) / 2.0
+
+
+static func _n(skill: float) -> float:
+	return clampf((skill - SKILL_LOW) / SKILL_SPAN, 0.0, 1.0)
+
+
+## Parte fixa do acerto (sem a sorte), 0..0.8. skills: {director, engineer} (notas 0-100).
+static func setup_ability(skills: Dictionary, driver: Dictionary) -> Dictionary:
+	var dir := W_DIRECTOR * _n(float(skills.get("director", 55)))
+	var eng := W_ENGINEER * _n(float(skills.get("engineer", 55)))
+	var drv := W_DRIVER * _n(driver_setup_skill(driver))
+	return {"director": dir, "engineer": eng, "driver": drv, "luck": W_LUCK * 0.5, "total": dir + eng + drv}
+
+
+## Chance de bom acerto mostrada na tela (0..1): a parte fixa + a sorte média.
+static func setup_chance(skills: Dictionary, driver: Dictionary) -> float:
+	return float(setup_ability(skills, driver)["total"]) + W_LUCK * 0.5
+
+
+func skills_of(car: CarState) -> Dictionary:
+	return (car.team.get("practice_skills", {}) as Dictionary).get(car.driver["id"], {})
+
+
+## Nota sorteada de um bloco (0..1): diretor 35 + engenheiro 30 + piloto 15 + sorte 20.
+func _draw(car: CarState) -> float:
+	return float(setup_ability(skills_of(car), car.driver)["total"]) + W_LUCK * rng.randf()
+
+
 func _finish_block(car: CarState, plan: Dictionary) -> void:
 	var id: String = plan["block"]
 	var setup: CarSetup = setups[car.driver["id"]]
-	var gain := rng.randf_range(GAIN_MIN, GAIN_MAX) * float(plan.get("block_share", 1.0)) * float(car.team.get("practice_gain_mult", 1.0))
+	var c := _draw(car)
+	(draws[car.driver["id"]] as Array).append(c)
+	var gain := (GAIN_MIN + GAIN_SPAN * c) * float(plan.get("block_share", 1.0)) * float(car.team.get("practice_gain_mult", 1.0))
 	var text := ""
+	var kind := "ok"
 	var problem_chance := PROBLEM_BASE + (100.0 - DriverStats.attr(car.driver, "consistency")) * PROBLEM_PER_RATING
 	if weather.wetness > 0.3 and id != "race":
 		gain *= 0.4  # acerto de pista seca não se aprende na chuva
+		kind = "wet"
 		text = "Pista molhada: pouco aprendizado no %s." % BLOCKS[id]["name"].to_lower()
 	elif rng.randf() < problem_chance:
 		if rng.randf() < 0.35:
 			gain = 0.0
-			text = "Problema mecânico: o carro passou o %s na garagem." % BLOCKS[id]["name"].to_lower()
+			kind = "failure"
+			text = "Problema mecânico: o carro passou o bloco de %s na garagem." % BLOCKS[id]["name"].to_lower()
 		else:
 			gain *= 0.5
-			text = "%s rodou e perdeu parte do %s." % [car.driver["name"], BLOCKS[id]["name"].to_lower()]
+			kind = "spin"
+			text = "%s rodou e perdeu parte do bloco de %s." % [car.driver["name"], BLOCKS[id]["name"].to_lower()]
 	match id:
 		"aero":
 			setup.aero += (1.0 - setup.aero) * gain
@@ -211,13 +258,36 @@ func _finish_block(car: CarState, plan: Dictionary) -> void:
 	setup.quali_prep = minf(setup.quali_prep, 1.0)
 	if text == "":
 		text = "%s concluído." % BLOCKS[id]["name"]
-	history.append({"car": car, "block": id, "text": text})
+	history.append({"car": car, "block": id, "text": text, "kind": kind})
 	block_finished.emit(car, id, text)
 	plan["block"] = ""
 	_start_next_block(car, GARAGE_S)
 
 
 # --- consultas --------------------------------------------------------------------------
+
+## Resumo do treino de um piloto para a tela de resultado (v21): acerto antes/depois, nota A–D e o que aconteceu.
+func summary_of(driver_id: String) -> Dictionary:
+	var before: CarSetup = setups_before[driver_id]
+	var after: CarSetup = setups[driver_id]
+	var events: Array = []
+	var car_ref: CarState = null
+	for c in cars:
+		if c.driver["id"] == driver_id:
+			car_ref = c
+	for h: Dictionary in history:
+		if h["car"] == car_ref:
+			events.append({"kind": h["kind"], "text": h["text"], "block": h["block"]})
+	var ds: Array = draws[driver_id]
+	var avg := 0.0
+	for x: float in ds:
+		avg += x
+	avg = avg / ds.size() if not ds.is_empty() else 0.0
+	return {"before": {"aero": before.aero, "mech": before.mech, "balance": before.balance},
+		"after": {"aero": after.aero, "mech": after.mech, "balance": after.balance},
+		"quality": after.quality(), "grade": CarSetup.grade(after.quality()), "draw": avg, "events": events,
+		"skills": skills_of(car_ref) if car_ref != null else {}}
+
 
 ## Classificação do treino pela melhor volta (quem não marcou tempo fica no fim).
 func standings() -> Array[CarState]:

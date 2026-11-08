@@ -40,6 +40,12 @@ ICONS = {
     "wrench": '<path d="M14.5 5.5a4 4 0 0 0 4.9 5.2L21 12l-9 9-3-3 9-9-1.3-1.6a4 4 0 0 0-5.2-4.9l2.5 2.5-2 2-2.5-2.5"/>',
     "undo": '<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
     "tree": '<circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v5M12 12l-6 5M12 12l6 5"/>',
+    # treino simulado e engenheiros de corrida (mockup v21, 2026-11-08)
+    "shield": '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>',
+    "headset": '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="14" width="5" height="6" rx="2"/><rect x="17" y="14" width="5" height="6" rx="2"/>',
+    "person": '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>',
+    "dice": '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="15" cy="9" r="1.2"/><circle cx="9" cy="15" r="1.2"/>',
+    "spin": '<path d="M20 12a8 8 0 1 1-3-6.3M20 4v5h-5"/>',
 }
 
 if __name__ == "__main__":
