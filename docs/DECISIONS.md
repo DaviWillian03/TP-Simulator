@@ -570,3 +570,11 @@ Respostas do usuário:
   jogador escolhe os programas e o acerto é sorteado pela capacidade — **diretor (engenharia de pista) 35%, engenheiro de
   corrida 30%, piloto 15%, sorte 20%**. Engenheiros de corrida: 1 por carro nas 11 equipes, **nomes reais quando houver fonte**
   (senão genéricos), com nota, salário e contrato no mercado de Pessoal (a IA também troca). Mockup antes.
+- **Pneus do fim de semana, saídas da classificação e estratégia** (respostas de 2026-11-08; vale para **todos os modos**):
+  distribuição **real** (13 jogos secos: 8 macios, 3 médios, 2 duros; sprint 12 = 6/4/2; 2 jogos devolvidos depois de cada
+  treino; 1 macio guardado para o Q3) e **o treino gasta sozinho** pelos blocos do programa. Classificação: ao mandar para a
+  pista abre uma tela com todos os jogos disponíveis; o jogador escolhe o jogo, a **atitude em 2 níveis** (garantir tempo ×
+  buscar o limite) e **1 ou 2 voltas rápidas** na saída. Estratégia antes da corrida: **passo antes da largada** (GP, campanha e
+  corrida rápida) com o **plano pronto dos engenheiros, que o jogador pode alterar**; na corrida o plano **só avisa** (a parada
+  só acontece se o jogador confirmar no box). O cartão do piloto **mantém o pneu atual só como informação**; o pneu só se
+  escolhe na tela do box. Mockup antes.

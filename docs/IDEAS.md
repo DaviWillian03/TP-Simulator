@@ -713,3 +713,15 @@ preparação automática e confirmação; (9) simplicidade no Android; (10) entr
   (ex.: parar na volta 12 de 14 só em casos raros); chuva com estratégias ainda mais imprevisíveis; uma IA que desafie.
 - **Sede e fábrica com prédios virtuais**: menu muito bonito com versões construídas dos prédios da equipe (sede, fábrica
   etc.), chamando a atenção para a estrutura.
+
+## Pneus do fim de semana, saídas da classificação e estratégia (usuário, 2026-11-08) — vale para todos os modos
+- **Distribuição de pneus** do fim de semana baseada na real, incluindo o que se gasta nos treinos livres
+  (referência 2026: 13 jogos secos — 8 macios, 3 médios, 2 duros; sprint: 12 — 6/4/2; dois jogos devolvidos depois de
+  cada treino; um macio guardado para o Q3).
+- **Classificação**: ao mandar o piloto para a pista, abre uma tela com todos os pneus disponíveis; nela o jogador escolhe
+  o pneu, a atitude (mais ou menos risco na volta) e quantas voltas o piloto dá naquela saída.
+- **Estratégia antes da corrida**: montar previamente a estratégia dos dois pilotos.
+- **Na corrida**: a escolha de pneu sai da gerência do piloto; o pneu só se escolhe ao mandar para o box, na tela do box
+  (junto com as outras opções que já existem lá).
+- **Animação do grid de largada** (usuário, 2026-11-08): antes da corrida, a ordem do grid aparece como na TV — da última
+  fila até a primeira, mostrando a foto de cada piloto.
