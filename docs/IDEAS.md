@@ -725,3 +725,6 @@ preparação automática e confirmação; (9) simplicidade no Android; (10) entr
   (junto com as outras opções que já existem lá).
 - **Animação do grid de largada** (usuário, 2026-11-08): antes da corrida, a ordem do grid aparece como na TV — da última
   fila até a primeira, mostrando a foto de cada piloto.
+
+## F2 e F3 jogáveis em todos os modos (usuário, 2026-11-08)
+- Item 8 fase 2 (jogar a campanha na F2/F3) e "coloque a F2 e F3 como opção pra ser jogada no grande premio tbm".
