@@ -56,6 +56,7 @@ var grids: Dictionary = {}  ## "sprint"/"race" -> Array de ids na ordem de larga
 var points: Dictionary = {}  ## id do piloto -> pontos no fim de semana
 var forecast: Array[float] = []  ## chance de chuva por dia (sexta, sábado, domingo)
 var rng := RandomNumberGenerator.new()
+var quali_times: Dictionary = {}  ## "race"/"sprint" -> {id do piloto: {time, part}} (melhor volta na classificação; grid)
 var strategy: Dictionary = {}  ## id do piloto -> plano da corrida atual (RaceStrategy; passo antes da largada, v22-2)
 var show_practice_report := false  ## a tela do fim de semana abre a folha de resultado do treino (uma vez)
 var last_practice: Dictionary = {}  ## resultado do último treino (tela de resultado, v21): {session, drivers: {id: resumo}, times}
@@ -258,6 +259,13 @@ func finish_quali(q: QualiSim) -> void:
 			tyre_alloc.after_quali(car.driver["id"], q.eliminated_in[car] < 0 and not q.crashed.has(car))
 	var order := q.standings()
 	_store(order)
+	var times := {}
+	for car in q.cars:
+		var part: int = q.eliminated_in[car] if q.eliminated_in[car] >= 0 else q.segments.size() - 1
+		var t: float = q.best[car][part]
+		if t < INF:
+			times[car.driver["id"]] = {"time": t, "part": String(q.segments[part]["name"])}
+	quali_times["sprint" if session_id() == "sprint_quali" else "race"] = times
 	grids["sprint" if session_id() == "sprint_quali" else "race"] = q.grid_ids()
 	_next()
 

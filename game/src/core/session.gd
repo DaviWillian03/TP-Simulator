@@ -23,6 +23,7 @@ const GP_SETUP_SCENE := "res://src/ui/gp_setup_screen.tscn"
 const WEEKEND_SCENE := "res://src/ui/weekend_screen.tscn"
 const QUALI_SCENE := "res://src/ui/quali_screen.tscn"
 const STRATEGY_SCENE := "res://src/ui/strategy_screen.tscn"  ## estratégia antes da largada (v22-2)
+const GRID_SCENE := "res://src/ui/grid_screen.tscn"  ## grid de largada fila a fila (v22-4)
 const TEAM_SELECT_SCENE := "res://src/ui/team_select_screen.tscn"
 const CAMPAIGN_ENTRY_SCENE := "res://src/ui/campaign_entry_screen.tscn"
 const TEAM_CREATOR_SCENE := "res://src/ui/team_creator_screen.tscn"
@@ -207,14 +208,16 @@ func _ready() -> void:
 			start_campaign.call_deferred(c)
 	elif args.has("gp"):
 		get_tree().change_scene_to_file.call_deferred(GP_SETUP_SCENE)
-	elif args.has("weekend") or args.has("practice") or args.has("quali") or args.has("play"):
+	elif args.has("weekend") or args.has("practice") or args.has("quali") or args.has("play") or args.has("grid"):
 		var opts := {"player_team": player_team, "duration_pct": duration_pct, "seed": int(args.get("seed", "1")),
 			"weather": args.get("weather", "realistic")}
 		opts.merge(sim_overrides.duplicate(), false)
 		weekend = WeekendSim.new(circuit_id, opts)
 		for i in int(args.get("skip", "0")):
 			weekend.simulate_current()
-		if args.has("practice") or args.has("quali") or args.has("play"):
+		if args.has("grid"):  # (captura) --grid abre a animação do grid da corrida atual
+			get_tree().change_scene_to_file.call_deferred(GRID_SCENE)
+		elif args.has("practice") or args.has("quali") or args.has("play"):
 			play_session.call_deferred()
 		else:
 			get_tree().change_scene_to_file.call_deferred(WEEKEND_SCENE)
@@ -399,7 +402,7 @@ func play_session() -> void:
 		get_tree().change_scene_to_file(QUALI_SCENE)
 	elif weekend.is_race(id):
 		# passo antes da largada: estratégia dos dois pilotos (todos os modos; decisão de 2026-11-08)
-		get_tree().change_scene_to_file(STRATEGY_SCENE if weekend.strategy.is_empty() and _has_player_cars() else RACE_SCENE)
+		get_tree().change_scene_to_file(STRATEGY_SCENE if weekend.strategy.is_empty() and _has_player_cars() else GRID_SCENE)
 
 
 func _has_player_cars() -> bool:
@@ -411,4 +414,13 @@ func _has_player_cars() -> bool:
 
 ## Estratégia confirmada: segue para o grid de largada e a corrida.
 func start_race_after_strategy() -> void:
+	get_tree().change_scene_to_file(GRID_SCENE)
+
+
+var pending_race: RaceSim = null  ## corrida já montada pelo grid de largada (a tela da corrida usa a mesma)
+
+
+## Fim da animação do grid (ou PULAR): a corrida começa com a simulação já montada.
+func start_race_from_grid(sim: RaceSim) -> void:
+	pending_race = sim
 	get_tree().change_scene_to_file(RACE_SCENE)

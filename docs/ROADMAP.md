@@ -123,6 +123,10 @@ Ordem de chegada dos pedidos ainda abertos (o que já foi feito está nas seçõ
     piloto 15 / sorte 20 — e engenheiros de corrida reais de 2026 nos cargos race1/race2, no mercado e na IA; mockup v21).
     Pendente: sede e fábrica com prédios virtuais.
 
+12. 2026-11-08 — ✅ **Pneus, classificação e estratégia** (v22, todos os modos): jogos de pneus reais do fim de semana
+    (13 jogos, 2 devolvidos por treino, macio do Q3), folha de saída da classificação (jogo, atitude, 1 ou 2 voltas),
+    estratégia antes da largada (planos dos engenheiros editáveis; na corrida só avisa) e grid de largada fila a fila.
+
 ## O que falta para o jogo ficar completo (revisão geral, 2026-11-02)
 Revisão de todos os pedidos (`docs/IDEAS.md` #1–#6, propostas aprovadas P1–P14, decisões e mensagens da sessão) contra o que existe.
 Já feito: corrida completa e GP (treinos, classificação, sprint), Garagem em todas as telas, box com mini-jogo, campanha com temporada,

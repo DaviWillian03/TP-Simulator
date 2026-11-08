@@ -55,7 +55,8 @@ func _ready() -> void:
 	weekend = Session.weekend if Session.weekend != null and Session.weekend.is_race(Session.weekend.session_id()) else null
 	if weekend != null:
 		# Grande Prêmio: grid da classificação, acerto dos treinos, sprint ou corrida
-		sim = weekend.make_race()
+		sim = Session.pending_race if Session.pending_race != null else weekend.make_race()
+		Session.pending_race = null
 	else:
 		var options := {"duration_pct": Session.duration_pct, "seed": Session.race_seed, "player_team": Session.player_team}
 		options.merge(Session.sim_overrides, true)

@@ -228,3 +228,14 @@ func test_estrategia_antes_da_largada_edita_e_confirma() -> void:
 	for car in sim.cars:
 		if car.driver["id"] == "albon":
 			assert_eq(car.tyre, String(screen.chosen["albon"]["stints"][0]["compound"]))
+
+
+func test_grid_mostra_da_ultima_fila_para_a_primeira_e_larga() -> void:
+	var w := _weekend_at("race")
+	var screen: Control = await _open("res://src/ui/grid_screen.tscn")
+	assert_eq(screen.row, screen.rows - 1, "começa pela última fila")
+	assert_eq(screen._cards.size(), 2, "dois pilotos por vez")
+	screen._process(screen.ROW_S + 0.01)
+	assert_eq(screen.row, screen.rows - 2)
+	assert_true(w.quali_times["race"].size() > 0, "tempos da classificação para os cartões")
+	assert_eq(screen.order[0].driver["id"], w.grids["race"][0], "a ordem é a do grid")

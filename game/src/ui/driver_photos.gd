@@ -42,6 +42,13 @@ static func avatar_texture(driver_id: String, team_color: Color) -> Texture2D:
 	return tex
 
 
+## Foto do rosto sem recorte (retrato grande do grid de largada), ou null sem foto.
+static func portrait_texture(driver_id: String) -> Texture2D:
+	if not has_photo(driver_id):
+		return null
+	return load(LOCAL_DIR + driver_id + "_face.png") as Texture2D
+
+
 ## Avatar redondo do piloto: foto se houver; senão iniciais sobre a cor da equipe.
 static func make_avatar(driver: Dictionary, team_color: Color, size: int = 40) -> Control:
 	var tex := avatar_texture(String(driver.get("id", "")), team_color)
