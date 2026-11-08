@@ -22,6 +22,7 @@ const RACE_SCENE := "res://src/ui/race_screen.tscn"
 const GP_SETUP_SCENE := "res://src/ui/gp_setup_screen.tscn"
 const WEEKEND_SCENE := "res://src/ui/weekend_screen.tscn"
 const QUALI_SCENE := "res://src/ui/quali_screen.tscn"
+const CAMPAIGN_HISTORY_SCENE := "res://src/ui/campaign_history_screen.tscn"  ## Histórico (v24)
 const CAMPAIGN_FEEDER_HUB_SCENE := "res://src/ui/campaign_feeder_hub_screen.tscn"  ## sede na F2/F3 (v23-3)
 const STRATEGY_SCENE := "res://src/ui/strategy_screen.tscn"  ## estratégia antes da largada (v22-2)
 const GRID_SCENE := "res://src/ui/grid_screen.tscn"  ## grid de largada fila a fila (v22-4)
@@ -115,6 +116,22 @@ func _ready() -> void:
 		get_tree().change_scene_to_file.call_deferred(CAMPAIGN_ENTRY_SCENE)
 	elif args.has("creator"):
 		get_tree().change_scene_to_file.call_deferred(TEAM_CREATOR_SCENE)
+	elif args.has("history"):  # (capturas) Histórico da campanha salva; --demo-history cria campeões de exemplo
+		var ch := Campaign.load_saved()
+		if ch != null:
+			campaign = ch
+			player_team = ch.player_team
+			if args.has("demo-history"):
+				for i in 2:
+					while not ch.season_over():
+						if ch.is_feeder():
+							ch._auto_f1_round()
+						else:
+							break
+					if ch.is_feeder():
+						ch.feeder_close_season()
+						ch.feeder_start_next_season()
+			open_campaign_history.call_deferred()
 	elif args.has("standings"):
 		var c2 := Campaign.load_saved()
 		if c2 != null:
@@ -303,6 +320,10 @@ func start_campaign(c: Campaign) -> void:
 
 func open_campaign_hub() -> void:
 	get_tree().change_scene_to_file(CAMPAIGN_FEEDER_HUB_SCENE if campaign != null and campaign.is_feeder() else CAMPAIGN_HUB_SCENE)
+
+
+func open_campaign_history() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_HISTORY_SCENE)
 
 
 func open_campaign_standings() -> void:

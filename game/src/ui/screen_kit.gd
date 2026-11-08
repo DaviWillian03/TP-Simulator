@@ -729,9 +729,9 @@ static func campaign_nav(layer: Control, active: String, y: float = 88.0) -> Pan
 	var nh := HBoxContainer.new()
 	nh.add_theme_constant_override("separation", 4)
 	nav.add_child(nh)
-	var items := [["Início", "hub"], ["Campeonatos", "standings"], ["Pessoal", "staff"], ["Carro", "car"], ["Design", "studio"], ["Fábrica", "factory"], ["Patrocínios", "sponsors"], ["Finanças", "finance"], ["Conselho", "council"]]
+	var items := [["Início", "hub"], ["Campeonatos", "standings"], ["Histórico", "history"], ["Pessoal", "staff"], ["Carro", "car"], ["Design", "studio"], ["Fábrica", "factory"], ["Patrocínios", "sponsors"], ["Finanças", "finance"], ["Conselho", "council"]]
 	if Session.campaign != null and Session.campaign.is_feeder():  # F2/F3: a sede reúne operação, dinheiro e pessoal
-		items = items.slice(0, 2)
+		items = items.slice(0, 3)
 	for t: Array in items:
 		var on: bool = t[1] == active
 		var b := Button.new()
@@ -750,6 +750,8 @@ static func campaign_nav(layer: Control, active: String, y: float = 88.0) -> Pan
 					b.pressed.connect(Session.open_campaign_hub)
 				"standings":
 					b.pressed.connect(Session.open_campaign_standings)
+				"history":
+					b.pressed.connect(Session.open_campaign_history)
 				"staff":
 					b.pressed.connect(Session.open_campaign_staff)
 				"car":

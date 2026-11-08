@@ -66,7 +66,13 @@ var rival_carry: Dictionary = {}  ## id da equipe da IA -> bônus herdado das te
 var _file_ratings: Dictionary = {}  ## id -> nota do carro nos dados (sem evolução)
 var _teams: Array = []
 var _drivers: Array = []
-var feeder: FeederCareer = null  ## campanha na F2/F3 (decisões de 2026-11-08); null = equipe na F1
+var feeder: FeederCareer = null
+## Histórico (decisões de 2026-11-08): números de carreira somados na campanha (só Grandes Prêmios, também os simulados),
+## números da temporada, campeões de cada ano e quem se aposentou com destaque (entra nas Lendas).
+var career_log: Dictionary = {}  ## id -> {starts, wins, podiums, poles, titles}
+var season_log: Dictionary = {}  ## id -> {wins, podiums, poles} da temporada atual
+var champions: Array = []  ## [{season, driver, driver_name, driver_team, driver_points, team, team_name, team_points, second, third, my_position}]
+var legend_adds: Array = []  ## [{id, name, nationality, years, titles, wins, poles, podiums, starts, from_campaign: true}]  ## campanha na F2/F3 (decisões de 2026-11-08); null = equipe na F1
 const F1_ENTRY_MUSD := 45.0  ## verba de entrada de quem sobe da F2 para a F1 (decisão de 2026-11-08; PROVISÓRIO)
 const AUTO_F1_NOISE_S := 0.45  ## F1 simulada com o jogador na base: sorte da corrida (s/volta de desvio no ritmo)
 const AUTO_F1_DNF := 0.07
@@ -198,10 +204,14 @@ func _auto_f1_round(skip_cat: String = "") -> void:
 			if i < table.size():
 				points[order[i]] = int(points.get(order[i], 0)) + int(table[i])
 		results[kind] = order + out
-	_record_auto_f1(points, results.get("race", []), cid, skip_cat)
+		if kind == "race":
+			results["out"] = out
+			results["pole"] = order[0] if not order.is_empty() else ""  # (estatístico: o mais rápido do dia larga na frente)
+	_record_auto_f1(points, results.get("race", []), cid, skip_cat, results.get("out", []), String(results.get("pole", "")))
 
 
-func _record_auto_f1(points: Dictionary, race: Array, circuit_id: String, skip_cat: String) -> void:
+func _record_auto_f1(points: Dictionary, race: Array, circuit_id: String, skip_cat: String, out: Array = [], pole: String = "") -> void:
+	_log_race(race, out, pole)
 	for id: String in points:
 		driver_points[id] = int(driver_points.get(id, 0)) + int(points[id])
 		var team_id := team_of(id)
@@ -266,6 +276,7 @@ func record_feeder_weekend(w: WeekendSim) -> void:
 
 ## Fim do ano na F2/F3: prêmio pela posição e acesso/rebaixamento de todas as categorias (decide_moves).
 func feeder_close_season() -> Dictionary:
+	_crown_champions()
 	var pos := feeder_position()
 	var prize := feeder.prize_for(pos)
 	feeder.cash += prize
@@ -321,6 +332,7 @@ func feeder_start_next_season() -> void:
 	team_points = {}
 	wins = {}
 	history = []
+	season_log = {}
 	day = _season_start_day()
 	catch_up()
 
@@ -346,6 +358,78 @@ func _enter_f1_from_feeder() -> void:
 	refresh_rating()
 	events._add(self, {"day": day, "cat": "calendar", "id": "promotion", "title": "%s CHEGA À F1" % name.to_upper(),
 		"text": "A equipe sobe com o carro mais fraco do grid, motor de fornecedor e US$ %d mi de verba de entrada." % int(F1_ENTRY_MUSD), "chips": []})
+
+
+## Soma um Grande Prêmio ao histórico: largadas de todos, vitória/pódio de quem terminou, pole.
+func _log_race(race: Array, out: Array, pole: String) -> void:
+	var pos := 0
+	for id: String in race:
+		var c: Dictionary = career_log.get(id, {"starts": 0, "wins": 0, "podiums": 0, "poles": 0, "titles": 0})
+		var s: Dictionary = season_log.get(id, {"wins": 0, "podiums": 0, "poles": 0})
+		c["starts"] = int(c["starts"]) + 1
+		if not out.has(id):
+			pos += 1
+			if pos == 1:
+				c["wins"] = int(c["wins"]) + 1
+				s["wins"] = int(s["wins"]) + 1
+			if pos <= 3:
+				c["podiums"] = int(c["podiums"]) + 1
+				s["podiums"] = int(s["podiums"]) + 1
+		if id == pole:
+			c["poles"] = int(c["poles"]) + 1
+			s["poles"] = int(s["poles"]) + 1
+		career_log[id] = c
+		season_log[id] = s
+
+
+## Carreira de um piloto: números até o fim de 2025 (dados) + o que a campanha somou.
+func career_of(d: Dictionary) -> Dictionary:
+	var base: Dictionary = d.get("career_2025", {})
+	var add: Dictionary = career_log.get(String(d.get("id", "")), {})
+	var out := {}
+	for k: String in ["starts", "wins", "podiums", "poles", "titles"]:
+		out[k] = int(base.get(k, d.get("titles", 0) if k == "titles" else 0)) + int(add.get(k, 0))
+	return out
+
+
+## Fim de ano: campeões de pilotos e construtores da F1 entram no histórico (e o título conta na carreira).
+func _crown_champions() -> void:
+	var drs := driver_standings()
+	var trs := team_standings()
+	if drs.is_empty() or trs.is_empty() or int(drs[0][1]) <= 0:
+		return
+	var did: String = drs[0][0]
+	var c: Dictionary = career_log.get(did, {"starts": 0, "wins": 0, "podiums": 0, "poles": 0, "titles": 0})
+	c["titles"] = int(c["titles"]) + 1
+	career_log[did] = c
+	var dname := ""
+	for d: Dictionary in _drivers:
+		if d["id"] == did:
+			dname = d["name"]
+	var name_of := func(id: String) -> String:
+		for d: Dictionary in _drivers:
+			if d["id"] == id:
+				return d["name"]
+		return id
+	champions.append({"season": season, "driver": did, "driver_name": dname, "driver_team": team_of(did), "driver_points": int(drs[0][1]),
+		"team": trs[0][0], "team_name": String(GameData.team_by_id(_teams, trs[0][0]).get("name", trs[0][0])), "team_points": int(trs[0][1]),
+		"second": name_of.call(drs[1][0]) if drs.size() > 1 else "", "third": name_of.call(drs[2][0]) if drs.size() > 2 else "",
+		"my_position": team_position(player_team) if feeder == null else 0, "my_category": category()})
+
+
+## Quem se aposentou da F1 neste fim de ano com título ou 10+ vitórias entra nas Lendas.
+func _legends_from_retirements(prev_drivers: Array, year: int) -> void:
+	for r: Dictionary in personnel.retired:
+		if int(r.get("season", 0)) != year or not bool(r.get("f1", false)):
+			continue
+		for d: Dictionary in prev_drivers:
+			if String(d.get("id", "")) == String(r.get("id", "")) or String(d["name"]) == String(r["name"]):
+				var c := career_of(d)
+				if int(c["titles"]) >= 1 or int(c["wins"]) >= 10:
+					var debut := year - int(c["starts"]) / 22
+					legend_adds.append({"id": d["id"], "name": d["name"], "nationality": d.get("nationality", ""), "years": "%d–%d" % [debut, year],
+						"titles": c["titles"], "wins": c["wins"], "poles": c["poles"], "podiums": c["podiums"], "starts": c["starts"], "from_campaign": true})
+				break
 
 
 ## Posição da equipe do jogador no campeonato de equipes da categoria.
@@ -1066,7 +1150,8 @@ func to_dict() -> Dictionary:
 		"moves": moves, "teams_grid": _teams, "freed_numbers": freed_numbers, "file_ratings": _file_ratings,
 		"livery": livery.to_dict(), "loans": loans, "advance": advance, "last_positions": last_positions,
 		"parts": parts.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (parts[k] as CarParts).to_dict(); return acc, {}),
-		"feeder": feeder.to_dict() if feeder != null else {}}
+		"feeder": feeder.to_dict() if feeder != null else {},
+		"career_log": career_log, "season_log": season_log, "champions": champions, "legend_adds": legend_adds}
 
 
 static func from_dict(d: Dictionary) -> Campaign:
@@ -1159,6 +1244,10 @@ static func from_dict(d: Dictionary) -> Campaign:
 		c.refresh_rating()
 	c.trust = float(d.get("trust", c._start_trust()))
 	c.day = int(d.get("day", c._season_start_day()))
+	c.career_log = d.get("career_log", {})
+	c.season_log = d.get("season_log", {})
+	c.champions = d.get("champions", [])
+	c.legend_adds = d.get("legend_adds", [])
 	if not (d.get("feeder", {}) as Dictionary).is_empty():
 		c.feeder = FeederCareer.from_dict(d["feeder"])
 	c.refresh_rating()
@@ -1242,6 +1331,10 @@ func record_weekend(w: WeekendSim, skip_cat: String = "") -> void:
 	if feeder != null:  # campanha na F2/F3: o fim de semana jogado é da categoria de base
 		record_feeder_weekend(w)
 		return
+	var pole := ""
+	if w.quali_times.has("race") and w.grids.has("race") and not (w.grids["race"] as Array).is_empty():
+		pole = String(w.grids["race"][0])
+	_log_race(w.results.get("race", []), w.retired.get("race", []), pole)
 	for id: String in w.points:
 		var pts := int(w.points[id])
 		driver_points[id] = int(driver_points.get(id, 0)) + pts
@@ -1420,6 +1513,7 @@ func trust_label() -> String:
 ## Encerra a temporada: premia pela posição final, paga a dívida, julga a meta.
 ## Devolve o relatório {verdict, position, points, best, goal, prize, ...}.
 func close_season() -> Dictionary:
+	_crown_champions()
 	var b: Dictionary = origins_data()["board"]
 	var f: Dictionary = origins_data()["finance"]
 	var pos := team_position(player_team)
@@ -1467,7 +1561,9 @@ func start_next_season() -> void:
 		last_positions[rows[i][0]] = i + 1
 	events.reset_for_new_season(self)  # lesionados voltam ao carro e o calendário cancelado zera antes do mercado
 	apply_moves()
+	var prev_drivers := _drivers.duplicate(true)
 	personnel.rollover(self)
+	_legends_from_retirements(prev_drivers, season)
 	if champion != "":
 		_apply_champion_number(champion)
 	for s: Series in series.values():
@@ -1503,6 +1599,7 @@ func start_next_season() -> void:
 	team_points = {}
 	wins = {}
 	history = []
+	season_log = {}
 	best_finish = 99
 	dev.rollover(my_parts().avg_effect() if my_parts() != null else 0.0)
 	for cp: CarParts in parts.values():

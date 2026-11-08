@@ -895,7 +895,7 @@ func _retire(camp: Campaign, d: Dictionary, f1: bool) -> void:
 
 func _retire_record(d: Dictionary, season: int, f1: bool) -> void:
 	var a := DriverCareer.age_in(d, season)
-	retired.append({"name": d["name"], "age": a, "season": season, "f1": f1})
+	retired.append({"name": d["name"], "age": a, "season": season, "f1": f1, "id": String(d.get("id", ""))})
 	if f1:
 		_log("%s anuncia a aposentadoria aos %d anos." % [d["name"], a])
 
