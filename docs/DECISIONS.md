@@ -578,8 +578,8 @@ Respostas do usuário:
   corrida rápida) com o **plano pronto dos engenheiros, que o jogador pode alterar**; na corrida o plano **só avisa** (a parada
   só acontece se o jogador confirmar no box). O cartão do piloto **mantém o pneu atual só como informação**; o pneu só se
   escolhe na tela do box. Mockup antes.
-- **F2/F3 jogáveis — fase 2** (respostas de 2026-11-08): F1/F2/F3 nos **três modos** (Campanha, Grande Prêmio e Corrida rápida);
-  no GP e na corrida rápida só aparecem as **etapas do calendário da categoria** (F2 14, F3 10). Carro: **nível de operação da
+- **F2/F3 jogáveis — fase 2** (respostas de 2026-11-08): F1/F2/F3 nos modos (Campanha e Grande Prêmio);
+  no GP só aparecem as **etapas do calendário da categoria** (F2 14, F3 10). Carro: **nível de operação da
   equipe** (engenharia, mecânicos, simulador; sem árvore de P&D — o chassi é o mesmo). Dinheiro: **pilotos pagantes +
   patrocínio** (quanto melhor o piloto, menos paga; orçamento de poucos milhões). Acesso: **sobe automático com verba de
   entrada** a cada subida. Fim de semana: treino simulado; **classificação (sessão única), sprint (grid invertido) e corrida
@@ -587,3 +587,5 @@ Respostas do usuário:
   (2 na F2, 3 na F3), genéricos, mercado próprio. Corrida: **sem bateria**, com **DRS** automático nas zonas. Regras reais a
   usar: F2 com dois compostos e parada obrigatória na corrida principal (sprint sem parada, 10 primeiros invertidos); F3 com
   4 jogos secos de um composto, sem parada obrigatória, sprint com os 12 primeiros invertidos. Mockup antes.
+- **Modo Corrida rápida removido** (usuário, 2026-11-08: "modo corrida rapida nem é pra existir mais"): o menu tem Campanha e
+  Grande Prêmio (Corrida Caótica segue bloqueada). "Só a corrida" continua como formato dentro do Grande Prêmio.

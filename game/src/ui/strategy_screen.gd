@@ -3,7 +3,7 @@ extends Control
 ##
 ## Os engenheiros montam até 3 planos para cada piloto; o jogador escolhe um e pode mudar as voltas (− / +) e o pneu de
 ## cada stint (toque no pneu). O estoque de jogos vem do fim de semana. Na corrida o plano só avisa: a parada acontece
-## quando o jogador confirma no box. Vale para Grande Prêmio, campanha e corrida rápida.
+## quando o jogador confirma no box. Vale para Grande Prêmio e campanha.
 
 var weekend: WeekendSim
 var ctx: Dictionary

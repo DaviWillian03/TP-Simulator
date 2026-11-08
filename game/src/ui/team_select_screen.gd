@@ -4,7 +4,7 @@ extends Control
 ## com a cor de fundo da equipe). Acrescenta o carro (nota e 4 características), chefe/motor/títulos, os dois pilotos
 ## (foto, número, idade, nota, títulos) e, na campanha, o objetivo da diretoria.
 ## Modo vem de Session.team_select_mode: "campaign" (começa a campanha), "gp" (vai à configuração do GP) ou
-## "quick" (larga a corrida rápida).
+## (o modo "corrida rápida" saiu em 2026-11-08).
 
 const TRAITS := [["straight", "Reta", "#ffd24a"], ["slow", "Curvas lentas", "#ff6a5a"], ["fast", "Curvas rápidas", "#5c93ea"], ["rel", "Confiabilidade", "#3c9d5d"]]
 
@@ -54,7 +54,7 @@ func _ready() -> void:
 	head.add_child(tag)
 	_name = UiStyle.g_label("", 40, UiStyle.G_TEXT, "black")
 	head.add_child(_name)
-	head.add_child(UiStyle.g_label({"campaign": "CAMPANHA · EQUIPE REAL", "gp": "GRANDE PRÊMIO", "quick": "CORRIDA RÁPIDA"}.get(_mode, ""), 13, Color("#c3c9d3"), "bold"))
+	head.add_child(UiStyle.g_label({"campaign": "CAMPANHA · EQUIPE REAL", "gp": "GRANDE PRÊMIO"}.get(_mode, ""), 13, Color("#c3c9d3"), "bold"))
 	ScreenKit.place(head, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 26))
 
 	_car = CarHero.new()
@@ -85,7 +85,7 @@ func _ready() -> void:
 	back.pressed.connect(_back)
 	acts.add_child(back)
 	var go := CutButton.new()
-	go.text = "LARGAR" if _mode == "quick" else "CONFIRMAR"
+	go.text = "CONFIRMAR"
 	go.custom_minimum_size = Vector2(240, UiStyle.TOUCH_MAIN + 4)
 	go.pressed.connect(_confirm)
 	acts.add_child(go)
@@ -278,8 +278,6 @@ func _confirm() -> void:
 	match _mode:
 		"campaign":
 			Session.start_campaign(Campaign.new_real(_team))
-		"quick":
-			Session.start_race()
 		_:
 			Session.open_gp_setup()
 

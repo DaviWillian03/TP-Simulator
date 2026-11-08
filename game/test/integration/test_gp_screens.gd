@@ -130,17 +130,10 @@ func test_menu_sem_equipe_e_escolha_de_equipe_troca_e_confirma() -> void:
 	Session.player_team = before
 
 
-func test_corrida_rapida_guarda_a_duracao_escolhida() -> void:
-	var before := Session.duration_pct
+func test_menu_nao_tem_corrida_rapida() -> void:
 	var screen: Control = await _open("res://src/ui/title_screen.tscn")
-	screen._open_quick_race()
-	await wait_process_frames(1)
-	var sheet: Node = screen.get_child(screen.get_child_count() - 1)
-	for b: Button in sheet.find_children("*", "Button", true, false):
-		if b.has_meta("value") and is_equal_approx(float(b.get_meta("value")), 0.5):
-			b.pressed.emit()
-	assert_almost_eq(Session.duration_pct, 0.5, 0.001)
-	Session.duration_pct = before
+	for l: Label in screen.find_children("*", "Label", true, false):
+		assert_false(l.text.to_lower().contains("corrida rápida"), "o modo saiu do jogo (2026-11-08)")
 
 
 func test_configuracao_preserva_as_escolhas_do_session() -> void:
