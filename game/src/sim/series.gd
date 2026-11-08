@@ -70,8 +70,20 @@ func assign_seats(prospects: Array) -> void:
 		if not in_cat.has(id) or team(String(seat_of[id])).is_empty():
 			seat_of.erase(id)
 	var count := {}
+	var by_team := {}
 	for id: String in seat_of:
 		count[seat_of[id]] = int(count.get(seat_of[id], 0)) + 1
+		if not by_team.has(seat_of[id]):
+			by_team[seat_of[id]] = []
+		by_team[seat_of[id]].append(id)
+	for tid: String in by_team:  # equipe que subiu da F3 (3 carros) para a F2 (2): o de menor nota fica sem vaga
+		var ids: Array = by_team[tid]
+		if ids.size() <= seats:
+			continue
+		ids.sort_custom(func(a: String, b: String) -> bool: return int(in_cat.get(a, {}).get("rating", 0)) > int(in_cat.get(b, {}).get("rating", 0)))
+		for id: String in ids.slice(seats):
+			seat_of.erase(id)
+			count[tid] = int(count[tid]) - 1
 	var free: Array = []
 	for id: String in in_cat:
 		if seat_of.has(id):
@@ -134,6 +146,17 @@ func simulate_round(f1_round: int, ratings: Dictionary, seed_value: int) -> Dict
 	var r := {"round": f1_round, "sprint": sprint[0] + sprint[1], "feature": feature[0] + feature[1], "out_s": sprint[1], "out_f": feature[1]}
 	_score(r["sprint"], sprint[1], pts_sprint)
 	_score(r["feature"], feature[1], pts_feature)
+	results.append(r)
+	return r
+
+
+## Etapa JOGADA pelo jogador (campanha na F2/F3): registra o resultado do fim de semana no lugar da simulação.
+## sprint/feature: ids na ordem de chegada (abandonos no fim); out_s/out_f: quem abandonou.
+func record_played(f1_round: int, sprint: Array, feature: Array, out_s: Array, out_f: Array) -> Dictionary:
+	var keep := func(list: Array) -> Array: return list.filter(func(id: String) -> bool: return seat_of.has(id))
+	var r := {"round": f1_round, "sprint": keep.call(sprint), "feature": keep.call(feature), "out_s": keep.call(out_s), "out_f": keep.call(out_f)}
+	_score(r["sprint"], r["out_s"], pts_sprint)
+	_score(r["feature"], r["out_f"], pts_feature)
 	results.append(r)
 	return r
 

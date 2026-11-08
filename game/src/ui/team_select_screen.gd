@@ -27,7 +27,7 @@ var _mode_label: Label
 
 func _ready() -> void:
 	_mode = Session.team_select_mode
-	_cat = Session.category if _mode == "gp" else "F1"
+	_cat = Session.category
 	_teams = GameData.category_teams(_cat)
 	_team = Session.player_team if not GameData.team_by_id(_teams, Session.player_team).is_empty() else String(_teams[0]["id"])
 	var page := ScreenKit.garage_page(self, _team)
@@ -60,10 +60,10 @@ func _ready() -> void:
 	_mode_label = UiStyle.g_label("", 13, Color("#c3c9d3"), "bold")
 	head.add_child(_mode_label)
 	ScreenKit.place(head, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 26))
-	if _mode == "gp":  # F1 / F2 / F3 (decisão de 2026-11-08)
-		var seg := ScreenKit.segmented([["F1", "F1"], ["F2", "F2"], ["F3", "F3"]], _cat, _set_category)
-		seg.custom_minimum_size = Vector2(240, 0)
-		ScreenKit.place(seg, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 30))
+	# F1 / F2 / F3 nos dois modos (decisão de 2026-11-08)
+	var seg := ScreenKit.segmented([["F1", "F1"], ["F2", "F2"], ["F3", "F3"]], _cat, _set_category)
+	seg.custom_minimum_size = Vector2(240, 0)
+	ScreenKit.place(seg, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 30))
 
 	_car = CarHero.new()
 	_layer.add_child(_car)
@@ -79,7 +79,7 @@ func _ready() -> void:
 	ScreenKit.place(_glass(_drivers), _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 306), Vector2(272, 0))
 	if _mode == "campaign":
 		_goal = _glass(VBoxContainer.new())
-		ScreenKit.place(_goal, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 26), Vector2(330, 0))
+		ScreenKit.place(_goal, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 90), Vector2(330, 0))
 
 	_strip = HBoxContainer.new()
 	_strip.add_theme_constant_override("separation", 6)
@@ -152,6 +152,8 @@ func _apply() -> void:
 	_fill_info(t)
 	_fill_drivers(drivers, col)
 	if _goal != null:
+		_goal.visible = not CategoryRules.is_feeder(_cat)
+	if _goal != null and _goal.visible:
 		var gv: VBoxContainer = _goal.get_child(0)
 		for c in gv.get_children():
 			c.queue_free()
@@ -321,11 +323,10 @@ func _fill_strip() -> void:
 
 func _confirm() -> void:
 	Session.player_team = _team
-	if _mode == "gp":
-		Session.category = _cat
+	Session.category = _cat
 	match _mode:
-		"campaign":
-			Session.start_campaign(Campaign.new_real(_team))
+		"campaign":  # F2/F3: campanha na categoria de base (a F1 corre simulada)
+			Session.start_campaign(Campaign.new_feeder(_team) if CategoryRules.is_feeder(_cat) else Campaign.new_real(_team))
 		_:
 			Session.open_gp_setup()
 

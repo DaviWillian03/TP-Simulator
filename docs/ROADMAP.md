@@ -114,8 +114,11 @@ Ordem de chegada dos pedidos ainda abertos (o que já foi feito está nas seçõ
 8. ✅ fase 1 (2026-11-04) — **Campanha em 3 categorias**: F2 e F3 correm em paralelo (simuladas: classificação, sprint com top 10
    invertido, corrida principal; 30% carro / 50% piloto / 20% acaso), tabelas novas das 3 categorias (mockup v20), acesso e
    rebaixamento das equipes no fim do ano, campeã da F2 entra na F1 com o carro mais fraco; sua equipe rebaixada → propostas da F1.
-   **Fase 2 (pendente)**: começar e jogar a campanha na F2/F3 (formato real ao vivo, equipe criada nas categorias de base,
-   verba de entrada ao subir).
+   ✅ **Fase 2 (2026-11-08, mockups v23)**: F1/F2/F3 no Grande Prêmio e na campanha (equipe real da categoria), formato
+   real ao vivo (TL simulado, classificação única, sprint invertida, principal), sem bateria e com DRS, Sede da base
+   (operação, pilotos pagantes, pessoal enxuto), F1 simulada rápida enquanto o jogador está na base, acesso automático com
+   verba de entrada (F3→F2; F2→F1 vira a campanha da F1). Pendente: equipe CRIADA começando na F2/F3; mercado de pilotos da
+   base para o jogador; F1 congelada (sem virada de pilotos) enquanto o jogador está na base.
 9. 2026-11-04 — **Aba Histórico** (Lendas, Pilotos atuais com números até 2025, Campeonatos).
 10. 2026-11-04 — **Animação de campeão**.
 11. 2026-11-04 — **Complementos da campanha** (✅ 2026-11-08: número 1 do campeão, números dos novatos, idade mínima de 18;

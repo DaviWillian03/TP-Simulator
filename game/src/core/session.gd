@@ -22,6 +22,7 @@ const RACE_SCENE := "res://src/ui/race_screen.tscn"
 const GP_SETUP_SCENE := "res://src/ui/gp_setup_screen.tscn"
 const WEEKEND_SCENE := "res://src/ui/weekend_screen.tscn"
 const QUALI_SCENE := "res://src/ui/quali_screen.tscn"
+const CAMPAIGN_FEEDER_HUB_SCENE := "res://src/ui/campaign_feeder_hub_screen.tscn"  ## sede na F2/F3 (v23-3)
 const STRATEGY_SCENE := "res://src/ui/strategy_screen.tscn"  ## estratégia antes da largada (v22-2)
 const GRID_SCENE := "res://src/ui/grid_screen.tscn"  ## grid de largada fila a fila (v22-4)
 const TEAM_SELECT_SCENE := "res://src/ui/team_select_screen.tscn"
@@ -201,7 +202,7 @@ func _ready() -> void:
 	elif args.has("hub"):
 		var c := Campaign.load_saved()
 		if args.has("fresh"):  # (captura) campanha nova da equipe --team; --event=<id> aplica um evento de exemplo
-			c = Campaign.new_real(player_team)
+			c = Campaign.new_feeder(player_team) if GameData.category_of(player_team) != "F1" else Campaign.new_real(player_team)
 		if c != null and args.has("event"):
 			var rng := RandomNumberGenerator.new()
 			rng.seed = 7
@@ -297,11 +298,11 @@ func start_campaign(c: Campaign) -> void:
 		TeamEmblems.register_custom(c.team())
 		CarModel3D._cache.erase(c.player_team)
 	c.save()
-	get_tree().change_scene_to_file(CAMPAIGN_HUB_SCENE)
+	get_tree().change_scene_to_file(CAMPAIGN_FEEDER_HUB_SCENE if c.is_feeder() else CAMPAIGN_HUB_SCENE)
 
 
 func open_campaign_hub() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_HUB_SCENE)
+	get_tree().change_scene_to_file(CAMPAIGN_FEEDER_HUB_SCENE if campaign != null and campaign.is_feeder() else CAMPAIGN_HUB_SCENE)
 
 
 func open_campaign_standings() -> void:
@@ -372,7 +373,10 @@ func play_campaign_round() -> void:
 	if r.is_empty():
 		return
 	circuit_id = r["id"]
-	weekend = WeekendSim.new(r["id"], campaign.weekend_options({"duration_pct": duration_pct}))
+	if campaign.is_feeder():  # campanha na F2/F3: o fim de semana é da categoria de base
+		weekend = WeekendSim.new(r["id"], campaign.feeder_weekend_options({"duration_pct": duration_pct}))
+	else:
+		weekend = WeekendSim.new(r["id"], campaign.weekend_options({"duration_pct": duration_pct}))
 	go_to_weekend()
 
 
@@ -382,7 +386,9 @@ func finish_campaign_weekend() -> void:
 		campaign.record_weekend(weekend)
 		campaign.save()
 	weekend = null
-	if campaign.season_over() or campaign.state != "active":
+	if campaign.is_feeder():  # a sede da F2/F3 mostra o fim de temporada
+		open_campaign_hub()
+	elif campaign.season_over() or campaign.state != "active":
 		open_campaign_report()
 	else:
 		open_campaign_hub()

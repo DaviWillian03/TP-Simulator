@@ -57,6 +57,7 @@ var grids: Dictionary = {}  ## "sprint"/"race" -> Array de ids na ordem de larga
 var points: Dictionary = {}  ## id do piloto -> pontos no fim de semana
 var forecast: Array[float] = []  ## chance de chuva por dia (sexta, sábado, domingo)
 var rng := RandomNumberGenerator.new()
+var retired: Dictionary = {}  ## "race"/"sprint" -> [ids] que abandonaram ou foram desclassificados
 var quali_times: Dictionary = {}  ## "race"/"sprint" -> {id do piloto: {time, part}} (melhor volta na classificação; grid)
 var category := "F1"  ## "F1", "F2" ou "F3" (CategoryRules; decisões de 2026-11-08)
 var strategy: Dictionary = {}  ## id do piloto -> plano da corrida atual (RaceStrategy; passo antes da largada, v22-2)
@@ -347,6 +348,7 @@ func finish_race(sim: RaceSim) -> void:
 	strategy = {}
 	var order := sim.standings()
 	_store(order)
+	retired[session_id()] = order.filter(func(c: CarState) -> bool: return c.retired or c.disqualified).map(func(c: CarState) -> String: return c.driver["id"])
 	if sim.sprint:  # depois da sprint: os jogos gastos viram usados e o de mais voltas é devolvido
 		for car in sim.cars:
 			tyre_alloc.after_sprint(car.driver["id"], car.stint_history())

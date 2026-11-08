@@ -730,6 +730,8 @@ static func campaign_nav(layer: Control, active: String, y: float = 88.0) -> Pan
 	nh.add_theme_constant_override("separation", 4)
 	nav.add_child(nh)
 	var items := [["Início", "hub"], ["Campeonatos", "standings"], ["Pessoal", "staff"], ["Carro", "car"], ["Design", "studio"], ["Fábrica", "factory"], ["Patrocínios", "sponsors"], ["Finanças", "finance"], ["Conselho", "council"]]
+	if Session.campaign != null and Session.campaign.is_feeder():  # F2/F3: a sede reúne operação, dinheiro e pessoal
+		items = items.slice(0, 2)
 	for t: Array in items:
 		var on: bool = t[1] == active
 		var b := Button.new()

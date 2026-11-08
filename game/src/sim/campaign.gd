@@ -66,6 +66,10 @@ var rival_carry: Dictionary = {}  ## id da equipe da IA -> bônus herdado das te
 var _file_ratings: Dictionary = {}  ## id -> nota do carro nos dados (sem evolução)
 var _teams: Array = []
 var _drivers: Array = []
+var feeder: FeederCareer = null  ## campanha na F2/F3 (decisões de 2026-11-08); null = equipe na F1
+const F1_ENTRY_MUSD := 45.0  ## verba de entrada de quem sobe da F2 para a F1 (decisão de 2026-11-08; PROVISÓRIO)
+const AUTO_F1_NOISE_S := 0.45  ## F1 simulada com o jogador na base: sorte da corrida (s/volta de desvio no ritmo)
+const AUTO_F1_DNF := 0.07
 
 
 static func origins_data() -> Dictionary:
@@ -99,6 +103,258 @@ static func new_real(team_id: String, options: Dictionary = {}) -> Campaign:
 	c.trust = c._start_trust()
 	c.day = c._season_start_day()
 	return c
+
+
+## Campanha na F2 ou F3 com uma equipe real da categoria (a F1 e a outra categoria correm simuladas).
+static func new_feeder(team_id: String, options: Dictionary = {}) -> Campaign:
+	var cat := GameData.category_of(team_id)
+	var c := new_real(team_id, options)  # F1 completa (IA) + base; a equipe do jogador fica no campeonato da categoria
+	var s: Series = c.series[cat]
+	c.feeder = FeederCareer.make(cat, s.team(team_id), s.teams)
+	c.budget_musd = 0.0
+	c.trust = 60.0
+	c.board_patience = 3
+	c._sync_feeder_rating()
+	c.catch_up()
+	return c
+
+
+func is_feeder() -> bool:
+	return feeder != null
+
+
+## Categoria em que a equipe do jogador corre.
+func category() -> String:
+	return feeder.cat if feeder != null else "F1"
+
+
+func my_series() -> Series:
+	return series.get(feeder.cat) if feeder != null else null
+
+
+## Pilotos da equipe do jogador na categoria de base (dados da base, com nota).
+func my_feeder_drivers() -> Array:
+	if feeder == null:
+		return []
+	var out: Array = []
+	for id: String in my_series().team_drivers(player_team):
+		var p := _prospect(id)
+		if not p.is_empty():
+			out.append(p)
+	return out
+
+
+func _sync_feeder_rating() -> void:
+	var t := my_series().team(player_team)
+	if not t.is_empty():
+		t["car_rating"] = feeder.car_rating()
+
+
+func feeder_upgrade(area: String) -> String:
+	var msg := feeder.upgrade(area)
+	if msg != "":
+		_sync_feeder_rating()
+	return msg
+
+
+## Etapas da categoria do jogador no calendário (índices da F1).
+func feeder_rounds() -> Array:
+	return my_series().rounds if feeder != null else []
+
+
+## Na F2/F3, as rodadas em que a categoria do jogador não corre passam sozinhas (F1 e a outra base simuladas).
+func catch_up() -> void:
+	if feeder == null:
+		return
+	while not season_over() and not feeder_rounds().has(round):
+		_auto_f1_round()
+
+
+## Simula a rodada atual da F1 sem o jogador, de forma estatística e rápida (ritmo de carro e piloto como na corrida,
+## mais sorte e abandonos), e registra os pontos. A corrida completa levaria segundos por rodada no celular.
+func _auto_f1_round(skip_cat: String = "") -> void:
+	var cid := String(next_round()["id"])
+	var track := TrackModel.new(GameData.circuit(cid))
+	var gp_teams := CarForm.apply(teams_for_gp(cid), cid, season * 100 + round, 1.0, CarParts.profile_of(GameData.circuit(cid)))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("autof1|%d|%d" % [season, round])
+	var points := {}
+	var results := {}
+	for kind: String in (["sprint", "race"] if regs.is_sprint(cid) else ["race"]):
+		var score := {}
+		var out: Array = []
+		for d: Dictionary in _drivers:
+			var t := GameData.team_by_id(gp_teams, String(d["team"]))
+			if t.is_empty():
+				continue
+			if rng.randf() < AUTO_F1_DNF * (0.5 if kind == "sprint" else 1.0):
+				out.append(d["id"])
+				continue
+			score[d["id"]] = RaceSim.base_lap_time(track, t, d) + rng.randfn(0.0, AUTO_F1_NOISE_S)
+		var order: Array = score.keys()
+		order.sort_custom(func(a: String, b: String) -> bool: return float(score[a]) < float(score[b]))
+		var table: Array = regs.points_sprint if kind == "sprint" else regs.points_race
+		for i in order.size():
+			if i < table.size():
+				points[order[i]] = int(points.get(order[i], 0)) + int(table[i])
+		results[kind] = order + out
+	_record_auto_f1(points, results.get("race", []), cid, skip_cat)
+
+
+func _record_auto_f1(points: Dictionary, race: Array, circuit_id: String, skip_cat: String) -> void:
+	for id: String in points:
+		driver_points[id] = int(driver_points.get(id, 0)) + int(points[id])
+		var team_id := team_of(id)
+		team_points[team_id] = int(team_points.get(team_id, 0)) + int(points[id])
+	if not race.is_empty():
+		wins[race[0]] = int(wins.get(race[0], 0)) + 1
+	history.append({"round": round + 1, "circuit": circuit_id, "results": race})
+	for cp: CarParts in parts.values():
+		cp.after_race(self)
+	_run_series(round, skip_cat)
+	round += 1
+	var nd := round_day(round - 1) + 1
+	_dev_tick(nd - day, nd)
+	day = nd
+	_skip_cancelled()
+
+
+## Opções do fim de semana da categoria de base do jogador: equipes e pilotos do campeonato atual.
+func feeder_weekend_options(extra: Dictionary = {}) -> Dictionary:
+	var s := my_series()
+	var teams: Array = []
+	for t: Dictionary in s.teams:
+		var c := t.duplicate(true)
+		c["category"] = feeder.cat
+		if c["id"] == player_team:
+			c.merge(feeder.team_effects(), true)
+		teams.append(c)
+	var drivers: Array = []
+	var n := 1
+	for t: Dictionary in teams:
+		for id: String in s.team_drivers(t["id"]):
+			var p := _prospect(id)
+			if p.is_empty():
+				continue
+			drivers.append({"id": id, "name": p["name"], "code": driver_code(String(p["name"])), "number": n, "team": t["id"],
+				"nationality": p.get("nationality", ""), "rating": int(p.get("rating", 60)), "birth": p.get("birth", ""), "category": feeder.cat})
+			n += 1
+	var mine: Array = drivers.filter(func(d: Dictionary) -> bool: return d["team"] == player_team).map(func(d: Dictionary) -> String: return d["id"])
+	for t: Dictionary in teams:
+		if t["id"] == player_team:
+			t["practice_skills"] = feeder.practice_skills(mine)
+	var o := {"category": feeder.cat, "teams": teams, "drivers": drivers, "player_team": player_team, "campaign": true,
+		"seed": season * 100 + round + 1}
+	o.merge(extra, true)
+	return o
+
+
+## Fim do fim de semana jogado na F2/F3: resultado no campeonato da categoria, contas da etapa, a F1 da mesma rodada
+## (simulada) e as rodadas seguintes sem a categoria do jogador.
+func record_feeder_weekend(w: WeekendSim) -> void:
+	var s := my_series()
+	var sprint: Array = w.results.get("sprint", [])
+	var feature: Array = w.results.get("race", [])
+	s.record_played(round, sprint, feature, w.retired.get("sprint", []), w.retired.get("race", []))
+	var bal := feeder.settle_round(my_feeder_drivers(), feeder_rounds().size())
+	cash_log.append({"r": round + 1, "cash": feeder.cash, "bal": bal})
+	_auto_f1_round(feeder.cat)
+	catch_up()
+	if feeder.cash < 0.0:
+		state = "bankrupt"
+
+
+## Fim do ano na F2/F3: prêmio pela posição e acesso/rebaixamento de todas as categorias (decide_moves).
+func feeder_close_season() -> Dictionary:
+	var pos := feeder_position()
+	var prize := feeder.prize_for(pos)
+	feeder.cash += prize
+	decide_moves()
+	var up := String(moves.get("up_f2" if feeder.cat == "F3" else "up_f1", "")) == player_team
+	var down := feeder.cat == "F2" and String(moves.get("down_f3", "")) == player_team
+	var report := {"season": season, "category": feeder.cat, "position": pos, "points": _feeder_points(), "prize": prize,
+		"cash": feeder.cash, "promoted": up, "relegated": down, "verdict": "promoted" if up else ("relegated" if down else "stay")}
+	seasons.append(report)
+	return report
+
+
+func _feeder_points() -> int:
+	for row: Array in my_series().team_standings():
+		if row[0] == player_team:
+			return int(row[1])
+	return 0
+
+
+## Começa o ano seguinte na F2/F3: aplica as subidas/descidas (a equipe do jogador muda de categoria se for o caso),
+## refaz os grids da base e zera os campeonatos. A F1 do ano seguinte continua simulada.
+func feeder_start_next_season() -> void:
+	var was := feeder.cat
+	if was == "F2" and String(moves.get("up_f1", "")) == player_team:
+		_enter_f1_from_feeder()
+		return
+	apply_moves()
+	for cat: String in series:
+		if not (series[cat] as Series).team(player_team).is_empty():
+			feeder.cat = cat
+	if feeder.cat != was:
+		var entry := float(FeederCareer.ECON[was]["entry_up"])
+		if feeder.cat == "F2" and was == "F3":
+			feeder.cash += entry  # verba de entrada ao subir (decisão de 2026-11-08)
+			feeder.log.append("Subimos para a F2: verba de entrada de US$ %s mi." % String.num(entry, 1).replace(".", ","))
+		feeder.base_rating = float(my_series().team(player_team)["car_rating"]) - feeder.level_bonus()
+		var roles := feeder.staff_roles()
+		for role: String in roles:  # F3 → F2: um engenheiro a menos; F2 → F3: contrata o terceiro
+			if not feeder.staff.has(role):
+				var p := Personnel.generic_person("%s|%s|%s|%d" % [feeder.cat, player_team, role, season])
+				p["salary"] = feeder.salary_for(int(p["skill"]))
+				feeder.staff[role] = p
+		for k: String in feeder.staff.keys():
+			if not roles.has(k):
+				feeder.staff.erase(k)
+	for s: Series in series.values():
+		s.reset_season()
+		s.assign_seats(personnel.feeder())
+	_sync_feeder_rating()
+	season += 1
+	round = 0
+	driver_points = {}
+	team_points = {}
+	wins = {}
+	history = []
+	day = _season_start_day()
+	catch_up()
+
+
+## Campeã da F2: a equipe do jogador entra na F1 (carro mais fraco, motor de fornecedor, os pilotos de contrato) e a
+## campanha passa a ser a da F1, com o caixa da base + a verba de entrada.
+func _enter_f1_from_feeder() -> void:
+	var carry := feeder.cash
+	var name := String(my_series().team(player_team).get("name", ""))
+	feeder = null
+	budget_musd = carry + F1_ENTRY_MUSD
+	start_next_season()  # aplica as subidas/descidas (a equipe entra no grid da F1) e vira o ano como na F1
+	factory_level = 1
+	dev.set_all_levels(1)
+	base_rating = float(team().get("car_rating", 75.0))
+	livery = Livery.new()
+	livery.setup(team())
+	objective = {"id": "board"}
+	trust = 60.0
+	board_patience = 3
+	cash_log = [{"r": 0, "cash": budget_musd}]
+	sync_factory_level()
+	refresh_rating()
+	events._add(self, {"day": day, "cat": "calendar", "id": "promotion", "title": "%s CHEGA À F1" % name.to_upper(),
+		"text": "A equipe sobe com o carro mais fraco do grid, motor de fornecedor e US$ %d mi de verba de entrada." % int(F1_ENTRY_MUSD), "chips": []})
+
+
+## Posição da equipe do jogador no campeonato de equipes da categoria.
+func feeder_position() -> int:
+	var rows := my_series().team_standings()
+	for i in rows.size():
+		if rows[i][0] == player_team:
+			return i + 1
+	return rows.size()
 
 
 ## Criar a própria equipe. spec: origin, name, short, color, color2, shape, country, engine
@@ -360,9 +616,11 @@ func _prospect_ratings() -> Dictionary:
 
 
 ## Depois de cada GP da F1: as categorias de base que correm nesse fim de semana também correm.
-func _run_series(f1_round: int) -> void:
+func _run_series(f1_round: int, skip_cat: String = "") -> void:
 	var ratings := _prospect_ratings()
 	for s: Series in series.values():
+		if s.cat == skip_cat:
+			continue  # campanha na F2/F3: a etapa da categoria do jogador foi jogada
 		if s.runs_on(f1_round):
 			s.simulate_round(f1_round, ratings, season * 100 + int(dev.seed_base))
 
@@ -736,9 +994,10 @@ func team_driver_ids(team_id: String) -> Array:
 func _dev_tick(n: int, last_day: int = -1) -> void:
 	if n > 0:
 		var end_day := day if last_day < 0 else last_day
-		for i in n:
-			events.tick_day(self, end_day - n + 1 + i)
-		dev.tick(self, n)
+		if feeder == null:  # eventos e P&D são da equipe da F1 do jogador
+			for i in n:
+				events.tick_day(self, end_day - n + 1 + i)
+			dev.tick(self, n)
 		for i in n:
 			for cp: CarParts in parts.values():
 				cp.day_step(self)
@@ -804,7 +1063,8 @@ func to_dict() -> Dictionary:
 		"series": series.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (series[k] as Series).to_dict(); return acc, {}),
 		"moves": moves, "teams_grid": _teams, "freed_numbers": freed_numbers, "file_ratings": _file_ratings,
 		"livery": livery.to_dict(), "loans": loans, "advance": advance, "last_positions": last_positions,
-		"parts": parts.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (parts[k] as CarParts).to_dict(); return acc, {})}
+		"parts": parts.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (parts[k] as CarParts).to_dict(); return acc, {}),
+		"feeder": feeder.to_dict() if feeder != null else {}}
 
 
 static func from_dict(d: Dictionary) -> Campaign:
@@ -897,6 +1157,8 @@ static func from_dict(d: Dictionary) -> Campaign:
 		c.refresh_rating()
 	c.trust = float(d.get("trust", c._start_trust()))
 	c.day = int(d.get("day", c._season_start_day()))
+	if not (d.get("feeder", {}) as Dictionary).is_empty():
+		c.feeder = FeederCareer.from_dict(d["feeder"])
 	c.refresh_rating()
 	return c
 
@@ -974,7 +1236,10 @@ func teams_for_gp(circuit_id: String) -> Array:
 
 ## Soma os pontos de um fim de semana concluído, paga as contas da rodada, ajusta a confiança da
 ## diretoria e avança para a próxima rodada (o dia vai para o dia seguinte à corrida).
-func record_weekend(w: WeekendSim) -> void:
+func record_weekend(w: WeekendSim, skip_cat: String = "") -> void:
+	if feeder != null:  # campanha na F2/F3: o fim de semana jogado é da categoria de base
+		record_feeder_weekend(w)
+		return
 	for id: String in w.points:
 		var pts := int(w.points[id])
 		driver_points[id] = int(driver_points.get(id, 0)) + pts
@@ -990,7 +1255,7 @@ func record_weekend(w: WeekendSim) -> void:
 	history.append({"round": round + 1, "circuit": w.circuit.get("id", ""), "results": race})
 	for cp: CarParts in parts.values():  # desgaste das peças e revelação dos upgrades estreados nesta corrida
 		cp.after_race(self)
-	_run_series(round)
+	_run_series(round, skip_cat)
 	var podiums := 0
 	for i in mini(3, race.size()):
 		if team_of(race[i]) == player_team:

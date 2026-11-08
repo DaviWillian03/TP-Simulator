@@ -37,6 +37,7 @@ func _ready() -> void:
 	titles.add_child(UiStyle.g_label("CAMPEONATOS", 30, UiStyle.G_TEXT, "black"))
 	head.add_child(titles)
 	ScreenKit.place(head, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 20))
+	_cat = campaign.category()  # campanha na F2/F3: abre na categoria da equipe
 	for a: String in OS.get_cmdline_user_args():  # (capturas) --cat=F2 --kind=teams
 		if a.begins_with("--cat="):
 			_cat = a.trim_prefix("--cat=")
