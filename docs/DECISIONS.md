@@ -566,3 +566,7 @@ Respostas do usuário:
   parou (equipes conservadoras cobrem mais) ou tenta o undercut em quem a segura há 2+ voltas (as que apostam tentam mais).
   Nas últimas voltas não para por pneu gasto (salvo pneu no limite) e no safety car do fim só troca quem está com pneu muito
   gasto. Item 6 da fila: a parte da IA está feita; os planos táticos do JOGADOR (tela) continuam pendentes.
+- **Treinos sempre simulados + engenheiros de corrida** (respostas de 2026-11-08): o treino livre não é mais jogado ao vivo; o
+  jogador escolhe os programas e o acerto é sorteado pela capacidade — **diretor (engenharia de pista) 35%, engenheiro de
+  corrida 30%, piloto 15%, sorte 20%**. Engenheiros de corrida: 1 por carro nas 11 equipes, **nomes reais quando houver fonte**
+  (senão genéricos), com nota, salário e contrato no mercado de Pessoal (a IA também troca). Mockup antes.
