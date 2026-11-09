@@ -64,6 +64,13 @@ P = {
 }
 
 
+def flag(cid, h=26):
+    import json as _j
+    cc = _j.loads((B.ROOT / f"game/data/circuits/{cid}.json").read_text(encoding="utf-8"))["country_code"]
+    return (f'<img src="../../game/assets/flags/{cc}.svg" style="height:{h}px;width:{h * 4 // 3}px;border-radius:4px;object-fit:cover;'
+            f'box-shadow:0 0 0 2px rgba(0,0,0,.35);flex:none">')
+
+
 def g(n, s=20, c="currentColor", w=2.2):
     return (f'<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="none" stroke="{c}" stroke-width="{w}" stroke-linecap="round" '
             f'stroke-linejoin="round" style="flex:none">{P[n]}</svg>')
@@ -267,7 +274,7 @@ def gp():
         cc += (f'<div class="tile" style="left:{x}px;top:{y}px;width:{w}px;height:{h}px;{"box-shadow:0 0 0 4px #fff,0 16px 40px rgba(0,0,0,.5)" if on else ""}">'
                f'<img src="{IMG.format(cid)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.5)"><div class="shade"></div>'
                f'<span style="position:absolute;left:14px;top:14px;width:10px;height:40px;border-radius:5px;background:{col}"></span>'
-               f'<div style="position:absolute;left:16px;bottom:16px"><div class="big" style="font-size:26px">{n.upper()}</div>'
+               f'<div style="position:absolute;left:16px;bottom:16px">{flag(cid, 24)}<div class="big" style="font-size:26px;margin-top:6px">{n.upper()}</div>'
                f'<div style="display:flex;gap:6px;margin-top:8px">{g("rain" if on else "sun", 18, "#9fd2ff" if on else "#F5C542")}'
                f'{tyre(*SOFT, 22)}{tyre(*MEDI, 22)}{tyre(*HARD, 22)}</div></div></div>')
     teams = ["mercedes", "ferrari", "mclaren", "redbull", "williams", "astonmartin", "alpine", "haas", "audi", "racingbulls", "cadillac"]
@@ -304,7 +311,7 @@ def fds():
                f'<div style="font-size:14px;font-weight:800;margin-top:6px;color:{"#4b5260" if on else "#a8b0bd"}">{sub}</div></div></div>')
     hero = (f'<div class="tile" style="left:40px;top:96px;width:800px;height:288px">'
             f'<img src="{IMG.format("silverstone")}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"><div class="shade"></div>'
-            f'<div style="position:absolute;left:24px;bottom:22px"><span class="chip">{g("flag", 16)}RODADA 9</span><div class="big" style="font-size:52px;margin-top:8px">GRÃ-BRETANHA</div></div>'
+            f'<div style="position:absolute;left:24px;bottom:22px"><span class="chip">{g("flag", 16)}RODADA 9</span><div style="display:flex;align-items:center;gap:14px;margin-top:8px">{flag("silverstone", 40)}<div class="big" style="font-size:52px">GRÃ-BRETANHA</div></div></div>'
             f'<div style="position:absolute;right:22px;bottom:22px;display:flex;gap:10px">'
             + "".join(f'<span style="width:62px;height:76px;border-radius:14px;background:rgba(10,12,16,.75);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:900;font-size:14px">{g(ic, 24, cl)}{t}</span>'
                       for ic, cl, t in [("sun", "#F5C542", "sex"), ("rain", "#9fd2ff", "sáb"), ("rain", "#9fd2ff", "dom")])
@@ -330,7 +337,7 @@ def campanha():
            f'<img src="{IMG.format("silverstone")}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"><div class="shade"></div>'
            f'<div class="hd"><span class="bdg" style="background:#E10600">{g("flag", 18, "#fff")}</span>PRÓXIMO GP</div>'
            f'<span class="chip" style="position:absolute;right:16px;top:14px;background:#E10600">{g("timer", 16, "#fff")}1 DIA</span>'
-           f'<div style="position:absolute;left:20px;bottom:18px"><div class="big" style="font-size:44px">GRÃ-BRETANHA</div>'
+           f'<div style="position:absolute;left:20px;bottom:18px"><div style="display:flex;align-items:center;gap:12px">{flag("silverstone", 30)}<div class="big" style="font-size:36px">GRÃ-BRETANHA</div></div>'
            f'<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="chip">{g("cal", 16)}05 jul</span><span class="chip">{g("rain", 16, "#9fd2ff")}35%</span>'
            f'<span class="chip" style="background:#A66BFF">SPRINT</span></div></div>'
            f'<div style="position:absolute;right:18px;bottom:18px;display:flex;gap:6px">{ring(.6, 58, "#4C8DFF", g("wind", 20))}{ring(.25, 58, "#F5C542", g("bolt", 20))}{ring(.85, 58, "#2FD38A", "P1")}</div></div>')
@@ -410,7 +417,7 @@ def calendario():
                   f'<div style="position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(transparent,#171a21)"></div></div>'
                   f'<div style="position:absolute;left:14px;top:14px;display:flex;gap:6px"><span class="chip" style="background:rgba(10,12,16,.8)">{9 + i}</span>'
                   f'{"<span class=chip style=background:#A66BFF>SPRINT</span>" if spr else ""}</div>'
-                  f'<div style="position:absolute;left:14px;right:14px;top:54%"><div class="big" style="font-size:22px">{n}</div>'
+                  f'<div style="position:absolute;left:14px;right:14px;top:50%">{flag(cid, 30)}<div class="big" style="font-size:22px;margin-top:6px">{n}</div>'
                   f'<div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-weight:800;font-size:14px;color:#a8b0bd">{g("cal", 16)}{d}</div>'
                   f'<div style="display:flex;gap:6px;margin-top:12px">{tyre(*SOFT, 28)}{tyre(*MEDI, 28)}{tyre(*HARD, 28)}</div>'
                   f'<div style="display:flex;align-items:center;gap:8px;margin-top:12px"><span style="width:34px;height:34px;border-radius:10px;background:{ac};display:grid;place-items:center">{g("car", 20, "#11141a")}</span>'

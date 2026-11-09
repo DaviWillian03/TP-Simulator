@@ -615,3 +615,5 @@ Respostas do usuário:
   pneus do fim de semana, afinidade). Recurso novo: **Sede com instalações** que evoluem por níveis (item 11 do roadmap).
   Alcance: **mockups do jogo todo de uma vez** (tela inicial, GP, fim de semana e campanha). Mais símbolos, menos escrita,
   uma cor de destaque por seção.
+- **2026-11-09 — Mockups v26 aprovados (todos).** Pedido extra: a **bandeira do país** aparece em todo cartão de pista
+  (próximo GP, agenda, Grande Prêmio, fim de semana). Pista 3D dos cartões: vista do próprio cenário do jogo.
