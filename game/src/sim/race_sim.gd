@@ -197,6 +197,8 @@ func _setup_grid(grid_ids: Array = []) -> void:
 		car.pit_compound = dry[dry.size() - 1] if car.tyre != dry[dry.size() - 1] else dry[0]
 		car.ai_pit_wear = rng.randf_range(0.66, 0.76)
 		StrategyAI.make_plan(self, car, int(options_seed))
+		if car.is_player:
+			_plan_base_mission(car)
 		car.lap_noise = rng.randfn(0.0, LAP_NOISE_SIGMA)
 
 
@@ -369,10 +371,39 @@ func cancel_pit(car: CarState) -> void:
 
 func set_pace_mode(car: CarState, mode: CarState.PaceMode) -> void:
 	car.pace_mode = mode
+	car.manual_modes = true
 
 
 func set_energy_mode(car: CarState, mode: CarState.EnergyMode) -> void:
 	car.energy_mode = mode
+	car.manual_modes = true
+
+
+## Missão de base do stint (o piloto passa a decidir ritmo e bateria por ela).
+func set_mission_base(car: CarState, kind: String, until_lap: int = 0) -> void:
+	car.mission_base = Missions.base_mission(kind, until_lap)
+	car.manual_modes = false
+	Missions.drive(self, car)
+
+
+## Missão curta para o jogador. O piloto pode discordar pelo rádio (aceitar a sugestão dele ou insistir).
+func give_short_mission(car: CarState, kind: String, laps: int, target := "", ask_driver := true) -> void:
+	var m := Missions.short_mission(kind, car.laps_done, laps, target)
+	car.manual_modes = false
+	if ask_driver and radio.mission_objection(car, m):
+		return
+	car.mission_short = m
+	Missions.drive(self, car)
+
+
+## Missão de base dos carros do jogador pelo plano: poupar pneus até a próxima parada planejada (ou ritmo normal).
+func _plan_base_mission(car: CarState) -> void:
+	if car.player_plan.is_empty():
+		if car.mission_base.is_empty():
+			car.mission_base = Missions.base_mission("normal")
+		return
+	var next := player_plan_next(car)
+	car.mission_base = Missions.base_mission("save", int(next["lap"])) if not next.is_empty() else Missions.base_mission("save", total_laps)
 
 
 ## Ordem de equipe. "Não brigar" vale para a dupla; "deixar passar" é para este carro abrir
@@ -430,9 +461,12 @@ func step() -> void:
 	_mode_timer -= DT
 	if _mode_timer <= 0.0:
 		_mode_timer = MODE_UPDATE_S
-		for car in cars:
-			if not car.is_player and not car.finished and not car.retired:
-				StrategyAI.update_modes(self, car)
+		for car in cars:  # missões (2026-11-09): o piloto dosa ritmo e bateria; a IA escolhe as próprias missões
+			if car.finished or car.retired or car.manual_modes:
+				continue
+			if not car.is_player:
+				Missions.ai_choose(self, car)
+			Missions.drive(self, car)
 
 	var order := _running_order()
 	_update_gaps(order)
@@ -725,6 +759,9 @@ func _service_car(car: CarState) -> void:
 	if not car.compounds_used.has(car.tyre):
 		car.compounds_used.append(car.tyre)
 	car.pit_stops += 1
+	if car.is_player:  # stint novo: a base volta a ser poupar até a próxima parada do plano
+		car.mission_short = {}
+		_plan_base_mission(car)
 	car.last_pit_lap = car.laps_done
 	control.on_pit_stop(car)
 	pit_stop.emit(car, car.tyre, car.pit_stationary_s)

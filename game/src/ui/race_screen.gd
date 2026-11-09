@@ -165,6 +165,7 @@ func _build_ui() -> void:
 			p.setup(sim, car)
 			p.pit_pressed.connect(_open_pit)
 			p.orders_pressed.connect(_open_orders)
+			p.mission_pressed.connect(_open_missions)
 			p.focus_pressed.connect(_on_driver_pressed)  # tocar no cartão segue o piloto, como a linha da torre
 			_car_panels.append(p)
 
@@ -305,6 +306,11 @@ func _connect_sim_signals() -> void:
 	sim.overtake.connect(_on_overtake)
 	sim.pit_stop.connect(_on_pit_stop)
 	sim.plan_stop_due.connect(_on_plan_due)
+	if Session.debug_ui == "missions":  # (captura) --ui=missions abre a folha de missões do primeiro piloto
+		for c in sim.cars:
+			if c.is_player:
+				_open_missions.call_deferred(c)
+				break
 	if Session.debug_ui.begins_with("champ"):  # (captura) --ui=champ (pista) / --ui=champ-poster (pôster) / --ui=champ-teams
 		var champ_car: CarState = sim.cars[0]
 		for c in sim.cars:
@@ -612,6 +618,173 @@ func _on_driver_pressed(car: CarState) -> void:
 
 
 # --- ordens de equipe (popover do botão EQUIPE) ---------------------------------------
+
+# --- missões (mockup v25-2) ---------------------------------------------------------------------------
+
+const MISSION_TILES := [["save", "tyre", "Fazer o pneu chegar até a volta escolhida.", "pneu −35% · ritmo −0,3 s · risco baixo"],
+	["attack", "arrow", "Pressionar o carro da frente: bateria nas retas, freadas no limite.", "pneu +40% · ritmo +0,3 s · risco alto"],
+	["defend", "shield", "Segurar o carro de trás: bateria guardada para as zonas de ultrapassagem.", "pneu +15% · risco médio"],
+	["push", "bolt", "Voltas fortes no ar limpo antes (ou logo depois) da parada.", "pneu +30% · ritmo +0,4 s"],
+	["safe", "check", "Sem riscos: proteger o carro, o pneu no fim ou os pontos.", "pneu −20% · risco mínimo"]]
+var _mission_ui := {}
+
+
+func _open_missions(car: CarState) -> void:
+	if car.finished or car.retired:
+		return
+	var was_paused := paused
+	paused = true  # a corrida espera a decisão
+	var sh := ScreenKit.sheet("Missões de %s" % _surname(car).capitalize(), 1120)
+	var root: Control = sh["root"]
+	root.tree_exited.connect(func() -> void: paused = was_paused)
+	var body: VBoxContainer = sh["body"]
+	var c: Dictionary = sim.tyres.compounds[car.tyre]
+	body.add_child(UiStyle.g_caption("Volta %d de %d · P%d · %s %dv" % [car.laps_done + 1, sim.total_laps, sim.standings().find(car) + 1, c["name"], car.tyre_laps]))
+	var base_kind := String(car.mission_base.get("kind", "save"))
+	var until := int(car.mission_base.get("until", 0))
+	if until <= car.laps_done:
+		var nxt := sim.player_plan_next(car)
+		until = int(nxt["lap"]) if not nxt.is_empty() else sim.total_laps
+	_mission_ui = {"car": car, "kind": base_kind if base_kind in ["save", "attack", "defend", "push", "safe"] else "save", "until": until,
+		"short": "attack", "laps": 3, "root": root}
+	body.add_child(UiStyle.g_caption("Missão de base · o stint inteiro"))
+	var tiles := HBoxContainer.new()
+	tiles.add_theme_constant_override("separation", 10)
+	var group := ButtonGroup.new()
+	for t: Array in MISSION_TILES:
+		tiles.add_child(_mission_tile(t, group))
+	body.add_child(tiles)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var lbl := UiStyle.g_label("Poupar até a volta", UiStyle.FS_SMALL, Color("#c3c9d3"), "bold")
+	lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(lbl)
+	var minus := ScreenKit.light_button("−")
+	minus.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN, UiStyle.TOUCH_MIN)
+	row.add_child(minus)
+	var lap_l := UiStyle.g_label(str(until), 22, UiStyle.G_TEXT, "black")
+	lap_l.custom_minimum_size = Vector2(44, 0)
+	lap_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lap_l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(lap_l)
+	var plus := ScreenKit.light_button("+")
+	plus.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN, UiStyle.TOUCH_MIN)
+	row.add_child(plus)
+	var calc := UiStyle.g_label("", UiStyle.FS_SMALL, UiStyle.G_UP, "bold")
+	calc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	calc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(calc)
+	var set_base := CutButton.new()
+	set_base.text = "DEFINIR BASE"
+	set_base.custom_minimum_size = Vector2(200, UiStyle.TOUCH_MIN + 6)
+	row.add_child(set_base)
+	body.add_child(row)
+	var refresh_calc := func() -> void:
+		lap_l.text = str(int(_mission_ui["until"]))
+		var per := Missions.wear_per_lap(sim, car, CarState.PaceMode.CONSERVE)
+		var left := 1.0 - (car.tyre_wear + per * maxi(int(_mission_ui["until"]) - car.laps_done, 0))
+		calc.text = "o engenheiro calcula: pneu chega com %d%% na volta %d" % [maxi(roundi(left * 100.0), 0), int(_mission_ui["until"])]
+		calc.add_theme_color_override("font_color", UiStyle.G_UP if left >= 1.0 - Missions.WEAR_LIMIT else UiStyle.G_DOWN)
+		var on: bool = _mission_ui["kind"] == "save"
+		for n: Control in [lbl, minus, lap_l, plus, calc]:
+			n.modulate.a = 1.0 if on else 0.3
+	minus.pressed.connect(func() -> void:
+		_mission_ui["until"] = maxi(car.laps_done + 1, int(_mission_ui["until"]) - 1)
+		refresh_calc.call())
+	plus.pressed.connect(func() -> void:
+		_mission_ui["until"] = mini(sim.total_laps, int(_mission_ui["until"]) + 1)
+		refresh_calc.call())
+	_mission_ui["refresh"] = refresh_calc
+	refresh_calc.call()
+	set_base.pressed.connect(func() -> void:
+		sim.set_mission_base(car, String(_mission_ui["kind"]), int(_mission_ui["until"]))
+		_toasts.push("%s: nova missão de base — %s." % [_surname(car), Missions.title(car.mission_base).to_lower()])
+		root.queue_free())
+	body.add_child(UiStyle.g_caption("Missão curta · termina sozinha e volta à base"))
+	var srow := HBoxContainer.new()
+	srow.add_theme_constant_override("separation", 10)
+	var order := sim.standings()
+	var idx := order.find(car)
+	var ahead: String = order[idx - 1].code() if idx > 0 else ""
+	var behind: String = order[idx + 1].code() if idx < order.size() - 1 else ""
+	var kinds: Array = []
+	if ahead != "":
+		kinds.append(["attack", "Atacar %s (P%d)" % [ahead, idx]])
+	if behind != "":
+		kinds.append(["defend", "Defender de %s (P%d)" % [behind, idx + 2]])
+	kinds.append(["push", "Undercut / abrir gap"])
+	_mission_ui["short"] = kinds[0][0]
+	_mission_ui["targets"] = {"attack": ahead, "defend": behind, "push": ""}
+	srow.add_child(ScreenKit.segmented(kinds, kinds[0][0], func(v: String) -> void: _mission_ui["short"] = v))
+	var to_stop := sim.player_plan_next(car)
+	var till_stop := maxi(int(to_stop.get("lap", sim.total_laps)) - car.laps_done, 1)
+	srow.add_child(ScreenKit.segmented([[2, "2 voltas"], [3, "3 voltas"], [5, "5 voltas"], [till_stop, "até a parada"]], 3, func(v: int) -> void: _mission_ui["laps"] = v))
+	var go := CutButton.new()
+	go.text = "DAR MISSÃO"
+	go.custom_minimum_size = Vector2(200, UiStyle.TOUCH_MAIN)
+	go.size_flags_horizontal = Control.SIZE_SHRINK_END
+	go.pressed.connect(func() -> void:
+		var k := String(_mission_ui["short"])
+		sim.give_short_mission(car, k, int(_mission_ui["laps"]), String(_mission_ui["targets"].get(k, "")))
+		if not car.mission_short.is_empty():
+			_toasts.push("%s: %s." % [_surname(car), Missions.title(car.mission_short).to_lower()], "hot")
+		root.queue_free())
+	srow.add_child(go)
+	body.add_child(srow)
+	_layer.add_child(root)
+
+
+func _mission_tile(t: Array, group: ButtonGroup) -> Button:
+	var b := Button.new()
+	b.toggle_mode = true
+	b.button_group = group
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(0, 150)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for st: String in ["normal", "hover"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE, 16, 0, 0))
+	for st: String in ["pressed", "hover_pressed"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT, 16, 0, 0))
+	var v := VBoxContainer.new()
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_theme_constant_override("separation", 4)
+	b.add_child(v)
+	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	v.offset_left = 12
+	v.offset_right = -12
+	v.offset_top = 12
+	var h := HBoxContainer.new()
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_theme_constant_override("separation", 8)
+	var ic := ScreenKit.icon(t[1], 20, UiStyle.G_TEXT)
+	h.add_child(ic)
+	var title := UiStyle.g_label(String(Missions.NAMES[t[0]]), UiStyle.FS_BODY, UiStyle.G_TEXT, "black")
+	h.add_child(title)
+	v.add_child(h)
+	var d := UiStyle.g_label(t[2], UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold")
+	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(d)
+	var e := UiStyle.g_label(t[3], UiStyle.FS_CAPTION, UiStyle.G_TEXT_3, "black")
+	e.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(e)
+	var paint := func() -> void:
+		var on := b.button_pressed
+		for l: Label in [title]:
+			l.add_theme_color_override("font_color", UiStyle.G_INK if on else UiStyle.G_TEXT)
+		d.add_theme_color_override("font_color", UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2)
+		e.add_theme_color_override("font_color", UiStyle.G_INK_2 if on else UiStyle.G_TEXT_3)
+		ic.modulate = UiStyle.G_INK if on else UiStyle.G_TEXT
+	b.toggled.connect(func(_on: bool) -> void: paint.call())
+	b.button_pressed = t[0] == _mission_ui["kind"]
+	paint.call()
+	var kind: String = t[0]
+	b.pressed.connect(func() -> void:
+		_mission_ui["kind"] = kind
+		if _mission_ui.has("refresh"):
+			(_mission_ui["refresh"] as Callable).call())
+	ScreenKit.press_feedback(b)
+	return b
+
 
 func _open_orders(car: CarState, anchor: Control) -> void:
 	var opts := [

@@ -131,6 +131,40 @@ func on_neutralization(car: CarState) -> void:
 		messages[messages.size() - 1]["expires_lap"] = car.laps_done + 1
 
 
+## Missão curta dada pelo jogador: o piloto discorda quando ela atrapalha o stint (decisão de 2026-11-09). Devolve true se
+## perguntou (a missão fica esperando a resposta: aceitar o jeito dele ou insistir).
+func mission_objection(car: CarState, m: Dictionary) -> bool:
+	if not enabled or not pending_for(car).is_empty():
+		return false
+	var k := String(m["kind"])
+	var base := car.mission_base
+	var text := ""
+	var alt := {}
+	var accept := ""
+	if k == "attack":
+		var gap := sim.gap_to_car_ahead_s(car)
+		if gap < 0.0 or gap > 2.5:
+			text = "Ele está longe demais para atacar agora (%s s). Prefiro seguir no ritmo e chegar perto primeiro." % ("—" if gap < 0.0 else String.num(gap, 1).replace(".", ","))
+			accept = "ACEITAR · seguir no ritmo"
+		elif String(base.get("kind", "")) == "save" and Missions.projected_limit_lap(sim, car, CarState.PaceMode.ATTACK) < int(base.get("until", 0)):
+			text = "Se eu atacar agora o pneu não chega na volta %d. Deixa eu esperar 2 voltas, ele pode errar." % int(base["until"])
+			alt = Missions.short_mission("attack", car.laps_done + 2, int(m["end"]) - int(m["start"]), String(m.get("target", "")))
+			accept = "ACEITAR · esperar 2 voltas e atacar"
+	elif k == "push" and car.tyre_wear > 0.68:
+		text = "O pneu está no fim, forçar agora vai acabar com ele. Melhor parar antes."
+		accept = "ACEITAR · ritmo do stint"
+	if text == "":
+		return false
+	var count := messages.size()
+	ask(car, text, [_opt(accept, "mission_accept"), _opt("INSISTIR · " + Missions.title(m).to_lower(), "mission_insist")], 0)
+	if messages.size() > count:
+		var q: Dictionary = messages[messages.size() - 1]
+		q["mission"] = m
+		q["alt"] = alt
+		return true
+	return false
+
+
 func _opt(label: String, action: String, arg: String = "") -> Dictionary:
 	return {"label": label, "action": action, "arg": arg}
 
@@ -159,6 +193,8 @@ func _expire(car: CarState) -> void:
 		if m["car"] == car and m["kind"] == "question" and not m["answered"] and car.laps_done >= int(m["expires_lap"]):
 			# o piloto decide sozinho: acerta a melhor opção na maioria das vezes
 			var pick: int = m["best"] if int(m["best"]) >= 0 and sim.rng.randf() < 0.7 else (m["options"].size() - 1)
+			if m.has("mission"):
+				pick = 0  # missão contestada: sem resposta, o piloto faz do jeito dele
 			_resolve(m, pick, true)
 
 
@@ -179,6 +215,10 @@ func _resolve(m: Dictionary, option: int, auto: bool) -> void:
 			car.defend_hard = true
 		"safe":
 			car.defend_hard = false
+		"mission_accept":  # do jeito do piloto
+			car.mission_short = m.get("alt", {})
+		"mission_insist":
+			car.mission_short = m["mission"]
 	var best := int(m["best"])
 	if best >= 0 and not auto:
 		car.confidence = 1 if option == best else -1

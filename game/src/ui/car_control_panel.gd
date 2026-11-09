@@ -9,6 +9,7 @@ extends PanelContainer
 signal pit_pressed(car: CarState)
 signal orders_pressed(car: CarState, anchor: Control)
 signal focus_pressed(car: CarState)
+signal mission_pressed(car: CarState)
 
 const WIDTH := 236.0
 const PHOTO := 62
@@ -36,8 +37,10 @@ var _hint_label: Label
 var _box_btn: Button
 var _orders_btn: Button
 var _orders_value: Label
-var _pace_buttons := {}
-var _energy_buttons := {}
+var _auto_label: Label
+var _base_box: Dictionary
+var _short_box: Dictionary
+var _mission_btn: Button
 
 
 func setup(p_sim: RaceSim, p_car: CarState) -> void:
@@ -116,49 +119,29 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	tyre.add_child(_life_label)
 	v.add_child(tyre)
 
-	# ritmo: velocímetro + Poupar/Normal/Atacar
-	var pace_row := HBoxContainer.new()
-	pace_row.add_theme_constant_override("separation", 6)
-	pace_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# missões (2026-11-09, mockup v25): o piloto dosa ritmo e bateria; o cartão mostra os dois só como informação
+	var auto_row := HBoxContainer.new()
+	auto_row.add_theme_constant_override("separation", 6)
+	auto_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_gauge = GaugeIcon.new()
-	_gauge.custom_minimum_size = Vector2(34, 34)
-	_gauge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_gauge.tooltip_text = "Ritmo"
-	pace_row.add_child(_gauge)
-	pace_row.add_child(_segment([["Poupar", CarState.PaceMode.CONSERVE], ["Normal", CarState.PaceMode.NORMAL], ["Atacar", CarState.PaceMode.ATTACK]],
-		car.pace_mode, _pace_buttons, func(m: int) -> void: sim.set_pace_mode(car, m)))
-	v.add_child(pace_row)
-	# energia: bateria com a carga dentro + Carregar/Equilíbrio/Usar
-	var energy_row := HBoxContainer.new()
-	energy_row.add_theme_constant_override("separation", 6)
-	energy_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_gauge.custom_minimum_size = Vector2(26, 26)
+	_gauge.tooltip_text = "Ritmo (o piloto decide)"
+	auto_row.add_child(_gauge)
 	_battery = BatteryIcon.new()
-	_battery.custom_minimum_size = Vector2(34, 34)
-	_battery.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_battery.tooltip_text = "Bateria"
-	energy_row.add_child(_battery)
-	energy_row.add_child(_segment([["Carregar", CarState.EnergyMode.HARVEST], ["Equil.", CarState.EnergyMode.BALANCED], ["Usar", CarState.EnergyMode.DEPLOY]],
-		car.energy_mode, _energy_buttons, func(m: int) -> void: sim.set_energy_mode(car, m)))
-	v.add_child(energy_row)
-	energy_row.visible = sim.energy_k > 0.0  # F2/F3: sem sistema híbrido (decisão de 2026-11-08)
-	if sim.drs:  # F2/F3: DRS automático nas zonas
-		_drs_box = PanelContainer.new()
-		_drs_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var dh := HBoxContainer.new()
-		dh.add_theme_constant_override("separation", 8)
-		dh.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_drs_icon = ScreenKit.icon("drs", 22, UiStyle.G_TEXT_3)
-		dh.add_child(_drs_icon)
-		var dv := VBoxContainer.new()
-		dv.add_theme_constant_override("separation", -3)
-		dv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_drs_title = UiStyle.g_label("DRS", 13, UiStyle.G_TEXT_2, "black")
-		_drs_sub = UiStyle.g_label("", 11, UiStyle.G_TEXT_3, "bold")
-		dv.add_child(_drs_title)
-		dv.add_child(_drs_sub)
-		dh.add_child(dv)
-		_drs_box.add_child(dh)
-		v.add_child(_drs_box)
+	_battery.custom_minimum_size = Vector2(26, 26)
+	_battery.tooltip_text = "Bateria (o piloto decide)"
+	_battery.visible = sim.energy_k > 0.0
+	auto_row.add_child(_battery)
+	_auto_label = UiStyle.g_label("", 12, UiStyle.G_TEXT_3, "bold")
+	_auto_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_auto_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_auto_label.clip_text = true
+	auto_row.add_child(_auto_label)
+	v.add_child(auto_row)
+	_base_box = _mission_box(false)
+	v.add_child(_base_box["root"])
+	_short_box = _mission_box(true)
+	v.add_child(_short_box["root"])
 
 	# avisos (regra dos compostos, dano na asa) só ocupam espaço quando existem
 	_hint_label = UiStyle.g_label("", 12, Color("#ffb4a8"), "bold")
@@ -170,7 +153,7 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	pit.add_theme_constant_override("separation", 6)
 	_orders_btn = Button.new()
 	_orders_btn.focus_mode = Control.FOCUS_NONE
-	_orders_btn.custom_minimum_size = Vector2(72, 44)
+	_orders_btn.custom_minimum_size = Vector2(56, 44)
 	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 		_orders_btn.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_SURFACE_HOVER if s != "pressed" else UiStyle.G_SURFACE_PRESS, 12, 4, 0))
 	var ob := VBoxContainer.new()
@@ -190,6 +173,18 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_orders_btn.pressed.connect(func() -> void: orders_pressed.emit(car, _orders_btn))
 	ScreenKit.press_feedback(_orders_btn)
 	pit.add_child(_orders_btn)
+	_mission_btn = Button.new()
+	_mission_btn.text = "MISSÃO"
+	_mission_btn.focus_mode = Control.FOCUS_NONE
+	_mission_btn.custom_minimum_size = Vector2(58, 44)
+	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		_mission_btn.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_LIGHT if s in ["normal", "hover"] else UiStyle.G_LIGHT_PRESS, 12, 4, 0))
+	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
+		_mission_btn.add_theme_color_override(k, UiStyle.G_INK)
+	_mission_btn.add_theme_font_size_override("font_size", UiStyle.fs(11))
+	_mission_btn.pressed.connect(func() -> void: mission_pressed.emit(car))
+	ScreenKit.press_feedback(_mission_btn)
+	pit.add_child(_mission_btn)
 	_box_btn = CutButton.new()
 	_box_btn.text = "P/ BOX"
 	_box_btn.custom_minimum_size = Vector2(0, 44)
@@ -197,12 +192,12 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_box_btn.clip_text = true
 	for st: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:  # margens menores: o botão é estreito
 		var e := StyleBoxEmpty.new()
-		e.content_margin_left = 12
-		e.content_margin_right = 8
+		e.content_margin_left = 8
+		e.content_margin_right = 4
 		_box_btn.add_theme_stylebox_override(st, e)
 	_box_btn.add_theme_constant_override("icon_max_width", 18)
 	_box_btn.add_theme_constant_override("h_separation", 6)
-	_box_btn.add_theme_font_size_override("font_size", UiStyle.fs(13))
+	_box_btn.add_theme_font_size_override("font_size", UiStyle.fs(11))
 	_box_btn.pressed.connect(func() -> void: pit_pressed.emit(car))
 	pit.add_child(_box_btn)
 	v.add_child(pit)
@@ -223,35 +218,52 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 
 
-## Controle segmentado (ritmo ou energia). options: [[texto, valor], ...].
-func _segment(options: Array, selected: int, store: Dictionary, on_pick: Callable) -> PanelContainer:
+## Caixa de missão (base ou curta): título, situação e barra de andamento.
+func _mission_box(short: bool) -> Dictionary:
 	var p := PanelContainer.new()
-	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	p.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE, 22, 3, 3))
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 2)
-	p.add_child(h)
-	var group := ButtonGroup.new()
-	for o: Array in options:
-		var b := Button.new()
-		b.text = o[0]
-		b.toggle_mode = true
-		b.button_group = group
-		b.focus_mode = Control.FOCUS_NONE
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size = Vector2(0, 38)
-		b.clip_text = true  # os três dividem a largura; o texto não alarga o cartão
-		ScreenKit._selectable_styles(b, 17)
-		for st: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
-			var sb: StyleBoxFlat = b.get_theme_stylebox(st)
-			sb.content_margin_left = 2
-			sb.content_margin_right = 2
-		b.add_theme_font_size_override("font_size", UiStyle.fs(11))
-		b.button_pressed = o[1] == selected
-		b.pressed.connect(on_pick.bind(o[1]))
-		store[o[1]] = b
-		h.add_child(b)
-	return p
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var st := UiStyle.g_box(Color(UiStyle.RED, 0.18) if short else UiStyle.G_SURFACE, 12, 8, 6)
+	if short:
+		st.set_border_width_all(1)
+		st.border_color = Color(UiStyle.RED, 0.5)
+	p.add_theme_stylebox_override("panel", st)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 1)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(v)
+	var cap := UiStyle.g_caption("Missão curta" if short else "Missão de base")
+	v.add_child(cap)
+	var title := UiStyle.g_label("", 13, UiStyle.G_TEXT, "black")
+	title.custom_minimum_size = Vector2(150, 0)
+	title.clip_text = true
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	v.add_child(title)
+	var sub := UiStyle.g_label("", 12, UiStyle.G_TEXT_2, "bold")
+	sub.custom_minimum_size = Vector2(150, 0)
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(sub)
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.max_value = 1.0
+	bar.custom_minimum_size = Vector2(0, 5)
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.12), 3, 0, 0))
+	v.add_child(bar)
+	return {"root": p, "title": title, "sub": sub, "bar": bar, "short": short}
+
+
+func _paint_mission(box: Dictionary, m: Dictionary) -> void:
+	var root: Control = box["root"]
+	root.visible = not m.is_empty()
+	if m.is_empty():
+		return
+	var stt := Missions.status(sim, car, m)
+	(box["title"] as Label).text = Missions.title(m)
+	(box["sub"] as Label).text = String(stt["text"])
+	var bar: ProgressBar = box["bar"]
+	bar.value = float(stt["progress"])
+	var col: Color = UiStyle.RED if box["short"] else (UiStyle.G_UP if bool(stt["ok"]) else UiStyle.G_DOWN)
+	bar.add_theme_stylebox_override("fill", UiStyle.g_box(col, 3, 0, 0))
 
 
 func refresh(race_position: int) -> void:
@@ -288,11 +300,12 @@ func refresh(race_position: int) -> void:
 		tw.tween_interval(1.2)
 		tw.tween_callback(func() -> void: _pos_label.add_theme_color_override("font_color", UiStyle.RED))
 	_last_pos = race_position
-	# os botões acompanham o estado real (se o piloto desobedecer a ordem, volta para "liberado")
-	for k: int in _pace_buttons:
-		(_pace_buttons[k] as Button).set_pressed_no_signal(car.pace_mode == k)
-	for k: int in _energy_buttons:
-		(_energy_buttons[k] as Button).set_pressed_no_signal(car.energy_mode == k)
+	_auto_label.text = "piloto: %s" % ["poupando", "normal", "atacando"][int(car.pace_mode)]
+	_paint_mission(_base_box, car.mission_base if not car.mission_base.is_empty() else Missions.base_mission("normal"))
+	var short: Dictionary = car.mission_short if not car.mission_short.is_empty() and car.laps_done >= int(car.mission_short.get("start", 0)) else {}
+	if not car.mission_short.is_empty() and short.is_empty():  # agendada (o piloto pediu para esperar)
+		short = car.mission_short
+	_paint_mission(_short_box, short)
 	_orders_value.text = {CarState.TeamOrder.FREE: "Liberado", CarState.TeamOrder.HOLD: "Não brigar", CarState.TeamOrder.LET_BY: "Deixar"}[car.team_order]
 	var hints: Array[String] = []
 	if car.damage_wing > 0.0:
@@ -306,9 +319,7 @@ func refresh(race_position: int) -> void:
 	_hint_label.text = " · ".join(hints)
 	_hint_label.visible = not hints.is_empty()
 	var active := not (car.retired or car.finished)
-	for b: Dictionary in [_pace_buttons, _energy_buttons]:
-		for k: int in b:
-			(b[k] as Button).disabled = not active
+	_mission_btn.disabled = not active
 	_orders_btn.disabled = not active
 	_box_btn.disabled = car.in_pit or car.finished or car.retired
 	_box_btn.text = _box_text()

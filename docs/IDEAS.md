@@ -733,3 +733,22 @@ preparação automática e confirmação; (9) simplicidade no Android; (10) entr
 > "o sistema de mexer na bateria está muito vazio. não seria melhor deixar isso na mão dos pilotos, e me dar outra forma
 > mais interessante de gerência dos pilotos durante a corrida?"
 - Pedido de ideias (a decidir): bateria passa para o piloto; o jogador ganha outra forma de gerenciar os pilotos em corrida.
+
+## Pneus mais no limite em corridas de 25% e estouro de pneu (usuário, 2026-11-09)
+> "quero que os pneus na corrida 25% fiquem mais proximo do limite de desempenho, provocando com que parar 2x não seja tão
+> mais pior assim, pelo menos em algumas pistas, para que fique mais imprevisivel, e para que o pneu duro não seja tão
+> inutil também. também quero que seja implementado o estouro de pneu, a partir de 20% pra baixo do desgaste ja pode ser
+> possivel isso acontecer, com a possibilidade de furo maior se a % do pneu estiver mais baixa dentro desses 20"
+
+## Menu da campanha inspirado no Motorsport Manager 3 (usuário, 2026-11-09) — depois das missões e dos pneus
+> "ANALISE PROFUNDAMENTE O MENU DA CAMPANHA DO MOTORSPORT MANAGER 3. olha como é bonitinho e bem distribuido as coisas, mais
+> facil de mexer, gostaria que o menu de todo nosso jogo fosse assim também, tivesse em alguns lugares oportunos mais simbolos e
+> menos escritas desnecessarias, além de design mais colorido, bem trabalhado no 3D, e tambem considere tudo que tem na campanha
+> deles. a nossa está chata e monotona demais, ou cheio de coisa demais? considere isso"
+- Prints enviados: sede em árvore com prédio 3D isométrico e nós de melhorias (0/10, 0/9, 0/8); tela Carros (cartões grandes
+  "Construir peças"/"Mercado de peças", carro visto de cima com desempenho/confiabilidade por piloto); início da campanha com
+  cartão da equipe + próxima corrida com arte 3D da pista, blocos grandes Pilotos/Carros/Toda a equipe com posição no
+  geral (anel), Observar pilotos, Construir peças, Patrocinadores, Sede, Rede de fornecedores e a classificação ao lado;
+  visão da equipe (carro de lado, cartões dos pilotos com número gigante); calendário em cartões verticais com arte da pista,
+  pneus do fim de semana e peças críticas.
+- Inspiração de organização e clareza (não copiar o jogo nem a arte).

@@ -55,6 +55,9 @@ var stuck_laps := 0  ## voltas seguidas colado no carro da frente sem passar
 var ai_gamble := 0.0  ## 0..1: quanto a equipe aposta (estratégia alternativa, ficar fora no safety car)
 var player_plan: Dictionary = {}  ## estratégia do jogador (RaceStrategy): só avisa na volta planejada
 var plan_notified: Array = []  ## voltas de parada do plano já avisadas
+var mission_base: Dictionary = {}  ## missão do stint (Missions; decisões de 2026-11-09)
+var mission_short: Dictionary = {}  ## missão curta com fim automático (volta à base)
+var manual_modes := false  ## ritmo/bateria postos à mão (testes/desenvolvimento): o piloto não decide sozinho
 var stints: Array = []  ## stints já encerrados: [{compound, laps}] (devolução de pneus depois da sprint)
 var plan: Dictionary = {}  ## plano da parada (PitStop.make_plan); vazio = parada padrão
 var wing_step := 0  ## ajuste da asa dianteira (−1..+2) em vigor

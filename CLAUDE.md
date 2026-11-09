@@ -18,7 +18,7 @@ das escolhas técnicas.
   marcados PROVISÓRIO até a pesquisa de atributos.
 - `src/sim/` — simulação **sem dependência de tela**: RaceSim (orquestra), TrackModel, TyreModel,
   WeatherModel (clima/radar), RaceControl (incidentes, bandeiras, punições), RadioSystem (rádio),
-  StrategyAI (IA); fim de semana: WeekendSim (sessões, previsão, grids, pontos), CarSetup (acerto),
+  StrategyAI (IA), Missions (missões do stint: o piloto dosa ritmo e bateria; a IA usa as mesmas); fim de semana: WeekendSim (sessões, previsão, grids, pontos), CarSetup (acerto),
   PracticeSession (programas de blocos), TyreAllocation (jogos de pneus reais do fim de semana), RaceStrategy (planos dos
   engenheiros; na corrida só avisam), QualiSim (Q1/Q2/Q3; cortes pelo nº de carros);
   campanha: `Campaign` (equipe real ou criada = 12ª equipe, 24 carros; salva em
@@ -66,7 +66,7 @@ Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--
 (a câmera vai direto ao alvo nas capturas). Grande Prêmio: `--gp` (configuração), `--weekend`
 (painel) e `--play` (sessão atual ao vivo; num treino, simula e abre a folha de resultado), com `--skip=<n>` para simular as n primeiras sessões
 (ex.: `--play --circuit=shanghai --skip=2` abre a sprint; `--grid` abre a animação do grid; `--live` vai direto à corrida com o plano dos engenheiros; `--team=f2_<equipe>` joga a F2/F3); `--advance` vale também na
-classificação. Capturas de interface: `--ui=team` (folha da tela inicial), `--ui=out` (folha de saída da classificação), `--ui=plan` (aviso da estratégia na corrida), `--ui=champ|champ-poster|champ-teams` (animação de campeão), `--ui=gallery`
+classificação. Capturas de interface: `--ui=team` (folha da tela inicial), `--ui=out` (folha de saída da classificação), `--ui=plan` (aviso da estratégia na corrida), `--ui=champ|champ-poster|champ-teams` (animação de campeão), `--ui=missions` (folha de missões), `--ui=gallery`
 (estados dos componentes), `--view-only` (só o 3D, base de mockups). Escolha de equipe: `--teamselect=campaign|gp` (com `--team=<id>`). Campanha: `--campaign`, `--history [--demo-history] [--tab=legends|current|seasons]`, `--car` (peças), `--rd` (árvore),
 `--creator [--ui=<passo 0..3>]`, `--hub` e `--camp-race` (usam a campanha salva; `tools/make_demo_campaign.gd -- --round=<n>` grava uma campanha de reta final).
 Testes de regras usam `{"weather": "dry", "incident_rate": 0.0}` salvo quando testam clima/incidentes.

@@ -19,6 +19,7 @@ func _after_laps(mode: int, start: float, laps: float) -> float:
 	var car := _mine(sim)
 	sim.advance(30.0)
 	car.battery = start
+	sim.set_pace_mode(car, CarState.PaceMode.NORMAL)  # (desde 2026-11-09 o piloto escolhe sozinho; aqui o teste fixa os modos)
 	sim.set_energy_mode(car, mode)
 	sim.advance(sim.track.base_lap_time_s * laps)
 	return car.battery

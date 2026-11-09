@@ -193,15 +193,25 @@ func test_ordens_de_equipe_pelo_popover() -> void:
 	assert_signal_emitted(screen.sim, "team_order_result", "a ordem chegou à simulação (o piloto pode obedecer ou não)")
 
 
-func test_botoes_de_ritmo_mudam_o_modo_do_carro() -> void:
+func test_folha_de_missoes_define_a_base_e_da_missao_curta() -> void:
 	var panel: CarControlPanel = screen._car_panels[0]
-	var attack: Button = null
+	var car: CarState = panel.car
+	var mission: Button = null
 	for b in _all_buttons(panel):
-		if b.text.to_lower() == "atacar":
-			attack = b
-	assert_not_null(attack)
-	attack.emit_signal("pressed")
-	assert_eq(panel.car.pace_mode, CarState.PaceMode.ATTACK)
+		if b.text == "MISSÃO":
+			mission = b
+	assert_not_null(mission, "o cartão tem o botão MISSÃO (sem Poupar/Normal/Atacar)")
+	var before: bool = screen.paused
+	mission.emit_signal("pressed")
+	assert_true(screen.paused, "a corrida espera a decisão")
+	screen._mission_ui["kind"] = "safe"
+	screen.sim.set_mission_base(car, "safe")
+	assert_eq(String(car.mission_base["kind"]), "safe")
+	screen.sim.give_short_mission(car, "push", 2, "", false)
+	assert_eq(String(Missions.active(car)["kind"]), "push")
+	(screen._mission_ui["root"] as Control).queue_free()
+	await wait_process_frames(2)
+	assert_eq(screen.paused, before, "fechou a folha: a corrida volta ao estado de antes")
 
 
 func _all_buttons(node: Node) -> Array[Button]:
