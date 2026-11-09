@@ -29,11 +29,13 @@ func _ready() -> void:
 	_badges()
 
 
-## Ajusta origem e unidade para caber no tamanho dado (o campus ocupa ~20 × 16 unidades).
+## Ajusta origem e unidade para o campus caber no tamanho dado (chão de −1..19 × −1..15: ~31,2 × 18,6 unidades).
 func fit(area: Vector2) -> void:
-	unit = minf(area.x / (20.0 * 0.866 * 2.0) * 1.9, area.y / 16.5)
-	origin = Vector2(area.x * 0.5 - (9.0 - 7.0) * 0.866 * unit, area.y * 0.5 - (9.0 + 7.0) * 0.5 * unit + 2.2 * unit)
+	unit = minf(area.x / 31.6, area.y / 19.0)
+	origin = Vector2((area.x - 31.2 * unit) / 2.0 + 13.86 * unit, (area.y - 18.6 * unit) / 2.0 + 1.6 * unit)
 	queue_redraw()
+	if is_inside_tree():
+		_place_badges.call_deferred()
 
 
 func p(x: float, y: float, z := 0.0) -> Vector2:

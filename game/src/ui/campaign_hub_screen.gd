@@ -307,7 +307,10 @@ func _hq_tile(r: Rect2) -> Control:
 	campus.fit(campus.size)
 	t.add_child(campus)
 	_tile_head(t, "hq", UiStyle.SECTION["hq"], "SEDE", true)
-	var busy := campaign.dev.busy()
+	var busy := 0
+	for sid: String in CarDevelopment.STRUCT_ORDER:
+		if not campaign.dev.work_of(sid).is_empty():
+			busy += 1
 	var chip := _pill_chip("%d OBRA%s" % [busy, "" if busy == 1 else "S"] if busy > 0 else "LIVRE", "up", UiStyle.SECTION["hq"], UiStyle.G_INK)
 	ScreenKit.place(chip, t, Control.PRESET_TOP_RIGHT, Vector2(-16, 14))
 	return t

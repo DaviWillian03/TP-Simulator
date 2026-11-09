@@ -33,6 +33,7 @@ const CAMPAIGN_HUB_SCENE := "res://src/ui/campaign_hub_screen.tscn"
 const CAMPAIGN_STANDINGS_SCENE := "res://src/ui/campaign_standings_screen.tscn"
 const CAMPAIGN_CALENDAR_SCENE := "res://src/ui/campaign_calendar_screen.tscn"
 const CAMPAIGN_TEAM_SCENE := "res://src/ui/campaign_team_screen.tscn"
+const CAMPAIGN_HQ_SCENE := "res://src/ui/campaign_hq_screen.tscn"
 const CAMPAIGN_SPONSORS_SCENE := "res://src/ui/campaign_sponsors_screen.tscn"
 const CAMPAIGN_COUNCIL_SCENE := "res://src/ui/campaign_council_screen.tscn"
 const CAMPAIGN_FINANCE_SCENE := "res://src/ui/campaign_finance_screen.tscn"
@@ -374,7 +375,7 @@ func open_campaign_team() -> void:
 
 ## Sede 3D com instalações (v26-5).
 func open_campaign_hq() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_FACTORY_SCENE)
+	get_tree().change_scene_to_file(CAMPAIGN_HQ_SCENE)
 
 
 ## Agenda em cartões (v26-6).
