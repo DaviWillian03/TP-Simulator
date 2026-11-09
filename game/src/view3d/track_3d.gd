@@ -115,8 +115,11 @@ func is_corner(i: int) -> bool:
 	return curvature[i] > 0.035
 
 
-## Zebras: faixas vermelho/branco nas curvas (cor por vértice, alternando a cada ~3 m).
+## Zebras nas curvas com as cores reais do circuito (scenery.kerbs; padrão vermelho/branco), alternando a cada ~4 m.
 func kerbs() -> ArrayMesh:
+	var palette: Array[Color] = []
+	for h: String in track.scenery.get("kerbs", ["#d42020", "#f2f2f2"]):  # cores reais das zebras de cada circuito
+		palette.append(Color(h))
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for side: float in [-1.0, 1.0]:
@@ -126,7 +129,7 @@ func kerbs() -> ArrayMesh:
 			if not (is_corner(i) or is_corner((i + 2) % n) or is_corner((i - 2 + n) % n)):
 				continue
 			var j := (i + 1) % n
-			var col := Color("#d42020") if i % 2 == 0 else Color("#f2f2f2")
+			var col := palette[i % palette.size()]
 			var lift := 0.06
 			var quad := [center[i] + right[i] * a, center[j] + right[j] * a, center[j] + right[j] * b, center[i] + right[i] * b]
 			for k in [0, 1, 2, 0, 2, 3]:
