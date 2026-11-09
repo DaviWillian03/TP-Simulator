@@ -618,6 +618,6 @@ Respostas do usuário:
 - **2026-11-09 — Mockups v26 aprovados (todos).** Pedido extra: a **bandeira do país** aparece em todo cartão de pista
   (próximo GP, agenda, Grande Prêmio, fim de semana). Pista 3D dos cartões: vista do próprio cenário do jogo.
 - **2026-11-09 — Setores na classificação.** No cartão de cada piloto do jogador (só na classificação), três faixas
-  S1 · S2 · S3 acendem quando o carro fecha cada setor da volta lançada: **roxo** = melhor setor da sessão, **verde** =
+  finas (sem texto, como na transmissão) acendem quando o carro fecha cada setor da volta lançada: **roxo** = melhor setor da sessão, **verde** =
   melhor setor do piloto, **amarelo** = mais lento que o melhor dele. O problema da volta (tráfego/erro) cai no setor em
   que aparece; voltas apagadas mostram as cores mas não contam como melhor.
