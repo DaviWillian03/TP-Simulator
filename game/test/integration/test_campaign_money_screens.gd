@@ -71,9 +71,9 @@ func test_nav_tem_patrocinios_e_financas_ativos() -> void:
 	var names := []
 	for b in _buttons(screen):
 		if not b.disabled:
-			names.append(b.text)
-	assert_true(names.has("Patrocínios"))
-	assert_true(names.has("Finanças"))
+			names.append(b.tooltip_text)  # barra de ícones (v26)
+	assert_true(names.has("Patroc."))
+	assert_true(names.has("Caixa"))
 
 
 func _buttons(node: Node) -> Array[Button]:

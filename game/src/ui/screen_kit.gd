@@ -721,58 +721,6 @@ static func popover(screen: Control, anchor: Control, title: String, options: Ar
 	return catcher
 
 
-## Abas da sede da campanha (Início · Campeonatos · Pessoal · Carro · Fábrica · Patrocínios · Finanças).
-## active: "hub", "standings", "staff", "car", "factory", "sponsors" ou "finance".
-static func campaign_nav(layer: Control, active: String, y: float = 88.0) -> PanelContainer:
-	var nav := PanelContainer.new()
-	nav.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE, 26, 4, 4))
-	var nh := HBoxContainer.new()
-	nh.add_theme_constant_override("separation", 4)
-	nav.add_child(nh)
-	var items := [["Início", "hub"], ["Campeonatos", "standings"], ["Histórico", "history"], ["Pessoal", "staff"], ["Carro", "car"], ["Design", "studio"], ["Fábrica", "factory"], ["Patrocínios", "sponsors"], ["Finanças", "finance"], ["Conselho", "council"]]
-	if Session.campaign != null and Session.campaign.is_feeder():  # F2/F3: a sede reúne operação, dinheiro e pessoal
-		items = items.slice(0, 3)
-	for t: Array in items:
-		var on: bool = t[1] == active
-		var b := Button.new()
-		b.text = t[0]
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
-		_selectable_styles(b, UiStyle.R_PILL - 4)
-		b.add_theme_stylebox_override("normal", UiStyle.g_box(UiStyle.G_LIGHT if on else Color(0, 0, 0, 0), UiStyle.R_PILL - 4, 20, 0))
-		b.add_theme_color_override("font_color", UiStyle.G_INK if on else UiStyle.G_TEXT)
-		b.add_theme_color_override("font_disabled_color", UiStyle.G_TEXT_OFF)
-		b.add_theme_font_size_override("font_size", UiStyle.fs(UiStyle.FS_BODY))
-		b.disabled = t[1] == ""
-		if t[1] != "" and not on:
-			match t[1]:
-				"hub":
-					b.pressed.connect(Session.open_campaign_hub)
-				"standings":
-					b.pressed.connect(Session.open_campaign_standings)
-				"history":
-					b.pressed.connect(Session.open_campaign_history)
-				"staff":
-					b.pressed.connect(Session.open_campaign_staff)
-				"car":
-					b.pressed.connect(Session.open_campaign_car)
-				"factory":
-					b.pressed.connect(Session.open_campaign_factory)
-				"studio":
-					b.pressed.connect(Session.open_campaign_studio)
-				"sponsors":
-					b.pressed.connect(Session.open_campaign_sponsors)
-				"finance":
-					b.pressed.connect(Session.open_campaign_finance)
-				"council":
-					b.pressed.connect(Session.open_campaign_council)
-		nh.add_child(b)
-	# com a letra maior as abas podem passar da largura da tela: a faixa desliza para o lado
-	var strip := DragScroll.new()
-	strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
-	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE  # a parte vazia da faixa não bloqueia o que está ao lado
-	nav.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	strip.add_child(nav)
-	place(strip, layer, Control.PRESET_TOP_LEFT, Vector2(44, y), Vector2(1280 - 88, UiStyle.TOUCH_MIN + 8))
-	return nav
+## Moldura da campanha (v26): barra do topo + barra de ícones. active: chave antiga da tela ("hub", "car", ...).
+static func campaign_nav(layer: Control, active: String, _y: float = 88.0) -> Control:
+	return CampaignFrame.apply(layer, active)

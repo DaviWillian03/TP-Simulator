@@ -63,6 +63,7 @@ var debug_camera: Dictionary = {}  ## --yaw --pitch --dist --cam=<n> (capturas d
 var sim_overrides: Dictionary = {}  ## opções extras da RaceSim (testes: clima, incidentes)
 var weekend: WeekendSim = null  ## Grande Prêmio em andamento (null = corrida rápida)
 var campaign: Campaign = null  ## campanha em andamento (carregada do arquivo salvo)
+var campaign_open_news := false  ## o sino da barra do topo pede as notícias ao abrir o Início
 var gp_weather := "realistic"  ## escolhas da configuração do GP
 var gp_format := "full"
 
@@ -356,6 +357,21 @@ func open_campaign_studio() -> void:
 
 func open_campaign_rd() -> void:
 	get_tree().change_scene_to_file(CAMPAIGN_RD_SCENE)
+
+
+## Equipe (carro grande + pilotos, v26-7).
+func open_campaign_team() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_STAFF_SCENE)
+
+
+## Sede 3D com instalações (v26-5).
+func open_campaign_hq() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_FACTORY_SCENE)
+
+
+## Agenda em cartões (v26-6).
+func open_campaign_calendar() -> void:
+	get_tree().change_scene_to_file(CAMPAIGN_STANDINGS_SCENE)
 
 
 func open_campaign_factory() -> void:

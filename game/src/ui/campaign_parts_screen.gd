@@ -64,6 +64,7 @@ func _ready() -> void:
 	tree_btn.pressed.connect(Session.open_campaign_rd)
 	chips.add_child(tree_btn)
 	var c1 := _chip("money")
+	c1.set_meta("frame_dup", true)  # a barra do topo da campanha já mostra o caixa
 	_cash = c1.get_meta("value")
 	chips.add_child(c1)
 	var c2 := _chip("factory")

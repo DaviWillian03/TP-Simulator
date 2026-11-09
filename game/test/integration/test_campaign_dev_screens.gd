@@ -87,8 +87,8 @@ func test_nav_da_campanha_tem_carro_e_fabrica_ativos() -> void:
 	var screen: Control = await _open("res://src/ui/campaign_hub_screen.tscn")
 	var enabled := []
 	for b in _buttons(screen):
-		if not b.disabled and b.text in ["Início", "Campeonatos", "Carro", "Fábrica"]:
-			enabled.append(b.text)
+		if not b.disabled and b.tooltip_text in ["Início", "Tabela", "Carro", "Sede"]:  # barra de ícones (v26)
+			enabled.append(b.tooltip_text)
 	assert_eq(enabled.size(), 4)
 
 

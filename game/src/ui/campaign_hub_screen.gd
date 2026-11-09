@@ -24,59 +24,350 @@ func _ready() -> void:
 	(page["backdrop"] as GarageBackdrop).set_glow(color)
 	var layer: Control = page["layer"]
 
-	# topo
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", UiStyle.SP_L)
-	var back := ScreenKit.round_button("back", 52, "Menu")
-	back.pressed.connect(Session.go_to_title)
-	head.add_child(back)
-	head.add_child(TeamEmblems.make_rect(campaign.player_team, 48))
-	var titles := VBoxContainer.new()
-	titles.add_theme_constant_override("separation", -2)
-	titles.add_child(UiStyle.g_caption("%s · %s %d" % [team["name"], campaign.date_text(), campaign.season]))
-	titles.add_child(UiStyle.g_label("SEDE", 28, UiStyle.G_TEXT, "black"))
-	head.add_child(titles)
-	ScreenKit.place(head, layer, Control.PRESET_TOP_LEFT, Vector2(44, 22))
-	var chips := HBoxContainer.new()
-	chips.add_theme_constant_override("separation", UiStyle.SP_M)
-	chips.add_child(_chip("Caixa", "US$ %d mi" % int(campaign.budget_musd), 16))
-	chips.add_child(_chip("Diretoria", campaign.trust_label(), 16))
-	var news_btn := Button.new()
-	news_btn.text = "NOTÍCIAS" + ("  ●" if not campaign.events.unseen.is_empty() else "")
-	news_btn.focus_mode = Control.FOCUS_NONE
-	news_btn.custom_minimum_size = Vector2(0, 44)
-	for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
-		news_btn.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 22, 18, 0))
-	news_btn.add_theme_font_size_override("font_size", UiStyle.fs(14))
-	news_btn.add_theme_color_override("font_color", UiStyle.G_TEXT)
-	news_btn.pressed.connect(_open_news)
-	ScreenKit.press_feedback(news_btn)
-	chips.add_child(news_btn)
-	ScreenKit.place(chips, layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 26))
-	ScreenKit.campaign_nav(layer, "hub")
-
-	# três colunas (mockup v15-1): próximo GP · assuntos · equipe
-	var gp_col := VBoxContainer.new()
-	gp_col.add_theme_constant_override("separation", 0)
-	ScreenKit.scroll_column(gp_col, layer, Vector2(44, 146), Vector2(470, 720 - 146 - 10))
-	gp_col.add_child(_event_card())
-	var mid := VBoxContainer.new()
-	mid.add_theme_constant_override("separation", 10)
-	ScreenKit.scroll_column(mid, layer, Vector2(528, 146), Vector2(420, 720 - 146 - 10))
-	_fill_topics(mid)
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 10)
-	ScreenKit.scroll_column(right, layer, Vector2(962, 146), Vector2(1280 - 44 - 962, 720 - 146 - 10))
-	right.add_child(_team_card(color))
-	right.add_child(_objective_card(color))
-	right.add_child(_factory_card())
+	# mosaico (mockup v26-4): próximo GP · pilotos · carro · sede · tabela · diretoria, com a moldura da campanha
+	_layer = layer
+	var R := CampaignFrame.CONTENT
+	var x0 := R.position.x
+	var y0 := R.position.y
+	layer.add_child(_gp_tile(Rect2(x0, y0, 540, 330)))
+	layer.add_child(_drivers_tile(Rect2(x0 + 556, y0, 380, 330), color))
+	layer.add_child(_car_tile(Rect2(x0, y0 + 346, 540, R.size.y - 346)))
+	layer.add_child(_hq_tile(Rect2(x0 + 556, y0 + 346, 380, R.size.y - 346)))
+	layer.add_child(_table_tile(Rect2(x0 + 952, y0, R.size.x - 952, 390)))
+	layer.add_child(_board_tile(Rect2(x0 + 952, y0 + 406, R.size.x - 952, R.size.y - 406)))
+	CampaignFrame.apply(layer, "hub", true)
+	if Session.campaign_open_news:
+		Session.campaign_open_news = false
+		_open_news.call_deferred()
 	layer.modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
-	_layer = layer
 	_show_next_event.call_deferred()
 	PartsDialogs.show_pending.call_deferred(self, campaign, _after_parts_dialog)
 	if campaign.livery != null and not campaign.livery.launch.is_empty():
 		_show_launch.call_deferred()
+
+
+# --- mosaico (v26-4) -------------------------------------------------------------------------------------------
+
+## Bloco do mosaico: botão grande com cantos arredondados; o conteúdo é posicionado à mão dentro dele.
+func _tile(r: Rect2, on_press: Callable, fill := Color("#171a21")) -> Button:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.clip_contents = true
+	b.position = r.position
+	b.size = r.size
+	for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		var box := UiStyle.g_box(fill if st == "normal" else fill.lightened(0.06), 22, 0, 0)
+		box.shadow_color = Color(0, 0, 0, 0.35)
+		box.shadow_size = 10
+		b.add_theme_stylebox_override(st, box)
+	b.pressed.connect(on_press)
+	ScreenKit.press_feedback(b)
+	return b
+
+
+## Cabeçalho do bloco: quadrado colorido com ícone + título curto.
+func _tile_head(t: Control, icon_name: String, col: Color, text: String, ink := false) -> void:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 8)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sq := PanelContainer.new()
+	sq.add_theme_stylebox_override("panel", UiStyle.g_box(col, 10, 6, 6))
+	sq.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sq.add_child(ScreenKit.icon(icon_name, 18, UiStyle.G_INK if ink else Color.WHITE))
+	h.add_child(sq)
+	if text != "":
+		var l := UiStyle.g_label(text, 15, UiStyle.G_TEXT, "black")
+		l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+		l.add_theme_constant_override("shadow_offset_y", 2)
+		h.add_child(l)
+	h.position = Vector2(16, 14)
+	t.add_child(h)
+
+
+func _pill_chip(text: String, icon_name := "", fill := Color(0.06, 0.07, 0.09, 0.78), fg := UiStyle.G_TEXT) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UiStyle.g_box(fill, 15, 12, 4))
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	if icon_name != "":
+		h.add_child(ScreenKit.icon(icon_name, 16, fg))
+	h.add_child(UiStyle.g_label(text, 13, fg, "black"))
+	p.add_child(h)
+	return p
+
+
+func _shade(t: Control, from := 0.3) -> void:
+	var grad := Gradient.new()
+	grad.colors = PackedColorArray([Color(0.03, 0.04, 0.055, 0.0), Color(0.03, 0.04, 0.055, 0.92)])
+	grad.offsets = PackedFloat32Array([from, 1.0])
+	var gt := GradientTexture2D.new()
+	gt.gradient = grad
+	gt.fill_to = Vector2(0, 1)
+	var tr := TextureRect.new()
+	tr.texture = gt
+	tr.stretch_mode = TextureRect.STRETCH_SCALE
+	tr.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	t.add_child(tr)
+
+
+## "GP da Grã-Bretanha" -> "Grã-Bretanha" (cartões com bandeira).
+static func gp_short(name: String) -> String:
+	var parts := name.split(" ")
+	if parts.size() >= 3 and parts[0] == "GP" and parts[1].begins_with("d"):
+		return " ".join(parts.slice(2))
+	return name
+
+
+static func track_art(circuit_id: String) -> Texture2D:
+	var path := "res://assets/tracks/%s.jpg" % circuit_id
+	return load(path) if ResourceLoader.exists(path) else null
+
+
+static func flag_rect(country_code: String, h: int) -> TextureRect:
+	var path := "res://assets/flags/%s.svg" % country_code
+	var f := TextureRect.new()
+	if ResourceLoader.exists(path):
+		f.texture = load(path)
+	f.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	f.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	f.custom_minimum_size = Vector2(roundi(h * 4.0 / 3.0), h)
+	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return f
+
+
+func _gp_tile(r: Rect2) -> Control:
+	var rd := campaign.next_round()
+	var circuit := GameData.circuit(rd["id"])
+	var t := _tile(r, Session.open_campaign_calendar)
+	var art := TextureRect.new()
+	art.texture = track_art(rd["id"])
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.set_anchors_preset(Control.PRESET_FULL_RECT)
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	t.add_child(art)
+	_shade(t, 0.25)
+	_tile_head(t, "flag", UiStyle.RED, "PRÓXIMO GP")
+	var days := campaign.days_to_event()
+	var ready := campaign.event_ready()
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 6)
+	if not ready:
+		var one := Button.new()
+		one.text = "+1 DIA"
+		one.focus_mode = Control.FOCUS_NONE
+		one.custom_minimum_size = Vector2(0, 32)
+		for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
+			one.add_theme_stylebox_override(st, UiStyle.g_box(Color(0.06, 0.07, 0.09, 0.78), 16, 12, 0))
+		one.add_theme_font_size_override("font_size", UiStyle.fs(13))
+		one.pressed.connect(_on_one_day)
+		top.add_child(one)
+	top.add_child(_pill_chip("HOJE" if ready else "%d DIA%s" % [days, "" if days == 1 else "S"], "timer", UiStyle.RED, Color.WHITE))
+	top.mouse_filter = Control.MOUSE_FILTER_PASS
+	ScreenKit.place(top, t, Control.PRESET_TOP_RIGHT, Vector2(-16, 12))
+	# nome com a bandeira + data, chuva e sprint
+	var info := VBoxContainer.new()
+	info.add_theme_constant_override("separation", 6)
+	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var nh := HBoxContainer.new()
+	nh.add_theme_constant_override("separation", 12)
+	nh.add_child(flag_rect(String(circuit.get("country_code", "")), 30))
+	var nm := UiStyle.g_label(gp_short(String(rd["grand_prix"])).to_upper(), 34 if gp_short(String(rd["grand_prix"])).length() <= 14 else 28, UiStyle.G_TEXT, "black")
+	nm.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	nm.add_theme_constant_override("shadow_offset_y", 2)
+	nh.add_child(nm)
+	info.add_child(nh)
+	var ch := HBoxContainer.new()
+	ch.add_theme_constant_override("separation", 6)
+	ch.add_child(_pill_chip(campaign.date_text(Campaign._day_of(String(rd["date"]))).get_slice(", ", 1).to_lower(), "cal"))
+	ch.add_child(_pill_chip("%d%%" % roundi(float(circuit.get("rain_probability", 0)) * 100), "rain"))
+	if campaign.regs.is_sprint(rd["id"]):
+		ch.add_child(_pill_chip("SPRINT", "", UiStyle.SECTION["staff"], Color.WHITE))
+	info.add_child(ch)
+	info.position = Vector2(20, r.size.y - 104)
+	t.add_child(info)
+	# como o carro se sai aqui: afinidade e ritmo estimado
+	var fit := campaign.track_fit(rd["id"])
+	var rank := campaign.track_rank(rd["id"])
+	var fit_col := UiStyle.G_UP if fit > 0.35 else (UiStyle.G_DOWN if fit < -0.35 else Color("#F5C542"))
+	var rings := HBoxContainer.new()
+	rings.add_theme_constant_override("separation", 8)
+	rings.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rings.add_child(RingGauge.make((fit + 1.0) / 2.0, 58, fit_col, "", "", "car"))
+	rings.add_child(RingGauge.make(1.0 - float(rank - 1) / 5.0, 58, UiStyle.G_UP if rank <= 2 else UiStyle.SECTION["drivers"], "P%d" % (rank * 2 - 1)))
+	rings.position = Vector2(r.size.x - 20 - 124, r.size.y - 78)
+	t.add_child(rings)
+	return t
+
+
+func _drivers_tile(r: Rect2, color: Color) -> Control:
+	var t := _tile(r, Session.open_campaign_team)
+	var ids := campaign.team_driver_ids(campaign.player_team)
+	var rows := campaign.driver_standings()
+	var half := r.size.x / maxf(ids.size(), 1)
+	for i in ids.size():
+		var d := _driver(ids[i])
+		var col := Control.new()
+		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.position = Vector2(i * half, 0)
+		col.size = Vector2(half, r.size.y)
+		var bg := ColorRect.new()
+		bg.color = Color(color, 0.16 if i == 0 else 0.1)
+		bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		col.add_child(bg)
+		var num := UiStyle.g_label(str(int(d.get("number", 0))), 120, Color(color, 0.32), "black")
+		num.position = Vector2(8, 26)
+		col.add_child(num)
+		var av := DriverPhotos.make_avatar(d, color, 96)
+		av.position = Vector2(half / 2.0 - 48, 70)
+		col.add_child(av)
+		var nm := String(d.get("name", ""))
+		var sl := UiStyle.g_label(nm.get_slice(" ", nm.get_slice_count(" ") - 1).to_upper(), 21, UiStyle.G_TEXT, "black")
+		sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		sl.position = Vector2(0, 180)
+		sl.size = Vector2(half, 30)
+		col.add_child(sl)
+		var pos := 0
+		for k in rows.size():
+			if rows[k][0] == ids[i]:
+				pos = k + 1
+		var ring := RingGauge.make(1.0 - float(pos - 1) / maxf(rows.size() - 1, 1.0), 64, UiStyle.SECTION["drivers"], "%dº" % pos, str(int(campaign.driver_points.get(ids[i], 0))))
+		ring.position = Vector2(half / 2.0 - 32, 222)
+		col.add_child(ring)
+		t.add_child(col)
+		if i > 0:
+			var sep := ColorRect.new()
+			sep.color = Color(0, 0, 0, 0.35)
+			sep.position = Vector2(i * half - 2, 0)
+			sep.size = Vector2(4, r.size.y)
+			sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			t.add_child(sep)
+	var badge := PanelContainer.new()
+	badge.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.SECTION["drivers"], 10, 6, 6))
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.add_child(ScreenKit.icon("users", 18, Color.WHITE))
+	badge.position = Vector2(r.size.x - 48, 14)
+	t.add_child(badge)
+	return t
+
+
+func _car_tile(r: Rect2) -> Control:
+	var t := _tile(r, Session.open_campaign_car, Color("#1d1813"))
+	_tile_head(t, "car", UiStyle.SECTION["car"], "CARRO", true)
+	ScreenKit.place(_pill_chip("%d/%d" % [campaign.dev.busy(), campaign.dev.slots()], "factory", Color(1, 1, 1, 0.1)), t, Control.PRESET_TOP_RIGHT, Vector2(-16, 14))
+	var car := TextureRect.new()
+	car.texture = CarArt.car_texture(campaign.team())
+	car.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	car.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	car.position = Vector2(24, 44)
+	car.size = Vector2(r.size.x - 48, r.size.y - 124)
+	car.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	t.add_child(car)
+	var traits: Dictionary = campaign.team().get("car_traits", {})
+	var parts := campaign.my_parts()
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 0)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for k: Array in [["straight", "#F5C542", "t_straight"], ["slow", "#ff6a5a", "t_slow"], ["fast", "#5c93ea", "t_fast"], ["rel", "#2FD38A", "t_rel"]]:
+		var v := 0.0
+		if k[0] == "rel":
+			v = float(traits.get("rel", CarParts.REL_NEUTRAL)) + parts.known_trait_delta(0, "rel")
+		else:
+			v = campaign.base_rating + campaign.dev.rating_bonus() + float(traits.get(k[0], 0.0)) + parts.known_trait_delta(0, k[0])
+		var cell := HBoxContainer.new()
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cell.alignment = BoxContainer.ALIGNMENT_CENTER
+		cell.add_theme_constant_override("separation", 6)
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.add_child(ScreenKit.icon(k[2], 18, Color(k[1])))
+		cell.add_child(RingGauge.make(clampf(v / 100.0, 0.0, 1.0), 56, Color(k[1]), str(roundi(v))))
+		row.add_child(cell)
+	row.position = Vector2(12, r.size.y - 70)
+	row.size = Vector2(r.size.x - 24, 60)
+	t.add_child(row)
+	return t
+
+
+func _hq_tile(r: Rect2) -> Control:
+	var t := _tile(r, Session.open_campaign_hq, Color("#13201b"))
+	var campus := HqCampus.new()
+	campus.colors = HqCampus.default_colors()
+	campus.position = Vector2(0, 30)
+	campus.size = Vector2(r.size.x, r.size.y - 30)
+	campus.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	campus.fit(campus.size)
+	t.add_child(campus)
+	_tile_head(t, "hq", UiStyle.SECTION["hq"], "SEDE", true)
+	var busy := campaign.dev.busy()
+	var chip := _pill_chip("%d OBRA%s" % [busy, "" if busy == 1 else "S"] if busy > 0 else "LIVRE", "up", UiStyle.SECTION["hq"], UiStyle.G_INK)
+	ScreenKit.place(chip, t, Control.PRESET_TOP_RIGHT, Vector2(-16, 14))
+	return t
+
+
+func _table_tile(r: Rect2) -> Control:
+	var t := _tile(r, Session.open_campaign_standings)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 8)
+	h.add_child(ScreenKit.icon("trophy", 20, UiStyle.SECTION["champ"]))
+	h.add_child(UiStyle.g_label("TABELA", 15, UiStyle.G_TEXT, "black"))
+	v.add_child(h)
+	var rows := campaign.team_standings()
+	for i in mini(rows.size(), 7):
+		var tid: String = rows[i][0]
+		var mine := tid == campaign.player_team
+		var p := PanelContainer.new()
+		p.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.08) if mine else Color(0, 0, 0, 0), 10, 6, 2))
+		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var rh := HBoxContainer.new()
+		rh.add_theme_constant_override("separation", 8)
+		var n := UiStyle.g_label(str(i + 1), 16, UiStyle.G_TEXT, "black")
+		n.custom_minimum_size = Vector2(16, 0)
+		rh.add_child(n)
+		var bar := ColorRect.new()
+		bar.color = UiStyle.team_color(tid)
+		bar.custom_minimum_size = Vector2(6, 28)
+		rh.add_child(bar)
+		rh.add_child(TeamEmblems.make_rect(tid, 28))
+		var pts := UiStyle.g_label(str(rows[i][1]), 15, UiStyle.G_TEXT, "black")
+		pts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pts.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		rh.add_child(pts)
+		p.add_child(rh)
+		v.add_child(p)
+	v.position = Vector2(14, 14)
+	v.size = Vector2(r.size.x - 28, r.size.y - 28)
+	t.add_child(v)
+	return t
+
+
+func _board_tile(r: Rect2) -> Control:
+	var t := _tile(r, Session.open_campaign_council)
+	var goal := campaign.season_goal()
+	var pos := campaign.team_position(campaign.player_team)
+	var ok := pos <= goal
+	var v := VBoxContainer.new()
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_theme_constant_override("separation", 8)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var ring := RingGauge.make(clampf(float(goal) / float(maxi(pos, 1)), 0.05, 1.0), 104, UiStyle.SECTION["board"] if ok else UiStyle.G_DOWN, "%dº" % pos, "meta %dº" % goal, "", 9.0)
+	ring.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	v.add_child(ring)
+	var h := HBoxContainer.new()
+	h.alignment = BoxContainer.ALIGNMENT_CENTER
+	h.add_theme_constant_override("separation", 6)
+	h.add_child(ScreenKit.icon("smile", 18, UiStyle.G_UP if campaign.trust >= 40.0 else UiStyle.G_DOWN))
+	h.add_child(UiStyle.g_label(campaign.trust_label().to_upper(), 13, UiStyle.G_TEXT, "black"))
+	v.add_child(h)
+	v.set_anchors_preset(Control.PRESET_FULL_RECT)
+	t.add_child(v)
+	return t
 
 
 func _chip(caption: String, value: String, size: int) -> PanelContainer:

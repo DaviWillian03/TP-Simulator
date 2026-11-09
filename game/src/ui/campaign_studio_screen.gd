@@ -57,6 +57,7 @@ func _ready() -> void:
 	save.pressed.connect(_save)
 	acts.add_child(save)
 	ScreenKit.place(acts, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 22))
+	ScreenKit.campaign_nav(_layer, "studio")
 	_toasts = ToastFeed.new()
 	ScreenKit.place(_toasts, _layer, Control.PRESET_TOP_LEFT, Vector2(560, 150), Vector2(300, 0))
 	_refresh()

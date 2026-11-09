@@ -94,7 +94,7 @@ func test_nav_tem_o_conselho() -> void:
 	var screen: Control = await _open("res://src/ui/campaign_hub_screen.tscn")
 	var has := false
 	for n in _all(screen):
-		if n is Button and (n as Button).text == "Conselho" and not (n as Button).disabled:
+		if n is Button and (n as Button).tooltip_text == "Regras" and not (n as Button).disabled:  # barra de ícones (v26)
 			has = true
 	assert_true(has)
 	for c in _cards(screen):

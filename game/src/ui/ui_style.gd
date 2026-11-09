@@ -262,7 +262,12 @@ const G_INK := Color("#11141a")  ## texto sobre o claro
 const G_INK_2 := Color("#4b5260")
 const G_RED_PRESS := Color("#b30500")
 const G_GLASS := Color(0.043, 0.051, 0.071, 0.86)  ## painel escuro translúcido sobre a pista em tela cheia
-const G_OFF := Color(1, 1, 1, 0.04)  ## fundo de controle desabilitado
+const G_OFF := Color(1, 1, 1, 0.04)
+const G_FRAME := Color(0.039, 0.047, 0.063, 0.82)  ## barra do topo e barra de ícones da campanha (v26)
+## Cor de destaque de cada seção da campanha (v26): o ícone e o título da seção usam a mesma cor.
+const SECTION := {"home": Color("#f3f4f6"), "champ": Color("#E10600"), "drivers": Color("#4C8DFF"), "car": Color("#FF8A1F"),
+	"hq": Color("#2FD38A"), "cal": Color("#ff4d4d"), "staff": Color("#A66BFF"), "spons": Color("#22C7E8"),
+	"money": Color("#F5C542"), "hist": Color("#F5C542"), "board": Color("#FF5C8A")}  ## fundo de controle desabilitado
 ## Treino simulado (mockup v21): partes do medidor "chance de bom acerto" e as notas do resultado
 const G_DIRECTOR := Color("#ffd24a")
 const G_ENGINEER := Color("#5c93ea")

@@ -5,6 +5,24 @@ import pathlib
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "game/assets/icons"
 ICONS = {
+    # menus v26 (2026-11-09): barra de ícones, barra do topo, mosaico e Sede
+    "home": '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    "trophy": '<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/><path d="M12 14v4M8 20h8"/>',
+    "users": '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c.8-4 3.4-6 7-6s6.2 2 7 6"/><circle cx="17" cy="8" r="3"/><path d="M17 14c2.5 0 4.3 1.8 5 5"/>',
+    "car": '<path d="M2 15h20l-2-4h-5l-2-3H8l-1 3H4z"/><circle cx="7" cy="16" r="2.4"/><circle cx="17" cy="16" r="2.4"/>',
+    "hq": '<path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-5h6v5M8 10h2M14 10h2"/>',
+    "cal": '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    "hand": '<path d="M3 12l4-4 4 2 3-2 7 5-6 6-4-2-3 1z"/><path d="M11 10l3 3"/>',
+    "gavel": '<path d="M13 4l7 7M10 7l7 7M12 5l-4 4 3 3 4-4"/><path d="M9 11l-6 6 2 2 6-6"/><path d="M13 20h8"/>',
+    "bell": '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+    "smile": '<circle cx="12" cy="12" r="9"/><path d="M8 14c1 1.5 2.4 2.2 4 2.2s3-.7 4-2.2M9 9h.01M15 9h.01"/>',
+    "play": '<path d="M7 4l13 8-13 8z"/>',
+    "wind": '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/>',
+    "sim": '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+    "pen": '<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>',
+    "up": '<path d="M12 19V5M5 12l7-7 7 7"/>',
+    "timer": '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+    "gear": '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
     "lock": '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
     "chevron": '<path d="M9 5l7 7-7 7"/>',
     "back": '<path d="M15 5l-7 7 7 7"/>',
