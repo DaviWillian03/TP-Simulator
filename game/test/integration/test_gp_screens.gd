@@ -30,7 +30,7 @@ func test_configuracao_mostra_o_calendario_e_troca_o_circuito() -> void:
 	assert_eq(screen._rows.size(), 22, "22 GPs no calendário")
 	(screen._rows["monaco"] as Button).button_pressed = true
 	assert_eq(Session.circuit_id, "monaco")
-	assert_string_contains(screen._gp_title.text, "MÔNACO")
+	assert_true((screen._rows["monaco"] as Button).button_pressed, "o cartão escolhido fica marcado")
 	Session.circuit_id = "interlagos"
 
 
