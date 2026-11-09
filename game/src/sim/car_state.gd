@@ -77,6 +77,7 @@ var confidence_until_lap := 0
 var stall_s := 0.0  ## rodou/saiu da pista: parado ou fora do traçado por alguns segundos
 var damage_wing := 0.0  ## 0..1 (reparável no box trocando a asa)
 var damage_floor := 0.0  ## 0..1 (não reparável)
+var punctured := false  ## pneu estourado: volta lenta até o box (troca obrigatória)
 var power_loss_s := 0.0  ## quebra parcial: segundos por volta perdidos até o fim da corrida
 var repair_wing := false  ## trocar a asa na próxima parada
 var penalty_pending_s := 0.0  ## punição de tempo ainda não cumprida

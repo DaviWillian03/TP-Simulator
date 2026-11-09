@@ -11,9 +11,10 @@ const MAX_STOPS := 3
 const MIN_STINT := 3
 
 
-## Contexto da corrida para planejar: {total_laps, wear_mult, pit_loss, sprint}.
-static func context(total_laps: int, wear_mult: float, pit_loss: float, sprint: bool) -> Dictionary:
-	return {"total_laps": total_laps, "wear_mult": wear_mult, "pit_loss": pit_loss, "sprint": sprint}
+## Contexto da corrida para planejar: {total_laps, wear_mult, pit_loss, sprint, pace_k}.
+## pace_k = RaceSim.tyre_pace_k_for(duração): a perda de ritmo do pneu cresce nas corridas curtas.
+static func context(total_laps: int, wear_mult: float, pit_loss: float, sprint: bool, pace_k := 1.0) -> Dictionary:
+	return {"total_laps": total_laps, "wear_mult": wear_mult, "pit_loss": pit_loss, "sprint": sprint, "pace_k": pace_k}
 
 
 ## Vida útil planejada de um composto (voltas), descontando o desgaste de jogo usado.
@@ -32,7 +33,7 @@ static func cost(tyres: TyreModel, stints: Array, ctx: Dictionary) -> float:
 		var w := 0.0 if bool(st.get("new", true)) else PitStop.USED_SET_WEAR
 		var per := tyres.wear_per_lap(k) * float(ctx["wear_mult"])
 		for i in int(st["laps"]):
-			total += tyres.pace_penalty(k, w)
+			total += tyres.pace_penalty(k, w) * float(ctx.get("pace_k", 1.0))
 			w += per
 	return total + float(ctx["pit_loss"]) * maxi(stints.size() - 1, 0)
 

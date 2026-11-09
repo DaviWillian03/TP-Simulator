@@ -28,7 +28,10 @@ signal pit_box_stop(car: CarState, hold_s: float)  ## carro parou no box (a tela
 signal race_finished
 signal plan_stop_due(car: CarState, lap: int, compound: String, fresh: bool)  ## estratégia do jogador: hora de parar (só avisa)
 
-const WEAR_SHORT_RACE_EXP := 0.5  ## quanto o desgaste cresce em corridas curtas (1 = proporcional)
+## e a perda de ritmo do pneu (gasto e diferença entre compostos) também cresce: com 25%, ~2,5x. Assim 2 paradas
+## ficam perto de 1 nas pistas de alto desgaste e o duro volta a ter papel (decisão 2026-11-09).
+const DEG_SHORT_RACE_EXP := 0.65
+const WEAR_SHORT_RACE_EXP := 0.9  ## corridas curtas gastam o pneu na proporção (decisão 2026-11-09: 25% perto do limite)
 const DT := 0.1  ## segundos de corrida por passo
 const GRID_SPACING_M := 10.0
 const MIN_GAP_M := 9.0  ## sem ultrapassar, um carro não chega mais perto que isso do da frente
@@ -74,6 +77,7 @@ var radio: RadioSystem
 var cars: Array[CarState] = []
 var total_laps := 0
 var duration_pct := 1.0
+var tyre_pace_k := 1.0  ## tyre_pace_k_for(duration_pct)
 var sprint := false
 var time_s := 0.0
 var chequered := false
@@ -117,6 +121,7 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	track = p_track
 	tyres = p_tyres
 	duration_pct = float(options.get("duration_pct", 1.0))
+	tyre_pace_k = tyre_pace_k_for(duration_pct)
 	sprint = bool(options.get("sprint", false))
 	total_laps = maxi(3, roundi(track.laps * duration_pct / (SPRINT_DISTANCE if sprint else 1.0)))
 	category = String(options.get("category", "F1"))
@@ -206,6 +211,11 @@ func _setup_grid(grid_ids: Array = []) -> void:
 
 func race_distance() -> float:
 	return total_laps * track.length_m
+
+
+## Multiplicador da perda de ritmo dos pneus para a duração da corrida (1 na corrida completa).
+static func tyre_pace_k_for(pct: float) -> float:
+	return pow(1.0 / clampf(pct, 0.05, 1.0), DEG_SHORT_RACE_EXP)
 
 
 func wear_multiplier() -> float:
@@ -471,8 +481,8 @@ func step() -> void:
 	var order := _running_order()
 	_update_gaps(order)
 	for car in order:
-		if car.drive_through and not car.pit_requested:
-			car.pit_requested = true
+		if (car.drive_through or car.punctured) and not car.pit_requested and not car.in_pit:
+			car.pit_requested = true  # drive-through ou pneu estourado: o box é obrigatório
 		if car.in_pit and car.box_hold_s > 0.0:
 			car.speed = 0.0
 			car.box_hold_s -= DT
@@ -547,7 +557,7 @@ func drs_open(car: CarState) -> bool:
 ## Tempo de volta no estado atual (bandeira verde). with_traffic inclui ruído e ar turbulento.
 func _lap_time(car: CarState, with_traffic: bool) -> float:
 	var t := _ideal_lap_time(car)
-	t += tyres.pace_penalty(car.tyre, car.tyre_wear)
+	t += tyres.pace_penalty(car.tyre, car.tyre_wear) * tyre_pace_k
 	var wet_skill := 1.0 + (80.0 - DriverStats.attr(car.driver, "wet")) * DriverStats.WET_K
 	t += (tyres.wet_penalty(car.tyre, weather.wetness) + weather.wetness * WET_TRACK_S) * clampf(wet_skill, 0.7, 1.4)
 	t -= weather.rubber * RUBBER_GAIN_S
@@ -562,6 +572,8 @@ func _lap_time(car: CarState, with_traffic: bool) -> float:
 		t += ENERGY_TIME[car.energy_mode] * energy_k
 	t += car.damage_wing * RaceControl.WING_PENALTY_S + car.damage_floor * RaceControl.FLOOR_PENALTY_S + car.power_loss_s
 	t += radio.confidence_delta_s(car)
+	if car.punctured:
+		t *= RaceControl.PUNCTURE_LAP_MULT
 	if with_traffic:
 		t += car.lap_noise
 		var gap := gap_to_car_ahead_s(car)
@@ -754,6 +766,7 @@ func _service_car(car: CarState) -> void:
 	car.stints.append({"compound": car.tyre, "laps": car.tyre_laps})
 	car.tyre = car.pit_compound
 	car.tyre_wear = PitStop.USED_SET_WEAR if used else 0.0
+	car.punctured = false
 	car.tyre_laps = 0
 	car.plan = {}
 	if not car.compounds_used.has(car.tyre):

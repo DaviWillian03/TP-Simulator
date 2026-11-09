@@ -16,7 +16,7 @@
  "pit_entry_frac": 0.95,
  "pit_box_frac": 0.0,
  "pit_exit_frac": 0.05,
- "tyre_wear_factor": 1.0,
+ "tyre_wear_factor": 1.16,
  "overtaking_difficulty": 0.8,
  "overtaking_zones": [
   {

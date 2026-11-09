@@ -601,3 +601,9 @@ Respostas do usuário:
   Missões: **Atacar o carro da frente**, **Defender a posição**, **Poupar pneus até a volta X**, **Abrir gap / undercut**,
   **Ritmo seguro (trazer o carro)**. O piloto **pode discordar pelo rádio** (aceitar ou insistir; sem barra de confiança por
   enquanto). Substitui Poupar/Normal/Atacar e a bateria no cartão do piloto. Mockup antes.
+- **2026-11-09 — Pneus mais no limite + estouro.** Nas corridas curtas (25%) o pneu fica mais perto do limite: o desgaste
+  cresce quase na proporção da duração e a perda de ritmo do pneu também aumenta (~2,5x com 25%), para que **2 paradas não
+  sejam muito piores** em algumas pistas e o **duro tenha papel**. Cada pista tem o seu desgaste (alto: Lusail, Silverstone,
+  Suzuka, Barcelona; baixo: Mônaco, Las Vegas, Monza, Baku, Montreal). **Estouro de pneu**: possível com **20% de vida ou
+  menos**, chance maior quanto menos vida (≈2%/volta com 15%, ≈7% com 10%, 30% com 0%); volta lenta até o box com troca
+  obrigatória e dano no assoalho, ou abandono (~15%), com VSC/SC pelos detritos. O rádio avisa do risco.

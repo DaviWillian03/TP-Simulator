@@ -910,9 +910,9 @@ func _on_fastest_lap(car: CarState, lap_time: float) -> void:
 
 
 func _on_incident(car: CarState, kind: String, text: String) -> void:
-	var important := car.is_player or kind in ["crash", "failure", "issue", "contact", "investigation", "cleared"] or sim.standings().find(car) < 5
+	var important := car.is_player or kind in ["crash", "failure", "blowout", "issue", "contact", "investigation", "cleared"] or sim.standings().find(car) < 5
 	if important:
-		_toasts.push(text, "hot" if car.is_player or kind == "crash" else "note")
+		_toasts.push(text, "hot" if car.is_player or kind in ["crash", "blowout"] else "note")
 
 
 func _on_flag_changed(_flag: int, text: String) -> void:

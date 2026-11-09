@@ -94,7 +94,7 @@ F2/F3/F4 simuladas ao fundo → Modo Edição e importação (.zip).
 - Corrida (torre tocável, cartões compactos, ícones de status), tela do box (estoque, ajustes, parada
   dupla, punição, mini-jogo de toque), classificação ao vivo, treino, painel do fim de semana, campanha.
 - Rostos dos pilotos e logos das equipes (só locais, `game/local/`). Cor da equipe como ambiente.
-- Desgaste de pneus balanceado (1 parada em corridas de 25%).
+- Desgaste de pneus balanceado: 25% perto do limite, desgaste por pista, 1 a 3 paradas conforme a pista; estouro de pneu (≤20% de vida).
 
 ## Fila de pedidos pendentes (revisão de 2026-11-04, pedido do usuário: uma tarefa por vez, do primeiro ao último)
 Ordem de chegada dos pedidos ainda abertos (o que já foi feito está nas seções abaixo com ✅):

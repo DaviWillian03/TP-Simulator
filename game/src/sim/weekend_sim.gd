@@ -255,7 +255,7 @@ func race_context() -> Dictionary:
 		total = maxi(3, roundi(CategoryRules.race_laps(category, track, is_sprint) * duration_pct))
 	var wear := track.tyre_wear_factor / pow(duration_pct, RaceSim.WEAR_SHORT_RACE_EXP) * float(TechRules.knobs(tech)["wear_k"])
 	var no_rule := is_sprint or not bool(CategoryRules.of(category).get("compound_rule", true))
-	var ctx := RaceStrategy.context(total, wear, track.pit_lane_loss_s, no_rule)
+	var ctx := RaceStrategy.context(total, wear, track.pit_lane_loss_s, no_rule, RaceSim.tyre_pace_k_for(duration_pct))
 	ctx["is_sprint"] = is_sprint
 	return ctx
 

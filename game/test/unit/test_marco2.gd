@@ -100,7 +100,7 @@ func test_safety_car_agrupa_o_pelotao_e_proibe_ultrapassagens() -> void:
 
 func test_vsc_mantem_as_diferencas_e_termina_sozinho() -> void:
 	var sim := _sim({})
-	_run_laps(sim, 5)
+	_run_laps(sim, 2)  # cedo: na corrida de 25% o macio já pede box por volta da 4ª
 	for c in sim.cars:  # ninguém precisa parar: isola o efeito do VSC nas diferenças
 		c.tyre_wear = 0.0
 		c.compounds_used = ["medium", "hard"]
@@ -301,7 +301,7 @@ func test_sem_resposta_o_piloto_decide_sozinho() -> void:
 
 func test_safety_car_gera_pergunta_de_parada() -> void:
 	var sim := _sim({"player_team": "haas"})
-	_run_laps(sim, 4)
+	_run_laps(sim, 2)
 	sim.control.deploy_sc("teste")
 	for car in _player_cars(sim):
 		var q := sim.radio.pending_for(car)

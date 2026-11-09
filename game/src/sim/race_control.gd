@@ -23,6 +23,11 @@ const WING_PENALTY_S := 1.8  ## asa totalmente destruída
 const FLOOR_PENALTY_S := 1.0
 const WING_CHANGE_S := 7.0  ## tempo extra parado para trocar a asa
 const RED_FLAG_SUSPENSION_S := 900.0
+# estouro de pneu (decisão 2026-11-09): possível com 20% de vida ou menos, mais provável quanto mais gasto
+const BLOWOUT_FROM_WEAR := 0.80  ## desgaste a partir do qual o pneu pode estourar (vida <= 20%)
+const BLOWOUT_MAX_PER_LAP := 0.30  ## chance por volta com o pneu no fim (vida 0%); cresce com o quadrado
+const BLOWOUT_RETIRE := 0.15  ## parte dos estouros que destrói a suspensão/assoalho e tira o carro
+const PUNCTURE_LAP_MULT := 1.45  ## volta lenta até o box com o pneu estourado
 const PACE_RISK := {CarState.PaceMode.CONSERVE: 0.7, CarState.PaceMode.NORMAL: 1.0, CarState.PaceMode.ATTACK: 1.6}
 
 var _sim_ref: WeakRef  # referência fraca: evita ciclo RaceSim <-> módulo (vazaria memória)
@@ -109,6 +114,9 @@ func step(dt: float, running: Array[CarState]) -> void:
 			continue
 		if car.in_pit:
 			continue
+		if not car.punctured and s.rng.randf() < blowout_chance_per_lap(car) * dt / lap_time:
+			_blowout(car)
+			continue
 		var p_incident := incident_rate_per_lap(car) * dt / lap_time
 		if flag == Flag.GREEN and s.rng.randf() < p_incident:
 			_incident(car)
@@ -141,6 +149,19 @@ func incident_rate_per_lap(car: CarState) -> float:
 		r *= 3.0  # largada
 	r *= clampf(1.0 + (90.0 - DriverStats.attr(car.driver, "consistency")) * 0.03, 0.6, 1.6)
 	return r
+
+
+## Chance de estouro por volta: 0 acima de 20% de vida, ~2% com 15%, ~7,5% com 10%, 30% com o pneu no fim.
+## Atacar pesa mais; atrás do safety car, menos. Pneu de chuva/intermediário também estoura.
+func blowout_chance_per_lap(car: CarState) -> float:
+	var x := (car.tyre_wear - BLOWOUT_FROM_WEAR) / (1.0 - BLOWOUT_FROM_WEAR)
+	if x <= 0.0:
+		return 0.0
+	var p := BLOWOUT_MAX_PER_LAP * minf(x, 1.4) * minf(x, 1.4)
+	p *= PACE_RISK[car.pace_mode]
+	if is_neutralized():
+		p *= 0.4
+	return minf(p, 0.8)
 
 
 ## Volta do líder completada (conta as voltas do safety car).
@@ -190,6 +211,26 @@ func _incident(car: CarState) -> void:
 		else:
 			car.damage_floor = minf(1.0, car.damage_floor + sim.rng.randf_range(0.3, 0.6))
 			sim.incident.emit(car, "damage", "%s passa por cima da zebra e danifica o assoalho" % car.display_name())
+
+
+func _blowout(car: CarState) -> void:
+	var life := roundi(maxf(0.0, 1.0 - car.tyre_wear) * 100.0)
+	if sim.rng.randf() < BLOWOUT_RETIRE:
+		sim.retire_car(car, "pneu estourado")
+		sim.incident.emit(car, "blowout", "%s: pneu estoura (%d%% de vida) e destrói a suspensão — abandona!" % [car.display_name(), life])
+		if sim.rng.randf() < 0.6:
+			deploy_vsc("Detritos do pneu de %s" % car.display_name())
+		else:
+			deploy_sc("Detritos do pneu de %s" % car.display_name())
+		return
+	car.punctured = true
+	car.stall_s = sim.rng.randf_range(1.5, 3.5)
+	car.damage_floor = minf(1.0, car.damage_floor + sim.rng.randf_range(0.1, 0.35))
+	if not car.in_pit and not car.pit_requested:
+		sim.request_pit(car, StrategyAI.choose_compound(sim, car, sim.total_laps - car.laps_done))
+	sim.incident.emit(car, "blowout", "%s: pneu estoura (%d%% de vida)! Volta lenta para o box" % [car.display_name(), life])
+	if sim.rng.randf() < 0.25:
+		deploy_vsc("Detritos do pneu de %s" % car.display_name())
 
 
 func _failure(car: CarState) -> void:

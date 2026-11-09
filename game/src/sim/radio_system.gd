@@ -95,7 +95,10 @@ func on_lap(car: CarState) -> void:
 	elif cls == "slick" and car.tyre_wear >= 0.72:
 		var next := StrategyAI.choose_compound(sim, car, remaining)
 		var pit_is_right := remaining > 3 or not sim.compound_rule_ok(car)
-		ask(car, "Os pneus acabaram, estou perdendo muito tempo. Box nesta volta?",
+		var q := "Os pneus acabaram, estou perdendo muito tempo. Box nesta volta?"
+		if car.tyre_wear >= RaceControl.BLOWOUT_FROM_WEAR:  # vida <= 20%: pode estourar
+			q = "Pneu com %d%% de vida, está vibrando — pode estourar! Box nesta volta?" % roundi(maxf(0.0, 1.0 - car.tyre_wear) * 100.0)
+		ask(car, q,
 			[_opt("Box: %s" % sim.tyres.compounds[next]["name"].to_lower(), "pit", next), _opt("Mais 2 voltas", "stay")],
 			0 if pit_is_right else 1)
 	elif _teammate_slower_ahead(car):
