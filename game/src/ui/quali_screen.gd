@@ -40,8 +40,10 @@ func _ready() -> void:
 		Session.go_to_title.call_deferred()
 		return
 	q = weekend.make_quali()
-	if Session.debug_advance_s > 0.0:  # (capturas de tela)
+	if Session.debug_advance_s > 0.0:  # (capturas de tela: a IA leva também os carros do jogador)
+		q.auto_player = true
 		q.advance(Session.debug_advance_s)
+		q.auto_player = false
 	var page := ScreenKit.garage_page(self, weekend.player_team)
 	var layer: Control = page["layer"]
 
@@ -254,6 +256,8 @@ func _player_panel(car: CarState) -> Control:
 	bar.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.12), 4, 0, 0))
 	bar.add_theme_stylebox_override("fill", UiStyle.g_box(Color("#c77dff"), 4, 0, 0))
 	v.add_child(bar)
+	var sectors := SectorStrip.new()  # setores da volta: roxo / verde / amarelo
+	v.add_child(sectors)
 	var go := CutButton.new()
 	go.custom_minimum_size = Vector2(0, 48)
 	go.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -267,7 +271,7 @@ func _player_panel(car: CarState) -> Control:
 	go.add_theme_constant_override("h_separation", 6)
 	go.add_theme_font_size_override("font_size", UiStyle.fs(13))
 	v.add_child(go)
-	var panel := {"car": car, "pos": pos, "status": status, "go": go, "bar": bar, "lap": lap}
+	var panel := {"car": car, "pos": pos, "status": status, "go": go, "bar": bar, "lap": lap, "sectors": sectors}
 	go.pressed.connect(_open_out_sheet.bind(panel))
 	_panels.append(panel)
 	return card
@@ -665,6 +669,7 @@ func _refresh_panel(p: Dictionary, order: Array[CarState]) -> void:
 		bar.add_theme_stylebox_override("fill", UiStyle.g_box(Color("#c77dff") if flying else Color("#8f98a7"), 4, 0, 0))
 	else:
 		lap.text = state
+	(p["sectors"] as SectorStrip).set_state(q.sectors_of(car), state == "Volta lançada")
 	var go: Button = p["go"]
 	go.disabled = not q.can_go_out(car)
 	if garage:

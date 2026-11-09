@@ -13,6 +13,7 @@ signal segment_started(index: int)
 signal segment_finished(index: int, eliminated: Array)
 signal session_event(text: String)
 signal session_finished
+signal sector_completed(car: CarState, index: int, time: float, color: String)  ## setor da volta lançada: "purple"/"green"/"yellow"
 signal decision_needed(decision: Dictionary)  ## volta comprometida de um carro do jogador: continuar / tentar de novo / box
 
 enum Phase { GARAGE, OUT_LAP, FLYING, IN_LAP }
@@ -51,6 +52,8 @@ const LIMIT_TIME_S := 0.12  ## no limite: mais rápida...
 const LIMIT_MISTAKE_K := 1.8  ## ...e bem mais arriscada
 const SECOND_LAP_S := 0.12  ## segunda volta rápida seguida: pneu já gasto por uma volta no limite
 const DECISION_TIMEOUT_S := 25.0  ## segundos de sessão para o jogador responder ao rádio
+const SECTORS := 3  ## setores da volta (cronometragem; pedido de 2026-11-09)
+const SECTOR_NOISE := 0.035  ## variação de cada setor (s): o melhor setor pode vir de voltas diferentes
 const REVEAL_RANGE := Vector2(0.25, 0.7)  ## em que ponto da volta o problema aparece
 
 var track: TrackModel
@@ -89,6 +92,10 @@ var lap_event: Dictionary = {}  ## CarState -> {kind, loss, valid, reveal, revea
 var pending: Array[Dictionary] = []  ## decisões abertas para o jogador
 var championship: Dictionary = {}
 var tech_lap_s := 0.0  ## regulamento técnico: carros mais rápidos/lentos para todos  ## driver id -> posição no campeonato (campanha); quem briga pelo título arrisca menos
+var lap_sectors: Dictionary = {}  ## CarState -> Array[float] tempos dos setores da volta lançada atual
+var sector_marks: Dictionary = {}  ## CarState -> Array[String] cor de cada setor já completado ("purple"/"green"/"yellow")
+var sector_best: Dictionary = {}  ## CarState -> Array[float] melhor setor do piloto na sessão (voltas válidas)
+var session_sector_best: Array = [INF, INF, INF]  ## melhor setor de toda a sessão (roxo)
 var _next_decision := 1
 var phase_d0: Dictionary = {}  ## CarState -> fração da volta em que a fase começou (abortar no meio da volta)
 var phase_start: Dictionary = {}  ## CarState -> instante (seg_time) em que a fase começou (para o carro andar na pista 3D)
@@ -133,6 +140,7 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		phase[car] = Phase.GARAGE
 		phase_end[car] = 0.0
 		best[car] = [INF, INF, INF]
+		sector_best[car] = [INF, INF, INF]
 		best_set_at[car] = [INF, INF, INF]
 		eliminated_in[car] = -1
 	if not single:
@@ -208,7 +216,9 @@ func _update_car(car: CarState) -> void:
 					_start_flying(car, false)
 		Phase.FLYING:
 			_check_reveal(car)
+			_check_sectors(car, false)
 			if seg_time >= phase_end[car]:
+				_check_sectors(car, true)
 				_finish_flying_lap(car)
 				laps_left[car] = int(laps_left.get(car, 1)) - 1
 				if int(laps_left[car]) > 0 and seg_time < segment_length() and not crashed.has(car):
@@ -338,10 +348,20 @@ func _start_flying(car: CarState, repeat: bool) -> void:
 			ev = {"kind": "limits", "loss": 0.0, "valid": false}
 		else:
 			ev = {"kind": "mistake", "loss": rng.randf_range(0.6, 2.5), "valid": true}
+	# setores: terços da volta com um pouco de variação; a perda do problema cai no setor em que ele aparece
+	var secs: Array = []
+	var clean := t
+	for i in SECTORS:
+		secs.append(clean / SECTORS + rng.randfn(0.0, SECTOR_NOISE))
+	secs[SECTORS - 1] = clean - float(secs[0]) - float(secs[1])
 	if not ev.is_empty():
 		ev["reveal"] = rng.randf_range(REVEAL_RANGE.x, REVEAL_RANGE.y)
 		ev["revealed"] = false
 		t += float(ev["loss"])
+		var si := clampi(int(float(ev["reveal"]) * SECTORS), 0, SECTORS - 1)
+		secs[si] = float(secs[si]) + float(ev["loss"])
+	lap_sectors[car] = secs
+	sector_marks[car] = []
 	lap_event[car] = ev
 	flying_time[car] = t
 	_set_phase(car, Phase.FLYING, seg_time + t)
@@ -454,6 +474,47 @@ func _apply_choice(car: CarState, option: int) -> void:
 		laps_left[car] = 0
 		_set_phase(car, Phase.IN_LAP, seg_time + rem * _lap_base(car) * IN_LAP_K, from)
 		session_event.emit("%s desiste da volta e volta ao box." % car.code())
+
+
+## Fecha os setores que o carro já cruzou na volta lançada e dá a cor de cada um (como na transmissão):
+## roxo = melhor da sessão, verde = melhor do piloto, amarelo = mais lento que o melhor dele.
+func _check_sectors(car: CarState, finished: bool) -> void:
+	var secs: Array = lap_sectors.get(car, [])
+	if secs.is_empty():
+		return
+	var marks: Array = sector_marks[car]
+	var elapsed := seg_time - float(phase_start[car])
+	var acc := 0.0
+	for i in SECTORS:
+		acc += float(secs[i])
+		if i < marks.size():
+			continue
+		if not finished and elapsed < acc:
+			return
+		var st := float(secs[i])
+		var valid: bool = (lap_event.get(car, {}) as Dictionary).get("valid", true)
+		var color := "yellow"
+		if st < float(session_sector_best[i]):
+			color = "purple"
+		elif st < float(sector_best[car][i]):
+			color = "green"
+		if valid:
+			if st < float(sector_best[car][i]):
+				sector_best[car][i] = st
+			if st < float(session_sector_best[i]):
+				session_sector_best[i] = st
+		marks.append(color)
+		sector_completed.emit(car, i, st, color)
+
+
+## Setores da volta atual (ou da última, se o carro já saiu da volta lançada): [{time, color}] dos já completados.
+func sectors_of(car: CarState) -> Array:
+	var out: Array = []
+	var secs: Array = lap_sectors.get(car, [])
+	var marks: Array = sector_marks.get(car, [])
+	for i in marks.size():
+		out.append({"time": float(secs[i]), "color": String(marks[i])})
+	return out
 
 
 func _finish_flying_lap(car: CarState) -> void:
