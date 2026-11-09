@@ -607,3 +607,11 @@ Respostas do usuário:
   Suzuka, Barcelona; baixo: Mônaco, Las Vegas, Monza, Baku, Montreal). **Estouro de pneu**: possível com **20% de vida ou
   menos**, chance maior quanto menos vida (≈2%/volta com 15%, ≈7% com 10%, 30% com 0%); volta lenta até o box com troca
   obrigatória e dano no assoalho, ou abandono (~15%), com VSC/SC pelos detritos. O rádio avisa do risco.
+- **2026-11-09 — Redesenho dos menus (inspiração: campanha do MM3, sem copiar).** Diagnóstico: a campanha estava ao mesmo
+  tempo cheia de texto (10 abas escritas, frases nos cartões) e monótona (uma cor, cartões iguais, poucas imagens).
+  Escolhas: **Início em mosaico** de blocos grandes com imagem + **barra de ícones** com rótulo curto no lugar das abas +
+  barra fixa no topo com dinheiro e um botão **CONTINUAR**. Arte/3D: **pista 3D no cartão do próximo GP**, **Sede 3D
+  isométrica**, **carro grande** (equipe/mosaico, pilotos com número gigante) e **calendário em cartões** (arte da pista,
+  pneus do fim de semana, afinidade). Recurso novo: **Sede com instalações** que evoluem por níveis (item 11 do roadmap).
+  Alcance: **mockups do jogo todo de uma vez** (tela inicial, GP, fim de semana e campanha). Mais símbolos, menos escrita,
+  uma cor de destaque por seção.
