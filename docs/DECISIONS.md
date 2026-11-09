@@ -595,3 +595,9 @@ Respostas do usuário:
   pôster** (câmera no carro do campeão, pista na cor da equipe, fogos/confete; depois pôster com foto grande, "CAMPEÃO
   MUNDIAL", número e números da temporada), para **pilotos e construtores de qualquer equipe** (mais festa quando é a sua).
   Mockup antes.
+- **Missões do stint no lugar da bateria** (respostas de 2026-11-09): a bateria (Carregar/Equil./Usar) passa para o piloto,
+  que dosa ritmo, bateria e pneus volta a volta conforme as notas (regularidade, gestão de pneus, ultrapassagem). O jogador
+  dá **missões**: uma **de base** para o stint e **missões curtas com fim automático** (terminada a curta, volta à base).
+  Missões: **Atacar o carro da frente**, **Defender a posição**, **Poupar pneus até a volta X**, **Abrir gap / undercut**,
+  **Ritmo seguro (trazer o carro)**. O piloto **pode discordar pelo rádio** (aceitar ou insistir; sem barra de confiança por
+  enquanto). Substitui Poupar/Normal/Atacar e a bateria no cartão do piloto. Mockup antes.

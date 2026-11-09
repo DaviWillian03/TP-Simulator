@@ -728,3 +728,8 @@ preparação automática e confirmação; (9) simplicidade no Android; (10) entr
 
 ## F2 e F3 jogáveis em todos os modos (usuário, 2026-11-08)
 - Item 8 fase 2 (jogar a campanha na F2/F3) e "coloque a F2 e F3 como opção pra ser jogada no grande premio tbm".
+
+## Gerência dos pilotos na corrida (usuário, 2026-11-09)
+> "o sistema de mexer na bateria está muito vazio. não seria melhor deixar isso na mão dos pilotos, e me dar outra forma
+> mais interessante de gerência dos pilotos durante a corrida?"
+- Pedido de ideias (a decidir): bateria passa para o piloto; o jogador ganha outra forma de gerenciar os pilotos em corrida.

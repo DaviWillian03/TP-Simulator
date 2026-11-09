@@ -1,0 +1,107 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>V25 · Corrida · missões</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:1280px;height:720px;overflow:hidden}.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.scene{background:#0b0c0f;color:#eef0f3;font-family:Titillium;font-weight:600}
+.wall{position:absolute;inset:0 0 250px 0;background:linear-gradient(#1b1e24,#111318 80%)}
+.wall:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:250px;background:linear-gradient(#181a1f,#0a0b0d)}
+.lamp{position:absolute;top:0;height:6px;background:#f4f6fa;border-radius:0 0 4px 4px;box-shadow:0 0 34px 10px rgba(240,245,255,.22)}
+.glow{position:absolute;inset:0;background:radial-gradient(ellipse 46% 40% at 64% 66%,rgba(24,104,219,.42),transparent 70%)}
+.cone{position:absolute;left:470px;top:0;width:560px;height:720px;background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0) 75%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%)}
+.car{position:absolute}.refl{position:absolute;transform:scaleY(-1);opacity:.13;-webkit-mask:linear-gradient(transparent 55%,#000)}
+.logo{position:absolute;left:52px;top:34px;height:74px}
+.season{position:absolute;left:56px;top:118px;font-size:13px;letter-spacing:3px;color:#9aa3b2}
+.modes{position:absolute;left:52px;top:168px;width:388px;display:flex;flex-direction:column;gap:12px}
+.mode{display:flex;align-items:center;gap:16px;border-radius:16px;padding:0 20px;background:rgba(255,255,255,.06)}
+.mode b{display:block;font-weight:900;font-size:24px;letter-spacing:.5px;line-height:1}.mode small{display:block;font-size:15px;color:#a8b0bd;margin-top:5px}
+.mode .go{margin-left:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.mode.main{height:112px;background:#f3f4f6;color:#11141a;position:relative;overflow:hidden}
+.mode.main:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:#E10600}
+.mode.main b{font-size:34px}.mode.main small{color:#4b5260}.mode.main .go{background:#E10600;color:#fff;width:54px;height:54px}
+.mode.alt{height:84px}
+.mode.lock svg{flex:none}.mode.lock{height:50px;white-space:nowrap;background:none;color:#6c7380;padding-left:20px}.mode.lock b{font-size:18px;color:#7b8290}
+.tag{font-size:12px;letter-spacing:2px;border-radius:20px;padding:4px 10px;background:rgba(255,255,255,.07);color:#8a92a0;margin-left:auto}
+.pill{display:flex;align-items:center;gap:12px;border-radius:40px;padding:8px 18px 8px 10px;background:rgba(255,255,255,.07)}
+.pill b{display:block;font-size:17px;font-weight:900;letter-spacing:1px}.pill small{display:block;font-size:13px;color:#a8b0bd}
+.top{position:absolute;right:44px;top:40px;display:flex;align-items:center;gap:12px}
+.swap{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07)}
+.plates{position:absolute;right:56px;bottom:40px;display:flex;gap:44px}
+.plate{display:flex;align-items:flex-end;gap:12px}.plate .n{font-weight:900;font-size:62px;line-height:.8;color:transparent;-webkit-text-stroke:2px #5c93ea}
+.plate b{display:block;font-size:20px;font-weight:900}.plate small{display:block;font-size:13px;color:#9aa3b2;letter-spacing:1.5px}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#5d6574}
+/* configuração */
+.hdr{position:absolute;left:44px;top:30px;display:flex;align-items:center;gap:16px}
+.round{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.hdr b{font-size:15px;letter-spacing:3px;font-weight:700;color:#9aa3b2;display:block}.hdr h1{font-size:30px;font-weight:900;letter-spacing:1px}
+.map{position:absolute;left:30px;top:96px;width:830px;height:420px}
+.map svg.trk{position:absolute;left:340px;top:6px;filter:drop-shadow(0 0 10px rgba(110,170,255,.55))}
+.badge{display:inline-flex;gap:8px;align-items:center;border-radius:20px;padding:5px 12px;font-size:13px;letter-spacing:2px;font-weight:700}
+.gpname{position:absolute;left:14px;top:40px;width:420px}
+.gpname h2{font-size:50px;font-weight:900;line-height:.95;margin:14px 0 8px}.gpname p{font-size:16px;color:#a8b0bd}
+.stats{position:absolute;left:14px;top:268px;display:grid;grid-template-columns:repeat(2,170px);gap:22px 26px}
+.stat b{display:block;font-size:40px;font-weight:900;line-height:1}.stat small{font-size:12px;letter-spacing:2px;color:#8f98a7}
+.panel{position:absolute;right:40px;top:92px;width:360px;display:flex;flex-direction:column;gap:13px}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#8f98a7;margin-bottom:8px}
+.seg{display:flex;background:rgba(255,255,255,.07);border-radius:28px;padding:4px;gap:4px}
+.seg span{flex:1;height:44px;border-radius:24px;display:grid;place-items:center;font-size:16px;font-weight:700;color:#c3c9d3}
+.seg span.on{background:#f3f4f6;color:#11141a}
+.wx{display:flex;gap:8px}.wx span{flex:1;height:58px;border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:#c3c9d3}
+.wx span.on{background:#f3f4f6;color:#11141a}
+.cta{height:60px;margin-top:2px;background:#E10600;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;font-weight:900;letter-spacing:1px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%);border-radius:14px 0 14px 14px}
+.cal{position:absolute;left:0;right:0;bottom:16px;height:108px;display:flex;gap:12px;padding-left:44px}
+.card{flex:0 0 172px;border-radius:16px;background:rgba(255,255,255,.055);padding:12px 14px;position:relative}
+.card .rd{font-size:12px;letter-spacing:2px;color:#8f98a7}.card b{display:block;font-size:17px;font-weight:900;margin-top:2px;white-space:nowrap}
+.card small{font-size:13px;color:#a8b0bd}.card svg{position:absolute;right:10px;bottom:10px;opacity:.75}
+.card.on{background:#f3f4f6;color:#11141a}.card.on small,.card.on .rd{color:#4b5260}.card.on:before{content:"";position:absolute;left:14px;right:14px;top:0;height:4px;border-radius:0 0 4px 4px;background:#1868DB}
+.chip{font-size:10px;letter-spacing:1.5px;border-radius:10px;padding:2px 7px;margin-left:4px;vertical-align:middle;font-weight:700}
+.chip.s{background:#E10600;color:#fff}.chip.n{background:#26324a;color:#ffd36b}
+.fade{position:absolute;right:0;bottom:0;width:160px;height:170px;background:linear-gradient(90deg,transparent,#0b0c0f)}
+
+.scene{background:#0b0c0f}
+.track{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 55% 50%,#24304a,#0b0c0f 75%)}
+.fc{border-radius:50%;overflow:hidden;display:block;flex:none}
+.ty{border-radius:50%;border:3px solid;background:#15171c;color:#fff;font-weight:900;display:grid;place-items:center;flex:none}
+.cap{font-size:11px;letter-spacing:2.5px;color:#8f98a7;font-weight:900}
+.glass{position:absolute;border-radius:20px;background:rgba(11,13,18,.88);padding:12px 14px}
+.cta{height:44px;background:#E10600;color:#fff;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;
+ clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);border-radius:12px 0 12px 12px;padding:0 16px;white-space:nowrap}
+.ghost{height:44px;border-radius:12px;background:rgba(255,255,255,.08);font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0 12px;gap:6px}
+.mis{border-radius:14px;background:rgba(255,255,255,.06);padding:8px 10px;margin-top:8px}
+.mis b{font-size:14px;font-weight:900;display:flex;align-items:center;gap:6px}.mis small{display:block;font-size:11px;color:#a8b0bd;font-weight:800;margin-top:2px}
+.bar{height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin-top:6px;overflow:hidden}.bar i{display:block;height:100%}
+.short{border-radius:14px;background:rgba(225,6,0,.18);border:1px solid rgba(225,6,0,.5)}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+.sheet{position:absolute;left:80px;top:40px;width:1120px;border-radius:24px;background:#17191e;padding:20px 24px}
+.sheet h2{font-size:28px;font-weight:900;line-height:1}
+.opts{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px}
+.opt{border-radius:16px;background:rgba(255,255,255,.05);padding:12px;min-height:150px}
+.opt.on{background:#f3f4f6;color:#11141a}.opt b{display:flex;gap:8px;align-items:center;font-size:15px;font-weight:900}
+.opt small{display:block;font-size:12px;color:#a8b0bd;font-weight:700;margin-top:6px;line-height:1.35}.opt.on small{color:#4b5260}
+.eff{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.eff span{font-size:11px;font-weight:900;border-radius:8px;padding:2px 6px;background:rgba(255,255,255,.08)}
+.opt.on .eff span{background:#e3e6eb}
+.step{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.08);display:grid;place-items:center;font-size:20px;font-weight:900}
+.seg{display:flex;border-radius:12px;background:rgba(255,255,255,.06);overflow:hidden}
+.seg span{padding:10px 16px;font-size:13px;font-weight:900;color:#c3c9d3}.seg .on{background:#f3f4f6;color:#11141a}
+.radio{position:absolute;left:300px;bottom:24px;width:640px;border-radius:20px;background:#f3f4f6;color:#11141a;padding:14px 16px;box-shadow:inset 6px 0 0 #E10600}
+.radio p{font-size:17px;font-weight:800;line-height:1.35;margin-top:6px}
+.btns{display:flex;gap:8px;margin-top:10px}.btns span{flex:1;height:46px;border-radius:12px;background:#e3e6eb;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px}
+.btns .pri{background:#11141a;color:#fff}
+</style></head><body><div class="scene"><div class="track"></div><div class="glass" style="right:24px;top:24px;width:420px;font-size:13px;font-weight:800;color:#c3c9d3;line-height:1.45"><div class="cap">O QUE MUDA</div>Sai Poupar/Normal/Atacar e a bateria. Você dá a <b style="color:#fff">missão de base</b> do stint e, quando quiser, uma <b style="color:#fff">missão curta</b> com fim automático. O piloto dosa ritmo, bateria e pneus volta a volta, conforme as notas.</div><div class="glass" style="left:12px;top:78px;width:250px"><div style="display:flex;gap:10px;align-items:center"><span class="fc" style="width:42px;height:42px;background:#1347F5"></span><div><b style="font-size:17px;font-weight:900">Albon</b><div style="color:#E10600;font-weight:900">P7</div></div><span style="margin-left:auto;display:flex;gap:4px;align-items:center;font-size:11px;font-weight:900;color:#8f98a7"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7fe0b1" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10v4M6 10v4M9 10v4"/></svg>piloto</span></div><div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;font-weight:800;color:#c3c9d3"><span class="ty" style="width:22px;height:22px;border-color:#F5C400;font-size:10px">M</span>Médio · 14v<div class="bar" style="flex:1;margin:0"><i style="width:68%;background:#ffd24a"></i></div>68%</div><div class="mis"><div class="cap">MISSÃO DE BASE</div><b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5c93ea" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Poupar pneus até a volta 30</b><small>cumprindo · pneu chega à volta 31</small><div class="bar"><i style="width:78%;background:#7fe0b1"></i></div></div><div class="mis short"><b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff8a80" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4 12h12M12 6l6 6-6 6"/><path d="M3 6v12"/></svg>Atacar Gasly · 3 voltas<span style="margin-left:auto;font-size:12px;color:#ffb4a8">2 de 3</span></b><small>a 0,6 s · bateria nas retas · pneu −4%/volta</small><div class="bar"><i style="width:66%;background:#E10600"></i></div></div><div style="display:flex;gap:6px;margin-top:10px"><div class="ghost">EQUIPE</div><div class="ghost" style="flex:1;background:#f3f4f6;color:#11141a">MISSÃO</div><div class="cta">P/ BOX</div></div></div><div class="glass" style="left:12px;top:400px;width:250px"><div style="display:flex;gap:10px;align-items:center"><span class="fc" style="width:42px;height:42px;background:#1347F5"></span><div><b style="font-size:17px;font-weight:900">Sainz</b><div style="color:#E10600;font-weight:900">P11</div></div><span style="margin-left:auto;display:flex;gap:4px;align-items:center;font-size:11px;font-weight:900;color:#8f98a7"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7fe0b1" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10v4M6 10v4M9 10v4"/></svg>piloto</span></div><div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;font-weight:800;color:#c3c9d3"><span class="ty" style="width:22px;height:22px;border-color:#F5C400;font-size:10px">M</span>Médio · 14v<div class="bar" style="flex:1;margin:0"><i style="width:68%;background:#ffd24a"></i></div>68%</div><div class="mis"><div class="cap">MISSÃO DE BASE</div><b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5c93ea" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>Ritmo seguro</b><small>sem riscos · trazendo o carro (asa danificada)</small><div class="bar"><i style="width:100%;background:#8f98a7"></i></div></div><div style="display:flex;gap:6px;margin-top:10px"><div class="ghost">EQUIPE</div><div class="ghost" style="flex:1;background:#f3f4f6;color:#11141a">MISSÃO</div><div class="cta">P/ BOX</div></div></div></div></body></html>
