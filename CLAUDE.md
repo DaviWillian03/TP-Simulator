@@ -37,7 +37,9 @@ das escolhas técnicas.
   (`TimingTable` com estilo "garage"). Todas as telas jogáveis já são Garagem (corrida, box, classificação, resultados e campanha).
   Mínimos: texto 12 px, alvo de toque 44 px (ação principal 56). Tamanho de fonte **sempre** via `UiStyle.fs()`
   (escala global da letra). Listas/colunas que podem passar da tela: `DragScroll` (arrastar rola; nunca ScrollContainer puro)
-  ou `ScreenKit.scroll_column`. Emblemas sempre via
+  ou `ScreenKit.scroll_column`. Campanha (v26): `CampaignFrame` (barra do topo + barra de ícones; telas novas usam
+  `CampaignFrame.CONTENT`), cores de seção em `UiStyle.SECTION`, `RingGauge`, `HqCampus` (Sede isométrica); arte 3D das
+  pistas em `assets/tracks/` (`tools/make_track_art.sh`). Emblemas sempre via
   `TeamEmblems` (prioridade: `user://import/emblems/`, depois `game/local/emblems/` — ignorada
   pelo git, para logos pessoais —, depois os originais).
 - `src/audio/race_audio.gd` — som da corrida (sons originais de `tools/make_sounds.py` em `assets/audio/`).
