@@ -13,9 +13,9 @@
  "laps": 78,
  "base_lap_time_s": 72.5,
  "pit_lane_loss_s": 20.0,
- "pit_entry_frac": 0.95,
+ "pit_entry_frac": 0.905,
  "pit_box_frac": 0.0,
- "pit_exit_frac": 0.05,
+ "pit_exit_frac": 0.07,
  "tyre_wear_factor": 0.8,
  "overtaking_difficulty": 0.95,
  "overtaking_zones": [
@@ -38,10 +38,11 @@
  "profile": {"straight": 0.05, "slow": 0.8, "fast": 0.15},
  "rain_probability": 0.15,
  "scenery": {
+  "street": true,
   "theme": "harbor",
   "landmark": "yachts"
  },
- "elevation": [],
+ "elevation": [[0.0, 0.0], [0.06, 2.0], [0.12, 24.0], [0.18, 38.0], [0.22, 42.0], [0.27, 32.0], [0.33, 16.0], [0.4, 9.0], [0.48, 4.0], [0.6, 2.0], [0.8, 1.0], [1.0, 0.0]],
  "_notas": {
   "tracado": "bacinger/f1-circuits mc-1929.geojson (MIT), escalado para 3337 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",

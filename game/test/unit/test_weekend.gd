@@ -293,4 +293,5 @@ func test_simular_a_corrida_faz_a_estrategia_parar_tambem_os_carros_do_jogador()
 		"weather": "dry", "incident_rate": 0.0, "format": "race_only"})
 	w.simulate_current()
 	for id: String in ["albon", "sainz"]:
-		assert_lt(w.results["race"].find(id), 20, "%s não pode ser desclassificado por falta de parada" % id)
+		assert_true(w.results["race"].has(id))
+		assert_false((w.retired.get("race", []) as Array).has(id), "%s não pode ser desclassificado por falta de parada" % id)

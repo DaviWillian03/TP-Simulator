@@ -135,6 +135,8 @@ func _build_ui() -> void:
 			_track_view.cycle_camera()
 		if Session.debug_camera.has("dist"):
 			_track_view.distance = Session.debug_camera["dist"]
+		if Session.debug_camera.has("look"):  # --look=<fração da volta>: centra a vista nesse ponto da pista
+			_track_view.look_at_frac(float(Session.debug_camera["look"]))
 		_track_view.snap_camera = true  # captura: câmera já no alvo, sem deslizar
 
 	ScreenKit.top_shade(_layer)

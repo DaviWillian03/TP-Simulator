@@ -89,7 +89,7 @@ func _ready() -> void:
 		sim_overrides["weather"] = [{"start_s": t, "end_s": t + 5000.0, "intensity": float(args.get("rain", "0.8"))}]
 	elif args.has("weather"):
 		sim_overrides["weather"] = args["weather"]
-	for k: String in ["yaw", "pitch", "dist"]:
+	for k: String in ["yaw", "pitch", "dist", "look"]:
 		if args.has(k):
 			debug_camera[k] = float(args[k])
 	if args.has("cam"):

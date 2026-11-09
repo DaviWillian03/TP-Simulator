@@ -47,23 +47,45 @@ static func _world(mat: StandardMaterial3D, meters: float) -> StandardMaterial3D
 	return mat
 
 
-static func grass(dry_tint: Color = Color("#4a6234")) -> StandardMaterial3D:
+static func grass(dry_tint: Color = Color("#4a7d2c")) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = _noise_tex(11, 0.02, _ramp([dry_tint.darkened(0.12), dry_tint, dry_tint.lightened(0.07), dry_tint.darkened(0.05)]))
 	m.roughness = 1.0
+	m.metallic_specular = 0.12  # sem o brilho esbranquiçado do céu no gramado visto de longe
 	return _world(m, 40.0)
+
+
+## Gramado aparado em listras (claro/escuro a cada 6 m ao longo da pista; usa o UV das faixas da pista).
+static func mowed_grass() -> StandardMaterial3D:
+	var img := Image.create(8, 64, false, Image.FORMAT_RGBA8)
+	var light := Color("#4f8a2e")
+	var dark := Color("#427a27")
+	var noise := FastNoiseLite.new()
+	noise.seed = 3
+	noise.frequency = 0.25
+	for y in 64:
+		for x in 8:
+			var base := light if y < 32 else dark
+			img.set_pixel(x, y, base.lightened(noise.get_noise_2d(x, y) * 0.05))
+	img.generate_mipmaps()
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = ImageTexture.create_from_image(img)
+	m.roughness = 1.0
+	m.metallic_specular = 0.12
+	return m
 
 
 static func ground(color: Color) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = _noise_tex(17, 0.03, _ramp([color.darkened(0.15), color, color.lightened(0.1)]))
 	m.roughness = 1.0
+	m.metallic_specular = 0.15
 	return _world(m, 30.0)
 
 
 static func asphalt() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
-	m.albedo_texture = _noise_tex(5, 0.4, _ramp([Color("#2b2d31"), Color("#3a3c41"), Color("#33353a"), Color("#45474c")]), 128)
+	m.albedo_texture = _noise_tex(5, 0.4, _ramp([Color("#1f2125"), Color("#2b2d32"), Color("#26282c"), Color("#34363b")]), 128)
 	m.roughness = 0.9
 	return _world(m, 6.0)
 

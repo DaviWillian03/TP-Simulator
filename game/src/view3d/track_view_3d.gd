@@ -87,20 +87,29 @@ func _build_environment() -> void:
 	_env.background_mode = Environment.BG_SKY
 	_env.sky = sky
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	_env.ambient_light_sky_contribution = 0.55  # menos azul do céu nas superfícies claras
+	_env.ambient_light_color = Color("#d8d2c4")
 	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	_env.tonemap_exposure = 0.85
+	_env.tonemap_exposure = 0.72
+	_env.adjustment_enabled = true  # cores mais vivas (gramado, zebras, placas)
+	_env.adjustment_saturation = 1.0
+	_env.adjustment_contrast = 1.05
 	_env.fog_enabled = true
-	_env.fog_density = 0.00018
+	_env.fog_density = 0.00004
 	var we := WorldEnvironment.new()
 	we.environment = _env
 	_world_root.add_child(we)
 	_sun = DirectionalLight3D.new()
 	_sun.shadow_enabled = true
 	_sun.directional_shadow_max_distance = 2500.0
-	_sun.rotation_degrees = Vector3(-48, 35, 0)
+	_sun.rotation_degrees = Vector3(-42, 35, 0)
+	_sun.shadow_blur = 1.5
+	_sun.shadow_bias = 0.08
+	_sun.shadow_normal_bias = 2.5  # sem "listras" de sombra nos gramados grandes e planos
 	_world_root.add_child(_sun)
 	_cam = Camera3D.new()
 	_cam.far = 9000.0
+	_cam.near = 1.5  # mais precisão de profundidade: sem "briga" entre faixas sobrepostas (zebras, gramado, paddock)
 	_cam.fov = 50.0
 	_world_root.add_child(_cam)
 	_rain = CPUParticles3D.new()
@@ -138,95 +147,15 @@ func _build_track() -> void:
 	var kerb := Materials3D.vertex_color(0.7)
 	kerb.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_add_mesh(t3.kerbs(), kerb)
-	var verge := Materials3D.flat(Color("#5a5a52"), 1.0)
+	var verge := Materials3D.flat(Color("#4c6b33"), 1.0)
 	verge.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_add_mesh(t3.skirt(-Track3D.WIDTH / 2.0 - Track3D.KERB_W, 3.0), verge)
 	_add_mesh(t3.skirt(Track3D.WIDTH / 2.0 + Track3D.KERB_W, 3.0), verge)
-	_build_track_details()
-	# linha de chegada (quadriculada simplificada: faixa branca larga)
-	var line := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(Track3D.WIDTH, 0.12, 2.0)
-	line.mesh = bm
-	line.transform = Transform3D(t3.basis_at(0.0), t3.point_at(0.0) + Vector3.UP * 0.1)
-	line.material_override = Materials3D.flat(Color.WHITE, 0.5)
-	_world_root.add_child(line)
-
-
-## Detalhes que todo circuito real tem: pit lane, prédio dos boxes, brita nas curvas,
-## guard-rails, barreiras de pneus e marcações do grid de largada.
-func _build_track_details() -> void:
-	var w := Track3D.WIDTH / 2.0
-	var k := Track3D.KERB_W
-	# pit lane (lado esquerdo da reta principal)
-	_add_mesh(t3.strip(-w - 22.0, -w - 8.0, 0.04, 8.0, t3.in_pit_zone), _asphalt)
-	var wall_mat := Materials3D.vertex_color(0.5)
-	wall_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_add_mesh(t3.wall(-w - 6.0, 1.1, t3.in_pit_zone, Color("#d9d9d9"), Color("#d9d9d9")), wall_mat)
-	# brita só do lado de fora das curvas, depois das zebras, com barreira de pneus atrás
-	var gravel := Materials3D.ground(Color("#7a6a4e"))
-	gravel.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var out_r := func(i: int) -> bool: return t3.outside_side(i) > 0.0  # pit lane só à esquerda
-	var out_l := func(i: int) -> bool: return t3.outside_side(i) < 0.0 and not t3.in_pit_zone(i)
-	_add_mesh(t3.strip(w + k, w + k + 16.0, 0.03, 8.0, out_r), gravel)
-	_add_mesh(t3.strip(-w - k - 16.0, -w - k, 0.03, 8.0, out_l), gravel)
-	_add_mesh(t3.wall(w + k + 17.0, 1.2, out_r, Color("#1d1d1f"), Color("#c8102e")), wall_mat)
-	_add_mesh(t3.wall(-w - k - 17.0, 1.2, out_l, Color("#1d1d1f"), Color("#1f4fa0")), wall_mat)
-	# guard-rail (cinza) no resto da volta, mais perto da pista
-	var rail_r := func(i: int) -> bool: return t3.outside_side(i) <= 0.0
-	var rail_l := func(i: int) -> bool: return t3.outside_side(i) >= 0.0 and not t3.in_pit_zone(i)
-	_add_mesh(t3.wall(w + 9.0, 0.9, rail_r, Color("#bfc4c9"), Color("#aab0b6")), wall_mat)
-	_add_mesh(t3.wall(-w - 9.0, 0.9, rail_l, Color("#bfc4c9"), Color("#aab0b6")), wall_mat)
-	_build_pit_building(w)
-	# marcações do grid (duas filas, atrás da linha de chegada)
-	var grid_mat := Materials3D.flat(Color("#f2f2f2"), 0.6)
-	for slot in sim.cars.size():
-		var d := -RaceSim.GRID_SPACING_M * slot - 5.0 - 2.0
-		var f := fposmod(d, sim.track.length_m) / sim.track.length_m
-		var b := t3.basis_at(f)
-		var mark := MeshInstance3D.new()
-		var bm2 := BoxMesh.new()
-		bm2.size = Vector3(2.4, 0.05, 0.35)
-		mark.mesh = bm2
-		mark.material_override = grid_mat
-		mark.transform = Transform3D(b, t3.point_at(f) + b.x * (3.0 if slot % 2 == 0 else -3.0) + Vector3.UP * 0.09)
-		_world_root.add_child(mark)
-
-
-## Prédio dos boxes atrás do pit lane: um vão de 12 m por garagem, com portão escuro
-## virado para o pit lane e uma faixa na cor da equipe (duas garagens por equipe).
-func _build_pit_building(w: float) -> void:
 	var teams: Array[Dictionary] = []
 	for car in sim.cars:
 		if not teams.has(car.team):
 			teams.append(car.team)
-	var body := Materials3D.flat(Color("#6f7276"), 0.85)
-	var door := Materials3D.flat(Color("#1c1e22"), 0.6)
-	var glass := Materials3D.flat(Color("#33414d"), 0.15)
-	glass.metallic = 0.4
-	var roof := Materials3D.flat(Color("#3f4247"), 0.95)
-	var bays := teams.size() * 2
-	for k in bays:
-		var f := float((k - (bays >> 1)) * 3) / t3.n  # 3 amostras = 12 m por vão
-		var b := t3.basis_at(f)
-		var base := t3.point_at(f) - b.x * (w + 31.0)
-		var team: Dictionary = teams[k >> 1]
-		var stripe := Materials3D.flat(Color(team["color"]), 0.5)
-		# (deslocamento lateral a partir do centro do prédio, altura, tamanho, material)
-		for part: Array in [
-			[0.0, 4.5, Vector3(16.0, 9.0, 12.05), body],
-			[8.05, 2.4, Vector3(0.2, 4.8, 9.6), door],  # portão (face do pit lane)
-			[8.1, 5.6, Vector3(0.2, 0.7, 11.0), stripe],  # faixa da equipe
-			[8.05, 7.6, Vector3(0.2, 1.8, 11.4), glass],  # vidro do andar de cima
-			[2.0, 9.15, Vector3(20.0, 0.3, 12.05), roof],  # laje com beiral sobre o pit lane
-		]:
-			var mi := MeshInstance3D.new()
-			var bm := BoxMesh.new()
-			bm.size = part[2]
-			mi.mesh = bm
-			mi.material_override = part[3]
-			mi.transform = Transform3D(b, base + b.x * float(part[0]) + Vector3.UP * float(part[1]))
-			_world_root.add_child(mi)
+	CircuitDressing.new().build(t3, _world_root, _asphalt, teams, _night)
 
 
 func _add_mesh(mesh: Mesh, mat: Material) -> void:
@@ -284,8 +213,8 @@ func _process(delta: float) -> void:
 			mi.set_fade(_motion.wreck_alpha(car))
 		else:
 			mi.set_fade(1.0)
-			if car.in_pit:
-				pos -= basis.x * PIT_OFFSET_M
+			if car.in_pit:  # segue o pit lane, inclusive as diagonais de entrada e saída
+				pos += basis.x * t3.pit_offset(frac)
 			elif d < 0.0 and car.laps_done == 0 and sim.render_distance(car) < 0.0:
 				pos += basis.x * (3.0 if car.grid_position % 2 == 0 else -3.0)
 			else:
@@ -317,15 +246,15 @@ func _apply_lighting(wetness: float, rain: float) -> void:
 		_sun.light_color = Color("#9fb4ff")
 		_env.ambient_light_energy = 0.9
 	else:
-		_sky_mat.sky_top_color = Color("#3b78c2").lerp(Color("#5d6670"), overcast)
-		_sky_mat.sky_horizon_color = Color("#bcd2e8").lerp(Color("#8d949b"), overcast)
+		_sky_mat.sky_top_color = Color("#2f7fd8").lerp(Color("#5d6670"), overcast)
+		_sky_mat.sky_horizon_color = Color("#cfe3f5").lerp(Color("#8d949b"), overcast)
 		_sky_mat.ground_horizon_color = Color("#a8b3a0").lerp(Color("#7c8279"), overcast)
 		_sky_mat.ground_bottom_color = Color("#4a5240")
-		_sun.light_energy = lerpf(0.95, 0.3, overcast)
-		_sun.light_color = Color("#fff4e0")
-		_env.ambient_light_energy = lerpf(0.22, 0.45, overcast)
+		_sun.light_energy = lerpf(1.05, 0.35, overcast)
+		_sun.light_color = Color("#fff1d6")
+		_env.ambient_light_energy = lerpf(0.24, 0.5, overcast)
 	_env.fog_light_color = _sky_mat.sky_horizon_color
-	_env.fog_density = lerpf(0.00008, 0.0007, overcast)
+	_env.fog_density = lerpf(0.00004, 0.0006, overcast)
 	_rain.emitting = rain > WeatherModel.RAIN_THRESHOLD
 	_rain.amount = int(lerpf(600, 2000, clampf(rain, 0.0, 1.0)))
 	if _asphalt != null:
@@ -404,6 +333,12 @@ func _cam_label() -> String:
 			var car := _follow_car()
 			return "Seguindo %s" % (car.code() if car != null else "—")
 	return "Seguindo o líder"
+
+
+## Centra a visão geral num ponto da pista (fração da volta) — capturas e atalhos de câmera.
+func look_at_frac(frac: float) -> void:
+	_overview_target = t3.point_at(frac)
+	_target = _overview_target
 
 
 func _overview_distance() -> float:

@@ -13,9 +13,9 @@
  "laps": 71,
  "base_lap_time_s": 72.0,
  "pit_lane_loss_s": 21.0,
- "pit_entry_frac": 0.905,
+ "pit_entry_frac": 0.87,
  "pit_box_frac": 0.0,
- "pit_exit_frac": 0.065,
+ "pit_exit_frac": 0.12,
  "tyre_wear_factor": 1.08,
  "overtaking_difficulty": 0.35,
  "overtaking_zones": [

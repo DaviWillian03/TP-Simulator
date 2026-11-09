@@ -38,6 +38,7 @@
  "profile": {"straight": 0.15, "slow": 0.65, "fast": 0.2},
  "rain_probability": 0.3,
  "scenery": {
+  "street": true,
   "theme": "bay",
   "landmark": "ferris_wheel"
  },

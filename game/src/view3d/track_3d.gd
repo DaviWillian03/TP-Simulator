@@ -16,6 +16,8 @@ var n := 0
 var center := PackedVector3Array()
 var right := PackedVector3Array()  ## vetor para a direita do sentido de corrida
 var curvature := PackedFloat32Array()
+var inside_limit := PackedFloat32Array()  ## por amostra: distância máxima do eixo do lado de DENTRO da curva (evita dobras)
+var turn := PackedFloat32Array()  ## +1 = virando à esquerda (dentro = esquerda), −1 = direita, 0 = reta
 
 
 func _init(p_track: TrackModel) -> void:
@@ -31,6 +33,19 @@ func _init(p_track: TrackModel) -> void:
 		var a := (center[i] - center[(i - 3 + n) % n]).normalized()
 		var b := (center[(i + 3) % n] - center[i]).normalized()
 		curvature.append(a.angle_to(b))
+	# raio local (pelas 6 amostras em volta) e o lado de dentro: faixas largas não podem passar do centro da curva
+	var raw := PackedFloat32Array()
+	for i in n:
+		var a := center[i] - center[(i - 3 + n) % n]
+		var b := center[(i + 3) % n] - center[i]
+		turn.append(signf(a.cross(b).y) if curvature[i] > 0.01 else 0.0)
+		var r := (STEP_M * 6.0) / maxf(curvature[i], 0.0001)
+		raw.append(clampf(r * 0.8, WIDTH / 2.0 + 2.0, 400.0))
+	for i in n:  # o menor raio por perto (a faixa vizinha também dobraria)
+		var m := 400.0
+		for k in range(-8, 9):
+			m = minf(m, raw[(i + k + n) % n])
+		inside_limit.append(m)
 
 
 ## Ponto do eixo da pista (com altura) na fração da volta.
@@ -121,10 +136,151 @@ func kerbs() -> ArrayMesh:
 	return st.commit()
 
 
+# --- pit lane (2026-11-09): sai da pista em diagonal, corre separado por um muro e volta em diagonal ----
+
+const PIT_LANE_W := 11.0
+const PIT_GAP := 6.0  ## grama/muro entre a borda da pista e o pit lane
+const PIT_RAMP_M := 110.0  ## comprimento da diagonal de entrada e de saída
+
+
+## Metros percorridos dentro do pit lane na fração (−1 fora dele) e o comprimento total do pit lane.
+func pit_progress(frac: float) -> Vector2:
+	var total := fposmod(track.pit_exit_frac - track.pit_entry_frac, 1.0) * track.length_m
+	var s := fposmod(frac - track.pit_entry_frac, 1.0) * track.length_m
+	return Vector2(s if s <= total else -1.0, total)
+
+
+## 0 na pista, 1 no pit lane já separado; sobe na diagonal de entrada e desce na de saída.
+func pit_ramp(frac: float) -> float:
+	var pp := pit_progress(frac)
+	if pp.x < 0.0:
+		return 0.0
+	var a := smoothstep(0.0, PIT_RAMP_M, pp.x)
+	var b := smoothstep(0.0, PIT_RAMP_M, pp.y - pp.x)
+	return minf(a, b)
+
+
+## Deslocamento lateral do centro do pit lane (m, + = direita) na fração.
+func pit_offset(frac: float) -> float:
+	var r := pit_ramp(frac)
+	var near := WIDTH / 2.0 - PIT_LANE_W / 2.0 + 1.0
+	var far := WIDTH / 2.0 + PIT_GAP + PIT_LANE_W / 2.0
+	return track.pit_side * lerpf(near, far, r)
+
+
+## Faixa ao longo do pit lane: do deslocamento a ao b medidos a partir do centro do pit lane (para fora = +).
+func pit_strip(a: float, b: float, lift: float, min_ramp: float = 0.0, colors: Array = []) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var dist := 0.0
+	for i in n:
+		var j := (i + 1) % n
+		var fi := float(i) / n
+		var fj := float(j) / n
+		if pit_progress(fi).x < 0.0 or pit_progress(fj).x < 0.0 or minf(pit_ramp(fi), pit_ramp(fj)) < min_ramp:
+			continue
+		var side := track.pit_side
+		var oi := pit_offset(fi)
+		var oj := pit_offset(fj)
+		var p0a := center[i] + right[i] * (oi + side * a) + Vector3.UP * lift
+		var p0b := center[i] + right[i] * (oi + side * b) + Vector3.UP * lift
+		var p1a := center[j] + right[j] * (oj + side * a) + Vector3.UP * lift
+		var p1b := center[j] + right[j] * (oj + side * b) + Vector3.UP * lift
+		var col: Color = colors[i % colors.size()] if not colors.is_empty() else Color.WHITE
+		var seg := center[i].distance_to(center[j])
+		for v: Array in [[p0a, Vector2(0, dist / 8.0)], [p1a, Vector2(0, (dist + seg) / 8.0)], [p1b, Vector2(1, (dist + seg) / 8.0)],
+				[p0a, Vector2(0, dist / 8.0)], [p1b, Vector2(1, (dist + seg) / 8.0)], [p0b, Vector2(1, dist / 8.0)]]:
+			st.set_color(col)
+			st.set_normal(Vector3.UP)
+			st.set_uv(v[1])
+			st.add_vertex(v[0])
+		dist += seg
+	return st.commit()
+
+
+## Área pintada (zebrada) entre a borda da pista e o pit lane nas diagonais de entrada e saída.
+func pit_gore(lift: float) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var side := track.pit_side
+	for i in n:
+		var j := (i + 1) % n
+		var fi := float(i) / n
+		var fj := float(j) / n
+		var ri := pit_ramp(fi)
+		var rj := pit_ramp(fj)
+		if pit_progress(fi).x < 0.0 or pit_progress(fj).x < 0.0 or (ri > 0.98 and rj > 0.98):
+			continue
+		var edge := WIDTH / 2.0 + KERB_W * 0.0
+		var inner_i := absf(pit_offset(fi)) - PIT_LANE_W / 2.0
+		var inner_j := absf(pit_offset(fj)) - PIT_LANE_W / 2.0
+		if inner_i <= edge and inner_j <= edge:
+			continue
+		var col := Color("#f2f2f2") if (i / 2) % 2 == 0 else Color("#3b3e44")
+		var q := [center[i] + right[i] * side * edge, center[j] + right[j] * side * edge,
+			center[j] + right[j] * side * maxf(inner_j, edge), center[i] + right[i] * side * maxf(inner_i, edge)]
+		for k in [0, 1, 2, 0, 2, 3]:
+			st.set_color(col)
+			st.set_normal(Vector3.UP)
+			st.add_vertex(q[k] + Vector3.UP * lift)
+	return st.commit()
+
+
+## Deslocamento lateral limitado do lado de dentro da curva (direita = +; virando à esquerda o lado de dentro é −).
+func _clamp_off(i: int, off: float) -> float:
+	var inside := (turn[i] > 0.0 and off < 0.0) or (turn[i] < 0.0 and off > 0.0)
+	if not inside:
+		return off
+	return signf(off) * minf(absf(off), inside_limit[i])
+
+
+## Faixa com altura variável entre as bordas (gramado aparado que desce até o terreno).
+func band(a: float, b: float, lift_a: float, lift_b: float, uv_scale: float, mask: Callable = Callable()) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var dist := 0.0
+	for i in n:
+		var j := (i + 1) % n
+		var seg := center[i].distance_to(center[j])
+		if mask.is_valid() and not mask.call(i):
+			dist += seg
+			continue
+		var p0a := center[i] + right[i] * _clamp_off(i, a) + Vector3.UP * lift_a
+		var p0b := center[i] + right[i] * _clamp_off(i, b) + Vector3.UP * lift_b
+		var p1a := center[j] + right[j] * _clamp_off(j, a) + Vector3.UP * lift_a
+		var p1b := center[j] + right[j] * _clamp_off(j, b) + Vector3.UP * lift_b
+		var nrm := Vector3.UP
+		for v: Array in [[p0a, Vector2(0, dist / uv_scale)], [p1a, Vector2(0, (dist + seg) / uv_scale)], [p1b, Vector2(1, (dist + seg) / uv_scale)],
+				[p0a, Vector2(0, dist / uv_scale)], [p1b, Vector2(1, (dist + seg) / uv_scale)], [p0b, Vector2(1, dist / uv_scale)]]:
+			st.set_normal(nrm)
+			st.set_uv(v[1])
+			st.add_vertex(v[0])
+		dist += seg
+	return st.commit()
+
+
+## Parede com várias cores em sequência (placas de publicidade).
+func wall_palette(offset: float, height: float, mask: Callable, palette: Array, run: int = 6) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in n:
+		if not mask.call(i):
+			continue
+		var j := (i + 1) % n
+		var a := center[i] + right[i] * _clamp_off(i, offset)
+		var b := center[j] + right[j] * _clamp_off(j, offset)
+		var col: Color = palette[(i / run) % palette.size()]
+		var nrm := -right[i] * signf(offset)
+		for v in [a, b, b + Vector3.UP * height, a, b + Vector3.UP * height, a + Vector3.UP * height]:
+			st.set_color(col)
+			st.set_normal(nrm)
+			st.add_vertex(v)
+	return st.commit()
+
+
 ## A amostra i está no trecho do pit lane (da entrada à saída, passando pela linha)?
 func in_pit_zone(i: int) -> bool:
-	var f := float(i) / n
-	return f >= track.pit_entry_frac or f <= track.pit_exit_frac
+	return pit_progress(float(i) / n).x >= 0.0
 
 
 ## Curva ou perto de uma (para brita e barreiras de pneus).
@@ -159,8 +315,8 @@ func wall(offset: float, height: float, mask: Callable, col_a: Color, col_b: Col
 		if not mask.call(i):
 			continue
 		var j := (i + 1) % n
-		var a := center[i] + right[i] * offset
-		var b := center[j] + right[j] * offset
+		var a := center[i] + right[i] * _clamp_off(i, offset)
+		var b := center[j] + right[j] * _clamp_off(j, offset)
 		var col := col_a if (i % 4) < 2 else col_b
 		var nrm := -right[i] * signf(offset)
 		for v in [a, b, b + Vector3.UP * height, a, b + Vector3.UP * height, a + Vector3.UP * height]:

@@ -15,6 +15,7 @@ var pit_lane_loss_s := 0.0
 var pit_entry_frac := 0.0
 var pit_box_frac := 0.0
 var pit_exit_frac := 0.0
+var pit_side := -1.0  ## lado do pit lane em relação ao sentido de corrida: -1 = esquerda, +1 = direita
 var tyre_wear_factor := 1.0
 var overtaking_difficulty := 0.5
 var overtaking_zones: Array = []
@@ -41,6 +42,7 @@ func _init(d: Dictionary) -> void:
 	pit_entry_frac = float(d["pit_entry_frac"])
 	pit_box_frac = float(d["pit_box_frac"])
 	pit_exit_frac = float(d["pit_exit_frac"])
+	pit_side = 1.0 if String(d.get("pit_side", "left")) == "right" else -1.0
 	tyre_wear_factor = float(d["tyre_wear_factor"])
 	overtaking_difficulty = float(d["overtaking_difficulty"])
 	overtaking_zones = d["overtaking_zones"]

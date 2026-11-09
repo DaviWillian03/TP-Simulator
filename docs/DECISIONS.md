@@ -621,3 +621,15 @@ Respostas do usuário:
   finas (sem texto, como na transmissão) acendem quando o carro fecha cada setor da volta lançada: **roxo** = melhor setor da sessão, **verde** =
   melhor setor do piloto, **amarelo** = mais lento que o melhor dele. O problema da volta (tráfego/erro) cai no setor em
   que aparece; voltas apagadas mostram as cores mas não contam como melhor.
+- **2026-11-09 — Pistas 3D mais detalhadas e boxes corrigidos.** Pedido: pistas bonitas, coloridas e legíveis de longe,
+  com a entrada dos boxes demarcada (referência de nível de detalhe: jogos de gestão; nada copiado). Feito em Godot, gerado
+  em código (`CircuitDressing`): gramado aparado em listras, escapes (asfalto + brita) e barreiras de pneus nas curvas,
+  muros com placas coloridas, pit lane com diagonais de entrada/saída zebradas, muro e tela do pit, linhas de limite de
+  velocidade, prédio dos boxes com as cores das equipes, torre de controle, pórtico de largada, paddock com motorhomes,
+  arquibancadas cobertas, passarelas, linha de chegada quadriculada; árvores de dois tipos; luz e cores mais vivas.
+  Circuitos de rua (`"street": true`: Mônaco, Baku, Singapura, Las Vegas, Madri) têm calçada e muros colados na pista.
+  Mônaco ganhou relevo (subida do Cassino) e porto com iates ao lado dos boxes; Silverstone, hangares do antigo aeródromo.
+  **Boxes corrigidos** (entrada/saída reais): Interlagos 0,87 → 0,12 (depois da Junção até a Curva do Sol), Mônaco
+  0,905 → 0,07 (piscina/Rascasse até depois da Sainte Devote), Silverstone 0,93 → 0,06 (depois do Vale até depois de
+  Abbey). As outras 19 pistas ainda usam a entrada genérica (0,95 → 0,05) e precisam de revisão. O lado do pit lane é
+  configurável (`pit_side`), padrão esquerda.
