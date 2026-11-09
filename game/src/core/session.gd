@@ -31,6 +31,8 @@ const CAMPAIGN_ENTRY_SCENE := "res://src/ui/campaign_entry_screen.tscn"
 const TEAM_CREATOR_SCENE := "res://src/ui/team_creator_screen.tscn"
 const CAMPAIGN_HUB_SCENE := "res://src/ui/campaign_hub_screen.tscn"
 const CAMPAIGN_STANDINGS_SCENE := "res://src/ui/campaign_standings_screen.tscn"
+const CAMPAIGN_CALENDAR_SCENE := "res://src/ui/campaign_calendar_screen.tscn"
+const CAMPAIGN_TEAM_SCENE := "res://src/ui/campaign_team_screen.tscn"
 const CAMPAIGN_SPONSORS_SCENE := "res://src/ui/campaign_sponsors_screen.tscn"
 const CAMPAIGN_COUNCIL_SCENE := "res://src/ui/campaign_council_screen.tscn"
 const CAMPAIGN_FINANCE_SCENE := "res://src/ui/campaign_finance_screen.tscn"
@@ -141,7 +143,7 @@ func _ready() -> void:
 			if c2.mode == "created":
 				TeamEmblems.register_custom(c2.team())
 			open_campaign_standings.call_deferred()
-	elif args.has("car") or args.has("rd") or args.has("studio") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance") or args.has("council"):  # (capturas) árvore de P&D / fábrica da campanha salva
+	elif args.has("car") or args.has("rd") or args.has("studio") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance") or args.has("council") or args.has("calendar") or args.has("teamview") or args.has("hq"):  # (capturas) árvore de P&D / fábrica da campanha salva
 		var c4 := Campaign.load_saved()
 		if args.has("fresh"):  # (captura) campanha nova da equipe --team, com --demo = P&D e obras de exemplo
 			c4 = Campaign.new_real(player_team)
@@ -193,6 +195,12 @@ func _ready() -> void:
 				open_campaign_rd.call_deferred()
 			elif args.has("studio"):
 				open_campaign_studio.call_deferred()
+			elif args.has("calendar"):
+				open_campaign_calendar.call_deferred()
+			elif args.has("teamview"):
+				open_campaign_team.call_deferred()
+			elif args.has("hq"):
+				open_campaign_hq.call_deferred()
 			else:
 				open_campaign_factory.call_deferred()
 	elif args.has("report"):
@@ -361,7 +369,7 @@ func open_campaign_rd() -> void:
 
 ## Equipe (carro grande + pilotos, v26-7).
 func open_campaign_team() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_STAFF_SCENE)
+	get_tree().change_scene_to_file(CAMPAIGN_TEAM_SCENE)
 
 
 ## Sede 3D com instalações (v26-5).
@@ -371,7 +379,7 @@ func open_campaign_hq() -> void:
 
 ## Agenda em cartões (v26-6).
 func open_campaign_calendar() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_STANDINGS_SCENE)
+	get_tree().change_scene_to_file(CAMPAIGN_CALENDAR_SCENE)
 
 
 func open_campaign_factory() -> void:

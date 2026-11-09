@@ -1,3 +1,4 @@
+class_name CampaignHub
 extends Control
 ## Sede da campanha (mockup v15-1 aprovado, 2026-11-04). Três colunas: o próximo GP (o que a pista pede, como o seu
 ## carro se sai nela, "avançar com preparação recomendada" e as próximas pistas), até 3 assuntos (DECISÃO × NOTÍCIA, com
@@ -113,6 +114,14 @@ func _shade(t: Control, from := 0.3) -> void:
 	t.add_child(tr)
 
 
+## Característica do carro (reta, lentas, rápidas, confiabilidade) como na tela de peças.
+static func car_trait(c: Campaign, key: String, car := 0) -> float:
+	var traits: Dictionary = c.team().get("car_traits", {})
+	if key == "rel":
+		return float(traits.get("rel", CarParts.REL_NEUTRAL)) + c.my_parts().known_trait_delta(car, "rel")
+	return c.base_rating + c.dev.rating_bonus() + float(traits.get(key, 0.0)) + c.my_parts().known_trait_delta(car, key)
+
+
 ## "GP da Grã-Bretanha" -> "Grã-Bretanha" (cartões com bandeira).
 static func gp_short(name: String) -> String:
 	var parts := name.split(" ")
@@ -134,6 +143,8 @@ static func flag_rect(country_code: String, h: int) -> TextureRect:
 	f.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	f.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	f.custom_minimum_size = Vector2(roundi(h * 4.0 / 3.0), h)
+	f.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	f.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	f.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return f
 
@@ -267,17 +278,11 @@ func _car_tile(r: Rect2) -> Control:
 	car.size = Vector2(r.size.x - 48, r.size.y - 124)
 	car.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	t.add_child(car)
-	var traits: Dictionary = campaign.team().get("car_traits", {})
-	var parts := campaign.my_parts()
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 0)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for k: Array in [["straight", "#F5C542", "t_straight"], ["slow", "#ff6a5a", "t_slow"], ["fast", "#5c93ea", "t_fast"], ["rel", "#2FD38A", "t_rel"]]:
-		var v := 0.0
-		if k[0] == "rel":
-			v = float(traits.get("rel", CarParts.REL_NEUTRAL)) + parts.known_trait_delta(0, "rel")
-		else:
-			v = campaign.base_rating + campaign.dev.rating_bonus() + float(traits.get(k[0], 0.0)) + parts.known_trait_delta(0, k[0])
+		var v := car_trait(campaign, k[0])
 		var cell := HBoxContainer.new()
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cell.alignment = BoxContainer.ALIGNMENT_CENTER
