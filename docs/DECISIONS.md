@@ -738,3 +738,10 @@ Respostas do usuário:
   desce as chances; chuva aumenta a chance de largada ruim. Durante os 10 primeiros segundos os carros **não se bloqueiam** (a
   posição vem só da distância, senão o carro lento virava "rolha" e afundava até o último); ao fim, o espaço mínimo é devolvido.
   Todos arrancam do zero (rampa igual). A tela avisa quem ganhou/perdeu ≥ 2 posições de verdade e o jogador.
+- **2026-11-10 — Batidas com consequência.** Antes, um toque entre carros só dava dano leve na asa (e investigação), então
+  quase não custava tempo. Agora cada toque sorteia um desfecho para quem foi prejudicado (60% o atacante, 40% o defensor):
+  **leve 38%** (perde 0,8–2,2 s e um pouco de asa; o outro carro perde algo em 40% dos casos), **danos 27%** (asa, às vezes
+  assoalho, e 1–3 s parado), **rodada 17%** (4–9 s parados e dano), **pneu furado 10%** (volta lenta até o box) e **batida forte
+  8%** (abandona; em 20% dos casos o outro carro também; pode vir safety car/VSC). Também há chance de toque nos cruzamentos da
+  largada (5× a de uma ultrapassagem comum). A frequência de toques (~5 por corrida) e a investigação seguem como antes;
+  `incident_rate = 0` continua sem toques. Em `RaceControl._contact_outcome` (PROVISÓRIO, ajustável).

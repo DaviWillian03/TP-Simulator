@@ -246,11 +246,11 @@ func _failure(car: CarState) -> void:
 		deploy_vsc("Carro de %s parado na pista" % car.display_name())
 
 
-## Chamado em cada tentativa de ultrapassagem. Retorna true se houve toque.
-func check_contact(att: CarState, def: CarState) -> bool:
+## Chamado em cada tentativa de ultrapassagem (e nos cruzamentos da largada, com `chance_mult` maior). Retorna true se houve toque.
+func check_contact(att: CarState, def: CarState, chance_mult: float = 1.0) -> bool:
 	if rate <= 0.0:
 		return false
-	var p := CONTACT_CHANCE * rate * (1.0 + 3.0 * sim.weather.wetness)
+	var p := CONTACT_CHANCE * rate * chance_mult * (1.0 + 3.0 * sim.weather.wetness)
 	if att.pace_mode == CarState.PaceMode.ATTACK:
 		p *= 1.5
 	if def.defend_hard:
@@ -258,8 +258,8 @@ func check_contact(att: CarState, def: CarState) -> bool:
 	if sim.rng.randf() >= p:
 		return false
 	var victim := att if sim.rng.randf() < 0.6 else def
-	victim.damage_wing = minf(1.0, victim.damage_wing + sim.rng.randf_range(0.25, 0.6))
 	sim.incident.emit(att, "contact", "Toque entre %s e %s!" % [att.display_name(), def.display_name()])
+	_contact_outcome(victim, def if victim == att else att)
 	# o causador fica sob investigação; o veredito sai depois (a chance de punição segue 50%)
 	if att.investigation.is_empty():
 		var guilty := sim.rng.randf() < 0.5
@@ -268,6 +268,52 @@ func check_contact(att: CarState, def: CarState) -> bool:
 			"secs": secs, "reason": "causou colisão com %s" % def.display_name(), "guilty": guilty}
 		sim.incident.emit(att, "investigation", "%s sob investigação por toque com %s" % [att.display_name(), def.display_name()])
 	return true
+
+
+## Consequência do toque (pedido de 2026-11-10: batida precisa custar algo). Quase sempre alguém perde tempo ou
+## ritmo; de vez em quando há rodada, pneu furado ou batida que tira um (raramente os dois) da prova.
+##   leve 38% · danos 27% · rodada 17% · furo 10% · batida forte 8%
+func _contact_outcome(victim: CarState, other: CarState) -> void:
+	var roll := sim.rng.randf()
+	if roll < 0.38:
+		victim.stall_s = sim.rng.randf_range(0.8, 2.2)  # escapa da trajetória e perde tempo
+		victim.damage_wing = minf(1.0, victim.damage_wing + sim.rng.randf_range(0.08, 0.25))
+		if sim.rng.randf() < 0.4:
+			other.stall_s = sim.rng.randf_range(0.5, 1.2)
+		sim.incident.emit(victim, "lockup", "%s perde tempo no toque (%.1f s)" % [victim.display_name(), victim.stall_s])
+	elif roll < 0.65:
+		victim.damage_wing = minf(1.0, victim.damage_wing + sim.rng.randf_range(0.3, 0.7))
+		victim.stall_s = sim.rng.randf_range(1.0, 3.0)
+		var what := "asa"
+		if sim.rng.randf() < 0.4:
+			victim.damage_floor = minf(1.0, victim.damage_floor + sim.rng.randf_range(0.15, 0.4))
+			what = "asa e assoalho"
+		if sim.rng.randf() < 0.35:
+			other.damage_wing = minf(1.0, other.damage_wing + sim.rng.randf_range(0.1, 0.3))
+		sim.incident.emit(victim, "damage", "%s danifica %s no toque" % [victim.display_name(), what])
+	elif roll < 0.82:
+		var loss := sim.rng.randf_range(4.0, 9.0)
+		victim.stall_s = loss
+		victim.damage_wing = minf(1.0, victim.damage_wing + sim.rng.randf_range(0.15, 0.45))
+		sim.incident.emit(victim, "spin", "%s roda depois do toque e perde %.0f s" % [victim.display_name(), loss])
+	elif roll < 0.92:
+		victim.punctured = true
+		victim.stall_s = sim.rng.randf_range(1.5, 3.0)
+		victim.damage_floor = minf(1.0, victim.damage_floor + sim.rng.randf_range(0.1, 0.3))
+		if not victim.in_pit and not victim.pit_requested:
+			sim.request_pit(victim, StrategyAI.choose_compound(sim, victim, sim.total_laps - victim.laps_done))
+		sim.incident.emit(victim, "blowout", "%s fura o pneu no toque! Volta lenta para o box" % victim.display_name())
+	else:
+		sim.retire_car(victim, "batida")
+		sim.incident.emit(victim, "crash", "%s bate forte no toque e abandona!" % victim.display_name())
+		if sim.rng.randf() < 0.2 and not other.retired:
+			sim.retire_car(other, "batida")
+			sim.incident.emit(other, "crash", "%s também fica sem carro!" % other.display_name())
+		var neut := sim.rng.randf()
+		if neut < 0.5:
+			deploy_sc("Batida entre %s e %s" % [victim.display_name(), other.display_name()])
+		elif neut < 0.85:
+			deploy_vsc("Batida entre %s e %s" % [victim.display_name(), other.display_name()])
 
 
 func on_pit_stop(car: CarState) -> void:

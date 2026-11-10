@@ -36,6 +36,7 @@ const DEG_SHORT_RACE_EXP := 0.65
 const WEAR_SHORT_RACE_EXP := 0.9  ## corridas curtas gastam o pneu na proporção (decisão 2026-11-09: 25% perto do limite)
 const DT := 0.1  ## segundos de corrida por passo
 const GRID_SPACING_M := 14.0  ## distância entre um carro e o seguinte no grid (filas de 2, escalonadas como na F1)
+const START_CONTACT_K := 5.0  ## toque nos cruzamentos da largada: 5x a chance de uma ultrapassagem comum
 const GRID_LATERAL_M := 4.2  ## quanto cada fila se afasta do eixo da pista (pole à esquerda, 2º à direita)
 const MIN_GAP_M := 9.0  ## sem ultrapassar, um carro não chega mais perto que isso do da frente
 const ATTACK_WINDOW_S := 1.0  ## a menos de 1 s do carro da frente: pode tentar ultrapassar
@@ -660,6 +661,7 @@ func _emit_start_passes(before: Array[CarState]) -> void:
 		var def: CarState = before[i - 1]
 		if att.lane() == 0 and def.lane() == 0 and att.distance > def.distance:
 			start_pass.emit(att, def)
+			control.check_contact(att, def, START_CONTACT_K)  # a 1ª reta é onde mais se toca
 
 
 ## Fim da largada: avisa quem ganhou ou perdeu posições de verdade (largada boa/ruim) e o jogador.
