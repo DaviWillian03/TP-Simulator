@@ -762,3 +762,10 @@ Respostas do usuário:
 - **2026-11-10 — Sem ajuste técnico de asa no box.** Saiu a opção de ajustar a asa dianteira (−1…+2: "mais asa, mais rápido, gasta mais
   pneu"): não existe mais `wing_step`, nem o efeito no ritmo e no desgaste do pneu, nem o custo em tempo parado. No box só resta
   **trocar a asa dianteira quando está danificada** (a opção nem aparece sem dano), além do pneu e da punição de tempo.
+- **2026-11-10 — Tabelas do Mundial completas, ampliadas e estatísticas clicáveis (mockup v34 aprovado).** A tabela de pilotos/construtores
+  do painel mostra **todos** (22 pilotos / 11 equipes) e **rola arrastando** (`DragScroll`); o cartão ganhou o botão de **ampliar**, que abre
+  o campeonato em **tela cheia** (`WorldTableScreen`) com abas Pilotos, Construtores e Estatísticas (foto, nome completo, vitórias, poles,
+  pódios, pontos e diferença). O botão "Estatísticas" do topo abre a mesma tela já na aba de estatísticas. Lá os quatro quadros
+  (vitórias, poles, pódios, abandonos) são **clicáveis**: tocar abre o **ranking completo** daquela estatística (com quem tem zero no fim),
+  trocando de estatística pelas abas e de pilotos para equipes pelo seletor. O componente `WorldTables` também serve às abas
+  Campeonato/Estatísticas do resultado de cada GP. Dev: `--world --team=<id> --rounds=<n> --ui=wtable|wteams|wstats|wrank`.

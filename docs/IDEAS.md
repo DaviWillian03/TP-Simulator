@@ -752,3 +752,14 @@ preparação automática e confirmação; (9) simplicidade no Android; (10) entr
   visão da equipe (carro de lado, cartões dos pilotos com número gigante); calendário em cartões verticais com arte da pista,
   pneus do fim de semana e peças críticas.
 - Inspiração de organização e clareza (não copiar o jogo nem a arte).
+
+## 2026-11-10 — Mais ideias para o Campeonato Mundial F1 (escolhidas pelo usuário em múltipla escolha)
+- **Clima real por pista:** cada GP usa a chance de chuva real do circuito (Spa, Interlagos, Suzuka mais instáveis; Bahrein e
+  Abu Dhabi quase sempre seco).
+- **Duelo de companheiros:** placar entre os dois pilotos de cada equipe (quem largou melhor, terminou à frente, diferença de pontos).
+- **Imprensa e rivalidades:** manchetes curtas depois de cada GP (briga de título, toque entre rivais, surpresa).
+- **Retrospectiva do ano:** resumo no fim da temporada (campeões, maior virada, melhor corrida, destaque de cada equipe).
+- **Cerimônia de premiação:** pódio do campeonato de pilotos e de construtores, com os três primeiros e o troféu.
+- Não escolhidas (ficam registradas): lesões e reservas, resultado real por GP (tela de importação), pressão da diretoria, jogar como
+  um piloto, mercado de pilotos, gráfico do campeonato, conta do título, comparar pilotos, recordes por circuito, replay dos melhores
+  momentos, temporada seguinte (2027).

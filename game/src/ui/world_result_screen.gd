@@ -12,7 +12,6 @@ var world: WorldChampionship
 var _tab := "result"
 var _stage: Control
 var _body: Control
-var _by_team := false
 var _tabs_holder: Control
 
 
@@ -88,12 +87,6 @@ func _build_tabs() -> void:
 		_tab = v
 		_show_tab())
 	_tabs_holder.add_child(seg)
-	if _tab == "stats":  # pilotos ou construtores
-		var sw := ScreenKit.segmented([[false, "Pilotos"], [true, "Equipes"]], _by_team, func(v: bool) -> void:
-			_by_team = v
-			_show_tab())
-		sw.position = Vector2(W - 60 - 220, 0)
-		_tabs_holder.add_child(sw)
 
 
 func _show_tab() -> void:
@@ -204,15 +197,6 @@ func _row(parent: Control, y: float, w: float, h: float, pos_text: String, id: S
 	hb.add_child(rl)
 
 
-func _move(before: Dictionary, id: String, now: int) -> Array:
-	var b := int(before.get(id, now))
-	if b > now:
-		return ["▲%d" % (b - now), Color("#7fe0b1")]
-	if b < now:
-		return ["▼%d" % (now - b), Color("#ff8a80")]
-	return ["", UiStyle.G_TEXT_3]
-
-
 # --- aba RESULTADO -------------------------------------------------------------------------------------
 
 func _result_tab() -> void:
@@ -296,102 +280,21 @@ func _caption_at(text: String, pos: Vector2) -> Label:
 # --- aba CAMPEONATO -----------------------------------------------------------------------------------------
 
 func _champ_tab() -> void:
-	var last: Dictionary = world.history.back() if not world.history.is_empty() else {}
-	var bd: Dictionary = last.get("before_drivers", {})
-	var bt: Dictionary = last.get("before_teams", {})
-	var pts: Dictionary = last.get("points", {})
-	var left := _card(Rect2(30, 140, 640, 480))
-	left.add_child(_caption_at("Pilotos · após %d GP%s" % [world.round, "" if world.round == 1 else "s"], Vector2(16, 12)))
-	var rows := world.driver_standings()
-	var y := 38.0
-	var shown := 0
-	for i in rows.size():
-		var id := String(rows[i][0])
-		var mine := world.team_of(id) == world.player_team
-		if shown >= 7 and not mine:
-			continue
-		if y > 440.0:
-			break
-		var mv := _move(bd, id, i + 1)
-		var gained := int(pts.get(id, 0))
-		_row(left, y, 608, 46, str(i + 1), id, world.team_of(id), "%d" % int(rows[i][1]) + ("  +%d" % gained if gained > 0 else ""), "", String(mv[0]), mv[1])
-		left.get_child(left.get_child_count() - 1).position.x = 16
-		y += 50.0
-		shown += 1
-	var right := _card(Rect2(690, 140, 560, 480))
-	right.add_child(_caption_at("Construtores", Vector2(16, 12)))
-	var trows := world.team_standings()
-	y = 38.0
-	for i in mini(trows.size(), 11):
-		var id := String(trows[i][0])
-		var mv := _move(bt, id, i + 1)
-		_row(right, y, 528, 36, str(i + 1), id, id, str(int(trows[i][1])), "", String(mv[0]), mv[1])
-		right.get_child(right.get_child_count() - 1).position.x = 16
-		y += 39.0
+	_embed(["drivers", "teams"], "drivers")
+
+
+func _embed(modes: Array, start: String) -> void:
+	var t := WorldTables.new()
+	t.position = Vector2(30, 140)
+	t.size = Vector2(W - 60, 460)
+	_body.add_child(t)
+	t.setup(world, modes, start)
 
 
 # --- aba ESTATÍSTICAS ------------------------------------------------------------------------------------------
 
 func _stats_tab() -> void:
-	var defs := [["wins", "Vitórias", "trophy", GOLD], ["poles", "Poles", "flag", Color("#C77DFF")],
-		["podiums", "Pódios", "up", Color("#7fe0b1")], ["dnfs", "Abandonos", "lock", Color("#ff8a80")]]
-	for i in 4:
-		var d: Array = defs[i]
-		_stat_block(Rect2(30 + (i % 2) * 630, 140 + (i / 2) * 240, 590, 226), String(d[0]), String(d[1]), String(d[2]), d[3])
-
-
-func _stat_block(r: Rect2, stat: String, title: String, icon_name: String, col: Color) -> void:
-	var c := _card(r)
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 8)
-	head.position = Vector2(16, 10)
-	head.add_child(ScreenKit.icon(icon_name, 20, col))
-	head.add_child(UiStyle.g_label(title, 15, UiStyle.G_TEXT, "black"))
-	c.add_child(head)
-	var rows := world.stat_table(stat, _by_team)
-	if rows.is_empty():
-		var none := UiStyle.g_label("Ninguém ainda.", 14, UiStyle.G_TEXT_3, "bold")
-		none.position = Vector2(16, 50)
-		c.add_child(none)
-		return
-	var mx := float((rows[0] as Array)[1])
-	var y := 42.0
-	for i in mini(5, rows.size()):
-		var id := String(rows[i][0])
-		var n := int(rows[i][1])
-		var hb := HBoxContainer.new()
-		hb.add_theme_constant_override("separation", 10)
-		hb.position = Vector2(16, y)
-		hb.size = Vector2(r.size.x - 32, 34)
-		c.add_child(hb)
-		if _by_team:
-			var em := TeamEmblems.make_rect(id, 28)
-			em.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			hb.add_child(em)
-		else:
-			hb.add_child(_avatar(id, 32))
-		var nl := UiStyle.g_label(String(GameData.team_by_id(GameData.teams(), id).get("name", id)) if _by_team else String(_driver(id).get("name", "")), 14, UiStyle.G_TEXT, "black")
-		nl.custom_minimum_size = Vector2(170, 0)
-		nl.clip_text = true
-		nl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		hb.add_child(nl)
-		var bar := ProgressBar.new()
-		bar.show_percentage = false
-		bar.min_value = 0.0
-		bar.max_value = mx
-		bar.value = n
-		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		bar.custom_minimum_size = Vector2(0, 8)
-		bar.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.1), 4, 0, 0))
-		bar.add_theme_stylebox_override("fill", UiStyle.g_box(col, 4, 0, 0))
-		hb.add_child(bar)
-		var cnt := UiStyle.g_label(str(n), 18, UiStyle.G_TEXT, "black")
-		cnt.custom_minimum_size = Vector2(28, 0)
-		cnt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		cnt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		hb.add_child(cnt)
-		y += 36.0
+	_embed(["stats"], "stats")
 
 
 func _notification(what: int) -> void:

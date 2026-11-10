@@ -59,7 +59,7 @@ func _top_bar(team: Dictionary) -> void:
 	var pills := HBoxContainer.new()
 	pills.add_theme_constant_override("separation", 10)
 	var stats := ScreenKit.glass_pill_button("Estatísticas", 150)
-	stats.pressed.connect(Session.open_world_result.bind("stats"))
+	stats.pressed.connect(Session.open_world_table.bind("stats", ""))
 	stats.custom_minimum_size = Vector2(150, 46)
 	pills.add_child(stats)
 	var cal_n := WorldChampionship.calendar().size()
@@ -220,12 +220,21 @@ func _standings_card(r: Rect2) -> Control:
 	tabs.add_child(seg)
 	tabs.add_child(UiStyle.hspacer())
 	tabs.add_child(_chip("Após %d GP%s" % [world.round, "" if world.round == 1 else "s"], "trophy", Color(1, 1, 1, 0.1), UiStyle.G_TEXT))
+	var expand := ScreenKit.round_button("expand", 44, "Ampliar o campeonato")
+	expand.pressed.connect(func() -> void: Session.open_world_table(_tab, ""))
+	tabs.add_child(expand)
 	c.add_child(tabs)
+	# todos os pilotos/equipes, rolando com o dedo (antes só o topo aparecia)
+	var scroll := DragScroll.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	scroll.position = Vector2(20, 66)
+	scroll.size = Vector2(r.size.x - 40, r.size.y - 78)
 	_standings_box = VBoxContainer.new()
 	_standings_box.add_theme_constant_override("separation", 4)
-	_standings_box.position = Vector2(20, 66)
-	_standings_box.size = Vector2(r.size.x - 40, r.size.y - 80)
-	c.add_child(_standings_box)
+	_standings_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_standings_box)
+	c.add_child(scroll)
 	_fill_standings()
 	return c
 
@@ -237,21 +246,10 @@ func _set_tab(v: String) -> void:
 
 func _fill_standings() -> void:
 	for ch in _standings_box.get_children():
+		_standings_box.remove_child(ch)
 		ch.queue_free()
 	var rows: Array = world.driver_standings() if _tab == "drivers" else world.team_standings()
-	var mine: Array = []
 	for i in rows.size():
-		var is_mine: bool = (world.team_of(rows[i][0]) if _tab == "drivers" else String(rows[i][0])) == world.player_team
-		if is_mine:
-			mine.append(i)
-	var show: Array = []
-	for i in mini(5, rows.size()):
-		show.append(i)
-	for i: int in mine:  # mostra o seu melhor, mesmo fora do topo
-		if not show.has(i) and show.size() < 6:
-			show.append(i)
-			break
-	for i: int in show:
 		_standings_box.add_child(_standing_row(i + 1, String(rows[i][0]), int(rows[i][1])))
 
 

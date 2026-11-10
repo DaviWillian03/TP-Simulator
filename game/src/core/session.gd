@@ -47,6 +47,7 @@ const WORLD_HUB_SCENE := "res://src/ui/world_hub_screen.tscn"  ## painel do Camp
 const WORLD_FINAL_SCENE := "res://src/ui/world_final_screen.tscn"
 const SETTINGS_SCENE := "res://src/ui/settings_screen.tscn"
 const SLOTS_SCENE := "res://src/ui/slots_screen.tscn"
+const WORLD_TABLE_SCENE := "res://src/ui/world_table_screen.tscn"  ## campeonato do Mundial em tela cheia + estatísticas (v34)
 const WORLD_RESULT_SCENE := "res://src/ui/world_result_screen.tscn"  ## resultado de cada GP + estatísticas (v30)
 
 var circuit_id := "interlagos"
@@ -277,7 +278,9 @@ func _ready() -> void:
 				wk.simulate_current()
 				guard += 1
 			world.record_weekend(wk)
-		if debug_ui in ["result", "champ", "stats"]:  # (captura) --ui=result|champ|stats abre o resultado do último GP
+		if debug_ui in ["wtable", "wteams", "wstats", "wrank"]:  # (captura) campeonato em tela cheia: pilotos | equipes | estatísticas | ranking de vitórias
+			open_world_table.call_deferred({"wtable": "drivers", "wteams": "teams"}.get(debug_ui, "stats"), "wins" if debug_ui == "wrank" else "")
+		elif debug_ui in ["result", "champ", "stats"]:  # (captura) --ui=result|champ|stats abre o resultado do último GP
 			world_result_tab = debug_ui
 			open_world_result.call_deferred()
 		else:
@@ -556,6 +559,8 @@ func open_world_hub() -> void:
 
 var dev_flags := false  ## alguma opção de desenvolvimento/captura foi passada (pula a abertura)
 var slots_mode := "campaign"  ## o que um slot vazio começa: "campaign" | "world"
+var world_table_mode := "drivers"  ## aba aberta na tela do campeonato: drivers | teams | stats
+var world_table_stat := ""  ## estatística aberta (wins | poles | podiums | dnfs) ou vazio
 var world_result_tab := "result"  ## aba aberta ao entrar no resultado do Mundial: result | champ | stats
 
 
@@ -568,6 +573,12 @@ func open_slots(mode: String) -> void:
 	if mode != "":
 		slots_mode = mode
 	get_tree().change_scene_to_file(SLOTS_SCENE)
+
+
+func open_world_table(mode: String = "drivers", stat_key: String = "") -> void:
+	world_table_mode = mode
+	world_table_stat = stat_key
+	get_tree().change_scene_to_file(WORLD_TABLE_SCENE)
 
 
 func open_world_result(tab: String = "") -> void:

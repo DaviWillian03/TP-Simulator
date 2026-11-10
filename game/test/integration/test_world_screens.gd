@@ -24,10 +24,10 @@ func _open(path: String) -> Control:
 func test_painel_mostra_proximo_gp_tabela_e_pecas() -> void:
 	var hub: WorldHub = await _open("res://src/ui/world_hub_screen.tscn")
 	assert_eq(hub.world.next_round()["id"], "albertpark")
-	assert_gte(hub._standings_box.get_child_count(), 6, "tabela de pilotos com o topo e a sua")
+	assert_eq(hub._standings_box.get_child_count(), hub.world.drivers().size(), "tabela com todos os pilotos (rola com o dedo)")
 	hub._set_tab("teams")
 	await wait_process_frames(2)
-	assert_gte(hub._standings_box.get_child_count(), 6, "tabela de construtores")
+	assert_eq(hub._standings_box.get_child_count(), GameData.teams().size(), "tabela com todos os construtores")
 
 
 func test_painel_avisa_a_punicao_de_grid_do_motor() -> void:
@@ -145,3 +145,64 @@ func test_tela_de_resultado_tem_as_tres_abas() -> void:
 		scr.queue_free()
 		await wait_process_frames(2)
 	Session.world_result_tab = "result"
+
+
+func test_tabela_ampliada_tem_todos_os_pilotos_e_equipes() -> void:
+	_play_one_round()
+	Session.world_table_mode = "drivers"
+	Session.world_table_stat = ""
+	var scr: WorldTableScreen = await _open("res://src/ui/world_table_screen.tscn")
+	var t := scr.tables
+	assert_eq(_count_rows(t), Session.world.drivers().size(), "pilotos")
+	t.mode = "teams"
+	t._render()
+	assert_eq(_count_rows(t), GameData.teams().size(), "construtores")
+
+
+func test_estatisticas_sao_clicaveis_e_o_ranking_traz_todo_mundo() -> void:
+	_play_one_round()
+	Session.world_table_mode = "stats"
+	Session.world_table_stat = ""
+	var scr: WorldTableScreen = await _open("res://src/ui/world_table_screen.tscn")
+	var t := scr.tables
+	var tiles: Array[Button] = []
+	_collect_tiles(t, tiles)
+	assert_eq(tiles.size(), 4, "vitórias, poles, pódios e abandonos")
+	tiles[0].emit_signal("pressed")
+	assert_eq(t.stat, "wins", "tocar no quadro abre o ranking")
+	assert_eq(t.ranking("wins").size(), Session.world.drivers().size(), "ranking inclui quem tem zero")
+	t.by_team = true
+	assert_eq(t.ranking("wins").size(), GameData.teams().size(), "por equipe")
+	assert_eq(int(t.ranking("wins")[0][1]), int(Session.world.stat_table("wins", true)[0][1]), "o líder bate com a estatística")
+
+
+func test_painel_abre_a_tela_ampliada_pelo_botao() -> void:
+	var hub: WorldHub = await _open("res://src/ui/world_hub_screen.tscn")
+	var found := false
+	for b in _buttons(hub):
+		if b.tooltip_text == "Ampliar o campeonato":
+			found = true
+	assert_true(found, "botão de ampliar no cartão da tabela")
+
+
+func _count_rows(t: WorldTables) -> int:
+	for c in t.find_children("*", "VBoxContainer", true, false):
+		if c.get_parent() is DragScroll:
+			return c.get_child_count()
+	return 0
+
+
+func _collect_tiles(n: Node, out: Array[Button]) -> void:
+	for c in n.get_children():
+		if c is Button and (c as Button).has_meta("stat"):
+			out.append(c)
+		_collect_tiles(c, out)
+
+
+func _buttons(n: Node) -> Array[Button]:
+	var out: Array[Button] = []
+	for c in n.get_children():
+		if c is Button:
+			out.append(c)
+		out.append_array(_buttons(c))
+	return out
