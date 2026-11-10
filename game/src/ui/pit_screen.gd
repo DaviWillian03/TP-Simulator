@@ -122,7 +122,7 @@ func _detach_view() -> void:
 func _build() -> void:
 	# fundo opaco da Garagem na cor da equipe (cobre a corrida, que segue rodando por baixo)
 	var bg := ColorRect.new()
-	bg.color = UiStyle.G_BG
+	bg.color = UiStyle.team_sheet(UiStyle.team_accent(car.team)).darkened(0.35)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	var backdrop := GarageBackdrop.new()
@@ -334,7 +334,9 @@ func _set_row(k: String, wet_now: bool) -> Control:
 	b.focus_mode = Control.FOCUS_NONE
 	b.custom_minimum_size = Vector2(0, 62)
 	b.disabled = total <= 0
-	var fill := UiStyle.G_LIGHT if on else Color(1, 1, 1, 0.07)
+	var accent := UiStyle.team_accent(car.team)
+	var ink_c := UiStyle.ink_on(accent)
+	var fill := accent if on else Color(1, 1, 1, 0.07)
 	for s: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
 		b.add_theme_stylebox_override(s, UiStyle.g_box(fill, 16, 14, 0))
 	ScreenKit.press_feedback(b)
@@ -355,10 +357,10 @@ func _set_row(k: String, wet_now: bool) -> Control:
 	names.alignment = BoxContainer.ALIGNMENT_CENTER
 	names.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	names.add_theme_constant_override("separation", -2)
-	var fg := UiStyle.G_INK if on else UiStyle.G_TEXT
+	var fg := ink_c if on else UiStyle.G_TEXT
 	var nm := UiStyle.g_label(String(c["name"]), 17, fg, "black")
 	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sub := UiStyle.g_label(COMPOUND_NOTE[k], 12, UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2)
+	var sub := UiStyle.g_label(COMPOUND_NOTE[k], 12, Color(ink_c, 0.8) if on else UiStyle.G_TEXT_2)
 	sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	names.add_child(nm)
 	names.add_child(sub)
@@ -368,12 +370,12 @@ func _set_row(k: String, wet_now: bool) -> Control:
 	grp.alignment = BoxContainer.ALIGNMENT_CENTER
 	grp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	grp.add_theme_constant_override("separation", 2)
-	var cap := UiStyle.g_caption("Novos %d · usados %d" % [int(st["new"]), int(st["used"])], UiStyle.G_INK_2 if on else UiStyle.G_TEXT_3)
+	var cap := UiStyle.g_caption("Novos %d · usados %d" % [int(st["new"]), int(st["used"])], Color(ink_c, 0.7) if on else UiStyle.G_TEXT_3)
 	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	grp.add_child(cap)
 	var dots := SetDots.new()
-	dots.setup(int(st["new"]), int(st["used"]), on)
+	dots.setup(int(st["new"]), int(st["used"]), on and ink_c == UiStyle.G_INK)
 	dots.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dots.size_flags_horizontal = Control.SIZE_SHRINK_END
 	grp.add_child(dots)
@@ -483,6 +485,7 @@ func _build_right() -> void:
 	ok.text = "CONFIRMAR BOX"
 	ok.custom_minimum_size = Vector2(0, 54)
 	ok.add_theme_font_size_override("font_size", UiStyle.fs(18))
+	ScreenKit.tint_button(ok, UiStyle.team_accent(car.team))
 	ok.disabled = not PitStop.has_set(car, _compound, _use_used)
 	ok.pressed.connect(_confirm)
 	_col_right.add_child(ok)

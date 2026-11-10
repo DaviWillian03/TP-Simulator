@@ -677,18 +677,19 @@ func _open_missions(car: CarState) -> void:
 		return
 	var was_paused := paused
 	paused = true  # a corrida espera a decisão
-	var sh := ScreenKit.sheet(_surname(car).capitalize(), 1120)
+	var accent := UiStyle.team_accent(car.team)  # as folhas seguem a cor da equipe do piloto
+	var sh := ScreenKit.sheet(_surname(car).capitalize(), 1120, accent)
 	var root: Control = sh["root"]
 	root.tree_exited.connect(func() -> void: paused = was_paused)
 	var outer: VBoxContainer = sh["body"]
 	var body := VBoxContainer.new()  # aba "Missões" (base e curta juntas); a outra aba é "Ordens de equipe"
 	body.add_theme_constant_override("separation", UiStyle.SP_M)
-	var ord_box := _orders_box(car, root)
+	var ord_box := _orders_box(car, root, accent)
 	ord_box.visible = Session.debug_ui == "orders"  # (captura) abre já na aba de ordens
 	body.visible = not ord_box.visible
 	outer.add_child(ScreenKit.segmented([["m", "Missões"], ["o", "Ordens de equipe"]], "m", func(v: String) -> void:
 		body.visible = v == "m"
-		ord_box.visible = v == "o"))
+		ord_box.visible = v == "o", accent))
 	outer.add_child(body)
 	outer.add_child(ord_box)
 	var base_kind := String(car.mission_base.get("kind", "save"))
@@ -697,7 +698,7 @@ func _open_missions(car: CarState) -> void:
 		var nxt := sim.player_plan_next(car)
 		until = int(nxt["lap"]) if not nxt.is_empty() else sim.total_laps
 	_mission_ui = {"car": car, "kind": base_kind if base_kind in ["save", "attack", "defend", "push", "safe"] else "save", "until": until,
-		"short": "attack", "laps": 3, "root": root}
+		"short": "attack", "laps": 3, "root": root, "accent": accent}
 	body.add_child(UiStyle.g_caption("Missão de base · o stint inteiro"))
 	var tiles := HBoxContainer.new()
 	tiles.add_theme_constant_override("separation", 10)
@@ -769,6 +770,7 @@ func _open_missions(car: CarState) -> void:
 	go.text = "CONFIRMAR"
 	go.custom_minimum_size = Vector2(260, UiStyle.TOUCH_MAIN)
 	go.size_flags_horizontal = Control.SIZE_SHRINK_END
+	ScreenKit.tint_button(go, accent)
 	go.pressed.connect(func() -> void:
 		var kind := String(_mission_ui["kind"])
 		var until_lap := int(_mission_ui["until"])
@@ -787,7 +789,7 @@ func _open_missions(car: CarState) -> void:
 
 
 ## Aba "Ordens de equipe": como o piloto trata o companheiro (saiu do cartão do piloto, mockup v33).
-func _orders_box(car: CarState, root: Control) -> VBoxContainer:
+func _orders_box(car: CarState, root: Control, accent: Color) -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", UiStyle.SP_M)
 	var pick := {"order": int(car.team_order)}
@@ -807,7 +809,7 @@ func _orders_box(car: CarState, root: Control) -> VBoxContainer:
 		for st: String in ["normal", "hover"]:
 			b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE, 16, 0, 0))
 		for st: String in ["pressed", "hover_pressed"]:
-			b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT, 16, 0, 0))
+			b.add_theme_stylebox_override(st, UiStyle.g_box(accent, 16, 0, 0))
 		var v := VBoxContainer.new()
 		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		v.add_theme_constant_override("separation", 8)
@@ -823,18 +825,19 @@ func _orders_box(car: CarState, root: Control) -> VBoxContainer:
 		b.toggled.connect(func(on: bool) -> void:
 			if on:
 				pick["order"] = val
-			var ink := UiStyle.G_INK if on else UiStyle.G_TEXT
+			var ink := UiStyle.ink_on(accent) if on else UiStyle.G_TEXT
 			ic.modulate = ink
 			lbl.add_theme_color_override("font_color", ink))
 		if b.button_pressed:
-			ic.modulate = UiStyle.G_INK
-			lbl.add_theme_color_override("font_color", UiStyle.G_INK)
+			ic.modulate = UiStyle.ink_on(accent)
+			lbl.add_theme_color_override("font_color", UiStyle.ink_on(accent))
 		row.add_child(b)
 	box.add_child(row)
 	var go := CutButton.new()
 	go.text = "CONFIRMAR"
 	go.custom_minimum_size = Vector2(260, UiStyle.TOUCH_MAIN)
 	go.size_flags_horizontal = Control.SIZE_SHRINK_END
+	ScreenKit.tint_button(go, accent)
 	go.pressed.connect(func() -> void:
 		if int(pick["order"]) != int(car.team_order):
 			sim.set_team_order(car, int(pick["order"]))
@@ -849,7 +852,8 @@ func _open_car(car: CarState) -> void:
 		return
 	var was_paused := paused
 	paused = true
-	var sh := ScreenKit.sheet(_surname(car).capitalize(), 1020)
+	var accent := UiStyle.team_accent(car.team)
+	var sh := ScreenKit.sheet(_surname(car).capitalize(), 1020, accent)
 	var root: Control = sh["root"]
 	root.tree_exited.connect(func() -> void: paused = was_paused)
 	var body: VBoxContainer = sh["body"]
@@ -909,6 +913,7 @@ func _open_car(car: CarState) -> void:
 		fix.icon = load("res://assets/icons/wrench.svg")
 		fix.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
 		fix.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ScreenKit.tint_button(fix, accent)
 		fix.pressed.connect(func() -> void:
 			root.queue_free()
 			_open_pit.call_deferred(car))
@@ -954,8 +959,10 @@ func _mission_tile(t: Array, group: ButtonGroup) -> Button:
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for st: String in ["normal", "hover"]:
 		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE, 16, 0, 0))
+	var accent: Color = _mission_ui.get("accent", UiStyle.G_LIGHT)
+	var ink := UiStyle.ink_on(accent)
 	for st: String in ["pressed", "hover_pressed"]:
-		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT, 16, 0, 0))
+		b.add_theme_stylebox_override(st, UiStyle.g_box(accent, 16, 0, 0))
 	var v := VBoxContainer.new()
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_theme_constant_override("separation", 4)
@@ -981,10 +988,10 @@ func _mission_tile(t: Array, group: ButtonGroup) -> Button:
 	var paint := func() -> void:
 		var on := b.button_pressed
 		for l: Label in [title]:
-			l.add_theme_color_override("font_color", UiStyle.G_INK if on else UiStyle.G_TEXT)
-		d.add_theme_color_override("font_color", UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2)
-		e.add_theme_color_override("font_color", UiStyle.G_INK_2 if on else UiStyle.G_TEXT_3)
-		ic.modulate = UiStyle.G_INK if on else UiStyle.G_TEXT
+			l.add_theme_color_override("font_color", ink if on else UiStyle.G_TEXT)
+		d.add_theme_color_override("font_color", Color(ink, 0.8) if on else UiStyle.G_TEXT_2)
+		e.add_theme_color_override("font_color", Color(ink, 0.7) if on else UiStyle.G_TEXT_3)
+		ic.modulate = ink if on else UiStyle.G_TEXT
 	b.toggled.connect(func(_on: bool) -> void: paint.call())
 	b.button_pressed = t[0] == _mission_ui["kind"]
 	paint.call()

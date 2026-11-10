@@ -401,6 +401,11 @@ static func team_glass(accent: Color, alpha: float = 0.78) -> Color:
 	return Color(base, alpha)
 
 
+## Fundo opaco das folhas e telas na cor da equipe (o painel cinza fixo era "feio e igual para todos").
+static func team_sheet(accent: Color) -> Color:
+	return Color("#111318").lerp(accent.darkened(0.55), 0.38)
+
+
 ## Texto legível sobre uma cor (escuro sobre cor clara, branco sobre escura).
 static func ink_on(fill: Color) -> Color:
 	return G_INK if fill.get_luminance() > 0.55 else Color.WHITE

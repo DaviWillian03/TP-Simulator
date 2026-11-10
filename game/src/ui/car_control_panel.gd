@@ -267,6 +267,7 @@ func _mission_box(short: bool) -> Dictionary:
 	th.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var cap := UiStyle.g_label("Curta" if short else "Base", 10, _hi if short else UiStyle.G_TEXT_3, "bold")  # sem espaçamento largo: sobra lugar para o título
 	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	cap.visible = false  # só o nome da missão (pedido de 2026-11-10: sem "base"/"curta")
 	th.add_child(cap)
 	var title := UiStyle.g_label("", 12, UiStyle.G_TEXT, "black")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -278,6 +279,7 @@ func _mission_box(short: bool) -> Dictionary:
 	sub.custom_minimum_size = Vector2(150, 0)
 	sub.clip_text = true
 	sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	sub.visible = false  # a situação ("o piloto decide o ritmo"…) fica só na dica do cartão
 	v.add_child(sub)
 	var bar := ProgressBar.new()
 	bar.show_percentage = false
@@ -297,6 +299,7 @@ func _paint_mission(box: Dictionary, m: Dictionary) -> void:
 	var stt := Missions.status(sim, car, m)
 	(box["title"] as Label).text = Missions.title(m)
 	(box["sub"] as Label).text = String(stt["text"])
+	root.tooltip_text = String(stt["text"])
 	var bar: ProgressBar = box["bar"]
 	bar.value = float(stt["progress"])
 	var col: Color = _hi if box["short"] else (UiStyle.G_UP if bool(stt["ok"]) else UiStyle.G_DOWN)

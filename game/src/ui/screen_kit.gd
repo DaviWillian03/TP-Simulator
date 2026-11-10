@@ -401,7 +401,7 @@ static func update_team_pill(p: PanelContainer, team_id: String) -> void:
 
 
 ## Controle segmentado em pílula. options: [[valor, texto], ...]. on_change(valor).
-static func segmented(options: Array, selected: Variant, on_change: Callable) -> PanelContainer:
+static func segmented(options: Array, selected: Variant, on_change: Callable, accent: Color = Color(0, 0, 0, 0)) -> PanelContainer:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE, UiStyle.R_PILL, 4, 4))
 	var h := HBoxContainer.new()
@@ -416,7 +416,7 @@ static func segmented(options: Array, selected: Variant, on_change: Callable) ->
 		b.focus_mode = Control.FOCUS_NONE
 		b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_selectable_styles(b, UiStyle.R_PILL - 2)
+		_selectable_styles(b, UiStyle.R_PILL - 2, accent)
 		b.button_pressed = opt[0] == selected
 		b.set_meta("value", opt[0])
 		b.pressed.connect(on_change.bind(opt[0]))
@@ -466,17 +466,26 @@ static func choice_tiles(options: Array, selected: Variant, on_change: Callable)
 
 
 ## Estados de um item selecionável: normal (superfície), pressionado, selecionado (claro).
-static func _selectable_styles(b: Button, radius: int) -> void:
+static func _selectable_styles(b: Button, radius: int, accent: Color = Color(0, 0, 0, 0)) -> void:
+	var sel := UiStyle.G_LIGHT if accent.a <= 0.0 else accent  # selecionado: claro, ou a cor da equipe
+	var ink := UiStyle.G_INK if accent.a <= 0.0 else UiStyle.ink_on(accent)
 	b.add_theme_stylebox_override("normal", UiStyle.g_box(Color(0, 0, 0, 0), radius, 10, 0))
 	b.add_theme_stylebox_override("hover", UiStyle.g_box(UiStyle.G_SURFACE, radius, 10, 0))
-	b.add_theme_stylebox_override("pressed", UiStyle.g_box(UiStyle.G_LIGHT, radius, 10, 0))
-	b.add_theme_stylebox_override("hover_pressed", UiStyle.g_box(UiStyle.G_LIGHT, radius, 10, 0))
+	b.add_theme_stylebox_override("pressed", UiStyle.g_box(sel, radius, 10, 0))
+	b.add_theme_stylebox_override("hover_pressed", UiStyle.g_box(sel, radius, 10, 0))
 	b.add_theme_stylebox_override("disabled", UiStyle.g_box(Color(0, 0, 0, 0), radius, 10, 0))
 	b.add_theme_color_override("font_color", UiStyle.G_TEXT_2)
 	b.add_theme_color_override("font_hover_color", UiStyle.G_TEXT)
-	b.add_theme_color_override("font_pressed_color", UiStyle.G_INK)
-	b.add_theme_color_override("font_hover_pressed_color", UiStyle.G_INK)
+	b.add_theme_color_override("font_pressed_color", ink)
+	b.add_theme_color_override("font_hover_pressed_color", ink)
 	b.add_theme_font_size_override("font_size", UiStyle.fs(UiStyle.FS_BODY))
+
+
+## Botão principal cortado na cor da equipe (texto escuro ou claro conforme a cor).
+static func tint_button(b: CutButton, accent: Color) -> void:
+	b.fill_color = accent
+	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+		b.add_theme_color_override(k, UiStyle.ink_on(accent))
 
 
 ## Número grande com legenda (dados do circuito).
@@ -507,7 +516,7 @@ static func badge(text: String, fill: Color, icon_name: String = "") -> PanelCon
 
 ## Folha sobreposta (seleção de equipe, corrida rápida). Fecha pelo X ou tocando fora.
 ## Devolve {"root": camada a adicionar na tela, "body": VBox para o conteúdo}.
-static func sheet(title: String, width: float = 860.0) -> Dictionary:
+static func sheet(title: String, width: float = 860.0, accent: Color = Color(0, 0, 0, 0)) -> Dictionary:
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.62)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -516,7 +525,11 @@ static func sheet(title: String, width: float = 860.0) -> Dictionary:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dim.add_child(center)
 	var panel := PanelContainer.new()
-	var st := UiStyle.g_box(Color("#17191e"), 22, 28, 22)
+	var st := UiStyle.g_box(Color("#17191e") if accent.a <= 0.0 else UiStyle.team_sheet(accent), 22, 28, 22)
+	if accent.a > 0.0:  # folha da equipe: faixa na cor dela, como o cartão do piloto
+		st.border_width_left = 6
+		st.border_color = accent
+		st.content_margin_left = 34
 	st.shadow_color = Color(0, 0, 0, 0.45)
 	st.shadow_size = 18
 	panel.add_theme_stylebox_override("panel", st)
