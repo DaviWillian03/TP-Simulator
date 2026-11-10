@@ -198,7 +198,13 @@ func _player_panel(car: CarState) -> Control:
 	var card := PanelContainer.new()
 	card.custom_minimum_size.x = CarControlPanel.WIDTH
 	card.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	card.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS, 20, 12, 10))
+	var accent := UiStyle.team_accent(car.team)  # cores da equipe, como no cartão da corrida
+	var hi := accent if accent.get_luminance() > 0.3 else accent.lightened(0.35)
+	var cst := UiStyle.g_box(UiStyle.team_glass(accent), 20, 12, 10)
+	cst.border_width_left = 5
+	cst.border_color = accent
+	cst.content_margin_left = 14
+	card.add_theme_stylebox_override("panel", cst)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 7)
 	card.add_child(v)
@@ -225,16 +231,13 @@ func _player_panel(car: CarState) -> Control:
 	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	names.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var full := car.display_name()
-	var surname := UiStyle.g_label(full.get_slice(" ", full.get_slice_count(" ") - 1), 18, UiStyle.G_TEXT, "black")
-	surname.clip_text = true
-	surname.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	names.add_child(surname)
+	names.add_child(NameFlag.make(full.get_slice(" ", full.get_slice_count(" ") - 1), String(car.driver.get("nationality", "")), 18))
 	var pos_row := HBoxContainer.new()
 	pos_row.add_theme_constant_override("separation", 6)
 	var logo := TeamEmblems.make_rect(String(car.team["id"]), 22)  # ao lado da foto, não por cima
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pos_row.add_child(logo)
-	var pos := UiStyle.g_label("P–", 17, UiStyle.RED, "black")
+	var pos := UiStyle.g_label("P–", 17, hi, "black")
 	pos_row.add_child(pos)
 	var num := UiStyle.g_label("#%d" % int(car.driver["number"]), 12, UiStyle.G_TEXT_3, "bold")
 	num.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -259,6 +262,9 @@ func _player_panel(car: CarState) -> Control:
 	var sectors := SectorStrip.new()  # setores da volta: roxo / verde / amarelo
 	v.add_child(sectors)
 	var go := CutButton.new()
+	go.fill_color = accent
+	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+		go.add_theme_color_override(k, UiStyle.ink_on(accent))
 	go.custom_minimum_size = Vector2(0, 48)
 	go.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	go.clip_text = true

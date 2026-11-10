@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://c0kba1tfli7el"
-path="res://.godot/imported/TitilliumWeb-SemiBold.ttf-5ba81e9a83f9e210133b239b04b905dd.fontdata"
+uid="uid://dmrgf5d2nstgc"
+path="res://.godot/imported/Kanit-Bold.ttf-ddd0b176e6b43f82b9e8ed4f28d6450b.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/TitilliumWeb-SemiBold.ttf"
-dest_files=["res://.godot/imported/TitilliumWeb-SemiBold.ttf-5ba81e9a83f9e210133b239b04b905dd.fontdata"]
+source_file="res://assets/fonts/Kanit-Bold.ttf"
+dest_files=["res://.godot/imported/Kanit-Bold.ttf-ddd0b176e6b43f82b9e8ed4f28d6450b.fontdata"]
 
 [params]
 

@@ -185,7 +185,7 @@ func test_ordens_de_equipe_no_cartao() -> void:
 	assert_eq(panel._order_btns.size(), 3, "briga liberada, não defender, não atacar")
 	var found := false
 	for b in panel._order_btns:
-		if b.text.begins_with("Não\natacar"):
+		if b.text.to_upper().begins_with("NÃO\nATACAR"):  # o jogo mostra tudo em caixa alta
 			b.emit_signal("pressed")
 			found = true
 	assert_true(found, "botão 'Não atacar' no cartão")

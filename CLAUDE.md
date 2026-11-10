@@ -35,6 +35,8 @@ das escolhas técnicas.
   **Garagem** (seção "Garagem" do UiStyle + peças em `ScreenKit`, `GarageBackdrop`, `CutButton`,
   `CarHero`); migradas: tudo (tela inicial, GP, fim de semana, treino, classificação, corrida, box e campanha)
   (`TimingTable` com estilo "garage"). Todas as telas jogáveis já são Garagem (corrida, box, classificação, resultados e campanha).
+  Fonte: **Kanit** e tudo em **caixa alta** (`AllCaps` no `Session`; meta `keep_case` para exceção). Cartão do piloto: cores via
+  `UiStyle.team_accent/team_glass/ink_on`, nome + bandeira via `NameFlag`.
   Mínimos: texto 12 px, alvo de toque 44 px (ação principal 56). Tamanho de fonte **sempre** via `UiStyle.fs()`
   (escala global da letra). Listas/colunas que podem passar da tela: `DragScroll` (arrastar rola; nunca ScrollContainer puro)
   ou `ScreenKit.scroll_column`. Campanha (v26): `CampaignFrame` (barra do topo + barra de ícones; telas novas usam

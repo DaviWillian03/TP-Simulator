@@ -75,6 +75,7 @@ var _screenshot_frames := 0
 
 
 func _ready() -> void:
+	AllCaps.install(get_tree())
 	var args := {}
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--").split("=", true, 1)

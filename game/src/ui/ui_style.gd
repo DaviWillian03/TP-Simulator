@@ -21,19 +21,18 @@ const WARN := RED
 # --- formas e fontes -----------------------------------------------------------------
 const RULE_THICK := 5  ## fio grosso sob o cabeçalho
 const RULE_MID := 2  ## fio entre seções e contorno de botões
-const HEAVY_FONT := preload("res://assets/fonts/ArchivoBlack-Regular.ttf")
-const NARROW_FONT := preload("res://assets/fonts/ArchivoNarrow-Variable.ttf")
+## Fonte do jogo inteiro: Kanit (OFL; escolha do usuário — estilo de jogo mobile, sempre em caixa alta).
+const HEAVY_FONT := preload("res://assets/fonts/Kanit-Bold.ttf")
+const NARROW_FONT := preload("res://assets/fonts/Kanit-Medium.ttf")
 
 static var _body_font: FontVariation
 
 
-## Archivo Narrow no peso 600 (a fonte é variável; o padrão dela seria 400).
+## Texto corrido das telas antigas (Kanit Medium).
 static func body_font() -> FontVariation:
 	if _body_font == null:
 		_body_font = FontVariation.new()
 		_body_font.base_font = NARROW_FONT
-		var wght := TextServerManager.get_primary_interface().name_to_tag("wght")
-		_body_font.variation_opentype = {wght: 600}
 	return _body_font
 
 
@@ -289,9 +288,10 @@ const SP_XXL := 44  ## margem lateral das telas
 const TOUCH_MIN := 44  ## menor alvo de toque (px na referência 1280×720)
 const TOUCH_MAIN := 56  ## ação principal
 
-const G_BLACK := preload("res://assets/fonts/TitilliumWeb-Black.ttf")
-const G_BOLD := preload("res://assets/fonts/TitilliumWeb-Bold.ttf")
-const G_SEMI := preload("res://assets/fonts/TitilliumWeb-SemiBold.ttf")
+## Pesos da Kanit: "black" = Bold (títulos e números), "bold" = SemiBold (nomes e botões), "semi" = Medium (texto).
+const G_BLACK := preload("res://assets/fonts/Kanit-Bold.ttf")
+const G_BOLD := preload("res://assets/fonts/Kanit-SemiBold.ttf")
+const G_SEMI := preload("res://assets/fonts/Kanit-Medium.ttf")
 const FS_DISPLAY := 50
 const FS_TITLE := 34
 const FS_H2 := 24
@@ -373,6 +373,29 @@ static func g_caption(text: String, color: Color = G_TEXT_3) -> Label:
 	var l := g_label(text.to_upper(), FS_CAPTION, color)
 	l.add_theme_font_override("font", _g_caption_font)
 	return l
+
+
+## Cor de destaque da equipe nos cartões (botões e realces). Se a cor principal for cinza ou escura
+## demais (Haas, Audi, Cadillac), usa a secundária; se ainda faltar brilho, clareia.
+static func team_accent(team: Dictionary) -> Color:
+	var c := Color(String(team.get("color", "#e10600")))
+	var c2 := Color(String(team.get("color2", team.get("color", "#e10600"))))
+	if (c.s < 0.3 or c.v < 0.35) and c2.s >= 0.3:
+		c = c2
+	elif c.v < 0.35:
+		c = c2 if c2.v > c.v else c.lightened(0.6)
+	return c
+
+
+## Vidro do cartão tingido com a cor da equipe. Alfa menor que o G_GLASS: a pista aparece por baixo.
+static func team_glass(accent: Color, alpha: float = 0.78) -> Color:
+	var base := Color(G_GLASS.r, G_GLASS.g, G_GLASS.b).lerp(accent.darkened(0.45), 0.32)
+	return Color(base, alpha)
+
+
+## Texto legível sobre uma cor (escuro sobre cor clara, branco sobre escura).
+static func ink_on(fill: Color) -> Color:
+	return G_INK if fill.get_luminance() > 0.55 else Color.WHITE
 
 
 ## Cor da equipe (destaques de seleção, brilho atrás do carro).

@@ -8,6 +8,8 @@ const CUT := 18.0
 const RADIUS := 14.0
 
 var _bg: _Shape
+## Cor do bloco (padrão: vermelho da Garagem; o cartão da corrida usa a cor da equipe).
+var fill_color := UiStyle.RED
 
 
 func _init() -> void:
@@ -50,12 +52,12 @@ class _Shape:
 	extends Control
 
 	func _draw() -> void:
-		var b: Button = get_parent()
-		var c := UiStyle.RED
+		var b: CutButton = get_parent()
+		var c: Color = b.fill_color
 		if b.disabled:
 			c = UiStyle.G_OFF
 		elif b.is_pressed() or b.button_pressed:
-			c = UiStyle.G_RED_PRESS
+			c = UiStyle.G_RED_PRESS if c == UiStyle.RED else c.darkened(0.2)
 		var w := size.x
 		var h := size.y
 		var r := CutButton.RADIUS

@@ -145,7 +145,7 @@ Números entre parênteses = dúvida correspondente em IDEAS.md.
 - Usuário pediu reformulação profunda dos menus (Paddock deixa de ser obrigatória). Três direções
   em `design/mockups/v3-*` (Garagem, Central da equipe, Largada); escolhida a **Garagem**:
   ambiente escuro de box, o carro da equipe iluminado como destaque, a cor da equipe tinge os
-  destaques; vermelho = marca e ação principal; fonte Titillium Web (OFL).
+  destaques; vermelho = marca e ação principal; fonte Titillium Web (OFL) — trocada pela Kanit em 2026-11-10.
 - Implementadas como referência de qualidade: **tela inicial** e **configuração do GP**. As demais
   telas seguem Paddock até serem migradas (UiStyle tem as duas seções; ver CLAUDE.md).
 - Carro em destaque: ilustração vetorial **original** (`tools/make_car_art.py`), uma por equipe.
@@ -662,3 +662,10 @@ Respostas do usuário:
   carro e valendo até mudar: **Briga liberada**, **Não defender do companheiro** (abre quando ele encosta atrás) e
   **Não atacar companheiro** (não tenta passá-lo). O piloto às vezes recusa. Ritmo e bateria viraram ícones na linha da
   missão de base.
+- **2026-11-10 — Fonte e caixa alta.** O jogo inteiro (menus e corrida) usa a **Kanit** (OFL; escolhida numa comparação
+  com Rubik, Russo One, Teko, Oswald e Montserrat — os jogos famosos usam fontes próprias que não podemos incluir) e
+  **todo texto fica em caixa alta** (`AllCaps`, ligado no `Session`; um nó com a meta `keep_case` fica como está).
+- **2026-11-10 — Cartão do piloto com as cores da equipe.** Na corrida e na classificação o cartão usa vidro tingido
+  com a cor da equipe (mais transparente que antes: a pista aparece), faixa lateral e botões na cor de destaque da
+  equipe (Haas/Audi/Cadillac, de cor principal cinza ou escura, usam a secundária). A **bandeira do país** fica logo
+  depois do sobrenome, num recorte inclinado (mesmo ângulo dos botões), na altura das maiúsculas (`NameFlag`).

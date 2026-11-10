@@ -5,9 +5,7 @@ Tudo que vem de fora do projeto, com origem e licença. Atualizar ao adicionar q
 | Item | Onde está | Origem | Licença | Observação |
 |---|---|---|---|---|
 | GUT 9.7.1 | `game/addons/gut/` | https://github.com/bitwes/Gut (tag `v9.7.1`) | MIT (`game/addons/gut/LICENSE.md`) | Só para testes; não precisa ir no APK |
-| Archivo Black | `game/assets/fonts/ArchivoBlack-Regular.ttf` | https://github.com/google/fonts/tree/main/ofl/archivoblack | SIL OFL 1.1 (`game/assets/fonts/OFL-ArchivoBlack.txt`) | Títulos, nomes, números; contornos dos emblemas |
-| Archivo Narrow (variável) | `game/assets/fonts/ArchivoNarrow-Variable.ttf` | https://github.com/google/fonts/tree/main/ofl/archivonarrow | SIL OFL 1.1 (`game/assets/fonts/OFL-ArchivoNarrow.txt`) | Texto da interface (peso 600) |
-| Titillium Web (Black, Bold, SemiBold) | `game/assets/fonts/TitilliumWeb-*.ttf` | https://github.com/google/fonts/tree/main/ofl/titilliumweb | SIL OFL 1.1 (`game/assets/fonts/OFL-TitilliumWeb.txt`) | Interface da direção Garagem |
+| Kanit (Bold, SemiBold, Medium) | `game/assets/fonts/Kanit-*.ttf` | https://github.com/google/fonts/tree/main/ofl/kanit | SIL OFL 1.1 (`game/assets/fonts/OFL-Kanit.txt`) | Fonte de todo o jogo (substituiu Titillium Web e Archivo) |
 | Fontes dos mockups (Titillium Web, Saira Condensed, Barlow, Chakra Petch, Oxanium, Archivo, Bebas Neue, Space Mono, IBM Plex Mono, Russo One, Kanit) | `design/mockups/fonts/` | https://github.com/google/fonts (pasta `ofl/`) | SIL OFL 1.1 (arquivos `OFL-*.txt` na pasta) | Só para os mockups; não vão no jogo |
 | Traçado de Interlagos | `game/data/circuits/interlagos.json` (`points`) | https://github.com/bacinger/f1-circuits, `circuits/br-1940.geojson` | MIT (`game/data/circuits/LICENSE-f1-circuits.md`) | Convertido para metros e escalado para 4.309 m |
 
@@ -34,4 +32,4 @@ símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `ga
 
 ## Bandeiras dos países (game/assets/flags/)
 - **flag-icons** 7.2.3 — https://github.com/lipis/flag-icons (via cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/).
-  Licença **MIT** (texto em `game/assets/flags/LICENSE-flag-icons.txt`). Usadas como fundo translúcido do nome do GP.
+  Licença **MIT** (texto em `game/assets/flags/LICENSE-flag-icons.txt`). Usadas como fundo translúcido do nome do GP e na nacionalidade dos pilotos (cartão da corrida).

@@ -40,6 +40,9 @@ var _auto_label: Label
 var _base_box: Dictionary
 var _short_box: Dictionary
 var _mission_btn: Button
+## Cores da equipe no cartão (pedido do usuário: nada de cinza com vermelho/branco em tudo).
+var _accent: Color  ## botões cheios
+var _hi: Color  ## textos e realces sobre o vidro escuro
 
 
 func setup(p_sim: RaceSim, p_car: CarState) -> void:
@@ -49,9 +52,11 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	tooltip_text = "Tocar para seguir este piloto na pista"
-	_style = UiStyle.g_box(UiStyle.G_GLASS, 20, 12, 10)
+	_accent = UiStyle.team_accent(car.team)
+	_hi = _accent if _accent.get_luminance() > 0.3 else _accent.lightened(0.35)
+	_style = UiStyle.g_box(UiStyle.team_glass(_accent), 20, 12, 10)
 	_style.border_width_left = 5  # faixa na cor da equipe
-	_style.border_color = car.team_color()
+	_style.border_color = _accent
 	_style.content_margin_left = 14
 	add_theme_stylebox_override("panel", _style)
 	var v := VBoxContainer.new()
@@ -73,17 +78,14 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	names.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	names.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var full := car.display_name()
-	var surname := UiStyle.g_label(full.get_slice(" ", full.get_slice_count(" ") - 1), 18, UiStyle.G_TEXT, "black")
-	surname.clip_text = true
-	surname.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	names.add_child(surname)
+	names.add_child(NameFlag.make(full.get_slice(" ", full.get_slice_count(" ") - 1), String(car.driver.get("nationality", "")), 18))
 	var pos_row := HBoxContainer.new()  # logo da equipe ao lado da foto, depois a posição e o número
 	pos_row.add_theme_constant_override("separation", 6)
 	pos_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_logo = TeamEmblems.make_rect(String(car.team["id"]), 22)
 	_logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pos_row.add_child(_logo)
-	_pos_label = UiStyle.g_label("P–", 17, UiStyle.RED, "black")
+	_pos_label = UiStyle.g_label("P–", 17, _hi, "black")
 	_pos_label.pivot_offset = Vector2(10, 12)
 	pos_row.add_child(_pos_label)
 	_num_label = UiStyle.g_label("", 12, UiStyle.G_TEXT_3, "bold")
@@ -167,15 +169,18 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_mission_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_mission_btn.add_theme_constant_override("icon_max_width", 26)
 	for k: String in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
-		_mission_btn.add_theme_color_override(k, UiStyle.G_INK)
+		_mission_btn.add_theme_color_override(k, Color.WHITE)
 	_mission_btn.add_theme_color_override("icon_disabled_color", UiStyle.G_TEXT_OFF)
 	for st: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
-		_mission_btn.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_OFF if st == "disabled" else (UiStyle.G_LIGHT if st in ["normal", "hover"] else UiStyle.G_LIGHT_PRESS), 12, 4, 0))
+		_mission_btn.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_OFF if st == "disabled" else Color(_accent, 0.30 if st in ["normal", "hover"] else 0.45), 12, 4, 0))
 	_mission_btn.pressed.connect(func() -> void: mission_pressed.emit(car))
 	ScreenKit.press_feedback(_mission_btn)
 	pit.add_child(_mission_btn)
 	_box_btn = CutButton.new()
 	_box_btn.tooltip_text = "Chamar para o box"
+	_box_btn.fill_color = _accent
+	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+		_box_btn.add_theme_color_override(k, UiStyle.ink_on(_accent))
 	_box_btn.icon = load("res://assets/icons/wrench.svg")  # box = mecânicos
 	_box_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_box_btn.custom_minimum_size = Vector2(0, 44)
@@ -222,7 +227,7 @@ func set_followed(on: bool) -> void:
 	_style.border_width_top = 2 if on else 0
 	_style.border_width_right = 2 if on else 0
 	_style.border_width_bottom = 2 if on else 0
-	_style.bg_color = Color(UiStyle.G_GLASS, 0.95) if on else UiStyle.G_GLASS
+	_style.bg_color = UiStyle.team_glass(_accent, 0.9 if on else 0.78)
 
 
 ## Toque no cartão (fora dos botões): segue esse piloto na pista.
@@ -236,10 +241,10 @@ func _gui_input(event: InputEvent) -> void:
 func _mission_box(short: bool) -> Dictionary:
 	var p := PanelContainer.new()
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var st := UiStyle.g_box(Color(UiStyle.RED, 0.18) if short else UiStyle.G_SURFACE, 12, 8, 4)
+	var st := UiStyle.g_box(Color(_hi, 0.16) if short else Color(_hi, 0.08), 12, 8, 4)
 	if short:
 		st.set_border_width_all(1)
-		st.border_color = Color(UiStyle.RED, 0.5)
+		st.border_color = Color(_hi, 0.5)
 	p.add_theme_stylebox_override("panel", st)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 1)
@@ -249,10 +254,10 @@ func _mission_box(short: bool) -> Dictionary:
 	var th := HBoxContainer.new()
 	th.add_theme_constant_override("separation", 6)
 	th.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var cap := UiStyle.g_caption("Curta" if short else "Base", Color("#ff8a80") if short else UiStyle.G_TEXT_3)
+	var cap := UiStyle.g_label("Curta" if short else "Base", 10, _hi if short else UiStyle.G_TEXT_3, "bold")  # sem espaçamento largo: sobra lugar para o título
 	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	th.add_child(cap)
-	var title := UiStyle.g_label("", 13, UiStyle.G_TEXT, "black")
+	var title := UiStyle.g_label("", 12, UiStyle.G_TEXT, "black")
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.clip_text = true
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -283,7 +288,7 @@ func _paint_mission(box: Dictionary, m: Dictionary) -> void:
 	(box["sub"] as Label).text = String(stt["text"])
 	var bar: ProgressBar = box["bar"]
 	bar.value = float(stt["progress"])
-	var col: Color = UiStyle.RED if box["short"] else (UiStyle.G_UP if bool(stt["ok"]) else UiStyle.G_DOWN)
+	var col: Color = _hi if box["short"] else (UiStyle.G_UP if bool(stt["ok"]) else UiStyle.G_DOWN)
 	bar.add_theme_stylebox_override("fill", UiStyle.g_box(col, 3, 0, 0))
 
 
@@ -320,7 +325,7 @@ func refresh(race_position: int) -> void:
 		tw.tween_property(_pos_label, "scale", Vector2(1.35, 1.35), 0.12)
 		tw.tween_property(_pos_label, "scale", Vector2.ONE, 0.25)
 		tw.tween_interval(1.2)
-		tw.tween_callback(func() -> void: _pos_label.add_theme_color_override("font_color", UiStyle.RED))
+		tw.tween_callback(func() -> void: _pos_label.add_theme_color_override("font_color", _hi))
 	_last_pos = race_position
 	_auto_label.text = "piloto: %s" % ["poupando", "normal", "atacando"][int(car.pace_mode)]
 	_gauge.tooltip_text = "Ritmo (o piloto decide): " + ["poupando", "normal", "atacando"][int(car.pace_mode)]
@@ -332,9 +337,9 @@ func refresh(race_position: int) -> void:
 	for ob: Button in _order_btns:  # ordem de equipe em vigor: clara; as outras, vidro
 		var on: bool = int(ob.get_meta("order")) == int(car.team_order)
 		for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
-			ob.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT if on else UiStyle.G_SURFACE, 10, 2, 0))
+			ob.add_theme_stylebox_override(st, UiStyle.g_box(_accent if on else Color(1, 1, 1, 0.07), 10, 2, 0))
 		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
-			ob.add_theme_color_override(k, UiStyle.G_INK if on else UiStyle.G_TEXT_2)
+			ob.add_theme_color_override(k, UiStyle.ink_on(_accent) if on else UiStyle.G_TEXT_2)
 	var hints: Array[String] = []
 	if car.damage_wing > 0.0:
 		hints.append("Asa −%d%%" % roundi(car.damage_wing * 100.0))

@@ -13,7 +13,7 @@ from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.pens.transformPen import TransformPen
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-FONT = ROOT / "game/assets/fonts/ArchivoBlack-Regular.ttf"
+FONT = ROOT / "design/mockups/fonts/ArchivoBlack-Regular.ttf"
 OUT = ROOT / "game/assets/emblems"
 
 

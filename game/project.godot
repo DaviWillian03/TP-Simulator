@@ -34,7 +34,7 @@ enabled=PackedStringArray("res://addons/gut/plugin.cfg")
 
 [gui]
 
-theme/custom_font="res://assets/fonts/ArchivoNarrow-Variable.ttf"
+theme/custom_font="res://assets/fonts/Kanit-Medium.ttf"
 
 [input_devices]
 
