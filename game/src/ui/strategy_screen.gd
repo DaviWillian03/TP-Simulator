@@ -49,7 +49,7 @@ func _ready() -> void:
 	var hint := HBoxContainer.new()
 	hint.add_theme_constant_override("separation", 6)
 	hint.add_child(ScreenKit.icon("headset", 18, UiStyle.G_ENGINEER))
-	hint.add_child(UiStyle.g_label("Os engenheiros montaram os planos; toque para mudar", UiStyle.FS_SMALL, UiStyle.G_TEXT, "bold"))
+	hint.add_child(UiStyle.g_label("Planos dos engenheiros · toque para mudar", UiStyle.FS_SMALL, UiStyle.G_TEXT, "bold"))
 	var chip := PanelContainer.new()
 	chip.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 16, 12, 6))
 	chip.add_child(hint)
@@ -73,11 +73,6 @@ func _ready() -> void:
 	var reset := ScreenKit.light_button("VOLTAR AO PLANO DOS ENGENHEIROS")
 	reset.pressed.connect(_reset)
 	foot.add_child(reset)
-	var note := UiStyle.g_label("Na corrida o plano só avisa: a parada acontece quando você confirma no box.", UiStyle.FS_SMALL, UiStyle.G_TEXT_2, "bold")
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	foot.add_child(note)
 	var go := CutButton.new()
 	go.text = "IR PARA O GRID"
 	go.custom_minimum_size = Vector2(240, UiStyle.TOUCH_MAIN)

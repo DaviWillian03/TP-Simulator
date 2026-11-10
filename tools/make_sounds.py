@@ -257,6 +257,47 @@ def alert():
     save("alert", x * env(n, 0.004, 0.05))
 
 
+# --- menus (v32): toque, confirmação, voltar e música de fundo -----------------------------------------
+
+def ui_blip(name, f0, f1, dur, gain=1.0):
+    """Estalo curto de interface: seno com glissando suave e decaimento (nada de apito agudo)."""
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    f = np.linspace(f0, f1, n)
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    x = (np.sin(ph) + 0.25 * np.sin(2 * ph)) * np.exp(-t * (6.0 / dur))
+    x *= np.clip(t / 0.003, 0, 1)
+    save(name, x * gain, 0.55)
+
+
+def menu_music():
+    """Trilha leve em loop (~32 s): quatro acordes com pad macio e um arpejo discreto. Original, sem amostras."""
+    chords = [(110.0, 130.8, 164.8), (87.3, 130.8, 174.6), (130.8, 164.8, 196.0), (98.0, 123.5, 196.0)]  # Am F C G(add)
+    seg = 8.0
+    n = int(SR * seg * len(chords))
+    t = np.arange(n) / SR
+    out = np.zeros(n)
+    for ci, ch in enumerate(chords):
+        a, b = int(SR * seg * ci), int(SR * seg * (ci + 1))
+        tt = t[a:b] - t[a]
+        e = np.minimum(np.minimum(tt / 2.0, 1.0), np.clip((seg - tt) / 2.0, 0, 1))  # entra e sai devagar (cruza com o vizinho)
+        pad = np.zeros(b - a)
+        for k, f in enumerate(ch):
+            det = 1.0 + 0.002 * (k - 1)
+            pad += np.sin(2 * np.pi * f * det * tt) + 0.35 * np.sin(2 * np.pi * 2 * f * tt + k) + 0.12 * np.sin(2 * np.pi * 3 * f * tt)
+        pad *= (0.7 + 0.3 * np.sin(2 * np.pi * tt / seg * 1.0 + ci)) * e
+        out[a:b] += pad
+        # arpejo discreto uma oitava acima, uma nota a cada 1 s
+        for j in range(int(seg)):
+            f = ch[j % 3] * 2
+            nt = np.arange(int(SR * 1.2)) / SR
+            note = np.sin(2 * np.pi * f * nt) * np.exp(-nt * 3.2) * np.clip(nt / 0.01, 0, 1) * 0.22
+            s0 = a + int(SR * j)
+            out[s0:s0 + len(note)] += note[: max(0, min(len(note), n - s0))]
+    out = band(out, 0, 2600)  # tira o brilho: fundo, não destaque
+    save("menu_music", loopify(out, 1.5), 0.5)
+
+
 if __name__ == "__main__":
     engine_bed()
     for i, s in enumerate([11, 22, 33]):
@@ -268,3 +309,7 @@ if __name__ == "__main__":
     pit_gun()
     radio()
     alert()
+    ui_blip("ui_tap", 620, 520, 0.07, 0.8)
+    ui_blip("ui_confirm", 520, 780, 0.16, 1.0)
+    ui_blip("ui_back", 520, 380, 0.11, 0.8)
+    menu_music()

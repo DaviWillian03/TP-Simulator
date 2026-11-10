@@ -185,7 +185,7 @@ func _build_right() -> void:
 	var dep := CarDevelopment.department(_dept)
 	var title := String(dep["name"]).to_upper() + (" · %d" % (campaign.season + 1) if _car == "next" else "")
 	_right.add_child(UiStyle.g_label(title, 30, UiStyle.G_TEXT, "black"))
-	var desc := UiStyle.g_label(String(dep["desc"]) + ("\nMesmo dinheiro e mesmos projetos do carro atual." if _car == "next" else ""), 13, UiStyle.G_TEXT_2)
+	var desc := UiStyle.g_label(String(dep["desc"]), 13, UiStyle.G_TEXT_2)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_right.add_child(desc)
 	for a in dep["arms"].size():
@@ -310,9 +310,6 @@ func _hint_card() -> Control:
 	v.add_theme_constant_override("separation", 6)
 	card.add_child(v)
 	v.add_child(UiStyle.g_label("Escolha um nó", 21, UiStyle.G_INK, "black"))
-	var t := UiStyle.g_label("Toque num nó aberto da árvore para ver custo, prazo e chance de acerto. Cada nó pago vira dias de projeto na fábrica.", 14, UiStyle.G_INK_2)
-	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(t)
 	var sug := ScreenKit.light_button("SUGERIR UM NÓ")
 	sug.custom_minimum_size = Vector2(0, 48)
 	sug.add_theme_font_size_override("font_size", UiStyle.fs(15))
@@ -328,9 +325,6 @@ func _director_card() -> Control:
 	card.add_child(v)
 	v.add_child(UiStyle.g_caption("Diretor técnico decide", UiStyle.G_INK_2))
 	v.add_child(UiStyle.g_label("Foco do desenvolvimento", 21, UiStyle.G_INK, "black"))
-	var t := UiStyle.g_label("O diretor escolhe e paga os projetos dentro do teto de gasto. Toque num nó para assumir.", 14, UiStyle.G_INK_2)
-	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(t)
 	var focus := HBoxContainer.new()
 	focus.add_theme_constant_override("separation", 6)
 	for o: Array in [["balanced", "Equilibrado"], ["aero", "Aero"], ["chassis", "Chassi"], ["durability", "Durab."]]:

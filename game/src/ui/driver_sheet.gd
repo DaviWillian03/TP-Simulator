@@ -91,10 +91,15 @@ func setup(camp: Campaign, id: String) -> void:
 		for k: String in DriverStats.KEYS:
 			left.add_child(_attr_row(String(DriverStats.NAMES[k]), int(p["attrs"][k])))
 	else:
-		var note := UiStyle.g_label("Sem atributos individuais (piloto de outra categoria): vale a nota geral em todas as situações da pista.", 14, UiStyle.G_TEXT_3)
+		var note := UiStyle.g_label("Sem atributos individuais: vale a nota geral.", 14, UiStyle.G_TEXT_3)
 		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		note.custom_minimum_size = Vector2(380, 0)
 		left.add_child(note)
+	left.add_child(UiStyle.g_caption("Resumo"))
+	var bio := UiStyle.g_label(Bio.driver(p, camp.season), 14, UiStyle.G_TEXT_2, "bold")
+	bio.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bio.custom_minimum_size = Vector2(380, 0)
+	left.add_child(bio)
 	cols.add_child(left)
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -300,15 +300,16 @@ const FS_SMALL := 14
 const FS_CAPTION := 12  ## menor texto permitido nas telas novas (antes da escala)
 ## Escala global do texto (pedido do usuário: letras maiores no celular). Textos até 22 px
 ## crescem 20%; acima disso (títulos) ganham só o mesmo acréscimo fixo, para não estourar o layout.
-const TEXT_SCALE := 1.2
+const TEXT_SCALE := 1.2  ## (padrão; o valor em uso vem de Settings.text_scale())
 const _BIG_FROM := 22
 
 
 ## Tamanho de fonte já com a escala global. Toda tela passa por aqui.
 static func fs(size: int) -> int:
+	var k := Settings.text_scale()
 	if size <= _BIG_FROM:
-		return roundi(size * TEXT_SCALE)
-	return size + roundi(_BIG_FROM * (TEXT_SCALE - 1.0))
+		return roundi(size * k)
+	return size + roundi(_BIG_FROM * (k - 1.0))
 
 ## Soma das folgas da área segura (câmera frontal/recortes) por eixo, em unidades de UI.
 static func safe_insets_size() -> Vector2:

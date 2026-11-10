@@ -120,7 +120,7 @@ func _build_left() -> void:
 			_left.add_child(l)
 	var seats := pe.open_driver_seats(campaign)
 	if seats > 0:
-		_left.add_child(UiStyle.g_label("%d vaga%s de piloto para %d: contrate no mercado (ou entra um piloto automático)." % [seats, "" if seats == 1 else "s", campaign.season + 1], 13, Color("#ffd24a"), "bold"))
+		_left.add_child(UiStyle.g_label("%d vaga%s de piloto para %d: contrate no mercado." % [seats, "" if seats == 1 else "s", campaign.season + 1], 13, Color("#ffd24a"), "bold"))
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 4)
 	_left.add_child(gap)
@@ -299,7 +299,7 @@ func _build_market() -> void:
 	for c in _market_box.get_children():
 		_market_box.remove_child(c)
 		c.queue_free()
-	_market_box.add_child(UiStyle.g_caption("Mercado · negocia a qualquer hora, troca na virada"))
+	_market_box.add_child(UiStyle.g_caption("Mercado"))
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 8)
 	var tabs := ScreenKit.segmented([["driver", "Pilotos"], ["staff", "Técnicos"]], _kind, _on_kind)
@@ -548,6 +548,8 @@ class NegotiationSheet:
 		var c := pe.contract_of(id)
 		var where := "Agente livre" if c.get("team", "") == "" else ("Sua equipe" if pe.is_mine(camp, id) else String(GameData.team_by_id(camp.teams(), c["team"]).get("name", c["team"])))
 		n.add_child(UiStyle.g_label("%s · %s · nota %d · contrato até %d" % [where, person["nationality"], int(person["rating"]), int(c.get("until", camp.season))], 14, UiStyle.G_TEXT_2, "bold"))
+		var staff_team := String(GameData.team_by_id(camp.teams(), String(c.get("team", ""))).get("name", ""))
+		n.add_child(UiStyle.g_label(Bio.staff(person, staff_team), 12, UiStyle.G_TEXT_3, "bold"))
 		h.add_child(n)
 		h.add_child(UiStyle.hspacer())
 		var ask := VBoxContainer.new()

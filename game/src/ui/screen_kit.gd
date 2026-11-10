@@ -558,6 +558,9 @@ static func fit_to_screen(panel_obj: Variant, dim_obj: Variant) -> void:
 	var dim := dim_obj as Control
 	if not dim.is_inside_tree():
 		return
+	# textos que quebram linha medem a altura com largura 0 antes de entrar na árvore e deixam o CenterContainer enorme:
+	# volta para a tela inteira antes de medir
+	(panel.get_parent() as Control).set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var room := dim.get_viewport_rect().size - UiStyle.safe_insets_size() - Vector2(24, 24)
 	var need := panel.size  # o CenterContainer dá ao painel o tamanho mínimo do conteúdo (sem escala)
 	var k := minf(1.0, minf(room.x / maxf(need.x, 1.0), room.y / maxf(need.y, 1.0)))

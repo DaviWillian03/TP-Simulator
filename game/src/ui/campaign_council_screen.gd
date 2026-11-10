@@ -54,10 +54,6 @@ func _ready() -> void:
 		v.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		r.add_child(v)
 		rv.add_child(r)
-	var note := UiStyle.g_label("Aprovadas valem na temporada seguinte. Motor, aerodinâmica e chassi novos são ANO DE VIRADA: os carros se aproximam e quem preparou o carro do ano seguinte na P&D sai na frente.", 13, UiStyle.G_TEXT_2)
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.custom_minimum_size = Vector2(340, 0)
-	rv.add_child(note)
 	if regs.vote_open(campaign):
 		var done := CutButton.new()
 		done.text = "CONFIRMAR VOTOS E FECHAR"
@@ -87,7 +83,7 @@ func _refresh() -> void:
 		c.queue_free()
 	if not regs.vote_open(campaign):
 		_left.add_child(UiStyle.g_caption("Votação"))
-		var l := UiStyle.g_label("A votação das regras de %d abre quando a temporada %d termina. Cada fim de temporada o Conselho põe em votação uma mudança de pontuação, de corridas sprint, de pneus e uma regra técnica (motor, aerodinâmica, chassi, reabastecimento ou calendário)." % [campaign.season + 1, campaign.season], 16, Color("#c3c9d3"))
+		var l := UiStyle.g_label("Votação das regras de %d abre ao fim da temporada." % [campaign.season + 1], 16, Color("#c3c9d3"))
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.custom_minimum_size = Vector2(640, 0)
 		_left.add_child(l)

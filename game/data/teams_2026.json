@@ -15,7 +15,7 @@
     "text": "Mc"
    },
    "principal": "Andrea Stella",
-   "technical_director": null,
+   "technical_director": "Rob Marshall",
    "debut": 1966,
    "constructors_titles": 10,
    "points_2026": 365,
@@ -24,7 +24,10 @@
     "slow": 1.0,
     "fast": 0.5,
     "rel": 84
-   }
+   },
+   "hq": "Woking, Reino Unido",
+   "founded": 1963,
+   "heritage": "Fundada por Bruce McLaren; uma das equipes mais vitoriosas da história."
   },
   {
    "id": "mercedes",
@@ -38,7 +41,7 @@
     "text": "Me"
    },
    "principal": "Toto Wolff",
-   "technical_director": null,
+   "technical_director": "James Allison",
    "debut": 2010,
    "constructors_titles": 8,
    "points_2026": 630,
@@ -47,7 +50,10 @@
     "slow": -1.0,
     "fast": -0.5,
     "rel": 86
-   }
+   },
+   "hq": "Brackley, Reino Unido",
+   "founded": 2010,
+   "heritage": "Herdeira da Tyrrell, BAR, Honda e Brawn GP; equipe oficial Mercedes desde 2010."
   },
   {
    "id": "ferrari",
@@ -61,7 +67,7 @@
     "text": "F"
    },
    "principal": "Frédéric Vasseur",
-   "technical_director": null,
+   "technical_director": "Loïc Serra",
    "debut": 1950,
    "constructors_titles": 16,
    "points_2026": 504,
@@ -70,7 +76,10 @@
     "slow": 0.5,
     "fast": -1.0,
     "rel": 80
-   }
+   },
+   "hq": "Maranello, Itália",
+   "founded": 1950,
+   "heritage": "A única equipe presente em todas as temporadas do Mundial desde 1950."
   },
   {
    "id": "redbull",
@@ -93,7 +102,10 @@
     "slow": -1.5,
     "fast": 0.5,
     "rel": 78
-   }
+   },
+   "hq": "Milton Keynes, Reino Unido",
+   "founded": 2005,
+   "heritage": "Comprou a Jaguar e estreou em 2005; motor próprio, com a Ford, a partir de 2026."
   },
   {
    "id": "williams",
@@ -107,7 +119,7 @@
     "text": "W"
    },
    "principal": "James Vowles",
-   "technical_director": null,
+   "technical_director": "Pat Fry",
    "debut": 1978,
    "constructors_titles": 9,
    "points_2026": 12,
@@ -116,7 +128,10 @@
     "slow": -1.5,
     "fast": -0.5,
     "rel": 82
-   }
+   },
+   "hq": "Grove, Reino Unido",
+   "founded": 1977,
+   "heritage": "Fundada por Frank Williams e Patrick Head; nove títulos de construtores."
   },
   {
    "id": "racingbulls",
@@ -140,7 +155,10 @@
     "slow": -0.5,
     "fast": 0.0,
     "rel": 79
-   }
+   },
+   "hq": "Faenza, Itália",
+   "founded": 2006,
+   "heritage": "Herdeira da Minardi e da Toro Rosso; equipe-irmã da Red Bull."
   },
   {
    "id": "astonmartin",
@@ -154,7 +172,7 @@
     "text": "AM"
    },
    "principal": "Adrian Newey",
-   "technical_director": null,
+   "technical_director": "Enrico Cardile",
    "debut": 2021,
    "constructors_titles": 0,
    "points_2026": 7,
@@ -163,7 +181,10 @@
     "slow": 1.0,
     "fast": 0.5,
     "rel": 70
-   }
+   },
+   "hq": "Silverstone, Reino Unido",
+   "founded": 2021,
+   "heritage": "Herdeira da Jordan, Midland, Spyker, Force India e Racing Point; motor Honda em 2026."
   },
   {
    "id": "haas",
@@ -177,7 +198,7 @@
     "text": "H"
    },
    "principal": "Ayao Komatsu",
-   "technical_director": null,
+   "technical_director": "Andrea De Zordo",
    "debut": 2016,
    "constructors_titles": 0,
    "points_2026": 31,
@@ -186,7 +207,10 @@
     "slow": 0.5,
     "fast": -0.5,
     "rel": 80
-   }
+   },
+   "hq": "Kannapolis, EUA",
+   "founded": 2016,
+   "heritage": "Primeira equipe americana em décadas; parceira técnica da Ferrari."
   },
   {
    "id": "alpine",
@@ -199,7 +223,7 @@
     "shape": "peak",
     "text": ""
    },
-   "principal": null,
+   "principal": "Steve Nielsen",
    "technical_director": "Mike Elliott",
    "debut": 2021,
    "constructors_titles": null,
@@ -209,7 +233,11 @@
     "slow": -0.5,
     "fast": -0.5,
     "rel": 81
-   }
+   },
+   "hq": "Enstone, Reino Unido",
+   "founded": 2021,
+   "heritage": "Herdeira da Toleman, Benetton, Renault e Lotus; motor Mercedes em 2026.",
+   "principal_title": "Diretor-geral (Flavio Briatore é o consultor executivo)"
   },
   {
    "id": "audi",
@@ -223,7 +251,7 @@
     "text": "Au"
    },
    "principal": "Jonathan Wheatley",
-   "technical_director": null,
+   "technical_director": "James Key",
    "debut": 2026,
    "constructors_titles": 0,
    "points_2026": 27,
@@ -232,7 +260,10 @@
     "slow": -1.0,
     "fast": 0.5,
     "rel": 74
-   }
+   },
+   "hq": "Hinwil, Suíça",
+   "founded": 2026,
+   "heritage": "A montadora alemã assumiu a Sauber e estreia como Audi em 2026."
   },
   {
    "id": "cadillac",
@@ -255,7 +286,10 @@
     "slow": 0.0,
     "fast": 0.5,
     "rel": 76
-   }
+   },
+   "hq": "Fishers, EUA",
+   "founded": 2026,
+   "heritage": "A 11ª equipe do grid, estreando em 2026 com motores Ferrari."
   }
  ]
 }

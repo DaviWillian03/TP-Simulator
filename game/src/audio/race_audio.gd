@@ -160,5 +160,6 @@ func _player(stream: AudioStream, db: float) -> AudioStreamPlayer:
 	var p := AudioStreamPlayer.new()
 	p.stream = stream
 	p.volume_db = db
+	p.bus = "SFX"
 	add_child(p)
 	return p

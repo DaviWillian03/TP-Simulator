@@ -209,7 +209,8 @@ func _fill_info(t: Dictionary) -> void:
 	sp.custom_minimum_size = Vector2(0, 2)
 	_info.add_child(sp)
 	var titles: Variant = t.get("constructors_titles")
-	for kv: Array in [["Chefe de equipe", t.get("principal") if t.get("principal") != null else "—"], ["Motor", t.get("power_unit", "—")],
+	for kv: Array in [["Chefe de equipe", t.get("principal") if t.get("principal") != null else "—"], ["Diretor técnico", t.get("technical_director") if t.get("technical_director") != null else "—"],
+			["Motor", t.get("power_unit", "—")], ["Sede", t.get("hq", "—")], ["Equipe atual desde", str(int(t["founded"])) if t.has("founded") else "—"],
 			["Títulos de construtores", str(int(titles)) if titles != null else "—"]]:
 		var h2 := HBoxContainer.new()
 		var k := UiStyle.g_label(kv[0], 12, UiStyle.G_TEXT_2, "bold")

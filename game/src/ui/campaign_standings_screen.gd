@@ -201,9 +201,6 @@ func _podium(rows: Array) -> void:
 		how.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.07), 18, 14, 10))
 		var hv := VBoxContainer.new()
 		hv.add_child(UiStyle.g_caption("Como funciona"))
-		var t := UiStyle.g_label("Campeão de construtores da F3 sobe para a F2; o último da F2 desce. Campeão da F2 sobe para a F1; o último da F1 desce. O número de equipes nunca muda.", 12, Color("#c3c9d3"), "bold")
-		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		hv.add_child(t)
 		how.add_child(hv)
 		col.add_child(how)
 

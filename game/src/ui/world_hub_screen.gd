@@ -14,6 +14,7 @@ var _tab_buttons: Dictionary = {}
 
 
 func _ready() -> void:
+	Tips.show_once.call_deferred(self, "world")
 	world = Session.world
 	if world == null:
 		Session.go_to_title.call_deferred()
@@ -155,8 +156,6 @@ func _cars_card(r: Rect2, team: Dictionary) -> Control:
 	var ids := world.driver_ids_of(world.player_team)
 	for i in mini(ids.size(), 2):
 		v.add_child(_car_row(i, String(ids[i]), team))
-	var note := UiStyle.g_label("A troca é automática; passou do limite, o carro larga atrás.", 12, UiStyle.G_TEXT_3, "bold")
-	v.add_child(note)
 	return c
 
 

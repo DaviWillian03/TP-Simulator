@@ -6,7 +6,7 @@ extends RefCounted
 ## Equipe criada = 12ª equipe do grid (24 carros), com pilotos reais da F2/F3 (decisão do
 ## usuário). Os valores das origens vêm de data/campaign_origins.json (PROVISÓRIOS).
 
-const SAVE_PATH := "user://campaign.json"
+const SAVE_PATH := "user://campaign.json"  ## (legado: antes dos slots; hoje o save fica em SaveSlots.campaign_path())
 const CUSTOM_ID := "custom"
 
 var mode := "real"  ## "real" ou "created"
@@ -1140,7 +1140,7 @@ static func driver_code(full_name: String) -> String:
 # --- salvar / carregar ------------------------------------------------------------------
 
 func to_dict() -> Dictionary:
-	return {"version": 1, "mode": mode, "season": season, "player_team": player_team, "origin": origin.get("id", ""),
+	return {"version": 1, "save_version": SaveSlots.VERSION, "mode": mode, "season": season, "player_team": player_team, "origin": origin.get("id", ""),
 		"identity": identity, "engine": engine, "objective": objective, "detail": detail, "ai_difficulty": ai_difficulty,
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
@@ -1254,7 +1254,10 @@ static func from_dict(d: Dictionary) -> Campaign:
 	return c
 
 
-func save(path: String = SAVE_PATH) -> bool:
+func save(path: String = "") -> bool:
+	if path == "":
+		path = SaveSlots.campaign_path()
+		SaveSlots.ensure()
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
 		return false
@@ -1262,11 +1265,13 @@ func save(path: String = SAVE_PATH) -> bool:
 	return true
 
 
-static func load_saved(path: String = SAVE_PATH) -> Campaign:
+static func load_saved(path: String = "") -> Campaign:
+	if path == "":
+		path = SaveSlots.campaign_path()
 	if not FileAccess.file_exists(path):
 		return null
 	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return from_dict(d) if d is Dictionary else null
+	return from_dict(d) if d is Dictionary and SaveSlots.compatible(d) else null
 
 
 # --- temporada ------------------------------------------------------------------------

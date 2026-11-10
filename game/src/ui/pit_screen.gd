@@ -312,7 +312,6 @@ func _build_sets() -> void:
 			_refresh())
 		which.add_child(b)
 	_col_mid.add_child(which)
-	_col_mid.add_child(_note("O jogo usado já rodou na classificação e começa com ~15% de desgaste. O estoque acaba: pense na corrida inteira."))
 	var rule := sim.compound_rule_ok(car)
 	if not rule:
 		var warn := UiStyle.g_label("● Ainda falta usar outro composto seco (regra da prova)", 12, Color("#ffd24a"), "bold")

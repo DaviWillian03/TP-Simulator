@@ -15,7 +15,7 @@ const PIT_MAX_SCALE := 2.0  ## com a tela do box aberta a corrida roda no máxim
 
 var sim: RaceSim
 var weekend: WeekendSim = null  ## Grande Prêmio em andamento (null = corrida rápida)
-var time_scale := 2.0
+var time_scale := float(Settings.start_speed)
 var paused := false
 var _audio: RaceAudio
 
@@ -52,6 +52,7 @@ var _start_lights: StartLights = null  ## semáforo antes da largada (a corrida 
 
 
 func _ready() -> void:
+	Tips.show_once.call_deferred(self, "race")
 	weekend = Session.weekend if Session.weekend != null and Session.weekend.is_race(Session.weekend.session_id()) else null
 	if weekend != null:
 		# Grande Prêmio: grid da classificação, acerto dos treinos, sprint ou corrida
@@ -712,7 +713,7 @@ func _open_missions(car: CarState) -> void:
 		refresh_calc.call())
 	_mission_ui["refresh"] = refresh_calc
 	refresh_calc.call()
-	body.add_child(UiStyle.g_caption("Missão curta · termina sozinha e volta à base"))
+	body.add_child(UiStyle.g_caption("Missão curta"))
 	var srow := HBoxContainer.new()
 	srow.add_theme_constant_override("separation", 10)
 	var order := sim.standings()
@@ -818,6 +819,7 @@ func _open_pit(car: CarState) -> void:
 	_pit.closed.connect(_on_pit_closed)
 	_pit.speed_requested.connect(set_time_scale)
 	_layer.add_child(_pit)
+	Tips.show_once.call_deferred(_pit, "pit")
 	set_time_scale(minf(time_scale, PIT_MAX_SCALE))
 
 

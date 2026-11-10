@@ -583,10 +583,6 @@ func _build_summary() -> void:
 		line.color = Color(1, 1, 1, 0.07)
 		line.custom_minimum_size = Vector2(0, 1)
 		sv.add_child(line)
-	var note := UiStyle.g_label("Essencial: o diretor técnico decide os detalhes da P&D. Dá para trocar a qualquer momento.", 14, UiStyle.G_TEXT_2)
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.custom_minimum_size = Vector2(0, 50)
-	sv.add_child(note)
 
 
 # --- 4 · pilotos ------------------------------------------------------------------------
@@ -749,9 +745,6 @@ func _fill_slots() -> void:
 			v.add_child(UiStyle.g_label("Toque num nome da lista", 13, UiStyle.G_TEXT_3))
 			empty.add_child(v)
 			_slots.add_child(empty)
-	var note := UiStyle.g_label("Salário e duração do contrato entram na camada de contratos; agora a escolha é direta.", 14, UiStyle.G_TEXT_3)
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_slots.add_child(note)
 
 
 func _notification(what: int) -> void:

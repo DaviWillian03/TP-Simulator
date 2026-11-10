@@ -23,7 +23,7 @@ func _ready() -> void:
 	head.add_child(back)
 	var titles := VBoxContainer.new()
 	titles.add_theme_constant_override("separation", -2)
-	titles.add_child(UiStyle.g_caption("Temporada 2026 · sem fim · objetivos da diretoria a cada ano"))
+	titles.add_child(UiStyle.g_caption("Temporada 2026"))
 	titles.add_child(UiStyle.g_label("CAMPANHA", 30, UiStyle.G_TEXT, "black"))
 	head.add_child(titles)
 	ScreenKit.place(head, layer, Control.PRESET_TOP_LEFT, Vector2(44, 24))

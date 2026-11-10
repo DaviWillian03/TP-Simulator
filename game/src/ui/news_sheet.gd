@@ -78,7 +78,7 @@ func _fill() -> void:
 		_list.add_child(_item(n))
 		shown += 1
 	if shown == 0 and (_tab != "market" or _camp.personnel.transfers.decisions.is_empty()):
-		_list.add_child(UiStyle.g_label("Nada por aqui ainda. As notícias aparecem enquanto o tempo passa.", 14, UiStyle.G_TEXT_3))
+		_list.add_child(UiStyle.g_label("Nada por aqui ainda.", 14, UiStyle.G_TEXT_3))
 
 
 ## Decisão aberta do mercado: emblema da equipe, título e "decidir".

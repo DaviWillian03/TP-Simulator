@@ -694,3 +694,20 @@ Respostas do usuário:
   (pilotos e construtores com quem subiu/desceu) e ESTATÍSTICAS (vitórias, poles, pódios e abandonos, por piloto ou por equipe);
   as estatísticas também abrem pelo botão do painel.
 
+- **2026-11-10 — Acabamento (mockups v32 aprovados).** `Settings` (volume geral/efeitos/música, sons de toque, tamanho da letra
+  pequena/normal/grande, velocidade inicial da corrida, pausar em decisões, dicas) em `user://settings.json`, com tela de
+  Configurações (engrenagem no menu). **3 slots de save** (`SaveSlots`; cada slot guarda uma Campanha OU um Mundial), com
+  `save_version` (save de versão futura é recusado) e migração automática do save antigo para o slot 1. **Ajuda** consultável
+  (`data/help.json`) e **dicas de primeira vez** por tela (podem ser desligadas). **Sons de menu** originais (toque, confirmar,
+  voltar) e música leve nos menus (`UiSound`, gerados por `tools/make_sounds.py`; a música cala na corrida e na classificação).
+  **Abertura** com a logo.
+- **2026-11-10 — Nova logo** (opção A escolhida): a curva com a linha branca do limite da pista; o carro laranja passa por
+  **fora** da linha (zona vermelha) e o azul-marinho por dentro, lembrando o lance Verstappen × Norris em Austin 2024 ("guidelines").
+  Carros genéricos, sem patrocínios nem marcas. Gerada por `tools/make_logo_v2.py` (texto em contornos, fonte Kanit).
+- **2026-11-10 — Menos texto explicativo.** Como o jogo agora tem Ajuda e dicas, foram removidas as frases explicativas
+  espalhadas pelas telas (P&D, Conselho, Fábrica, Finanças, Estúdio, criação de equipe, estratégia, box etc.); ficam só avisos
+  necessários (regra do composto, limites, erros). Texto novo nas telas: só o necessário.
+- **2026-11-10 — Dados reais (item 11).** `teams_2026.json` ganhou sede, ano da equipe atual, herança e diretor técnico/chefe de
+  equipe (`tools/enrich_team_info.py`; chefes de 2026 conferidos por busca: Aston Martin = Newey, Alpine = Steve Nielsen como
+  diretor-geral). Resumos curtos de pilotos e técnicos (`Bio`) usam só dados existentes (nada inventado). **Atualização a cada GP:**
+  `tools/add_real_round.py <circuito> <p1..p10>` acrescenta o resultado real e regenera `real_form_2026.json` (Mundial).

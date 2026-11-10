@@ -36,3 +36,7 @@ símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `ga
 
 ## Dados de resultados reais (data/real_form_2026.json)
 - Posições de chegada de 2026 (fatos esportivos) levantadas por busca na web em 2026-11-10 (planetf1, the-race, crash.net, sky sports, formula1.com) e resumidas em `tools/real_results_2026.json`; só fatos (posições), nenhum texto ou imagem copiado. Parcial e sem checagem contra a classificação oficial.
+
+## Sons de menu e logo
+- `game/assets/audio/ui_*.wav` e `menu_music.wav`: síntese própria (`tools/make_sounds.py`), sem amostras de terceiros.
+- Logo e ícone novos: desenho próprio (`tools/make_logo_v2.py`); texto em contornos da fonte Kanit (OFL). Carros genéricos, sem marcas.

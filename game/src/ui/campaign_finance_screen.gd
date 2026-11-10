@@ -238,7 +238,7 @@ func _cap() -> Control:
 	var lh := HBoxContainer.new()
 	lh.add_theme_constant_override("separation", 8)
 	lh.add_child(ScreenKit.icon("lock", 18, Color("#ffb4a8")))
-	var lt := UiStyle.g_label("Trava rígida: quando o teto acaba, projetos, pesquisas e peças novas ficam bloqueados até a próxima temporada.", 13, Color("#ffb4a8"), "bold")
+	var lt := UiStyle.g_label("Trava rígida: sem teto, projetos e peças novas ficam bloqueados.", 13, Color("#ffb4a8"), "bold")
 	lt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lh.add_child(lt)
@@ -318,9 +318,6 @@ func _atr() -> Control:
 	h.add_child(tv)
 	p.add_child(h)
 	v.add_child(p)
-	var note := UiStyle.g_label("Regra da F1: quem termina mais à frente pesquisa menos aerodinâmica no ano seguinte (campeão 70%, último 115%). Vale para todas as equipes, inclusive a IA: muda os dias e a chance das pesquisas de aero.", 12, UiStyle.G_TEXT_3, "bold")
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(note)
 	return v
 
 
@@ -402,8 +399,6 @@ func _open_loan_sheet() -> void:
 			p.add_child(fv)
 			facts.add_child(p)
 		content.add_child(facts)
-		var warn := UiStyle.g_label("O dinheiro emprestado entra no caixa, mas os gastos continuam limitados pelo teto.", 13, Color("#ffd24a"), "bold")
-		content.add_child(warn)
 		var go := CutButton.new()
 		go.text = "CONFIRMAR"
 		go.custom_minimum_size = Vector2(300, 56)

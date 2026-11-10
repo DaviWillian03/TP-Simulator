@@ -127,9 +127,6 @@ static func _research_done(screen: Control, camp: Campaign, e: Dictionary, on_do
 	var sh := ScreenKit.sheet("Pesquisa concluída · " + String(p["area"]).to_lower(), 860)
 	var body: VBoxContainer = sh["body"]
 	body.add_child(UiStyle.g_label(title, 30, UiStyle.G_TEXT, "black"))
-	var txt := UiStyle.g_label("Promessa do túnel de vento e do simulador. O resultado real só aparece depois da primeira corrida com a peça. Enquanto não for fabricada e instalada, nada muda no carro.", 14, UiStyle.G_TEXT_2)
-	txt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_child(txt)
 	body.add_child(_fx_chips(s["fx"]))
 	if bool(e.get("fix", false)):
 		var ok := CutButton.new()

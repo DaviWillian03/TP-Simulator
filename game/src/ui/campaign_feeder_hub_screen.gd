@@ -66,9 +66,6 @@ func _operation_card() -> Control:
 	var g := _glass(Vector2(44, 104), 560)
 	var v: VBoxContainer = g[1]
 	v.add_child(UiStyle.g_caption("Operação da equipe · %d" % f.operation_score(campaign.my_series().teams)))
-	var d := UiStyle.g_label("O chassi é igual para todos: a diferença vem de quem opera o carro.", UiStyle.FS_SMALL, UiStyle.G_TEXT_2, "bold")
-	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(d)
 	var icons := {"eng": "p_gear", "mech": "wrench", "sim": "clock"}
 	for a: String in FeederCareer.AREAS:
 		var row := PanelContainer.new()

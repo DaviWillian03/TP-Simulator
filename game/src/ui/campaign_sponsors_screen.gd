@@ -163,7 +163,7 @@ func _refresh() -> void:
 		for o in offers:
 			_right.add_child(_offer_row(o))
 		if offers.is_empty():
-			_right.add_child(UiStyle.g_label("Sem ofertas agora. Novas marcas aparecem no próximo mês.", 14, UiStyle.G_TEXT_3))
+			_right.add_child(UiStyle.g_label("Sem ofertas agora.", 14, UiStyle.G_TEXT_3))
 
 
 func _brand_badge(name: String) -> PanelContainer:

@@ -297,7 +297,7 @@ func _fill_use() -> void:
 	_panel.add_child(cap)
 	var opts := _use_options(ids)
 	if opts.is_empty():
-		_panel.add_child(UiStyle.g_label("Nada a trocar: os dois carros já estão com a melhor unidade.", 13, UiStyle.G_TEXT_2))
+		_panel.add_child(UiStyle.g_label("Nada a trocar.", 13, UiStyle.G_TEXT_2))
 	else:
 		if _choice == "" or not opts.any(func(o: Dictionary) -> bool: return o["id"] == _choice):
 			_choice = opts[0]["id"]
@@ -672,8 +672,6 @@ func _research_card(r: Dictionary) -> void:
 	h.add_child(ScreenKit.icon("clock", 16, UiStyle.G_TEXT_2))
 	h.add_child(UiStyle.g_label("faltam %d dias" % int(r["days_left"]), 13, UiStyle.G_TEXT, "black"))
 	v.add_child(h)
-	v.add_child(UiStyle.g_label("O resultado real só aparece depois da primeira corrida com a peça.", 12, UiStyle.G_TEXT_2))
-	(v.get_child(v.get_child_count() - 1) as Label).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_panel.add_child(card)
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL

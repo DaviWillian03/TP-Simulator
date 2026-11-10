@@ -123,8 +123,6 @@ func setup(camp: Campaign, d: Dictionary) -> void:
 		var short: String = {"cover": "COBRIR", "fee": "ACEITAR A MULTA", "let_go": "DEIXAR IR"}.get(code, String(o[1]).to_upper())
 		opts.add_child(_option(code, short, desc, icon_name, tag, tag_kind, code in ["cover", "accept"]))
 	v.add_child(opts)
-	if offer:
-		v.add_child(UiStyle.g_label("A campanha fica parada até você decidir.", 13, UiStyle.G_TEXT_2, "bold"))
 
 
 func _option(code: String, title: String, desc: String, icon_name: String, tag: String, tag_kind: String, primary: bool) -> Button:

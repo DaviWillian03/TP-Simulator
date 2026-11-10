@@ -103,7 +103,7 @@ func refresh() -> void:
 				break
 		_text.text = "%s agora. %s" % [now.capitalize(), "Deve parar em ~%d–%d voltas." % [stops * 2, stops * 2 + 2] if stops >= 0 else "Sem sinal de parar tão cedo."]
 	elif first >= 0:
-		_text.text = "Chuva provável em %d–%d voltas (%d%%). A previsão melhora conforme a nuvem chega." % [first * 2, first * 2 + 2, roundi(f[first] * 100.0)]
+		_text.text = "Chuva provável em %d–%d voltas (%d%%)." % [first * 2, first * 2 + 2, roundi(f[first] * 100.0)]
 	else:
 		_text.text = "Sem chuva prevista nas próximas %d voltas." % (BUCKETS * 2)
 	_wet_bar.value = sim.weather.wetness * 100.0

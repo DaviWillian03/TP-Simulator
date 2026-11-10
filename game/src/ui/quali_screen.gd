@@ -35,6 +35,7 @@ var _speeds: PanelContainer
 
 
 func _ready() -> void:
+	Tips.show_once.call_deferred(self, "quali")
 	weekend = Session.weekend
 	if weekend == null or not weekend.is_quali(weekend.session_id()):
 		Session.go_to_title.call_deferred()
@@ -641,8 +642,7 @@ func _refresh_ui() -> void:
 		_table.set_tyre(i, 4, c.get("letter", ""), Color(c.get("color", "#00000000")), "")
 	_table.set_cut_line(adv - 1 if adv > 0 and adv < active and not q.is_over() else -1)
 	_cut_info.text = "" if adv <= 0 or q.is_over() else "Linha vermelha: zona de eliminação (%dº–%dº)" % [adv + 1, active]
-	_evolution.text = "Pista evoluindo: +%s s nesta parte. Quem sair no fim ganha até %s s de borracha, mas arrisca tráfego, bandeira vermelha ou chuva." % [
-		String.num(q.track_evolution_s(), 2).replace(".", ","), String.num(QualiSim.EVOLUTION_S + QualiSim.SEGMENT_EVOLUTION_S * q.segment, 1).replace(".", ",")]
+	_evolution.text = "Pista evoluindo: +%s s nesta parte." % String.num(q.track_evolution_s(), 2).replace(".", ",")
 	if q.weather.wetness > 0.1:
 		_evolution.text += " Pista %s." % q.weather.surface_label().to_lower()
 	for p: Dictionary in _panels:

@@ -12,7 +12,8 @@ var _camp_tile: Button
 
 
 func _ready() -> void:
-	var saved := Campaign.load_saved()
+	var latest_c := SaveSlots.latest("campaign")
+	var saved: Campaign = Campaign.load_saved(SaveSlots.campaign_path(latest_c)) if latest_c > 0 else null
 	var team_id := saved.player_team if saved != null else Session.player_team
 	_page = ScreenKit.garage_page(self, team_id)
 	var bd: GarageBackdrop = _page["backdrop"]
@@ -23,8 +24,18 @@ func _ready() -> void:
 	logo.texture = LOGO
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	ScreenKit.place(logo, layer, Control.PRESET_TOP_LEFT, Vector2(36, 22), Vector2(170, 66))
-	ScreenKit.place(UiStyle.g_caption("Temporada 2026"), layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 46))
+	ScreenKit.place(logo, layer, Control.PRESET_TOP_LEFT, Vector2(36, 18), Vector2(240, 74))
+	ScreenKit.place(UiStyle.g_caption("Temporada 2026"), layer, Control.PRESET_TOP_RIGHT, Vector2(-170, 46))
+	var gear := ScreenKit.round_button("gear", 48, "Configurações")
+	gear.pressed.connect(Session.open_settings)
+	ScreenKit.place(gear, layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 28))
+	var help := ScreenKit.round_button("help", 48, "Ajuda")
+	help.pressed.connect(func() -> void: HelpSheet.open(self))
+	ScreenKit.place(help, layer, Control.PRESET_TOP_RIGHT, Vector2(-100, 28))
+	if Session.debug_ui == "help":  # (captura) --ui=help abre a ajuda
+		HelpSheet.open.call_deferred(self)
+	else:
+		Tips.show_once.call_deferred(self, "title")
 
 	_camp_tile = _campaign_tile(saved, Rect2(40, 110, 700, 570))
 	layer.add_child(_camp_tile)
@@ -60,7 +71,7 @@ func _world_tile(r: Rect2) -> Button:
 	st.border_color = gold
 	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
 		b.add_theme_stylebox_override(s, st)
-	b.pressed.connect(Session.open_world)
+	b.pressed.connect(Session.open_slots.bind("world"))
 	var sq := PanelContainer.new()
 	sq.add_theme_stylebox_override("panel", UiStyle.g_box(gold, 18, 13, 13))
 	sq.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -71,7 +82,8 @@ func _world_tile(r: Rect2) -> Button:
 	v.add_theme_constant_override("separation", 4)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(UiStyle.g_label("Campeonato Mundial F1", 22, UiStyle.G_TEXT, "black"))
-	var saved := WorldChampionship.load_saved()
+	var latest_w := SaveSlots.latest("world")
+	var saved: WorldChampionship = WorldChampionship.load_saved(SaveSlots.world_path(latest_w)) if latest_w > 0 else null
 	var sub := "22 GPs · sem desenvolvimento"
 	if saved != null:
 		sub = "%s · rodada %d/22 · %dº" % [String(GameData.team_by_id(GameData.teams(), saved.player_team).get("name", "")), mini(saved.round + 1, 22), saved.team_position(saved.player_team)]
@@ -121,7 +133,7 @@ func _chip(text: String, icon_name: String, fill: Color, icon_col := UiStyle.G_T
 func _campaign_tile(saved: Campaign, r: Rect2) -> Button:
 	var col := UiStyle.team_color(saved.player_team) if saved != null else UiStyle.SECTION["hq"]
 	var b := _tile(r, Color("#101c1b").lerp(col, 0.12))
-	b.pressed.connect((func() -> void: Session.start_campaign(saved)) if saved != null else Session.open_campaign)
+	b.pressed.connect(Session.open_slots.bind("campaign"))  # escolhe o slot (continua o salvo ou começa uma Campanha)
 	var glow := ColorRect.new()
 	glow.color = Color(col, 0.08)
 	glow.set_anchors_preset(Control.PRESET_FULL_RECT)

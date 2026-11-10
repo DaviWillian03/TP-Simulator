@@ -45,6 +45,8 @@ const CAMPAIGN_FACTORY_SCENE := "res://src/ui/campaign_factory_screen.tscn"
 const CAMPAIGN_REPORT_SCENE := "res://src/ui/campaign_report_screen.tscn"
 const WORLD_HUB_SCENE := "res://src/ui/world_hub_screen.tscn"  ## painel do Campeonato Mundial F1 (v29)
 const WORLD_FINAL_SCENE := "res://src/ui/world_final_screen.tscn"
+const SETTINGS_SCENE := "res://src/ui/settings_screen.tscn"
+const SLOTS_SCENE := "res://src/ui/slots_screen.tscn"
 const WORLD_RESULT_SCENE := "res://src/ui/world_result_screen.tscn"  ## resultado de cada GP + estatísticas (v30)
 
 var circuit_id := "interlagos"
@@ -79,13 +81,22 @@ var _screenshot_frames := 0
 
 
 func _ready() -> void:
+	Settings.load_all()
+	Settings.apply_audio()
+	slow_on_decisions = Settings.slow_on_decisions
+	SaveSlots.migrate_legacy()
 	AllCaps.install(get_tree())
+	if DisplayServer.get_name() != "headless":  # (testes e relatórios não tocam som)
+		var ui_sound := UiSound.new()
+		add_child(ui_sound)
+		ui_sound.install(get_tree())
 	SafeArea.install(get_tree())
 	RenderingServer.set_default_clear_color(Color(0.043, 0.051, 0.071))  # faixas da área segura: mesmo tom escuro da interface
 	var args := {}
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else ""
+	dev_flags = not args.is_empty()
 	player_team = args.get("team", player_team)
 	category = String(args.get("category", GameData.category_of(player_team)))  # --category=F2 (com --team=f2_...)
 	duration_pct = float(args.get("pct", duration_pct))
@@ -236,6 +247,10 @@ func _ready() -> void:
 			weekend = WeekendSim.new(campaign.next_round()["id"], campaign.weekend_options({"duration_pct": duration_pct, "format": "race_only",
 				"weather": args.get("weather", "realistic")}))
 			play_session.call_deferred()
+	elif args.has("settings"):  # (capturas) tela de configurações
+		open_settings.call_deferred()
+	elif args.has("slots"):  # (capturas) --slots[=world]: escolha de slot
+		open_slots.call_deferred(String(args["slots"]) if String(args["slots"]) != "" else "campaign")
 	elif args.has("world"):  # (capturas) --world --team=<id> [--rounds=<n>]: painel do Mundial com n GPs já simulados (não salva)
 		world = WorldChampionship.start(player_team)
 		for i in int(args.get("rounds", "0")):
@@ -419,7 +434,7 @@ func open_campaign_report() -> void:
 ## Novo ano (ou fim da campanha, se demitido/falido): grava e volta para a sede ou para a entrada.
 func finish_season_report() -> void:
 	if campaign.state != "active":
-		DirAccess.remove_absolute(Campaign.SAVE_PATH)  # campanha encerrada: o arquivo sai
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SaveSlots.campaign_path()))  # campanha encerrada: o arquivo sai
 		campaign = null
 		open_campaign()
 		return
@@ -474,7 +489,20 @@ func open_world_hub() -> void:
 	get_tree().change_scene_to_file(WORLD_FINAL_SCENE if world != null and world.season_over() else WORLD_HUB_SCENE)
 
 
+var dev_flags := false  ## alguma opção de desenvolvimento/captura foi passada (pula a abertura)
+var slots_mode := "campaign"  ## o que um slot vazio começa: "campaign" | "world"
 var world_result_tab := "result"  ## aba aberta ao entrar no resultado do Mundial: result | champ | stats
+
+
+func open_settings() -> void:
+	get_tree().change_scene_to_file(SETTINGS_SCENE)
+
+
+## Escolha de slot. mode vazio = só gerenciar (um slot vazio começa o último modo pedido).
+func open_slots(mode: String) -> void:
+	if mode != "":
+		slots_mode = mode
+	get_tree().change_scene_to_file(SLOTS_SCENE)
 
 
 func open_world_result(tab: String = "") -> void:
@@ -499,7 +527,7 @@ func play_world_round() -> void:
 
 ## Recomeça a temporada do Mundial (apaga o save e escolhe a equipe de novo).
 func reset_world() -> void:
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(WorldChampionship.SAVE_PATH))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(SaveSlots.world_path()))
 	world = null
 	open_team_select("world")
 

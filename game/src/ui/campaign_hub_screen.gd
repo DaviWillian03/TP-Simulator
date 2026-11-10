@@ -12,6 +12,7 @@ var _count_days: Label
 
 
 func _ready() -> void:
+	Tips.show_once.call_deferred(self, "campaign")
 	campaign = Session.campaign
 	if campaign == null:
 		Session.open_campaign.call_deferred()
@@ -795,7 +796,7 @@ func _fill_topics(col: VBoxContainer) -> void:
 	card.add_child(v)
 	v.add_child(UiStyle.g_caption("Assuntos · %d" % topics.size()))
 	if topics.is_empty():
-		var l := UiStyle.g_label("Tudo em ordem. Nada pede a sua atenção antes do próximo GP.", 14, UiStyle.G_TEXT_2)
+		var l := UiStyle.g_label("Tudo em ordem.", 14, UiStyle.G_TEXT_2)
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		v.add_child(l)
 	for t: Dictionary in topics:

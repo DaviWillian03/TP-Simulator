@@ -23,6 +23,7 @@ var _program_holder: VBoxContainer
 
 
 func _ready() -> void:
+	Tips.show_once.call_deferred(self, "weekend")
 	weekend = Session.weekend
 	if weekend == null:
 		Session.go_to_title.call_deferred()

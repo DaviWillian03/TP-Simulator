@@ -187,8 +187,6 @@ func _build_current(holder: VBoxContainer) -> void:
 	for r: Dictionary in current_rows():
 		v.add_child(_current_row(r))
 	holder.add_child(card)
-	var note := UiStyle.g_label("Números até o fim de 2025 + o que a campanha somou (em verde). Só Grandes Prêmios, também os simulados.", UiStyle.FS_CAPTION, UiStyle.G_TEXT_3, "bold")
-	holder.add_child(note)
 
 
 func _current_row(r: Dictionary) -> Control:
@@ -236,7 +234,7 @@ func _current_row(r: Dictionary) -> Control:
 
 func _build_seasons(holder: VBoxContainer) -> void:
 	if campaign.champions.is_empty():
-		var l := UiStyle.g_label("Nenhuma temporada concluída ainda. Os campeões de cada ano aparecem aqui.", UiStyle.FS_BODY, UiStyle.G_TEXT_2, "bold")
+		var l := UiStyle.g_label("Nenhuma temporada concluída.", UiStyle.FS_BODY, UiStyle.G_TEXT_2, "bold")
 		holder.add_child(l)
 		return
 	var grid := GridContainer.new()

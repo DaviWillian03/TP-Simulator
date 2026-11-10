@@ -41,12 +41,9 @@ func _ready() -> void:
 	chips.add_child(_chip("Custo por corrida", "US$ %.1f mi" % campaign.cost_per_race()))
 	ScreenKit.place(chips, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 26))
 	ScreenKit.campaign_nav(_layer, "factory")
-	var note := UiStyle.g_label("Uma obra por vez em cada estrutura. Estruturas melhores aceleram a árvore de P&D e aumentam a chance de cada upgrade dar certo.", 13, UiStyle.G_TEXT_2)
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# nota + grade 2×2 numa coluna que rola (com a letra maior, não cabe tudo na tela)
+	# grade 2×2 numa coluna que rola (com a letra maior, não cabe tudo na tela)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", UiStyle.SP_M)
-	col.add_child(note)
 	_grid = GridContainer.new()
 	_grid.columns = 2
 	_grid.add_theme_constant_override("h_separation", 20)

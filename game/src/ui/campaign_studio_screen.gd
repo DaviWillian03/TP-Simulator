@@ -205,9 +205,6 @@ func _build_paint() -> void:
 		b.pressed.connect(func() -> void: paint["finish"] = f; _refresh())
 		fg.add_child(b)
 	right.add_child(fg)
-	var note := UiStyle.g_label("A pintura é só visual: não muda o desempenho. Uma pintura marcante rende mídia e bônus no lançamento do carro.", 11, UiStyle.G_TEXT_3, "bold")
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	right.add_child(note)
 
 
 func _layer_sub(l: Dictionary) -> String:
@@ -360,9 +357,6 @@ func _build_sponsors() -> void:
 	var go := ScreenKit.glass_pill_button("Ofertas e contratos")
 	go.pressed.connect(Session.open_campaign_sponsors)
 	right.add_child(go)
-	var note := UiStyle.g_label("Zonas mais visíveis pagam mais; um carro limpo rende menos.", 11, UiStyle.G_TEXT_3, "bold")
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	right.add_child(note)
 	# pinos das zonas sobre o carro
 	for z: Dictionary in Sponsorship.zones():
 		var pin: Array = z.get("pin", [0.5, 0.5])
@@ -412,9 +406,6 @@ func _build_helmet() -> void:
 	right.add_child(UiStyle.g_caption("Desenho"))
 	right.add_child(ScreenKit.segmented([["band", "Faixa"], ["crown", "Coroa"], ["split", "Metade"], ["stars", "Estrelas"]], String(livery.helmet.get("pattern", "band")),
 		func(v: Variant) -> void: livery.helmet["pattern"] = String(v); _refresh()))
-	var note := UiStyle.g_label("O capacete vale para os dois pilotos da equipe e aparece nos perfis.", 11, UiStyle.G_TEXT_3, "bold")
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	right.add_child(note)
 
 
 # --- Logo (equipe criada) -----------------------------------------------------------------------------
@@ -425,9 +416,6 @@ func _build_logo() -> void:
 	big.position = Vector2(380, 230)
 	var right := _panel(Vector2(1280 - 44 - 360, 150), 360)
 	if campaign.mode != "created":
-		var l := UiStyle.g_label("Equipe real: o logo é o da própria equipe. O editor de logo vale para a equipe criada (12ª do grid).", 14, UiStyle.G_TEXT_2)
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		right.add_child(l)
 		return
 	var ident: Dictionary = campaign.identity
 	var emb: Dictionary = ident.get("emblem", {})
@@ -474,7 +462,7 @@ func _apply_logo(emb: Dictionary) -> void:
 
 func _build_specials() -> void:
 	var v := _panel(Vector2(44, 150), 1280 - 88)
-	v.add_child(UiStyle.g_caption("Pinturas especiais · até %d por temporada (corrida em casa, comemoração...)" % Livery.MAX_SPECIALS))
+	v.add_child(UiStyle.g_caption("Pinturas especiais · até %d por temporada" % Livery.MAX_SPECIALS))
 	var cal := Campaign.calendar()
 	for i in livery.specials.size():
 		var s: Dictionary = livery.specials[i]

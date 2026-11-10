@@ -5,7 +5,7 @@ extends RefCounted
 ## (`data/real_form_2026.json`, gerado por tools/make_real_form.py, já com o grid ~40% mais equilibrado). Motor e câmbio
 ## têm limite por temporada com punição de grid (WorldParts). Pilotos e contratos são os reais de 2026.
 
-const SAVE_PATH := "user://world_championship.json"
+const SAVE_PATH := "user://world_championship.json"  ## (legado: antes dos slots; hoje o save fica em SaveSlots.world_path())
 const FORM_WITH_DATA := 0.3  ## variação aleatória do fim de semana quando já há resultado real da pista
 const FORM_NO_DATA := 0.8  ## pista ainda sem resultado real: só a nota base + variação normal
 
@@ -290,7 +290,7 @@ func champions() -> Dictionary:
 # --- save -------------------------------------------------------------------------------------
 
 func to_dict() -> Dictionary:
-	return {"season": season, "player_team": player_team, "round": round, "seed_base": seed_base,
+	return {"save_version": SaveSlots.VERSION, "season": season, "player_team": player_team, "round": round, "seed_base": seed_base,
 		"driver_points": driver_points, "team_points": team_points, "wins": wins, "poles": poles, "podiums": podiums,
 		"dnfs": dnfs, "history": history, "news": news, "parts": parts.to_dict()}
 
@@ -316,7 +316,10 @@ static func from_dict(d: Dictionary) -> WorldChampionship:
 	return w
 
 
-func save(path: String = SAVE_PATH) -> bool:
+func save(path: String = "") -> bool:
+	if path == "":
+		path = SaveSlots.world_path()
+		SaveSlots.ensure()
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
 		return false
@@ -324,12 +327,14 @@ func save(path: String = SAVE_PATH) -> bool:
 	return true
 
 
-static func load_saved(path: String = SAVE_PATH) -> WorldChampionship:
+static func load_saved(path: String = "") -> WorldChampionship:
+	if path == "":
+		path = SaveSlots.world_path()
 	if not FileAccess.file_exists(path):
 		return null
 	var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return from_dict(d) if d is Dictionary else null
+	return from_dict(d) if d is Dictionary and SaveSlots.compatible(d) else null
 
 
-static func has_save(path: String = SAVE_PATH) -> bool:
-	return FileAccess.file_exists(path)
+static func has_save(path: String = "") -> bool:
+	return FileAccess.file_exists(path if path != "" else SaveSlots.world_path())
