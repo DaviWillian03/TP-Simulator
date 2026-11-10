@@ -758,3 +758,4 @@ Respostas do usuário:
   pneu, a perda total, o risco de quebra e **TROCAR ASA**. As **ordens de equipe** (briga liberada, não defender, não atacar) viraram
   a aba "Ordens de equipe" da folha de Missões (base e curta continuam juntas na aba "Missões"). **Sem textos explicativos** nessas
   telas: só o carro, números e ícones (pedido do usuário).
+- **2026-11-10 — Classificação sem aviso de evolução da pista.** O texto "Pista evoluindo: +x s" saiu da tela (a evolução continua na simulação, de forma implícita); só aparece o aviso quando a pista está molhada.

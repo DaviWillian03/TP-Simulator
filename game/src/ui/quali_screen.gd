@@ -642,9 +642,9 @@ func _refresh_ui() -> void:
 		_table.set_tyre(i, 4, c.get("letter", ""), Color(c.get("color", "#00000000")), "")
 	_table.set_cut_line(adv - 1 if adv > 0 and adv < active and not q.is_over() else -1)
 	_cut_info.text = "" if adv <= 0 or q.is_over() else "Linha vermelha: zona de eliminação (%dº–%dº)" % [adv + 1, active]
-	_evolution.text = "Pista evoluindo: +%s s nesta parte." % String.num(q.track_evolution_s(), 2).replace(".", ",")
-	if q.weather.wetness > 0.1:
-		_evolution.text += " Pista %s." % q.weather.surface_label().to_lower()
+	# a evolução da pista é implícita (pedido de 2026-11-10): sem aviso; só diz a condição quando a pista está molhada
+	_evolution.text = "Pista %s." % q.weather.surface_label().to_lower() if q.weather.wetness > 0.1 else ""
+	_evolution.visible = _evolution.text != ""
 	for p: Dictionary in _panels:
 		_refresh_panel(p, order)
 	var ask := {}
