@@ -1,0 +1,24 @@
+{
+ "_fonte": "Resultados reais de 2026 levantados por busca na web em 2026-11-10 (planetf1, the-race, crash.net, sky sports, formula1.com). Top 10 PARCIAL: null = posição que as fontes não confirmaram; 'dnf' = quem abandonou (não conta como ritmo). Pode divergir da classificação oficial pós-punições. Rodadas 20-22 ainda não aconteceram (use só a base).",
+ "rounds": {
+  "albertpark": {"top10": ["russell","antonelli","leclerc","hamilton","norris","verstappen","bearman","lindblad","bortoleto","gasly"], "dnf": ["hadjar","piastri"]},
+  "shanghai": {"top10": ["antonelli","russell","hamilton","leclerc","bearman","gasly","lawson","hadjar","sainz","colapinto"], "dnf": ["verstappen","norris","piastri"]},
+  "suzuka": {"top10": ["antonelli","piastri","leclerc","russell","norris","hamilton","gasly","verstappen","lawson","ocon"], "dnf": ["bearman","stroll"]},
+  "miami": {"top10": ["antonelli","norris","piastri","russell","verstappen","hamilton","colapinto","leclerc","sainz","albon"], "dnf": []},
+  "montreal": {"top10": ["antonelli","hamilton","verstappen","leclerc","hadjar","colapinto","lawson","gasly","sainz","bearman"], "dnf": ["russell","norris"]},
+  "monaco": {"top10": ["antonelli","hamilton","hadjar","piastri","lawson","lindblad","gasly","albon","ocon","alonso"], "dnf": ["verstappen","leclerc"]},
+  "barcelona": {"top10": ["hamilton","russell","norris","verstappen",null,null,"gasly","colapinto","lawson","lindblad"], "dnf": ["antonelli","leclerc","alonso","hulkenberg","bottas","stroll"]},
+  "spielberg": {"top10": ["russell","verstappen","antonelli","piastri","hamilton",null,null,"leclerc",null,null], "dnf": []},
+  "silverstone": {"top10": ["leclerc","russell","hamilton","norris","hadjar","lawson","lindblad","bortoleto",null,null], "dnf": ["verstappen"], "slow": ["antonelli"]},
+  "spa": {"top10": ["antonelli","leclerc","verstappen","hamilton",null,null,null,"bortoleto","lindblad","colapinto"], "dnf": ["russell"]},
+  "hungaroring": {"top10": ["norris","verstappen","antonelli","leclerc","hamilton","hadjar","russell","lawson","hulkenberg","lindblad"], "dnf": ["piastri","perez","bottas"]},
+  "zandvoort": {"top10": ["norris","antonelli","russell","hamilton","leclerc","piastri","lawson","hulkenberg","alonso","gasly"], "dnf": ["verstappen","ocon","bottas","stroll","bearman"]},
+  "monza": {"top10": ["antonelli","russell","verstappen","norris","piastri","hamilton","gasly","lindblad",null,null], "dnf": ["leclerc"]},
+  "madring": {"top10": ["antonelli","verstappen","norris","leclerc","russell",null,"lawson","colapinto","lindblad","piastri"], "dnf": ["hamilton","sainz"]},
+  "baku": {"top10": ["russell","verstappen","hadjar","leclerc","antonelli","hamilton","lindblad","ocon","bearman","sainz"], "dnf": ["norris"]},
+  "singapore": {"top10": ["verstappen","leclerc","antonelli","norris","piastri","hamilton",null,null,"russell","hadjar"], "dnf": ["bortoleto","colapinto","stroll"]},
+  "austin": {"top10": ["antonelli","leclerc","verstappen",null,"norris",null,null,"russell","lawson","gasly"], "dnf": []},
+  "mexico": {"top10": ["verstappen","hamilton","antonelli","leclerc","norris",null,null,"lindblad","gasly","hulkenberg"], "dnf": []},
+  "interlagos": {"top10": ["norris","verstappen","hadjar","russell","antonelli","piastri",null,"leclerc","hamilton","hulkenberg"], "dnf": []}
+ }
+}

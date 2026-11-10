@@ -46,6 +46,7 @@ var championship: Dictionary = {}
 var tech: Dictionary = {}  ## regulamento técnico da campanha (TechRules)  ## campanha: driver id -> posição no campeonato (classificação usa)
 var incident_rate := 1.0
 var campaign := false  ## fim de semana de uma campanha (volta para a sede ao terminar)
+var world := false  ## fim de semana do Campeonato Mundial F1 (volta para o painel da temporada ao terminar)
 
 var sessions: Array[String] = []
 var current := 0
@@ -97,6 +98,7 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	race_only = options.get("format", "full") == "race_only"
 	incident_rate = float(options.get("incident_rate", 1.0))
 	campaign = bool(options.get("campaign", false))
+	world = bool(options.get("world", false))
 	seed_value = int(options.get("seed", 1))
 	championship = options.get("championship", {})
 	tech = options.get("tech", {})
