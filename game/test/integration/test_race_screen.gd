@@ -195,11 +195,8 @@ func test_ordens_de_equipe_no_cartao() -> void:
 func test_folha_de_missoes_define_a_base_e_da_missao_curta() -> void:
 	var panel: CarControlPanel = screen._car_panels[0]
 	var car: CarState = panel.car
-	var mission: Button = null
-	for b in _all_buttons(panel):
-		if b.text == "MISSÃO":
-			mission = b
-	assert_not_null(mission, "o cartão tem o botão MISSÃO (sem Poupar/Normal/Atacar)")
+	var mission: Button = panel._mission_btn  # símbolo de alvo (2026-11-10)
+	assert_not_null(mission, "o cartão tem o botão de missões (sem Poupar/Normal/Atacar)")
 	var before: bool = screen.paused
 	mission.emit_signal("pressed")
 	assert_true(screen.paused, "a corrida espera a decisão")
