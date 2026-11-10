@@ -32,6 +32,7 @@ var _ex: Dictionary = {}  ## ex-pilotos do grid liberados: id -> dados (podem se
 var prospects: Array = []  ## base da campanha (F2/F3 e pilotos novos fictícios): evolui, sobe de categoria e se aposenta
 var agents: Array = []  ## pilotos de outras categorias (IndyCar, WEC, FE...) e quem ficou sem vaga
 var retired: Array = []  ## [{name, age, season, f1}] aposentadorias (notícias e histórico)
+var transfers := TransferMarket.new()  ## mercado vivo durante a temporada (contratos futuros, propostas, renovações)
 var _lists_ready := false
 
 static var _staff_pool: Array = []
@@ -611,6 +612,8 @@ func _skill_of(role: String) -> float:
 func rollover(camp: Campaign) -> void:
 	var season := camp.season
 	_careers(camp)
+	var released_early: Dictionary = transfers.decided.duplicate()
+	transfers.apply_at_rollover(camp)  # contratos futuros fechados durante a temporada entram agora
 	# 1) IA: renovações e dispensas
 	for t: Dictionary in camp.teams():
 		if t["id"] == camp.player_team:
@@ -618,6 +621,9 @@ func rollover(camp: Campaign) -> void:
 		for d: Dictionary in camp.drivers().filter(func(x: Dictionary) -> bool: return x["team"] == t["id"]):
 			var c: Dictionary = contracts[d["id"]]
 			if int(c["until"]) > season:
+				continue
+			if String(released_early.get(d["id"], "")) == "released":  # a equipe já tinha decidido liberar
+				_release_to_pool(camp, d)
 				continue
 			var chance := clampi(AI_RENEW_BASE + int(d["rating"]) - 75, 20, 95)
 			if _h("%s|%d|renew" % [d["id"], season]) % 100 < chance:
@@ -910,7 +916,7 @@ func _log(text: String) -> void:
 
 func to_dict() -> Dictionary:
 	return {"contracts": contracts, "pending": pending, "dismissed": dismissed, "staff": staff, "news": news, "ex": _ex,
-		"prospects": feeder(), "agents": outside(), "retired": retired}
+		"prospects": feeder(), "agents": outside(), "retired": retired, "transfers": transfers.to_dict()}
 
 
 static func from_dict(d: Dictionary) -> Personnel:
@@ -930,6 +936,7 @@ static func from_dict(d: Dictionary) -> Personnel:
 	p.prospects = d.get("prospects", [])
 	p.agents = d.get("agents", [])
 	p.retired = d.get("retired", [])
+	p.transfers = TransferMarket.from_dict(d.get("transfers", {}))
 	return p
 
 

@@ -1373,6 +1373,7 @@ func record_weekend(w: WeekendSim, skip_cat: String = "") -> void:
 	round += 1
 	cash_log.append({"r": round, "cash": budget_musd})
 	events.on_race_recorded(self)
+	personnel.transfers.after_round(self)  # mercado vivo: contratos futuros, propostas e pedidos de renovação
 	var new_day := round_day(round - 1) + 1
 	_dev_tick(new_day - day, new_day)
 	day = new_day

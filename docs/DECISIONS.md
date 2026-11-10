@@ -645,3 +645,10 @@ Respostas do usuário:
   néon (Las Vegas), torres de iluminação (Lusail), além dos já existentes (lago e skyline, hangares, montanhas).
   Ainda faltam: túnel de Mônaco, Muro dos Campeões, teto do Silverstone Wing, subida da Eau Rouge (relevo de Spa),
   muralhas de Baku, trecho dentro do estádio no México e a curva inclinada do Madring. Sepang não está no calendário do jogo.
+- **2026-11-10 — Item 7: mercado vivo, componentes e finanças** (escolhas do usuário). **Componentes**: limite por
+  temporada de unidade de potência e câmbio; passou do limite = punição de grid; a IA também sofre e decide quando
+  trocar. **Mercado vivo** durante a temporada: contratos futuros da IA (anunciados nas notícias), rivais fazem proposta
+  pelos seus pilotos/técnicos (cobrir, aceitar a multa ou deixar ir no fim do contrato) e pedidos de renovação/aumento
+  perto do fim do contrato (recusar baixa a moral). Sem boatos. **Finanças**: patrocínio garantido × bônus por meta,
+  prêmio oficial por posição com tabela visível e projeção, compromissos (gastos já assumidos) e gráfico do caixa até o
+  fim do ano. Ordem: **mercado vivo primeiro**, depois componentes, depois finanças.
