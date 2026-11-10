@@ -22,6 +22,8 @@ var dnfs: Dictionary = {}
 var history: Array = []  ## [{round, circuit, results: [ids], pole, retired: [ids]}]
 var news: Array = []  ## [{round, text}] punições de grid etc.
 var parts := WorldParts.new()
+var season_log: Dictionary = {}  ## id do piloto -> {wins, podiums, poles} (mesmo formato da campanha: a corrida lê daqui)
+var champions_log: Array = []  ## o Mundial tem uma temporada só por enquanto (sem histórico de campeões anteriores)
 var _real: Dictionary = {}
 
 
@@ -49,6 +51,46 @@ func next_round() -> Dictionary:
 
 func drivers() -> Array:
 	return GameData.drivers()
+
+
+func teams() -> Array:
+	return GameData.teams()
+
+
+func is_feeder() -> bool:
+	return false
+
+
+## Etapas que ainda restam depois da corrida atual (contrato igual ao da campanha: o campeonato ao vivo da corrida usa).
+func remaining_after_current() -> Dictionary:
+	var cal := calendar()
+	var races := 0
+	var sprints := 0
+	for i in range(round + 1, cal.size()):
+		races += 1
+		if bool(cal[i].get("sprint", false)):
+			sprints += 1
+	return {"races": races, "sprints": sprints}
+
+
+## Carreira do piloto: títulos que ele já tinha antes de 2026 (dos dados) mais as vitórias/pódios/poles desta temporada.
+func career_of(d: Dictionary) -> Dictionary:
+	var base: Dictionary = d.get("career_2025", {})
+	var lg: Dictionary = season_log.get(String(d.get("id", "")), {})
+	var out := {}
+	for k: String in ["starts", "wins", "podiums", "poles", "titles"]:
+		out[k] = int(base.get(k, d.get("titles", 0) if k == "titles" else 0)) + (int(lg.get(k, 0)) if k != "titles" else 0)
+	return out
+
+
+func _rebuild_log() -> void:
+	season_log.clear()
+	for k: String in ["wins", "podiums", "poles"]:
+		var src: Dictionary = get(k)
+		for id: String in src:
+			var row: Dictionary = season_log.get(id, {"wins": 0, "podiums": 0, "poles": 0})
+			row[k] = int(src[id])
+			season_log[id] = row
 
 
 func driver_ids_of(team_id: String) -> Array:
@@ -194,6 +236,7 @@ func record_weekend(w: WeekendSim) -> void:
 		var pen: Dictionary = w.grid_penalties[did]
 		var what: Array = (pen["parts"] as Array).map(func(x: Dictionary) -> String: return "%dº %s" % [int(x["n"]), "motor" if x["part"] == "pu" else "câmbio"])
 		news.append({"round": round + 1, "text": "%s largou %s por usar o %s (limite: 4)." % [did, "do fundo do grid" if bool(pen["back"]) else "%d posições atrás" % int(pen["places"]), ", ".join(what)]})
+	_rebuild_log()
 	parts.after_race(GameData.teams())
 	round += 1
 
@@ -226,6 +269,7 @@ static func from_dict(d: Dictionary) -> WorldChampionship:
 		for id: String in src:
 			dst[id] = int(src[id])
 		w.set(k, dst)
+	w._rebuild_log()
 	w.history = d.get("history", [])
 	w.news = d.get("news", [])
 	w.parts.from_dict(d.get("parts", {}))

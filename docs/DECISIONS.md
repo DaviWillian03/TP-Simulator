@@ -680,3 +680,11 @@ Respostas do usuário:
 - **2026-11-10 — Resultado entre as partes da classificação** (mockup v28 aprovado): ao fim do Q1/Q2 a sessão para e
   mostra quem passa e, em vermelho, os eliminados (com a distância para o corte); ao fim do Q3, a pole em destaque e o
   grid do 2º ao 10º. Sempre pede CONTINUAR. "Simular o resto" não para nas partes do meio.
+- **2026-11-10 — Modo "Campeonato Mundial F1"** (mockup v29 aprovado). Temporada completa de 2026 (22 GPs) com pontos,
+  tabelas e estatísticas, **sem desenvolvimento de carro**; pilotos e contratos reais, eventos só do fim de semana,
+  controle de motor/câmbio com punição de grid (`WorldParts`, mesmas regras do `CarParts`: limite 4, troca automática).
+  Força dos carros por pista = **temporada real** (`data/real_form_2026.json`, gerado por `tools/make_real_form.py` a partir
+  de `tools/real_results_2026.json`: top 10 de 19 GPs levantados por busca na web, PARCIAL e sujeito a divergência entre
+  fontes), com o grid **~40% mais equilibrado** e ajuste fino calibrado em `tools/world_report.gd`. Rodadas ainda sem
+  resultado real usam só a nota base. Bloco próprio no menu inicial e **save separado** (`user://world_championship.json`);
+  a Campanha continua intacta. O **campeonato ao vivo da corrida** (pop-ups "se terminar assim" e as animações de campeão de pilotos/construtores) também vale no Mundial (mesmo contrato da campanha; sem a frase do número 1 do ano seguinte). Fica para depois: mais temporadas, controle manual das peças.

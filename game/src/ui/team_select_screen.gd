@@ -61,9 +61,10 @@ func _ready() -> void:
 	head.add_child(_mode_label)
 	ScreenKit.place(head, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 26))
 	# F1 / F2 / F3 nos dois modos (decisão de 2026-11-08)
-	var seg := ScreenKit.segmented([["F1", "F1"], ["F2", "F2"], ["F3", "F3"]], _cat, _set_category)
-	seg.custom_minimum_size = Vector2(240, 0)
-	ScreenKit.place(seg, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 30))
+	if _mode != "world":  # o Mundial é só F1
+		var seg := ScreenKit.segmented([["F1", "F1"], ["F2", "F2"], ["F3", "F3"]], _cat, _set_category)
+		seg.custom_minimum_size = Vector2(240, 0)
+		ScreenKit.place(seg, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 30))
 
 	_car = CarHero.new()
 	_layer.add_child(_car)
@@ -139,7 +140,7 @@ func _apply() -> void:
 	_slab.add_theme_stylebox_override("panel", sb)
 	var nm := String(t["name"]).to_upper()
 	_name.text = nm
-	var base_label: String = {"campaign": "CAMPANHA · EQUIPE REAL", "gp": "GRANDE PRÊMIO"}.get(_mode, "")
+	var base_label: String = {"campaign": "CAMPANHA · EQUIPE REAL", "gp": "GRANDE PRÊMIO", "world": "CAMPEONATO MUNDIAL F1"}.get(_mode, "")
 	_mode_label.text = base_label + ("" if _cat == "F1" else " · " + String(CategoryRules.of(_cat)["name"]).to_upper())
 	_giant.text = nm
 	var fs := 178
@@ -327,6 +328,8 @@ func _confirm() -> void:
 	match _mode:
 		"campaign":  # F2/F3: campanha na categoria de base (a F1 corre simulada)
 			Session.start_campaign(Campaign.new_feeder(_team) if CategoryRules.is_feeder(_cat) else Campaign.new_real(_team))
+		"world":
+			Session.start_world(_team)
 		_:
 			Session.open_gp_setup()
 

@@ -21,6 +21,8 @@ das escolhas técnicas.
   StrategyAI (IA), Missions (missões do stint: o piloto dosa ritmo e bateria; a IA usa as mesmas); fim de semana: WeekendSim (sessões, previsão, grids, pontos), CarSetup (acerto),
   PracticeSession (programas de blocos), TyreAllocation (jogos de pneus reais do fim de semana), RaceStrategy (planos dos
   engenheiros; na corrida só avisam), QualiSim (Q1/Q2/Q3; cortes pelo nº de carros);
+  **Campeonato Mundial F1**: `WorldChampionship` (temporada 2026 real, sem P&D; save `user://world_championship.json`), `WorldParts` (limite de motor/câmbio),
+  `data/real_form_2026.json` (de `tools/make_real_form.py`), telas `world_hub_screen` e `world_final_screen`, `tools/world_report.gd` (calibra); dev: `--world --team=<id> [--rounds=<n>]`;
   campanha: `Campaign` (equipe real ou criada = 12ª equipe, 24 carros; salva em
   user://campaign.json; na F2/F3 usa `FeederCareer` + `campaign_feeder_hub_screen`, e a F1 roda simulada rápida), `CategoryRules`
   (regras F1/F2/F3 em `data/categories.json`), `CarDevelopment` (árvore de P&D em `data/rd_tree.json`, gerada por

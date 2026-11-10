@@ -433,16 +433,24 @@ func _refresh_ui() -> void:
 		p.set_followed(p.car == following)
 
 
-# --- campeonato ao vivo (pop-ups "se terminar assim", só na campanha) ---------------------------
+# --- campeonato ao vivo (pop-ups "se terminar assim", na campanha e no Campeonato Mundial F1) ----------
+
+## Quem guarda a temporada deste fim de semana: o Mundial ou a campanha (mesmo contrato: pontos, calendário, equipes).
+func _season() -> Variant:
+	if weekend != null and weekend.world and Session.world != null:
+		return Session.world
+	return Session.campaign
+
+
 
 func _setup_championship() -> void:
-	var camp: Campaign = Session.campaign
+	var camp: Variant = _season()
 	if weekend == null or not weekend.campaign or camp == null or camp.is_feeder():
 		return  # (F2/F3: o campeonato ao vivo da F1 não se aplica)
 	var team_of := {}
 	for d: Dictionary in camp.drivers():
 		team_of[d["id"]] = d["team"]
-	var rem := camp.remaining_after_current()
+	var rem: Dictionary = camp.remaining_after_current()
 	var races := int(rem["races"]) + (1 if sim.sprint else 0)  # na sprint, a corrida do domingo ainda vem
 	_champ = ChampionshipLive.new()
 	_champ.setup(camp.driver_points, camp.team_points, team_of, weekend.points_sprint if sim.sprint else weekend.points_race,
@@ -489,14 +497,14 @@ func _check_championship() -> void:
 
 func _champ_drivers() -> Dictionary:
 	var out := {}
-	for d: Dictionary in Session.campaign.drivers():
+	for d: Dictionary in _season().drivers():
 		out[d["id"]] = d
 	return out
 
 
 func _show_standings(kind: String, rows: Array, before: Array) -> void:
 	var colors := {}
-	for t: Dictionary in Session.campaign.teams():
+	for t: Dictionary in _season().teams():
 		colors[t["id"]] = Color(t["color"])
 	var mine: Array = []
 	for c in sim.cars:
@@ -504,7 +512,7 @@ func _show_standings(kind: String, rows: Array, before: Array) -> void:
 			mine.append(c.driver["id"] if kind == "drivers" else c.team["id"])
 	var names := _champ_drivers()
 	var lead := int(rows[0][2]) - int(rows[1][2]) if rows.size() > 1 else 0
-	var leader: String = String(names.get(rows[0][0], {}).get("name", rows[0][0])) if kind == "drivers" else String(GameData.team_by_id(Session.campaign.teams(), rows[0][0]).get("name", ""))
+	var leader: String = String(names.get(rows[0][0], {}).get("name", rows[0][0])) if kind == "drivers" else String(GameData.team_by_id(_season().teams(), rows[0][0]).get("name", ""))
 	var left := _champ.max_remaining() * (2 if kind == "teams" else 1)
 	var msg := "%s lidera por %d ponto%s · ainda restam %d em disputa" % [leader.get_slice(" ", leader.get_slice_count(" ") - 1) if kind == "drivers" else leader, lead, "" if lead == 1 else "s", left]
 	_champ_card.show_standings(kind, rows, before, names, colors, mine, msg)
@@ -515,12 +523,12 @@ func _show_title(kind: String, cl: Dictionary, lap_text: String) -> void:
 	if kind == "drivers":
 		var d: Dictionary = names.get(cl["id"], {})
 		var rival := String(names.get(cl["rival"], {}).get("name", ""))
-		_champ_card.show_title(String(d.get("name", "")), d, UiStyle.team_color_from(Session.campaign.teams(), String(d.get("team", ""))), lap_text,
+		_champ_card.show_title(String(d.get("name", "")), d, UiStyle.team_color_from(_season().teams(), String(d.get("team", ""))), lap_text,
 			"Vantagem projetada de %d pontos; restam %d em disputa." % [int(cl["lead"]), int(cl["left"])],
 			"%s não alcança mais, se a corrida terminar assim." % rival.get_slice(" ", rival.get_slice_count(" ") - 1), false)
 	else:
-		var t := GameData.team_by_id(Session.campaign.teams(), String(cl["id"]))
-		var rt := GameData.team_by_id(Session.campaign.teams(), String(cl["rival"]))
+		var t := GameData.team_by_id(_season().teams(), String(cl["id"]))
+		var rt := GameData.team_by_id(_season().teams(), String(cl["rival"]))
 		_champ_card.show_title(String(t.get("name", "")), {}, Color(t.get("color", "#888888")), lap_text,
 			"Vantagem projetada de %d pontos; restam %d em disputa." % [int(cl["lead"]), int(cl["left"])],
 			"%s não alcança mais nos construtores." % String(rt.get("name", "")), true, String(cl["id"]))
@@ -529,7 +537,7 @@ func _show_title(kind: String, cl: Dictionary, lap_text: String) -> void:
 ## Títulos (pilotos/construtores) que esta corrida decidiu: [{kind, id}] — não repete se já estava decidido antes.
 func _titles_decided_now() -> Array:
 	var out: Array = []
-	if _champ == null or Session.campaign == null:
+	if _champ == null or _season() == null:
 		return out
 	var order: Array = []
 	var dnf := {}
@@ -559,7 +567,7 @@ func _play_celebrations(titles: Array) -> void:
 		_show_podium()
 		return
 	var t: Dictionary = titles.pop_front()
-	var camp: Campaign = Session.campaign
+	var camp: Variant = _season()
 	var data := {"kind": t["kind"], "season": camp.season, "place": "%s · volta %d de %d" % [sim.track.grand_prix, sim.total_laps, sim.total_laps]}
 	var after := 0
 	for r: Array in t["rows"]:
@@ -583,7 +591,7 @@ func _play_celebrations(titles: Array) -> void:
 				["PÓDIOS", int(sl.get("podiums", 0)) + (1 if pos >= 1 and pos <= 3 and not sim.sprint else 0)], ["PONTOS", after]]})
 		var last := String(d.get("name", "")).get_slice(" ", String(d.get("name", "")).get_slice_count(" ") - 1)
 		data["note"] = ("Decidido na última etapa." if races_left <= 0 else "Garantido com %d etapa%s de antecedência." % [races_left, "" if races_left == 1 else "s"]) \
-			+ " No ano que vem, o carro de %s leva o número 1." % last
+			+ ("" if camp is WorldChampionship else " No ano que vem, o carro de %s leva o número 1." % last)
 	else:
 		var team := GameData.team_by_id(camp.teams(), String(t["id"]))
 		var wins := 0
@@ -593,7 +601,7 @@ func _play_celebrations(titles: Array) -> void:
 				wins += int(camp.season_log[did].get("wins", 0))
 				pods += int(camp.season_log[did].get("podiums", 0))
 		var prev := int(team.get("constructors_titles", 0) if team.get("constructors_titles") != null else 0)
-		for ch: Dictionary in camp.champions:
+		for ch: Dictionary in (camp.champions_log if camp is WorldChampionship else camp.champions):
 			if String(ch.get("team", "")) == t["id"]:
 				prev += 1
 		data.merge({"name": team.get("name", ""), "team": team, "color": Color(team.get("color", "#888888")), "titles": prev + 1,

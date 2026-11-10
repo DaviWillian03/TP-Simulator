@@ -20,6 +20,8 @@ BALANCE = 0.40
 PTS_PER_RATING = 7.0
 TRACK_WEIGHT = 0.6
 MAX_OFFSET = 5.0
+# Ajuste fino da nota base, calibrado com tools/world_report.gd (a Mercedes real somou mais que a simulação, a Ferrari menos):
+CALIBRATION = {"mercedes": 0.9, "ferrari": -0.5}
 
 
 def main() -> None:
@@ -46,7 +48,7 @@ def main() -> None:
     top = max(mean.values())
     base = {t: 79.0 + 11.0 * (mean[t] / top) ** 0.5 for t in teams}
     centre = sum(base.values()) / len(base)
-    base = {t: round(centre + (v - centre) * (1.0 - BALANCE), 2) for t, v in base.items()}
+    base = {t: round(centre + (v - centre) * (1.0 - BALANCE) + CALIBRATION.get(t, 0.0), 2) for t, v in base.items()}
     rounds = {}
     for cid, s in score.items():
         rounds[cid] = {}

@@ -43,6 +43,8 @@ const CAMPAIGN_STUDIO_SCENE := "res://src/ui/campaign_studio_screen.tscn"  ## es
 const CAMPAIGN_RD_SCENE := "res://src/ui/campaign_car_screen.tscn"  ## árvore de P&D
 const CAMPAIGN_FACTORY_SCENE := "res://src/ui/campaign_factory_screen.tscn"
 const CAMPAIGN_REPORT_SCENE := "res://src/ui/campaign_report_screen.tscn"
+const WORLD_HUB_SCENE := "res://src/ui/world_hub_screen.tscn"  ## painel do Campeonato Mundial F1 (v29)
+const WORLD_FINAL_SCENE := "res://src/ui/world_final_screen.tscn"
 
 var circuit_id := "interlagos"
 var player_team := "mclaren"
@@ -59,13 +61,14 @@ var debug_profile := ""  ## --profile=<id do piloto>: abre a ficha na tela Pesso
 var debug_pit := false  ## --pit: abre a tela do box na corrida
 var debug_tap := false  ## --tap: leva um carro ao box e abre o mini-jogo de toque
 var category := "F1"  ## categoria escolhida (F1/F2/F3) para o Grande Prêmio (e a campanha); decisões de 2026-11-08
-var team_select_mode := "gp"  ## escolha de equipe: "campaign" | "gp"
+var team_select_mode := "gp"  ## escolha de equipe: "campaign" | "gp" | "world"
 var debug_ui := ""  ## --ui=team (abre a folha na tela inicial) · --ui=gallery (estados dos componentes)
 var debug_view_only := false  ## --view-only: só o cenário 3D em tela cheia (base para mockups)
 var debug_camera: Dictionary = {}  ## --yaw --pitch --dist --cam=<n> (capturas da vista 3D)
 var sim_overrides: Dictionary = {}  ## opções extras da RaceSim (testes: clima, incidentes)
 var weekend: WeekendSim = null  ## Grande Prêmio em andamento (null = corrida rápida)
 var campaign: Campaign = null  ## campanha em andamento (carregada do arquivo salvo)
+var world: WorldChampionship = null  ## Campeonato Mundial F1 em andamento (save separado, v29)
 var campaign_open_news := false  ## o sino da barra do topo pede as notícias ao abrir o Início
 var gp_weather := "realistic"  ## escolhas da configuração do GP
 var gp_format := "full"
@@ -232,6 +235,16 @@ func _ready() -> void:
 			weekend = WeekendSim.new(campaign.next_round()["id"], campaign.weekend_options({"duration_pct": duration_pct, "format": "race_only",
 				"weather": args.get("weather", "realistic")}))
 			play_session.call_deferred()
+	elif args.has("world"):  # (capturas) --world --team=<id> [--rounds=<n>]: painel do Mundial com n GPs já simulados (não salva)
+		world = WorldChampionship.start(player_team)
+		for i in int(args.get("rounds", "0")):
+			var wk := WeekendSim.new(world.next_round()["id"], world.weekend_options({"duration_pct": 0.1, "weather": "dry", "incident_rate": 0.5}))
+			var guard := 0
+			while not wk.is_over() and guard < 20:
+				wk.simulate_current()
+				guard += 1
+			world.record_weekend(wk)
+		open_world_hub.call_deferred()
 	elif args.has("hub"):
 		var c := Campaign.load_saved()
 		if args.has("fresh"):  # (captura) campanha nova da equipe --team; --event=<id> aplica um evento de exemplo
@@ -432,8 +445,60 @@ func play_campaign_round() -> void:
 	go_to_weekend()
 
 
+# --- Campeonato Mundial F1 (v29) ---------------------------------------------------------------
+
+## Do menu: continua o campeonato salvo ou, sem save, vai escolher a equipe.
+func open_world() -> void:
+	var saved := WorldChampionship.load_saved()
+	if saved == null:
+		open_team_select("world")
+		return
+	world = saved
+	player_team = saved.player_team
+	open_world_hub()
+
+
+func start_world(team_id: String) -> void:
+	world = WorldChampionship.start(team_id)
+	player_team = team_id
+	world.save()
+	open_world_hub()
+
+
+func open_world_hub() -> void:
+	get_tree().change_scene_to_file(WORLD_FINAL_SCENE if world != null and world.season_over() else WORLD_HUB_SCENE)
+
+
+func open_world_final() -> void:
+	get_tree().change_scene_to_file(WORLD_FINAL_SCENE)
+
+
+## Joga o próximo GP do campeonato com as notas reais da pista.
+func play_world_round() -> void:
+	var r := world.next_round()
+	if r.is_empty():
+		return
+	circuit_id = r["id"]
+	weekend = WeekendSim.new(r["id"], world.weekend_options({"duration_pct": duration_pct}))
+	go_to_weekend()
+
+
+## Recomeça a temporada do Mundial (apaga o save e escolhe a equipe de novo).
+func reset_world() -> void:
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(WorldChampionship.SAVE_PATH))
+	world = null
+	open_team_select("world")
+
+
 ## Fim do fim de semana da campanha: soma os pontos, avança a rodada, salva e volta para a sede.
 func finish_campaign_weekend() -> void:
+	if world != null and weekend != null and weekend.world:
+		if weekend.is_over():
+			world.record_weekend(weekend)
+			world.save()
+		weekend = null
+		open_world_hub()
+		return
 	if campaign != null and weekend != null and weekend.campaign and weekend.is_over():
 		campaign.record_weekend(weekend)
 		campaign.save()

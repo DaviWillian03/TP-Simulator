@@ -28,9 +28,10 @@ func _ready() -> void:
 
 	_camp_tile = _campaign_tile(saved, Rect2(40, 110, 700, 570))
 	layer.add_child(_camp_tile)
-	_gp_tile = _gp_block(Rect2(760, 110, 480, 300))
+	_gp_tile = _gp_block(Rect2(760, 110, 480, 186))
 	layer.add_child(_gp_tile)
-	var hist := _small(Rect2(760, 430, 152, 250), "crown", "HISTÓRIA", "15 lendas", UiStyle.SECTION["hist"])
+	layer.add_child(_world_tile(Rect2(760, 308, 480, 112)))
+	var hist := _small(Rect2(760, 432, 152, 248), "crown", "HISTÓRIA", "15 lendas", UiStyle.SECTION["hist"])
 	if saved != null:
 		hist.pressed.connect(func() -> void:
 			Session.campaign = saved
@@ -39,15 +40,54 @@ func _ready() -> void:
 	else:
 		hist.disabled = true
 	layer.add_child(hist)
-	var new_team := _small(Rect2(924, 430, 152, 250), "plus", "NOVA EQUIPE", "12ª do grid", UiStyle.SECTION["hq"])
+	var new_team := _small(Rect2(924, 432, 152, 248), "plus", "NOVA EQUIPE", "12ª do grid", UiStyle.SECTION["hq"])
 	new_team.pressed.connect(Session.open_team_creator)
 	layer.add_child(new_team)
-	var chaos := _small(Rect2(1088, 430, 152, 250), "lock", "CAÓTICA", "em breve", UiStyle.G_TEXT_OFF)
+	var chaos := _small(Rect2(1088, 432, 152, 248), "lock", "CAÓTICA", "em breve", UiStyle.G_TEXT_OFF)
 	chaos.disabled = true
 	layer.add_child(chaos)
 
 	layer.modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
+
+
+## Bloco do Campeonato Mundial F1 (mockup v29-1): temporada real de 2026, sem desenvolvimento de carro.
+func _world_tile(r: Rect2) -> Button:
+	var gold := Color("#F5C542")
+	var b := _tile(r, Color("#171a21").lerp(gold, 0.1))
+	var st := UiStyle.g_box(Color("#171a21").lerp(gold, 0.1), 22, 0, 0)
+	st.set_border_width_all(3)
+	st.border_color = gold
+	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		b.add_theme_stylebox_override(s, st)
+	b.pressed.connect(Session.open_world)
+	var sq := PanelContainer.new()
+	sq.add_theme_stylebox_override("panel", UiStyle.g_box(gold, 18, 13, 13))
+	sq.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sq.add_child(ScreenKit.icon("globe", 34, UiStyle.G_INK))
+	sq.position = Vector2(18, 18)
+	b.add_child(sq)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(UiStyle.g_label("Campeonato Mundial F1", 22, UiStyle.G_TEXT, "black"))
+	var saved := WorldChampionship.load_saved()
+	var sub := "22 GPs · sem desenvolvimento"
+	if saved != null:
+		sub = "%s · rodada %d/22 · %dº" % [String(GameData.team_by_id(GameData.teams(), saved.player_team).get("name", "")), mini(saved.round + 1, 22), saved.team_position(saved.player_team)]
+	var sl := UiStyle.g_label(sub, 13, Color("#c9b27a"), "bold")
+	sl.clip_text = true
+	v.add_child(sl)
+	v.position = Vector2(94, 20)
+	v.size = Vector2(r.size.x - 94 - 70, 0)
+	b.add_child(v)
+	var play := PanelContainer.new()
+	play.add_theme_stylebox_override("panel", UiStyle.g_box(Color.WHITE, 23, 12, 12))
+	play.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	play.add_child(ScreenKit.icon("play", 22, UiStyle.G_INK))
+	play.position = Vector2(r.size.x - 66, 33)
+	b.add_child(play)
+	return b
 
 
 func _tile(r: Rect2, fill: Color) -> Button:

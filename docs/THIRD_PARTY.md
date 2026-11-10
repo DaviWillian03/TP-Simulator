@@ -33,3 +33,6 @@ símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `ga
 ## Bandeiras dos países (game/assets/flags/)
 - **flag-icons** 7.2.3 — https://github.com/lipis/flag-icons (via cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/).
   Licença **MIT** (texto em `game/assets/flags/LICENSE-flag-icons.txt`). Usadas como fundo translúcido do nome do GP e na nacionalidade dos pilotos (cartão da corrida).
+
+## Dados de resultados reais (data/real_form_2026.json)
+- Posições de chegada de 2026 (fatos esportivos) levantadas por busca na web em 2026-11-10 (planetf1, the-race, crash.net, sky sports, formula1.com) e resumidas em `tools/real_results_2026.json`; só fatos (posições), nenhum texto ou imagem copiado. Parcial e sem checagem contra a classificação oficial.

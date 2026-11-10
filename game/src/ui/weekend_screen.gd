@@ -431,7 +431,7 @@ func _final_card() -> Control:
 			var pos: int = weekend.results["race"].find(d["id"]) + 1
 			v.add_child(UiStyle.g_label("%s · %dº na corrida · %d pontos" % [d["name"], pos, weekend.points[d["id"]]], 18, UiStyle.G_INK_2, "bold"))
 	var again := CutButton.new()
-	again.text = "VOLTAR À SEDE" if weekend.campaign else "NOVO GRANDE PRÊMIO"
+	again.text = "VOLTAR AO PAINEL" if weekend.world else ("VOLTAR À SEDE" if weekend.campaign else "NOVO GRANDE PRÊMIO")
 	again.custom_minimum_size = Vector2(300, UiStyle.TOUCH_MAIN)
 	again.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	again.pressed.connect(Session.finish_campaign_weekend if weekend.campaign else Session.open_gp_setup)
