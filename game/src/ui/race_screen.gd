@@ -158,8 +158,14 @@ func _build_ui() -> void:
 
 	# cartões dos seus pilotos: coluna vertical à esquerda
 	var cards := VBoxContainer.new()
-	cards.add_theme_constant_override("separation", 12)
-	ScreenKit.place(cards, _layer, Control.PRESET_TOP_LEFT, Vector2(12, SIDE_TOP))
+	cards.add_theme_constant_override("separation", 10)
+	# a coluna nunca passa do rodapé: se os cartões crescerem (avisos, missão curta), ela rola arrastando
+	var cards_scroll := DragScroll.new()
+	cards_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	cards_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	cards_scroll.mouse_filter = Control.MOUSE_FILTER_PASS
+	cards_scroll.add_child(cards)
+	ScreenKit.place(cards_scroll, _layer, Control.PRESET_TOP_LEFT, Vector2(12, SIDE_TOP), Vector2(CarControlPanel.WIDTH + 4.0, 720.0 - SIDE_TOP - 8.0))
 	for car in sim.cars:
 		if car.is_player:
 			var p := CarControlPanel.new()

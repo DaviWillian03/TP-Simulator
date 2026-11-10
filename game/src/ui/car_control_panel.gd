@@ -12,7 +12,7 @@ signal focus_pressed(car: CarState)
 signal mission_pressed(car: CarState)
 
 const WIDTH := 236.0
-const PHOTO := 62
+const PHOTO := 50
 
 var sim: RaceSim
 var car: CarState
@@ -56,7 +56,7 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_style.content_margin_left = 14
 	add_theme_stylebox_override("panel", _style)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 6)
+	v.add_theme_constant_override("separation", 4)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(v)
 
@@ -124,11 +124,11 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	auto_row.add_theme_constant_override("separation", 6)
 	auto_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_gauge = GaugeIcon.new()
-	_gauge.custom_minimum_size = Vector2(26, 26)
+	_gauge.custom_minimum_size = Vector2(22, 22)
 	_gauge.tooltip_text = "Ritmo (o piloto decide)"
 	auto_row.add_child(_gauge)
 	_battery = BatteryIcon.new()
-	_battery.custom_minimum_size = Vector2(26, 26)
+	_battery.custom_minimum_size = Vector2(22, 22)
 	_battery.tooltip_text = "Bateria (o piloto decide)"
 	_battery.visible = sim.energy_k > 0.0
 	auto_row.add_child(_battery)
@@ -145,7 +145,8 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 
 	# avisos (regra dos compostos, dano na asa) só ocupam espaço quando existem
 	_hint_label = UiStyle.g_label("", 12, Color("#ffb4a8"), "bold")
-	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint_label.clip_text = true  # uma linha só (o texto inteiro fica na dica): o cartão não cresce
+	_hint_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_hint_label.visible = false
 	v.add_child(_hint_label)
 
@@ -231,16 +232,23 @@ func _mission_box(short: bool) -> Dictionary:
 	v.add_theme_constant_override("separation", 1)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_child(v)
-	var cap := UiStyle.g_caption("Missão curta" if short else "Missão de base")
-	v.add_child(cap)
+	# compacto (2026-11-10): rótulo curto ao lado do título e situação em uma linha, para os dois cartões caberem na tela
+	var th := HBoxContainer.new()
+	th.add_theme_constant_override("separation", 6)
+	th.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var cap := UiStyle.g_caption("Curta" if short else "Base", Color("#ff8a80") if short else UiStyle.G_TEXT_3)
+	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	th.add_child(cap)
 	var title := UiStyle.g_label("", 13, UiStyle.G_TEXT, "black")
-	title.custom_minimum_size = Vector2(150, 0)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.clip_text = true
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	v.add_child(title)
+	th.add_child(title)
+	v.add_child(th)
 	var sub := UiStyle.g_label("", 12, UiStyle.G_TEXT_2, "bold")
 	sub.custom_minimum_size = Vector2(150, 0)
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub.clip_text = true
+	sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	v.add_child(sub)
 	var bar := ProgressBar.new()
 	bar.show_percentage = false
@@ -313,10 +321,11 @@ func refresh(race_position: int) -> void:
 	if car.damage_floor > 0.0:
 		hints.append("Assoalho −%d%%" % roundi(car.damage_floor * 100.0))
 	if car.power_loss_s > 0.0:
-		hints.append("Problema mecânico: −%s s/volta" % String.num(car.power_loss_s, 1).replace(".", ","))
+		hints.append("Motor −%s s/v" % String.num(car.power_loss_s, 1).replace(".", ","))
 	if not (car.finished or car.retired or sim.compound_rule_ok(car)):
-		hints.append("Falta usar outro composto seco.")
+		hints.append("Falta 2º composto")
 	_hint_label.text = " · ".join(hints)
+	_hint_label.tooltip_text = _hint_label.text
 	_hint_label.visible = not hints.is_empty()
 	var active := not (car.retired or car.finished)
 	_mission_btn.disabled = not active
