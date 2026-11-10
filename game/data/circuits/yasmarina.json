@@ -38,6 +38,7 @@
  "profile": {"straight": 0.4, "slow": 0.4, "fast": 0.2},
  "rain_probability": 0.01,
  "scenery": {
+  "kerbs": ["#d42020", "#f2f2f2"],
   "theme": "marina",
   "landmark": "hotel"
  },

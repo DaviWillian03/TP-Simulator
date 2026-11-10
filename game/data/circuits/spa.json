@@ -38,6 +38,7 @@
  "profile": {"straight": 0.45, "slow": 0.15, "fast": 0.4},
  "rain_probability": 0.45,
  "scenery": {
+  "kerbs": ["#d42020", "#f5c400"],
   "theme": "forest",
   "landmark": "hills"
  },

@@ -38,6 +38,7 @@
  "profile": {"straight": 0.45, "slow": 0.35, "fast": 0.2},
  "rain_probability": 0.1,
  "scenery": {
+  "kerbs": ["#d42020", "#f2f2f2"],
   "theme": "city",
   "landmark": "stadium"
  },

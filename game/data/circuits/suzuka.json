@@ -38,6 +38,7 @@
  "profile": {"straight": 0.2, "slow": 0.2, "fast": 0.6},
  "rain_probability": 0.3,
  "scenery": {
+  "kerbs": ["#d42020", "#f2f2f2"],
   "theme": "forest",
   "landmark": "ferris_wheel"
  },

@@ -38,6 +38,7 @@
  "profile": {"straight": 0.05, "slow": 0.8, "fast": 0.15},
  "rain_probability": 0.15,
  "scenery": {
+  "kerbs": ["#d42020", "#f2f2f2"],
   "street": true,
   "theme": "harbor",
   "landmark": "yachts"

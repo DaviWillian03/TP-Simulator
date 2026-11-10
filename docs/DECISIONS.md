@@ -633,3 +633,6 @@ Respostas do usuário:
   0,905 → 0,07 (piscina/Rascasse até depois da Sainte Devote), Silverstone 0,93 → 0,06 (depois do Vale até depois de
   Abbey). As outras 19 pistas ainda usam a entrada genérica (0,95 → 0,05) e precisam de revisão. O lado do pit lane é
   configurável (`pit_side`), padrão esquerda.
+- **2026-11-09 — Cores das zebras por circuito** (tabela enviada pelo usuário; referência geral, não curva a curva):
+  Albert Park verde/amarelo, Spa vermelho/amarelo, Interlagos verde/amarelo/branco, Monza verde/branco/vermelho,
+  Madring vermelho/amarelo/branco; as demais vermelho/branco (inclusive Silverstone, pela tabela). Campo `scenery.kerbs`.

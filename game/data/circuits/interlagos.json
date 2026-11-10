@@ -38,7 +38,7 @@
  "profile": {"straight": 0.35, "slow": 0.35, "fast": 0.3},
  "rain_probability": 0.35,
  "scenery": {
-  "kerbs": ["#1f5fbf", "#f5c400", "#1f9d3a"],
+  "kerbs": ["#1f9d3a", "#f5c400", "#f2f2f2"],
   "theme": "lake",
   "landmark": "skyline"
  },

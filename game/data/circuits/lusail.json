@@ -38,6 +38,7 @@
  "profile": {"straight": 0.25, "slow": 0.2, "fast": 0.55},
  "rain_probability": 0.01,
  "scenery": {
+  "kerbs": ["#d42020", "#f2f2f2"],
   "theme": "desert",
   "landmark": "lights"
  },
