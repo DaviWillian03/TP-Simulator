@@ -310,6 +310,11 @@ static func fs(size: int) -> int:
 		return roundi(size * TEXT_SCALE)
 	return size + roundi(_BIG_FROM * (TEXT_SCALE - 1.0))
 
+## Soma das folgas da área segura (câmera frontal/recortes) por eixo, em unidades de UI.
+static func safe_insets_size() -> Vector2:
+	return SafeArea.size()
+
+
 static var _g_caption_font: FontVariation
 
 

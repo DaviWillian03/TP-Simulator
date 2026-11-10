@@ -540,8 +540,29 @@ static func sheet(title: String, width: float = 860.0) -> Dictionary:
 		if e is InputEventMouseButton and e.pressed and not panel.get_global_rect().has_point(e.global_position):
 			dim.queue_free())
 	dim.modulate = Color(1, 1, 1, 0)
-	dim.ready.connect(func() -> void: dim.create_tween().tween_property(dim, "modulate:a", 1.0, 0.12))
+	dim.ready.connect(func() -> void:
+		dim.create_tween().tween_property(dim, "modulate:a", 1.0, 0.12)
+		fit_to_screen.call_deferred(panel, dim))
+	panel.resized.connect(func() -> void: fit_to_screen.call_deferred(panel, dim))  # o conteúdo (textos que quebram linha) assenta depois do 1º quadro
 	return {"root": dim, "body": body}
+
+
+## Garante que a folha cabe na tela. O tamanho mínimo do painel vem do conteúdo (textos largos em caixa alta,
+## fontes maiores…); se passar do espaço útil, o painel é reduzido para caber, e o botão de fechar nunca
+## sai da tela (antes ele ficava de fora e o fundo escuro bloqueava o toque: o jogo parecia travado).
+static func fit_to_screen(panel: Control, dim: Control) -> void:
+	if not is_instance_valid(panel) or not is_instance_valid(dim) or not dim.is_inside_tree():
+		return
+	var room := dim.get_viewport_rect().size - UiStyle.safe_insets_size() - Vector2(24, 24)
+	var need := panel.size  # o CenterContainer dá ao painel o tamanho mínimo do conteúdo (sem escala)
+	var k := minf(1.0, minf(room.x / maxf(need.x, 1.0), room.y / maxf(need.y, 1.0)))
+	# a escala vai no CenterContainer (pai do painel): um Container zera a escala dos filhos ao reorganizá-los
+	# (o pai também cresce quando o conteúdo é largo demais: gira em torno do centro do painel e recentra na tela)
+	var holder := panel.get_parent() as Control
+	var c := panel.position + panel.size / 2.0
+	holder.pivot_offset = c
+	holder.scale = Vector2(k, k)
+	holder.position = dim.size / 2.0 - c if k < 1.0 else Vector2.ZERO
 
 
 ## Folha de escolha da equipe (tela inicial e configuração do GP). Grava em Session.player_team

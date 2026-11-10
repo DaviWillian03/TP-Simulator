@@ -76,6 +76,8 @@ var _screenshot_frames := 0
 
 func _ready() -> void:
 	AllCaps.install(get_tree())
+	SafeArea.install(get_tree())
+	RenderingServer.set_default_clear_color(Color(0.043, 0.051, 0.071))  # faixas da área segura: mesmo tom escuro da interface
 	var args := {}
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--").split("=", true, 1)
@@ -106,6 +108,9 @@ func _ready() -> void:
 	debug_tap = args.has("tap")
 	debug_view_only = args.has("view-only")
 	debug_ui = args.get("ui", "")
+	if args.has("cutout"):  # --cutout=44 ou --cutout=esq,topo,dir,base: simula o furo da câmera no PC
+		var cv := String(args["cutout"]).split_floats(",")
+		SafeArea.debug = Vector4(cv[0], 0, 0, 0) if cv.size() == 1 else Vector4(cv[0], cv[1], cv[2], cv[3])
 	if debug_ui == "gallery":
 		get_tree().change_scene_to_file.call_deferred("res://src/ui/dev/ui_gallery.tscn")
 	if args.has("incidents"):

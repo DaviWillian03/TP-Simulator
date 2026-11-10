@@ -278,3 +278,56 @@ func test_camera_escolhida_no_tempo_acelerado_e_respeitada() -> void:
 	screen._standings.driver_pressed.emit(car)  # jogador escolhe seguir um carro mesmo no 8×
 	screen.set_time_scale(2.0)
 	assert_eq(view.cam_mode, TrackView3D.CamMode.CAR)
+
+
+func _find_confirm(n: Node) -> Button:
+	if n is CutButton and (n as Button).text.to_upper() == "CONFIRMAR":
+		return n
+	for c in n.get_children():
+		var r := _find_confirm(c)
+		if r != null:
+			return r
+	return null
+
+
+func test_folha_de_missoes_confirma_base_e_curta_de_uma_vez() -> void:
+	var panel: CarControlPanel = screen._car_panels[0]
+	var car: CarState = panel.car
+	panel._mission_btn.emit_signal("pressed")
+	await wait_process_frames(2)
+	var ui: Dictionary = screen._mission_ui
+	var root: Control = ui["root"]
+	ui["kind"] = "attack"
+	ui["short"] = "push"
+	ui["laps"] = 2
+	var ok := _find_confirm(root)
+	assert_not_null(ok, "um só botão CONFIRMAR (sem Definir base / Dar missão)")
+	ok.emit_signal("pressed")
+	await wait_process_frames(2)
+	assert_eq(String(car.mission_base["kind"]), "attack", "a base foi aplicada")
+	assert_eq(String(Missions.active(car)["kind"]), "push", "a missão curta foi aplicada na mesma janela")
+	assert_false(is_instance_valid(root) and root.is_inside_tree(), "a folha fechou")
+
+
+func test_folha_cabe_na_tela_e_o_botao_de_fechar_fica_visivel() -> void:
+	# regressão: com a fonte larga em caixa alta a folha passava da tela e o X ficava de fora (jogo "travado")
+	var panel: CarControlPanel = screen._car_panels[0]
+	panel._mission_btn.emit_signal("pressed")
+	await wait_process_frames(4)
+	var root: Control = screen._mission_ui["root"]
+	var view := root.get_viewport_rect()
+	var box := _first_panel(root)
+	assert_not_null(box)
+	var r := box.get_global_transform() * Rect2(Vector2.ZERO, box.size)
+	assert_true(view.grow(1.0).encloses(r), "a folha inteira cabe na tela: %s dentro de %s" % [r, view])
+	root.queue_free()
+
+
+func _first_panel(n: Node) -> Control:
+	if n is PanelContainer:
+		return n
+	for c in n.get_children():
+		var r := _first_panel(c)
+		if r != null:
+			return r
+	return null

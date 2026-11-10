@@ -313,6 +313,11 @@ func _connect_sim_signals() -> void:
 	sim.overtake.connect(_on_overtake)
 	sim.pit_stop.connect(_on_pit_stop)
 	sim.plan_stop_due.connect(_on_plan_due)
+	if Session.debug_ui == "pit":  # (captura) --ui=pit abre a tela do box do primeiro piloto
+		for c in sim.cars:
+			if c.is_player:
+				_open_pit.call_deferred(c)
+				break
 	if Session.debug_ui == "missions":  # (captura) --ui=missions abre a folha de missões do primeiro piloto
 		for c in sim.cars:
 			if c.is_player:
@@ -681,10 +686,6 @@ func _open_missions(car: CarState) -> void:
 	calc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	calc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(calc)
-	var set_base := CutButton.new()
-	set_base.text = "DEFINIR BASE"
-	set_base.custom_minimum_size = Vector2(200, UiStyle.TOUCH_MIN + 6)
-	row.add_child(set_base)
 	body.add_child(row)
 	var refresh_calc := func() -> void:
 		lap_l.text = str(int(_mission_ui["until"]))
@@ -703,10 +704,6 @@ func _open_missions(car: CarState) -> void:
 		refresh_calc.call())
 	_mission_ui["refresh"] = refresh_calc
 	refresh_calc.call()
-	set_base.pressed.connect(func() -> void:
-		sim.set_mission_base(car, String(_mission_ui["kind"]), int(_mission_ui["until"]))
-		_toasts.push("%s: nova missão de base — %s." % [_surname(car), Missions.title(car.mission_base).to_lower()])
-		root.queue_free())
 	body.add_child(UiStyle.g_caption("Missão curta · termina sozinha e volta à base"))
 	var srow := HBoxContainer.new()
 	srow.add_theme_constant_override("separation", 10)
@@ -720,24 +717,33 @@ func _open_missions(car: CarState) -> void:
 	if behind != "":
 		kinds.append(["defend", "Defender de %s (P%d)" % [behind, idx + 2]])
 	kinds.append(["push", "Undercut / abrir gap"])
-	_mission_ui["short"] = kinds[0][0]
+	kinds.push_front(["none", "Sem missão curta"])  # base e curta se escolhem juntas; a curta é opcional
+	_mission_ui["short"] = "none"
 	_mission_ui["targets"] = {"attack": ahead, "defend": behind, "push": ""}
-	srow.add_child(ScreenKit.segmented(kinds, kinds[0][0], func(v: String) -> void: _mission_ui["short"] = v))
+	srow.add_child(ScreenKit.segmented(kinds, "none", func(v: String) -> void: _mission_ui["short"] = v))
 	var to_stop := sim.player_plan_next(car)
 	var till_stop := maxi(int(to_stop.get("lap", sim.total_laps)) - car.laps_done, 1)
 	srow.add_child(ScreenKit.segmented([[2, "2 voltas"], [3, "3 voltas"], [5, "5 voltas"], [till_stop, "até a parada"]], 3, func(v: int) -> void: _mission_ui["laps"] = v))
+	body.add_child(srow)
+	# um só botão confirma as duas escolhas (pedido do usuário): base só se mudou; curta só se escolhida
 	var go := CutButton.new()
-	go.text = "DAR MISSÃO"
-	go.custom_minimum_size = Vector2(200, UiStyle.TOUCH_MAIN)
+	go.text = "CONFIRMAR"
+	go.custom_minimum_size = Vector2(260, UiStyle.TOUCH_MAIN)
 	go.size_flags_horizontal = Control.SIZE_SHRINK_END
 	go.pressed.connect(func() -> void:
+		var kind := String(_mission_ui["kind"])
+		var until_lap := int(_mission_ui["until"])
+		var changed := kind != String(car.mission_base.get("kind", "")) or (kind == "save" and until_lap != int(car.mission_base.get("until", 0)))
+		if changed:
+			sim.set_mission_base(car, kind, until_lap)
+			_toasts.push("%s: nova missão de base — %s." % [_surname(car), Missions.title(car.mission_base).to_lower()])
 		var k := String(_mission_ui["short"])
-		sim.give_short_mission(car, k, int(_mission_ui["laps"]), String(_mission_ui["targets"].get(k, "")))
-		if not car.mission_short.is_empty():
-			_toasts.push("%s: %s." % [_surname(car), Missions.title(car.mission_short).to_lower()], "hot")
+		if k != "none":
+			sim.give_short_mission(car, k, int(_mission_ui["laps"]), String(_mission_ui["targets"].get(k, "")))
+			if not car.mission_short.is_empty():
+				_toasts.push("%s: %s." % [_surname(car), Missions.title(car.mission_short).to_lower()], "hot")
 		root.queue_free())
-	srow.add_child(go)
-	body.add_child(srow)
+	body.add_child(go)
 	_layer.add_child(root)
 
 

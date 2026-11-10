@@ -1,0 +1,120 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>V28 · Resultado da classificação</title><style>
+@font-face{font-family:Titillium;font-weight:900;src:url(fonts/TitilliumWeb-Black.ttf)}
+@font-face{font-family:Titillium;font-weight:700;src:url(fonts/TitilliumWeb-Bold.ttf)}
+@font-face{font-family:Titillium;font-weight:600;src:url(fonts/TitilliumWeb-SemiBold.ttf)}
+@font-face{font-family:SairaC;font-weight:700;src:url(fonts/SairaCondensed-Bold.ttf)}
+@font-face{font-family:SairaC;font-weight:800;src:url(fonts/SairaCondensed-ExtraBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:600;src:url(fonts/BarlowCondensed-SemiBold.ttf)}
+@font-face{font-family:BarlowC;font-weight:800;font-style:italic;src:url(fonts/BarlowCondensed-ExtraBoldItalic.ttf)}
+@font-face{font-family:Barlow;font-weight:500;src:url(fonts/Barlow-Medium.ttf)}
+@font-face{font-family:Chakra;font-weight:600;src:url(fonts/ChakraPetch-SemiBold.ttf)}
+@font-face{font-family:Chakra;font-weight:700;src:url(fonts/ChakraPetch-Bold.ttf)}
+@font-face{font-family:Oxanium;font-weight:200 800;src:url("fonts/Oxanium[wght].ttf")}
+@font-face{font-family:ArchivoBlack;src:url(fonts/ArchivoBlack-Regular.ttf)}
+@font-face{font-family:ArchivoN;font-weight:400 700;src:url("fonts/ArchivoNarrow[wght].ttf")}
+@font-face{font-family:Bebas;src:url(fonts/BebasNeue-Regular.ttf)}
+@font-face{font-family:SpaceMono;font-weight:700;src:url(fonts/SpaceMono-Bold.ttf)}
+@font-face{font-family:Plex;font-weight:600;src:url(fonts/IBMPlexMono-SemiBold.ttf)}
+@font-face{font-family:Russo;src:url(fonts/RussoOne-Regular.ttf)}
+@font-face{font-family:Kanit;font-weight:900;font-style:italic;src:url(fonts/Kanit-BlackItalic.ttf)}
+@font-face{font-family:Kanit;font-weight:600;font-style:italic;src:url(fonts/Kanit-SemiBoldItalic.ttf)}
+*{box-sizing:border-box;margin:0;padding:0}html,body{width:1280px;height:720px;overflow:hidden}.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.scene{background:#0b0c0f;color:#eef0f3;font-family:Titillium;font-weight:600}
+.wall{position:absolute;inset:0 0 250px 0;background:linear-gradient(#1b1e24,#111318 80%)}
+.wall:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 1px,transparent 1px 46px)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:250px;background:linear-gradient(#181a1f,#0a0b0d)}
+.lamp{position:absolute;top:0;height:6px;background:#f4f6fa;border-radius:0 0 4px 4px;box-shadow:0 0 34px 10px rgba(240,245,255,.22)}
+.glow{position:absolute;inset:0;background:radial-gradient(ellipse 46% 40% at 64% 66%,rgba(24,104,219,.42),transparent 70%)}
+.cone{position:absolute;left:470px;top:0;width:560px;height:720px;background:linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,0) 75%);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%)}
+.car{position:absolute}.refl{position:absolute;transform:scaleY(-1);opacity:.13;-webkit-mask:linear-gradient(transparent 55%,#000)}
+.logo{position:absolute;left:52px;top:34px;height:74px}
+.season{position:absolute;left:56px;top:118px;font-size:13px;letter-spacing:3px;color:#9aa3b2}
+.modes{position:absolute;left:52px;top:168px;width:388px;display:flex;flex-direction:column;gap:12px}
+.mode{display:flex;align-items:center;gap:16px;border-radius:16px;padding:0 20px;background:rgba(255,255,255,.06)}
+.mode b{display:block;font-weight:900;font-size:24px;letter-spacing:.5px;line-height:1}.mode small{display:block;font-size:15px;color:#a8b0bd;margin-top:5px}
+.mode .go{margin-left:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1)}
+.mode.main{height:112px;background:#f3f4f6;color:#11141a;position:relative;overflow:hidden}
+.mode.main:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:#E10600}
+.mode.main b{font-size:34px}.mode.main small{color:#4b5260}.mode.main .go{background:#E10600;color:#fff;width:54px;height:54px}
+.mode.alt{height:84px}
+.mode.lock svg{flex:none}.mode.lock{height:50px;white-space:nowrap;background:none;color:#6c7380;padding-left:20px}.mode.lock b{font-size:18px;color:#7b8290}
+.tag{font-size:12px;letter-spacing:2px;border-radius:20px;padding:4px 10px;background:rgba(255,255,255,.07);color:#8a92a0;margin-left:auto}
+.pill{display:flex;align-items:center;gap:12px;border-radius:40px;padding:8px 18px 8px 10px;background:rgba(255,255,255,.07)}
+.pill b{display:block;font-size:17px;font-weight:900;letter-spacing:1px}.pill small{display:block;font-size:13px;color:#a8b0bd}
+.top{position:absolute;right:44px;top:40px;display:flex;align-items:center;gap:12px}
+.swap{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07)}
+.plates{position:absolute;right:56px;bottom:40px;display:flex;gap:44px}
+.plate{display:flex;align-items:flex-end;gap:12px}.plate .n{font-weight:900;font-size:62px;line-height:.8;color:transparent;-webkit-text-stroke:2px #5c93ea}
+.plate b{display:block;font-size:20px;font-weight:900}.plate small{display:block;font-size:13px;color:#9aa3b2;letter-spacing:1.5px}
+.note{position:absolute;font-size:11px;letter-spacing:1.5px;color:#5d6574}
+/* configuração */
+.hdr{position:absolute;left:44px;top:30px;display:flex;align-items:center;gap:16px}
+.round{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08)}
+.hdr b{font-size:15px;letter-spacing:3px;font-weight:700;color:#9aa3b2;display:block}.hdr h1{font-size:30px;font-weight:900;letter-spacing:1px}
+.map{position:absolute;left:30px;top:96px;width:830px;height:420px}
+.map svg.trk{position:absolute;left:340px;top:6px;filter:drop-shadow(0 0 10px rgba(110,170,255,.55))}
+.badge{display:inline-flex;gap:8px;align-items:center;border-radius:20px;padding:5px 12px;font-size:13px;letter-spacing:2px;font-weight:700}
+.gpname{position:absolute;left:14px;top:40px;width:420px}
+.gpname h2{font-size:50px;font-weight:900;line-height:.95;margin:14px 0 8px}.gpname p{font-size:16px;color:#a8b0bd}
+.stats{position:absolute;left:14px;top:268px;display:grid;grid-template-columns:repeat(2,170px);gap:22px 26px}
+.stat b{display:block;font-size:40px;font-weight:900;line-height:1}.stat small{font-size:12px;letter-spacing:2px;color:#8f98a7}
+.panel{position:absolute;right:40px;top:92px;width:360px;display:flex;flex-direction:column;gap:13px}
+.lbl{font-size:12px;letter-spacing:2.5px;color:#8f98a7;margin-bottom:8px}
+.seg{display:flex;background:rgba(255,255,255,.07);border-radius:28px;padding:4px;gap:4px}
+.seg span{flex:1;height:44px;border-radius:24px;display:grid;place-items:center;font-size:16px;font-weight:700;color:#c3c9d3}
+.seg span.on{background:#f3f4f6;color:#11141a}
+.wx{display:flex;gap:8px}.wx span{flex:1;height:58px;border-radius:14px;background:rgba(255,255,255,.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:#c3c9d3}
+.wx span.on{background:#f3f4f6;color:#11141a}
+.cta{height:60px;margin-top:2px;background:#E10600;color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-size:22px;font-weight:900;letter-spacing:1px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%);border-radius:14px 0 14px 14px}
+.cal{position:absolute;left:0;right:0;bottom:16px;height:108px;display:flex;gap:12px;padding-left:44px}
+.card{flex:0 0 172px;border-radius:16px;background:rgba(255,255,255,.055);padding:12px 14px;position:relative}
+.card .rd{font-size:12px;letter-spacing:2px;color:#8f98a7}.card b{display:block;font-size:17px;font-weight:900;margin-top:2px;white-space:nowrap}
+.card small{font-size:13px;color:#a8b0bd}.card svg{position:absolute;right:10px;bottom:10px;opacity:.75}
+.card.on{background:#f3f4f6;color:#11141a}.card.on small,.card.on .rd{color:#4b5260}.card.on:before{content:"";position:absolute;left:14px;right:14px;top:0;height:4px;border-radius:0 0 4px 4px;background:#1868DB}
+.chip{font-size:10px;letter-spacing:1.5px;border-radius:10px;padding:2px 7px;margin-left:4px;vertical-align:middle;font-weight:700}
+.chip.s{background:#E10600;color:#fff}.chip.n{background:#26324a;color:#ffd36b}
+.fade{position:absolute;right:0;bottom:0;width:160px;height:170px;background:linear-gradient(90deg,transparent,#0b0c0f)}
+
+.scene{background:#0d0f13}
+.bgx{position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 70% 30%,rgba(0,161,155,.22),transparent 70%),
+ radial-gradient(ellipse 50% 60% at 10% 90%,rgba(76,141,255,.14),transparent 70%),linear-gradient(#141821,#0b0d11)}
+.fc{border-radius:50%;overflow:hidden;display:grid;place-items:center;flex:none;color:#fff}
+.ty{border-radius:50%;border:3px solid;background:#15171c;color:#fff;font-weight:900;display:grid;place-items:center;flex:none}
+.cap{font-size:12px;letter-spacing:2.4px;color:#9aa3b2;font-weight:900;text-transform:uppercase}
+.rg{position:relative;display:inline-grid;place-items:center;flex:none}.rg svg{position:absolute;inset:0}
+.rg i{font-style:normal;text-align:center;line-height:1}.rg b{display:block;font-weight:900;font-size:20px}.rg small{display:block;font-size:12px;color:#a8b0bd;font-weight:800;margin-top:2px}
+.tile{position:absolute;border-radius:22px;overflow:hidden;background:#171a21;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.tile .hd{position:absolute;left:16px;top:14px;display:flex;align-items:center;gap:8px;font-weight:900;font-size:15px;letter-spacing:1px;text-transform:uppercase}
+.tile .bdg{width:32px;height:32px;border-radius:10px;display:grid;place-items:center}
+.cta{background:#E10600;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px;
+ clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%);border-radius:14px 0 14px 14px;padding:0 22px;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;border-radius:15px;padding:0 12px;background:rgba(255,255,255,.1);font-weight:900;font-size:13px}
+.top{position:absolute;left:0;right:0;top:0;height:76px;display:flex;align-items:center;gap:12px;padding:0 20px 0 18px;background:rgba(10,12,16,.75);backdrop-filter:blur(8px)}
+.pill{height:46px;border-radius:23px;background:rgba(255,255,255,.07);display:flex;align-items:center;gap:8px;padding:0 16px;font-weight:900;font-size:17px}
+.rail{position:absolute;left:0;top:76px;bottom:0;width:84px;background:rgba(10,12,16,.75);display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:6px}
+.ri{width:72px;height:56px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:800;color:#a8b0bd}
+.ri.on{background:rgba(255,255,255,.1);color:#fff}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,10,14,0) 30%,rgba(8,10,14,.92))}
+.big{font-weight:900;line-height:.9}
+.num{position:absolute;font-weight:900;font-style:italic;line-height:.8;opacity:.95}
+.bars span{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin-top:6px}
+.bars i{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden}.bars i u{display:block;height:100%;text-decoration:none}
+
+.dim{position:absolute;inset:0;background:rgba(5,7,10,.66)}
+.sheet{position:absolute;left:60px;right:60px;top:34px;bottom:34px;border-radius:26px;background:rgba(17,19,25,.96);box-shadow:0 20px 60px rgba(0,0,0,.6);padding:22px 26px}
+.h1{font-size:34px;font-weight:900;letter-spacing:.5px}
+.cols{display:flex;gap:22px;margin-top:16px}
+.lst{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;flex:1}
+.row{display:flex;align-items:center;gap:10px;height:40px;border-radius:12px;background:rgba(255,255,255,.05);padding:0 12px;font-weight:900;font-size:15px}
+.row .p{width:26px;text-align:center;color:#a8b0bd}.row .t{margin-left:auto;font-variant-numeric:tabular-nums}.row .d{width:62px;text-align:right;color:#8f98a7;font-size:13px}
+.row.me{background:rgba(39,244,210,.16);box-shadow:inset 4px 0 0 #27F4D2}
+.out{width:372px;border-radius:20px;background:linear-gradient(rgba(225,6,0,.2),rgba(225,6,0,.08));border:2px solid rgba(225,6,0,.55);padding:14px}
+.orow{display:flex;align-items:center;gap:12px;margin-top:10px;font-weight:900}
+.orow .n{font-size:18px;line-height:1}.orow small{display:block;font-size:12px;color:#ffb4a8;font-weight:800;margin-top:3px}
+.cut{display:flex;align-items:center;gap:10px;margin:10px 0 2px;font-size:12px;font-weight:900;letter-spacing:2px;color:#ff8a80}
+.cut i{flex:1;height:0;border-top:2px dashed rgba(255,138,128,.6)}
+.foot{position:absolute;left:26px;right:26px;bottom:20px;display:flex;align-items:center;gap:14px;color:#a8b0bd;font-size:14px;font-weight:800}
+.hero{width:470px;border-radius:24px;position:relative;overflow:hidden;height:470px;background:linear-gradient(160deg,#27F4D2,#10131a 75%)}
+.hero .num{right:14px;top:30px;font-size:250px;color:rgba(255,255,255,.12)}
+.poletag{display:inline-flex;align-items:center;gap:8px;height:36px;border-radius:18px;padding:0 16px;background:#F5C542;color:#11141a;font-weight:900;font-size:15px;letter-spacing:1.5px}
+</style></head><body><div class="scene"><div class="bgx"></div><div class="dim"></div><div class="sheet"><div style="display:flex;align-items:center;gap:14px"><div class="h1">FIM DO Q1</div><span class="chip" style="background:#3c9d5d">16 PASSAM PARA O Q2</span><span class="chip" style="background:rgba(225,6,0,.3);color:#ffb4a8">6 ELIMINADOS</span><span style="flex:1"></span><span class="chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>Q1 · GP DE SÃO PAULO</span></div><div class="cols"><div class="lst" style="grid-auto-flow:column;grid-template-rows:repeat(8,40px)"><div class="row"><span class="p">1</span><img src="../../game/assets/emblems/redbull.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>VER</span><span class="t">1:09,350</span><span class="d">—</span></div><div class="row"><span class="p">2</span><img src="../../game/assets/emblems/redbull.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>HAD</span><span class="t">1:09,480</span><span class="d">+0,130</span></div><div class="row"><span class="p">3</span><img src="../../game/assets/emblems/mclaren.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>NOR</span><span class="t">1:09,610</span><span class="d">+0,260</span></div><div class="row"><span class="p">4</span><img src="../../game/assets/emblems/mclaren.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>PIA</span><span class="t">1:09,680</span><span class="d">+0,330</span></div><div class="row"><span class="p">5</span><img src="../../game/assets/emblems/ferrari.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>LEC</span><span class="t">1:09,810</span><span class="d">+0,460</span></div><div class="row me"><span class="p">6</span><img src="../../game/assets/emblems/mercedes.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>RUS</span><span class="t">1:09,940</span><span class="d">+0,590</span></div><div class="row"><span class="p">7</span><img src="../../game/assets/emblems/ferrari.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>HAM</span><span class="t">1:10,010</span><span class="d">+0,660</span></div><div class="row me"><span class="p">8</span><img src="../../game/assets/emblems/mercedes.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>ANT</span><span class="t">1:10,140</span><span class="d">+0,790</span></div><div class="row"><span class="p">9</span><img src="../../game/assets/emblems/williams.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>ALB</span><span class="t">1:10,270</span><span class="d">+0,920</span></div><div class="row"><span class="p">10</span><img src="../../game/assets/emblems/williams.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>SAI</span><span class="t">1:10,340</span><span class="d">+0,990</span></div><div class="row"><span class="p">11</span><img src="../../game/assets/emblems/racingbulls.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>LAW</span><span class="t">1:10,470</span><span class="d">+1,120</span></div><div class="row"><span class="p">12</span><img src="../../game/assets/emblems/racingbulls.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>LIN</span><span class="t">1:10,600</span><span class="d">+1,250</span></div><div class="row"><span class="p">13</span><img src="../../game/assets/emblems/astonmartin.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>ALO</span><span class="t">1:10,670</span><span class="d">+1,320</span></div><div class="row"><span class="p">14</span><img src="../../game/assets/emblems/astonmartin.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>STR</span><span class="t">1:10,800</span><span class="d">+1,450</span></div><div class="row"><span class="p">15</span><img src="../../game/assets/emblems/alpine.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>GAS</span><span class="t">1:10,930</span><span class="d">+1,580</span></div><div class="row"><span class="p">16</span><img src="../../game/assets/emblems/alpine.svg" style="width:26px;height:26px;border-radius:6px;flex:none"><span>COL</span><span class="t">1:11,000</span><span class="d">+1,650</span></div></div><div class="out"><div class="cap" style="color:#ff8a80">ELIMINADOS · LARGAM DE P17 A P22</div><div class="orow"><span class="fc" style="width:46px;height:46px;background:#DEE1E2;box-shadow:0 0 0 3px #E10600;"><b style="font-size:16px">OCO</b></span><div style="flex:1"><div class="n">OCON</div><small>P17 · 1:11,130 · +0,130 do corte</small></div><img src="../../game/assets/emblems/haas.svg" style="width:30px;height:30px;border-radius:7px;flex:none"></div><div class="orow"><span class="fc" style="width:46px;height:46px;background:#DEE1E2;box-shadow:0 0 0 3px #E10600;"><b style="font-size:16px">BEA</b></span><div style="flex:1"><div class="n">BEARMAN</div><small>P18 · 1:11,260 · +0,260 do corte</small></div><img src="../../game/assets/emblems/haas.svg" style="width:30px;height:30px;border-radius:7px;flex:none"></div><div class="orow"><span class="fc" style="width:46px;height:46px;background:#8E9296;box-shadow:0 0 0 3px #E10600;"><b style="font-size:16px">HUL</b></span><div style="flex:1"><div class="n">HÜLKENBERG</div><small>P19 · 1:11,330 · +0,330 do corte</small></div><img src="../../game/assets/emblems/audi.svg" style="width:30px;height:30px;border-radius:7px;flex:none"></div><div class="orow"><span class="fc" style="width:46px;height:46px;background:#8E9296;box-shadow:0 0 0 3px #E10600;"><b style="font-size:16px">BOR</b></span><div style="flex:1"><div class="n">BORTOLETO</div><small>P20 · 1:11,460 · +0,460 do corte</small></div><img src="../../game/assets/emblems/audi.svg" style="width:30px;height:30px;border-radius:7px;flex:none"></div><div class="orow"><span class="fc" style="width:46px;height:46px;background:#2B2B2B;box-shadow:0 0 0 3px #E10600;"><b style="font-size:16px">PER</b></span><div style="flex:1"><div class="n">PÉREZ</div><small>P21 · 1:11,590 · +0,590 do corte</small></div><img src="../../game/assets/emblems/cadillac.svg" style="width:30px;height:30px;border-radius:7px;flex:none"></div><div class="orow"><span class="fc" style="width:46px;height:46px;background:#2B2B2B;box-shadow:0 0 0 3px #E10600;"><b style="font-size:16px">BOT</b></span><div style="flex:1"><div class="n">BOTTAS</div><small>P22 · 1:11,660 · +0,660 do corte</small></div><img src="../../game/assets/emblems/cadillac.svg" style="width:30px;height:30px;border-radius:7px;flex:none"></div></div></div><div class="foot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>O Q2 só começa quando você confirmar.<span style="flex:1"></span><div class="cta" style="height:58px;font-size:22px;min-width:300px">CONTINUAR · Q2<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M9 5l7 7-7 7"/></svg></div></div></div></div></body></html>
