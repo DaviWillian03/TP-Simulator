@@ -711,3 +711,10 @@ Respostas do usuário:
   equipe (`tools/enrich_team_info.py`; chefes de 2026 conferidos por busca: Aston Martin = Newey, Alpine = Steve Nielsen como
   diretor-geral). Resumos curtos de pilotos e técnicos (`Bio`) usam só dados existentes (nada inventado). **Atualização a cada GP:**
   `tools/add_real_round.py <circuito> <p1..p10>` acrescenta o resultado real e regenera `real_form_2026.json` (Mundial).
+- **2026-11-10 — Finanças aplicadas (mockups v31 aprovados).** A tela Caixa ganhou abas: **Caixa** (o que já existia), **Receitas**,
+  **Prêmio** e **Compromissos**. Patrocínio: a oferta abre a folha "**Garantido × Por meta**" — garantido paga o valor cheio por
+  corrida; por meta paga 60% por corrida e, se a equipe terminar entre os N primeiros dos construtores (N = meta da diretoria),
+  um bônus igual ao total anual do garantido (cumprida, rende 160%); o bônus é pago no fim da temporada (`Sponsorship.settle_goals`).
+  **Prêmio oficial**: tabela por posição com a sua posição, o que vale subir/descer e a distância em pontos. **Compromissos**:
+  folha, operação, parcelas de empréstimo, adiantamento e juros até o fim da temporada; **caixa livre = caixa − compromissos**,
+  com a projeção do caixa. Obras e peças já saem do caixa na encomenda, então não são compromissos futuros.

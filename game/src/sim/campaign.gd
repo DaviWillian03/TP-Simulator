@@ -600,6 +600,63 @@ func projected_cash_end() -> float:
 	return budget_musd + left * (sponsor_per_race() - cost_per_race()) + prize
 
 
+## Tabela do prêmio oficial por posição final dos construtores (US$ mi).
+func prize_table() -> Array:
+	return origins_data()["finance"]["prize_pool"]
+
+
+## Prêmio da posição atual e quanto vale subir ou descer uma posição (para a tela de Prêmio).
+func prize_projection() -> Dictionary:
+	var pool := prize_table()
+	var rows := team_standings()
+	var pos := team_position(player_team)
+	var prize := float(pool[mini(pos, pool.size()) - 1])
+	var up := float(pool[mini(pos - 1, pool.size()) - 1]) - prize if pos > 1 else 0.0
+	var down := prize - float(pool[mini(pos + 1, pool.size()) - 1]) if pos < pool.size() else 0.0
+	var mine := int(team_points.get(player_team, 0))
+	var gap_up := int(rows[pos - 2][1]) - mine if pos > 1 else 0
+	var gap_down := mine - int(rows[pos][1]) if pos < rows.size() else 0
+	var span := float(pool[0]) - float(pool[pool.size() - 1])
+	return {"position": pos, "prize": prize, "up": up, "down": down, "gap_up": gap_up, "gap_down": gap_down,
+		"up_team": String(rows[pos - 2][0]) if pos > 1 else "", "down_team": String(rows[pos][0]) if pos < rows.size() else "",
+		"avg_step": span / maxf(pool.size() - 1, 1), "races_left": races_left_in_season()}
+
+
+## Gastos já assumidos até o fim da temporada: [{id, label, detail, amount}] (amount em US$ mi, positivo = sai do caixa).
+func commitments() -> Array:
+	var left := races_left_in_season()
+	var f: Dictionary = origins_data()["finance"]
+	var out: Array = []
+	out.append({"id": "payroll", "label": "Folha de pagamento", "detail": "pilotos e técnicos · %d corrida%s" % [left, "" if left == 1 else "s"], "amount": personnel.payroll_per_race(self) * left})
+	out.append({"id": "ops", "label": "Operação e manutenção", "detail": "%d corrida%s" % [left, "" if left == 1 else "s"], "amount": (float(f["cost_base"]) + dev.upkeep_per_race()) * left})
+	var loan_total := 0.0
+	var loan_parcels := 0
+	for l: Dictionary in loans:
+		var n := mini(int(l["races_left"]), left)
+		loan_total += float(l["per_race"]) * n
+		loan_parcels = maxi(loan_parcels, int(l["races_left"]))
+	if loan_total > 0.0:
+		out.append({"id": "loan", "label": "Empréstimo do banco", "detail": "%d parcela%s restante%s" % [loan_parcels, "" if loan_parcels == 1 else "s", "" if loan_parcels == 1 else "s"], "amount": loan_total})
+	if not advance.is_empty():
+		var n2 := mini(int(advance["races_left"]), left)
+		out.append({"id": "advance", "label": "Adiantamento de patrocínio", "detail": "desconto nas corridas restantes", "amount": float(advance["cut"]) * n2})
+	if debt_musd > 0.0:
+		out.append({"id": "debt", "label": "Juros da dívida", "detail": "pago no fim da temporada", "amount": minf(debt_musd, float(f["debt_service_musd"]))})
+	return out
+
+
+func committed_total() -> float:
+	var t := 0.0
+	for c: Dictionary in commitments():
+		t += float(c["amount"])
+	return t
+
+
+## Caixa livre = caixa hoje − compromissos até o fim da temporada (nunca conta receitas futuras).
+func free_cash() -> float:
+	return budget_musd - committed_total()
+
+
 ## Peças de todas as equipes, versão A. A IA ganha o "tamanho" das suas peças do ano (dificuldade, ranking, sorte, técnicos).
 func _init_parts() -> void:
 	parts = {}
@@ -1555,6 +1612,10 @@ func close_season() -> Dictionary:
 	var prize := float(pool[mini(pos, pool.size()) - 1])
 	budget_musd += prize
 	record("prize", prize)
+	var goal_pay := sponsors.settle_goals(self, pos)  # patrocínios por meta cumpridos
+	if goal_pay > 0.0:
+		budget_musd += goal_pay
+		record("bonus", goal_pay)
 	var service := minf(debt_musd, float(f["debt_service_musd"]))
 	debt_musd -= service
 	budget_musd -= service

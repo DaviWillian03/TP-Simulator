@@ -10,6 +10,8 @@ const EXPENSE_ROWS := [["ops", "Corridas e operação"], ["upkeep", "Manutençã
 
 var campaign: Campaign
 var _layer: Control
+var _holder: Control
+var _tab := "cash"
 
 
 func _ready() -> void:
@@ -42,11 +44,259 @@ func _ready() -> void:
 	ScreenKit.campaign_nav(layer, "finance")
 
 	_layer = layer
-	_card(layer, Vector2(44, 150), Vector2(520, 250), "Receitas · temporada %d" % campaign.season, _income())
-	_card(layer, Vector2(44, 412), Vector2(520, 288), "Despesas · temporada %d" % campaign.season, _expenses())
-	_card(layer, Vector2(580, 150), Vector2(656, 250), "Teto de gastos %d · igual para todas as equipes" % campaign.season, _cap())
-	_card(layer, Vector2(580, 412), Vector2(320, 288), "Crédito", _credit())
-	_card(layer, Vector2(916, 412), Vector2(320, 288), "Túnel de vento %d" % campaign.season, _atr())
+	if Session.debug_ui in ["income", "prize", "commit"]:  # (captura) --ui=income|prize|commit abre a aba
+		_tab = Session.debug_ui
+	_holder = Control.new()
+	_holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(_holder)
+	var seg := ScreenKit.segmented([["cash", "Caixa"], ["income", "Receitas"], ["prize", "Prêmio"], ["commit", "Compromissos"]], _tab, func(v: String) -> void:
+		_tab = v
+		_show_tab())
+	ScreenKit.place(seg, layer, Control.PRESET_TOP_LEFT, Vector2(44, 90))
+	_show_tab()
+
+
+# --- abas (mockups v31 aprovados): Caixa (o que já existia), Receitas, Prêmio e Compromissos --------------------------
+
+func _show_tab() -> void:
+	for ch in _holder.get_children():
+		ch.queue_free()
+	match _tab:
+		"income":
+			_card(_holder, Vector2(44, 146), Vector2(760, 554), "Patrocinadores · garantido ou por meta", _income_list())
+			_card(_holder, Vector2(820, 146), Vector2(416, 554), "Receita do ano", _income_side())
+		"prize":
+			_card(_holder, Vector2(44, 146), Vector2(520, 554), "Prêmio oficial · posição final dos construtores", _prize_list())
+			_card(_holder, Vector2(580, 146), Vector2(656, 554), "Projeção para o seu carro", _prize_side())
+		"commit":
+			_card(_holder, Vector2(44, 146), Vector2(520, 554), "Compromissos até o fim da temporada", _commit_list())
+			_card(_holder, Vector2(580, 146), Vector2(656, 554), "Caixa livre", _commit_side())
+		_:
+			_card(_holder, Vector2(44, 150), Vector2(520, 250), "Receitas · temporada %d" % campaign.season, _income())
+			_card(_holder, Vector2(44, 412), Vector2(520, 288), "Despesas · temporada %d" % campaign.season, _expenses())
+			_card(_holder, Vector2(580, 150), Vector2(656, 250), "Teto de gastos %d · igual para todas as equipes" % campaign.season, _cap())
+			_card(_holder, Vector2(580, 412), Vector2(320, 288), "Crédito", _credit())
+			_card(_holder, Vector2(916, 412), Vector2(320, 288), "Túnel de vento %d" % campaign.season, _atr())
+
+
+func _info_row(icon_name: String, title: String, sub: String, col: Color = UiStyle.G_TEXT_2) -> Control:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.05), 14, 14, 10))
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 12)
+	var sq := PanelContainer.new()
+	sq.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.08), 11, 8, 8))
+	sq.add_child(ScreenKit.icon(icon_name, 20, col))
+	sq.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(sq)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", -2)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_child(UiStyle.g_label(title, 15, UiStyle.G_TEXT, "black"))
+	if sub != "":
+		v.add_child(UiStyle.g_label(sub, 12, UiStyle.G_TEXT_2, "bold"))
+	h.add_child(v)
+	p.add_child(h)
+	return p
+
+
+func _tag(text: String, icon_name: String, col: Color) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UiStyle.g_box(Color(col, 0.18), 10, 9, 3))
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 5)
+	h.add_child(ScreenKit.icon(icon_name, 13, col))
+	h.add_child(UiStyle.g_label(text, 12, col, "black"))
+	p.add_child(h)
+	return p
+
+
+## Receitas: um cartão por zona do carro, com o contrato (garantido ou por meta) e o valor por corrida.
+func _income_list() -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 7)
+	var sp := campaign.sponsors
+	for z: Dictionary in Sponsorship.zones():
+		var id: String = z["id"]
+		var p := PanelContainer.new()
+		p.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.05), 16, 14, 10))
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 12)
+		p.add_child(h)
+		var nv := VBoxContainer.new()
+		nv.add_theme_constant_override("separation", -2)
+		nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if sp.contracts.has(id):
+			var c: Dictionary = sp.contracts[id]
+			nv.add_child(UiStyle.g_label(String(c["brand"]), 16, UiStyle.G_TEXT, "black"))
+			nv.add_child(UiStyle.g_label("%s · até %d" % [z["name"], int(c["until"])], 12, UiStyle.G_TEXT_2, "bold"))
+			h.add_child(nv)
+			if int(c.get("goal_pos", 0)) > 0:
+				h.add_child(_tag("Meta: top %d" % int(c["goal_pos"]), "trophy", Color("#F5C542")))
+			else:
+				h.add_child(_tag("Garantido", "lock", Color("#7fe0b1")))
+			var pv := VBoxContainer.new()
+			pv.add_theme_constant_override("separation", -3)
+			pv.custom_minimum_size = Vector2(110, 0)
+			var a := UiStyle.g_label("%s mi" % _money(float(c["per_race"])), 16, UiStyle.G_TEXT, "black")
+			a.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			pv.add_child(a)
+			var b := UiStyle.g_label("por corrida", 11, UiStyle.G_TEXT_3, "bold")
+			b.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			pv.add_child(b)
+			h.add_child(pv)
+			if int(c.get("goal_pos", 0)) > 0:
+				var gv := VBoxContainer.new()
+				gv.add_theme_constant_override("separation", -3)
+				gv.custom_minimum_size = Vector2(120, 0)
+				var g1 := UiStyle.g_label("+%s mi" % _money(float(c["goal_bonus"])), 16, Color("#F5C542"), "black")
+				g1.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				gv.add_child(g1)
+				var g2 := UiStyle.g_label("no fim do ano", 11, UiStyle.G_TEXT_3, "bold")
+				g2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				gv.add_child(g2)
+				h.add_child(gv)
+		else:
+			nv.add_child(UiStyle.g_label("Zona livre", 16, UiStyle.G_TEXT_2, "black"))
+			nv.add_child(UiStyle.g_label("%s · %d ofertas" % [z["name"], sp.offers_for(campaign, id).size()], 12, UiStyle.G_TEXT_3, "bold"))
+			h.add_child(nv)
+		v.add_child(p)
+	return v
+
+
+func _income_side() -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 10)
+	var sm := campaign.sponsors.year_summary(campaign)
+	var total := float(sm["guaranteed"]) + float(sm["goal"])
+	var share := float(sm["guaranteed"]) / maxf(total, 0.01)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 16)
+	top.add_child(RingGauge.make(share, 96, Color("#7fe0b1"), "%d%%" % roundi(share * 100.0), "garantido", "", 8.0))
+	var nv := VBoxContainer.new()
+	nv.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	nv.add_child(UiStyle.g_label("US$ %s mi" % _money(float(sm["guaranteed"])), 20, Color("#7fe0b1"), "black"))
+	nv.add_child(UiStyle.g_label("garantido até o fim do ano", 12, UiStyle.G_TEXT_2, "bold"))
+	top.add_child(nv)
+	v.add_child(top)
+	v.add_child(_info_row("trophy", "US$ %s mi em metas" % _money(float(sm["goal"])), "%d de %d contratos dependem do campeonato" % [int(sm["goal_count"]), int(sm["count"])], Color("#F5C542")))
+	var pos := campaign.team_position(campaign.player_team)
+	var worst := 0
+	for c: Dictionary in campaign.sponsors.contracts.values():
+		var gp := int(c.get("goal_pos", 0))
+		if gp > 0:
+			worst = gp if worst == 0 else mini(worst, gp)
+	if int(sm["goal_count"]) > 0:
+		var ok := pos <= worst
+		v.add_child(_info_row("up" if ok else "lock", "Hoje: %dº (meta mais exigente: top %d)" % [pos, worst], "no caminho" if ok else "atrás da meta: o bônus está em risco", Color("#7fe0b1") if ok else Color("#ff8a80")))
+	v.add_child(_info_row("timer", "+%s mi por pódio" % _money(campaign.sponsors.bonus_per_podium()), "soma dos contratos, por piloto"))
+	var sp := Control.new()
+	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	v.add_child(sp)
+	var go := CutButton.new()
+	go.text = "VER OFERTAS"
+	go.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
+	go.pressed.connect(Session.open_campaign_sponsors)
+	v.add_child(go)
+	return v
+
+
+func _prize_list() -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	var pool := campaign.prize_table()
+	var mine := campaign.team_position(campaign.player_team)
+	var mx := float(pool[0])
+	for i in pool.size():
+		var now := i + 1 == mine
+		var p := PanelContainer.new()
+		p.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#F5C542", 0.2) if now else Color(1, 1, 1, 0.05), 10, 12, 0))
+		p.custom_minimum_size = Vector2(0, 36)
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 10)
+		var pl := UiStyle.g_label("%dº" % (i + 1), 14, UiStyle.G_TEXT_2, "black")
+		pl.custom_minimum_size = Vector2(32, 0)
+		h.add_child(pl)
+		var bar := ProgressBar.new()
+		bar.show_percentage = false
+		bar.max_value = mx
+		bar.value = float(pool[i])
+		bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		bar.custom_minimum_size = Vector2(0, 8)
+		bar.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.08), 4, 0, 0))
+		bar.add_theme_stylebox_override("fill", UiStyle.g_box(Color("#F5C542") if now else Color("#4C8DFF"), 4, 0, 0))
+		h.add_child(bar)
+		var vl := UiStyle.g_label("US$ %d mi" % int(pool[i]), 14, UiStyle.G_TEXT, "black")
+		vl.custom_minimum_size = Vector2(96, 0)
+		vl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		h.add_child(vl)
+		if now:
+			h.add_child(_tag("Você", "trophy", Color("#F5C542")))
+		p.add_child(h)
+		v.add_child(p)
+	return v
+
+
+func _prize_side() -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 10)
+	var pr := campaign.prize_projection()
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 26)
+	for kv: Array in [["Hoje", "%dº" % int(pr["position"]), UiStyle.G_TEXT], ["Prêmio nesta posição", "US$ %d mi" % int(pr["prize"]), Color("#F5C542")], ["Faltam", "%d GPs" % int(pr["races_left"]), UiStyle.G_TEXT]]:
+		var c := VBoxContainer.new()
+		c.add_theme_constant_override("separation", -2)
+		c.add_child(UiStyle.g_caption(String(kv[0])))
+		c.add_child(UiStyle.g_label(String(kv[1]), 32, kv[2], "black"))
+		top.add_child(c)
+	v.add_child(top)
+	if float(pr["up"]) > 0.0:
+		v.add_child(_info_row("up", "Subir para %dº vale +US$ %d mi" % [int(pr["position"]) - 1, int(pr["up"])], "%d pontos atrás da %s" % [int(pr["gap_up"]), String(GameData.team_by_id(campaign.teams(), String(pr["up_team"])).get("name", ""))], Color("#7fe0b1")))
+	if float(pr["down"]) > 0.0:
+		v.add_child(_info_row("lock", "Cair para %dº custa −US$ %d mi" % [int(pr["position"]) + 1, int(pr["down"])], "a %s está %d pontos atrás" % [String(GameData.team_by_id(campaign.teams(), String(pr["down_team"])).get("name", "")), int(pr["gap_down"])], Color("#ff8a80")))
+	v.add_child(_info_row("cal", "Pago no fim da temporada", "entra no caixa na virada do ano"))
+	v.add_child(UiStyle.g_caption("Cada posição vale, em média, US$ %s mi" % _money(float(pr["avg_step"]))))
+	return v
+
+
+func _commit_list() -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 7)
+	var icons := {"payroll": "person", "ops": "gear", "loan": "money", "advance": "hand", "debt": "lock"}
+	for c: Dictionary in campaign.commitments():
+		var row := _info_row(String(icons.get(c["id"], "money")), String(c["label"]), String(c["detail"]))
+		var h := (row.get_child(0) as HBoxContainer)
+		h.add_child(UiStyle.g_label("−%s mi" % _money(float(c["amount"])), 16, Color("#ff8a80"), "black"))
+		v.add_child(row)
+	var sep := HSeparator.new()
+	v.add_child(sep)
+	var tot := HBoxContainer.new()
+	tot.add_child(UiStyle.g_label("TOTAL COMPROMETIDO", 15, UiStyle.G_TEXT, "black"))
+	tot.add_child(UiStyle.hspacer())
+	tot.add_child(UiStyle.g_label("−%s mi" % _money(campaign.committed_total()), 24, Color("#ff8a80"), "black"))
+	v.add_child(tot)
+	return v
+
+
+func _commit_side() -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 12)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 30)
+	for kv: Array in [["Caixa hoje", "US$ %s mi" % _money(campaign.budget_musd), UiStyle.G_TEXT], ["Comprometido", "−%s mi" % _money(campaign.committed_total()), Color("#ff8a80")],
+			["Caixa livre", "US$ %s mi" % _money(campaign.free_cash()), Color("#7fe0b1") if campaign.free_cash() >= 0.0 else Color("#ff8a80")]]:
+		var c := VBoxContainer.new()
+		c.add_theme_constant_override("separation", -2)
+		c.add_child(UiStyle.g_caption(String(kv[0])))
+		c.add_child(UiStyle.g_label(String(kv[1]), 26, kv[2], "black"))
+		top.add_child(c)
+	v.add_child(top)
+	v.add_child(UiStyle.g_caption("Projeção do caixa até a última corrida"))
+	v.add_child(_chart())
+	v.add_child(_info_row("up", "Fim do ano: US$ %s mi" % _money(campaign.projected_cash_end()), "com o prêmio da posição de hoje", Color("#7fe0b1")))
+	return v
 
 
 func _chip(caption: String, value: String) -> PanelContainer:

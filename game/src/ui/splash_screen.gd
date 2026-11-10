@@ -4,9 +4,10 @@ extends Control
 
 func _ready() -> void:
 	if Session.dev_flags:  # capturas: se nenhuma opção trocou a cena, vai direto ao menu (sem abertura)
-		await get_tree().process_frame
-		await get_tree().process_frame
-		if is_inside_tree() and get_tree().current_scene == self:
+		var tree := get_tree()
+		await tree.process_frame
+		await tree.process_frame
+		if is_instance_valid(self) and is_inside_tree() and tree.current_scene == self:
 			Session.go_to_title()
 		return
 	var bg := ColorRect.new()

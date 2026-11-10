@@ -5,7 +5,7 @@ extends RefCounted
 ## influência da equipe; o jogador aceita, recusa ou pede mais (uma vez por oferta, com risco de a marca desistir).
 ## Marcas reais só como TEXTO (sem logos). Valores PROVISÓRIOS (data/sponsors.json). Sem dependência de tela.
 
-var contracts: Dictionary = {}  ## zona -> {brand, category, tier, per_race, bonus, until}
+var contracts: Dictionary = {}  ## zona -> {brand, category, tier, per_race, bonus, until, goal_pos, goal_bonus} (goal_pos 0 = garantido)
 var asked: Array = []  ## ofertas em que já pediu mais (neste mês)
 var withdrawn: Array = []  ## ofertas retiradas pela marca (neste mês)
 var boosted: Dictionary = {}  ## chave da oferta -> valor por corrida depois de pedir mais
@@ -135,21 +135,65 @@ func offers_for(camp: Campaign, zone_id: String) -> Array[Dictionary]:
 		if boosted.has(key):
 			per_race = float(boosted[key])
 		var frac: float = data()["podium_bonus_options"][rng.randi() % data()["podium_bonus_options"].size()]
-		out.append({"key": key, "brand": brand["name"], "category": brand["category"], "tier": int(brand["tier"]),
+		var season_total := per_race * calendar_size()
+		out.append({"key": key, "goal_per_race": maxf(snappedf(per_race * GOAL_SHARE, 0.05), 0.05), "goal_bonus": snappedf(season_total * GOAL_BONUS_K, 0.5),
+			"goal_pos": maxi(1, camp.season_goal()), "brand": brand["name"], "category": brand["category"], "tier": int(brand["tier"]),
 			"per_race": maxf(per_race, 0.05), "bonus": snappedf(per_race * frac, 0.05), "years": 1 + rng.randi() % 3, "asked": asked.has(key)})
 	return out
 
 
+## Contratos por meta: o valor por corrida é menor, mas ao fim do ano paga um bônus se a equipe terminar entre os N primeiros.
+const GOAL_SHARE := 0.6  ## valor por corrida do contrato por meta = 60% do garantido
+const GOAL_BONUS_K := 1.0  ## bônus da meta = o total anual do garantido (cumprida a meta: 160% do garantido)
+
+
+static func calendar_size() -> int:
+	return Campaign.calendar().size()
+
+
+## Fim da temporada: paga o bônus dos contratos por meta cumpridos (posição final nos construtores). Devolve o total pago.
+func settle_goals(camp: Campaign, position: int) -> float:
+	var total := 0.0
+	for z: String in contracts:
+		var c: Dictionary = contracts[z]
+		var pos := int(c.get("goal_pos", 0))
+		if pos <= 0:
+			continue
+		if position <= pos:
+			total += float(c.get("goal_bonus", 0.0))
+			news.push_front("%s paga o bônus da meta (top %d): US$ %s mi." % [c["brand"], pos, ("%.1f" % float(c["goal_bonus"])).replace(".", ",")])
+		else:
+			news.push_front("%s: meta de top %d não cumprida, sem bônus." % [c["brand"], pos])
+	return total
+
+
+## Resumo para a tela de Receitas: garantido x meta (no ano), e quantos contratos dependem do campeonato.
+func year_summary(camp: Campaign) -> Dictionary:
+	var left := camp.races_left_in_season()
+	var guaranteed := 0.0
+	var goal_total := 0.0
+	var goals := 0
+	for z: String in contracts:
+		var c: Dictionary = contracts[z]
+		guaranteed += float(c["per_race"]) * left
+		if int(c.get("goal_pos", 0)) > 0:
+			goal_total += float(c.get("goal_bonus", 0.0))
+			goals += 1
+	return {"guaranteed": guaranteed, "goal": goal_total, "goal_count": goals, "count": contracts.size()}
+
+
 # --- ações ------------------------------------------------------------------------------------------
 
-func accept(camp: Campaign, zone_id: String, key: String) -> Dictionary:
+func accept(camp: Campaign, zone_id: String, key: String, mode: String = "safe") -> Dictionary:
 	if contracts.has(zone_id):
 		return {"ok": false, "text": "A zona já tem patrocinador."}
 	for o: Dictionary in offers_for(camp, zone_id):
 		if o["key"] == key:
-			contracts[zone_id] = {"brand": o["brand"], "category": o["category"], "tier": o["tier"], "per_race": o["per_race"],
-				"bonus": o["bonus"], "until": camp.season + int(o["years"]) - 1}
-			var msg := "%s fecha com a %s: US$ %s mi por corrida até %d." % [o["brand"], String(zone(zone_id)["name"]).to_lower(), ("%.2f" % float(o["per_race"])).replace(".", ","), camp.season + int(o["years"]) - 1]
+			var goal := mode == "goal"
+			contracts[zone_id] = {"brand": o["brand"], "category": o["category"], "tier": o["tier"], "per_race": o["goal_per_race"] if goal else o["per_race"],
+				"bonus": o["bonus"], "until": camp.season + int(o["years"]) - 1, "goal_pos": int(o["goal_pos"]) if goal else 0, "goal_bonus": float(o["goal_bonus"]) if goal else 0.0}
+			var msg := "%s fecha com a %s: US$ %s mi por corrida até %d%s." % [o["brand"], String(zone(zone_id)["name"]).to_lower(), ("%.2f" % float(contracts[zone_id]["per_race"])).replace(".", ","), camp.season + int(o["years"]) - 1,
+				(" (meta: top %d)" % int(o["goal_pos"])) if goal else ""]
 			news.push_front(msg)
 			return {"ok": true, "text": msg}
 	return {"ok": false, "text": "Oferta indisponível."}
@@ -227,6 +271,8 @@ static func from_dict(d: Dictionary) -> Sponsorship:
 		s.contracts[z]["bonus"] = float(s.contracts[z]["bonus"])
 		s.contracts[z]["until"] = int(s.contracts[z]["until"])
 		s.contracts[z]["tier"] = int(s.contracts[z]["tier"])
+		s.contracts[z]["goal_pos"] = int(s.contracts[z].get("goal_pos", 0))
+		s.contracts[z]["goal_bonus"] = float(s.contracts[z].get("goal_bonus", 0.0))
 	s.asked = d.get("asked", [])
 	s.withdrawn = d.get("withdrawn", [])
 	s.boosted = d.get("boosted", {})

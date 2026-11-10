@@ -111,6 +111,10 @@ func _ready() -> void:
 	var free := sp.free_zones()
 	_zone = free[0] if not free.is_empty() else String(Sponsorship.zones()[0]["id"])
 	_refresh()
+	if Session.debug_ui == "offer":  # (captura) --ui=offer abre a folha da primeira oferta
+		var offs := sp.offers_for(campaign, _zone)
+		if not offs.is_empty():
+			_on_accept.call_deferred(String(offs[0]["key"]))
 
 
 func _chip(caption: String) -> PanelContainer:
@@ -228,7 +232,7 @@ func _zone_row(z: Dictionary) -> Control:
 		r1.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		r1.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		rv.add_child(r1)
-		var r2 := UiStyle.g_label("por corrida · até %d" % int(c["until"]), 11, UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2, "bold")
+		var r2 := UiStyle.g_label(("por corrida · até %d" % int(c["until"])) + (" · meta top %d" % int(c["goal_pos"]) if int(c.get("goal_pos", 0)) > 0 else ""), 11, UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2, "bold")
 		r2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		r2.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		rv.add_child(r2)
@@ -358,12 +362,91 @@ func _on_zone(id: String) -> void:
 	_refresh()
 
 
+## Escolher a oferta abre a folha "Garantido × Por meta" (mockup v31-2): o jogador decide quanto risco quer correr.
 func _on_accept(key: String) -> void:
-	var res := sp.accept(campaign, _zone, key)
-	if res["ok"]:
-		campaign.save()
-	_toasts.push(String(res["text"]), "hot" if res["ok"] else "note")
-	_refresh()
+	var offer: Dictionary = {}
+	for o: Dictionary in sp.offers_for(campaign, _zone):
+		if o["key"] == key:
+			offer = o
+	if offer.is_empty():
+		return
+	var years := campaign.calendar().size()
+	var sh := ScreenKit.sheet("Oferta · %s" % String(Sponsorship.zone(_zone)["name"]), 860)
+	var body: VBoxContainer = sh["body"]
+	var l := UiStyle.g_label("%s quer patrocinar" % String(offer["brand"]), 26, UiStyle.G_TEXT, "black")
+	body.add_child(l)
+	var state := {"mode": "safe"}
+	var opts := HBoxContainer.new()
+	opts.add_theme_constant_override("separation", 14)
+	var group := ButtonGroup.new()
+	var make_opt := func(mode: String, title: String, icon_name: String, big: String, small: String, total: String, col: Color) -> Button:
+		var b := Button.new()
+		b.toggle_mode = true
+		b.button_group = group
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(0, 170)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.button_pressed = mode == "safe"
+		for st: String in ["normal", "hover"]:
+			b.add_theme_stylebox_override(st, UiStyle.g_box(Color(1, 1, 1, 0.07), 18, 0, 0))
+		for st: String in ["pressed", "hover_pressed"]:
+			b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT, 18, 0, 0))
+		var v := VBoxContainer.new()
+		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_theme_constant_override("separation", 4)
+		b.add_child(v)
+		v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		v.offset_left = 16
+		v.offset_top = 14
+		v.offset_right = -12
+		var h := HBoxContainer.new()
+		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_theme_constant_override("separation", 8)
+		var ic := ScreenKit.icon(icon_name, 22, col)
+		h.add_child(ic)
+		var t := UiStyle.g_label(title, 18, UiStyle.G_TEXT, "black")
+		h.add_child(t)
+		v.add_child(h)
+		var bg := UiStyle.g_label(big, 26, UiStyle.G_TEXT, "black")
+		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(bg)
+		var sm := UiStyle.g_label(small, 13, UiStyle.G_TEXT_2, "bold")
+		sm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(sm)
+		var tl := UiStyle.g_label(total, 13, col, "black")
+		tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_child(tl)
+		var paint := func(on: bool) -> void:
+			var ink := UiStyle.G_INK if on else UiStyle.G_TEXT
+			t.add_theme_color_override("font_color", ink)
+			bg.add_theme_color_override("font_color", ink)
+			sm.add_theme_color_override("font_color", UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2)
+		b.toggled.connect(func(on: bool) -> void:
+			paint.call(on)
+			if on:
+				state["mode"] = mode)
+		paint.call(b.button_pressed)
+		opts.add_child(b)
+		return b
+	var safe_total := float(offer["per_race"]) * years
+	var goal_total := float(offer["goal_per_race"]) * years
+	make_opt.call("safe", "Garantido", "lock", "%s mi" % _money(float(offer["per_race"])), "por corrida, aconteça o que acontecer", "Total no ano: %s mi" % _money(safe_total), Color("#7fe0b1"))
+	make_opt.call("goal", "Por meta", "trophy", "%s mi + %s no fim" % [_money(float(offer["goal_per_race"])), _money(float(offer["goal_bonus"]))],
+		"se terminar entre os %d primeiros dos construtores" % int(offer["goal_pos"]), "Se cumprir: %s + %s = %s mi" % [_money(goal_total), _money(float(offer["goal_bonus"])), _money(goal_total + float(offer["goal_bonus"]))], Color("#F5C542"))
+	body.add_child(opts)
+	var go := CutButton.new()
+	go.text = "FECHAR CONTRATO"
+	go.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
+	go.pressed.connect(func() -> void:
+		var res := sp.accept(campaign, _zone, key, String(state["mode"]))
+		if res["ok"]:
+			campaign.save()
+		_toasts.push(String(res["text"]), "hot" if res["ok"] else "note")
+		(sh["root"] as Control).queue_free()
+		_refresh())
+	body.add_child(go)
+	add_child(sh["root"])
 
 
 func _on_ask_more(key: String) -> void:

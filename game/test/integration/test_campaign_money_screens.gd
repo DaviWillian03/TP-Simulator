@@ -34,9 +34,18 @@ func test_aceitar_oferta_pela_tela_fecha_contrato() -> void:
 	var zone: String = screen._zone
 	var before := camp.sponsor_per_race()
 	var key: String = camp.sponsors.offers_for(camp, zone)[0]["key"]
-	screen._on_accept(key)
+	screen._on_accept(key)  # abre a folha Garantido × Por meta; "Garantido" já vem marcado
+	await wait_process_frames(3)
+	var stack: Array = [screen]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is CutButton and (n as Button).text.to_upper() == "FECHAR CONTRATO":
+			n.emit_signal("pressed")
+			break
+		stack.append_array(n.get_children())
 	assert_true(camp.sponsors.contracts.has(zone))
 	assert_gt(camp.sponsor_per_race(), before)
+	assert_eq(int(camp.sponsors.contracts[zone]["goal_pos"]), 0, "padrão: garantido")
 
 
 func test_pedir_mais_pela_tela_marca_a_oferta() -> void:
@@ -83,3 +92,48 @@ func _buttons(node: Node) -> Array[Button]:
 			out.append(c)
 		out.append_array(_buttons(c))
 	return out
+
+
+func test_financas_tem_quatro_abas_e_todas_montam() -> void:
+	var screen: Control = await _open("res://src/ui/campaign_finance_screen.tscn")
+	for tab: String in ["cash", "income", "prize", "commit"]:
+		screen._tab = tab
+		screen._show_tab()
+		await wait_process_frames(2)
+		assert_gt(screen._holder.get_child_count(), 1, "aba %s montou os cartões" % tab)
+
+
+func test_oferta_de_patrocinio_abre_folha_garantido_x_meta_e_fecha_por_meta() -> void:
+	camp.sponsors.contracts.clear()
+	var screen: Control = await _open("res://src/ui/campaign_sponsors_screen.tscn")
+	var offers: Array = screen.sp.offers_for(camp, screen._zone)
+	var key := String(offers[0]["key"])
+	var zone: String = screen._zone
+	screen._on_accept(key)
+	await wait_process_frames(3)
+	var go: Button = null
+	var stack: Array = [screen]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is CutButton and (n as Button).text.to_upper() == "FECHAR CONTRATO":
+			go = n
+		stack.append_array(n.get_children())
+	assert_not_null(go, "a folha tem o botão de fechar contrato")
+	# escolhe "por meta" (segundo botão da folha) e fecha
+	var goal_btn: Button = null
+	stack = [screen]
+	var toggles: Array[Button] = []
+	while not stack.is_empty():
+		var n2: Node = stack.pop_back()
+		if n2 is Button and (n2 as Button).toggle_mode and (n2 as Button).button_group != null and n2.get_parent() is HBoxContainer and n2.get_parent().get_child_count() == 2:
+			toggles.append(n2)
+		stack.append_array(n2.get_children())
+	toggles.sort_custom(func(a: Button, b: Button) -> bool: return a.get_index() < b.get_index())
+	if toggles.size() == 2:
+		goal_btn = toggles[1]
+		goal_btn.button_pressed = true
+	go.emit_signal("pressed")
+	await wait_process_frames(2)
+	assert_true(camp.sponsors.contracts.has(zone))
+	if goal_btn != null:
+		assert_gt(int(camp.sponsors.contracts[zone]["goal_pos"]), 0, "fechou por meta")

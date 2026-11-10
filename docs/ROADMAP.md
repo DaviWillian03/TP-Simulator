@@ -191,3 +191,4 @@ P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, 
   avisos e CONTINUAR + barra de ícones com cor por seção), Início em mosaico, Agenda em cartões, Equipe (carro grande),
   Sede 3D isométrica com as estruturas da fábrica, tela inicial em mosaico, Grande Prêmio e fim de semana com a pista 3D
   e a bandeira. Arte das pistas gerada pelo próprio jogo (`tools/make_track_art.sh`).
+- 2026-11-10 — ✅ **Finanças** (v31): patrocínio garantido × por meta, prêmio oficial por posição e compromissos com caixa livre. ✅ **Acabamento** (v32): configurações, 3 slots de save com versão, ajuda/dicas, sons de menu, abertura e nova logo. ✅ **Dados reais**: sede/fundação/diretor técnico das equipes, resumos de pilotos e técnicos, `tools/add_real_round.py`. ✅ Mundial F1 (v29/v30) com resultado de cada GP e estatísticas.
