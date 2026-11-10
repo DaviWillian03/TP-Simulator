@@ -38,6 +38,7 @@
  "profile": {"straight": 0.3, "slow": 0.35, "fast": 0.35},
  "rain_probability": 0.1,
  "scenery": {
+  "landmarks": ["cota_tower"],
   "kerbs": ["#d42020", "#f2f2f2"],
   "theme": "prairie",
   "landmark": "tower"

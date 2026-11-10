@@ -38,6 +38,7 @@
  "profile": {"straight": 0.25, "slow": 0.3, "fast": 0.45},
  "rain_probability": 0.1,
  "scenery": {
+  "landmarks": ["hills"],
   "kerbs": ["#d42020", "#f2f2f2"],
   "theme": "hills",
   "landmark": "grandstand"

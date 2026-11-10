@@ -636,3 +636,12 @@ Respostas do usuário:
 - **2026-11-09 — Cores das zebras por circuito** (tabela enviada pelo usuário; referência geral, não curva a curva):
   Albert Park verde/amarelo, Spa vermelho/amarelo, Interlagos verde/amarelo/branco, Monza verde/branco/vermelho,
   Madring vermelho/amarelo/branco; as demais vermelho/branco (inclusive Silverstone, pela tabela). Campo `scenery.kerbs`.
+- **2026-11-10 — Marcos visuais por circuito** (lista do usuário; prioridade para os que funcionam em tela pequena).
+  `Landmarks3D`, lista em `scenery.landmarks`, formas originais e sem logotipos, ampliadas (~1,5–3,4×) para aparecer na
+  vista geral: roda-gigante (Suzuka, Singapura), escultura de touro em bronze genérica (Áustria), esfera de telão (Las
+  Vegas), torre de observação (Austin), iates (Mônaco, Miami, Abu Dhabi), torres-chama (Baku), três torres com a
+  prancha no topo (Singapura), domo geodésico (Montreal), estádio (Miami, Cidade do México), oval inclinado (Monza),
+  hotel com casca sobre treliça (Abu Dhabi), arquibancada com asas (Xangai), palmeiras, dunas (Zandvoort), hotéis com
+  néon (Las Vegas), torres de iluminação (Lusail), além dos já existentes (lago e skyline, hangares, montanhas).
+  Ainda faltam: túnel de Mônaco, Muro dos Campeões, teto do Silverstone Wing, subida da Eau Rouge (relevo de Spa),
+  muralhas de Baku, trecho dentro do estádio no México e a curva inclinada do Madring. Sepang não está no calendário do jogo.

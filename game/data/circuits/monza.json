@@ -38,6 +38,7 @@
  "profile": {"straight": 0.7, "slow": 0.15, "fast": 0.15},
  "rain_probability": 0.15,
  "scenery": {
+  "landmarks": ["banking"],
   "kerbs": ["#1f9d3a", "#f2f2f2", "#d42020"],
   "theme": "park",
   "landmark": "trees"

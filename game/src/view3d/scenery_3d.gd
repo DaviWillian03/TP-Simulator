@@ -24,6 +24,7 @@ var water_center := Vector3.INF
 var water_radius := 0.0
 var water_side := ""
 var _box: AABB
+var clear_zones: Array[Vector4] = []  ## marcos (Landmarks3D): x, z e raio sem árvores nem prédios
 var _paddock := PackedVector3Array()  ## pontos do paddock/arquibancadas (sem árvores nem prédios por perto)
 
 
@@ -40,8 +41,12 @@ func build(p_t3: Track3D, p_night: bool) -> Node3D:
 			_paddock.append(t3.center[i] + t3.right[i] * t3.track.pit_side * 55.0)
 	_water()  # antes do terreno: o terreno afunda onde há água (porto)
 	_terrain()
+	var marks := Landmarks3D.new(self)
+	var keys := Landmarks3D.keys_of(t3.track)
+	marks.plan(keys)
 	_trees_and_buildings()
 	_landmark()
+	marks.build(keys)
 	if night:
 		_track_lights()
 	return root
@@ -255,6 +260,9 @@ func _trees_and_buildings() -> void:
 
 
 func _near_paddock(p: Vector3) -> bool:
+	for z in clear_zones:
+		if Vector2(p.x - z.x, p.z - z.z).length_squared() < z.w * z.w:
+			return true
 	for q in _paddock:
 		if Vector2(p.x - q.x, p.z - q.z).length_squared() < 60.0 * 60.0:
 			return true
@@ -322,6 +330,14 @@ func _tree_mesh() -> ArrayMesh:
 	return st.commit()
 
 
+func make_multimesh(mesh: Mesh, xforms: Array[Transform3D], colors: Array[Color], mat: Material) -> MultiMeshInstance3D:
+	return _multimesh(mesh, xforms, colors, mat)
+
+
+func in_water(p: Vector3) -> bool:
+	return _in_water(p)
+
+
 func _multimesh(mesh: Mesh, xforms: Array[Transform3D], colors: Array[Color], mat: Material) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -359,6 +375,12 @@ func _grandstands() -> void:
 
 
 func _landmark() -> void:
+	for lm: String in Landmarks3D.keys_of(t3.track):
+		landmark = lm
+		_one_landmark()
+
+
+func _one_landmark() -> void:
 	var tb := t3.bounds_3d()
 	var spot := Vector3(tb.position.x - 160.0, 0, tb.get_center().z)
 	match landmark:
@@ -378,29 +400,6 @@ func _landmark() -> void:
 				tower.position = Vector3(p.x, ground_height(p) + h / 2.0, p.z)
 				tower.material_override = facade
 				root.add_child(tower)
-		"ferris_wheel":
-			var wheel := MeshInstance3D.new()
-			var torus := TorusMesh.new()
-			torus.inner_radius = 38.0
-			torus.outer_radius = 41.0
-			wheel.mesh = torus
-			wheel.rotation_degrees = Vector3(90, 0, 0)
-			wheel.position = Vector3(spot.x, ground_height(spot) + 44.0, spot.z)
-			wheel.material_override = Materials3D.flat(Color("#e9e3d6"), 0.5)
-			root.add_child(wheel)
-		"sphere":
-			var ball := MeshInstance3D.new()
-			var sm := SphereMesh.new()
-			sm.radius = 55.0
-			sm.height = 110.0
-			ball.mesh = sm
-			ball.position = Vector3(spot.x, ground_height(spot) + 55.0, spot.z)
-			var m := Materials3D.flat(Color("#f5a623"), 0.4)
-			m.emission_enabled = night
-			m.emission = Color("#f5a623")
-			m.emission_energy_multiplier = 1.5
-			ball.material_override = m
-			root.add_child(ball)
 		"mountains", "hills":
 			for i in 5:
 				var mtn := MeshInstance3D.new()

@@ -38,6 +38,7 @@
  "profile": {"straight": 0.4, "slow": 0.35, "fast": 0.25},
  "rain_probability": 0.25,
  "scenery": {
+  "landmarks": ["stadium", "yachts", "palms"],
   "kerbs": ["#d42020", "#f2f2f2"],
   "theme": "coast",
   "landmark": "stadium"

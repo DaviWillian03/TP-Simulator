@@ -38,6 +38,7 @@
  "profile": {"straight": 0.5, "slow": 0.4, "fast": 0.1},
  "rain_probability": 0.3,
  "scenery": {
+  "landmarks": ["biosphere"],
   "kerbs": ["#d42020", "#f2f2f2"],
   "theme": "river",
   "landmark": "biosphere"
