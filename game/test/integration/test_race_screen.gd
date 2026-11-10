@@ -180,17 +180,64 @@ func test_rival_mostra_so_idade_do_pneu_e_meu_carro_mostra_barra_de_vida() -> vo
 		assert_eq(st._rows[i]["age"].visible, not mine)
 
 
-func test_ordens_de_equipe_no_cartao() -> void:
+func test_cartao_nao_tem_mais_ordens_de_equipe_e_mostra_o_carro() -> void:
+	var panel: CarControlPanel = screen._car_panels[0]
+	for b in _all_buttons(panel):
+		assert_false(b.text.to_upper().contains("ATACAR") or b.text.to_upper().contains("DEFENDER"), "ordens saíram do cartão")
+	assert_not_null(panel._diagram, "mini-carro no cartão")
+	assert_true(panel._diagram.is_inside_tree())
+	assert_not_null(panel._car_btn, "botão do carro")
+	panel.car.add_damage("floor", 0.5)
+	panel.refresh(1)
+	assert_true(panel._loss_label.visible, "o que o dano custa por volta aparece")
+	assert_true(panel._loss_label.text.begins_with("−"))
+	panel.car.damage_floor = 0.0
+	panel.refresh(1)
+	assert_false(panel._loss_label.visible, "carro sem dano: sem aviso")
+
+
+func test_toque_no_carro_abre_a_folha_e_pausa() -> void:
+	var panel: CarControlPanel = screen._car_panels[0]
+	var before: bool = screen.paused
+	panel.car.add_damage("front_wing", 0.6)
+	panel._car_btn.emit_signal("pressed")
+	assert_true(screen.paused, "a corrida espera enquanto a folha está aberta")
+	var diagrams := 0
+	for n in screen._layer.get_children():
+		diagrams += _count_diagrams(n)
+	assert_gt(diagrams, 0, "a folha mostra o desenho do carro")
+	for n in screen._layer.get_children():
+		if n is ColorRect and (n as ColorRect).color.a > 0.5:
+			n.queue_free()
+	await wait_process_frames(2)
+	assert_eq(screen.paused, before)
+
+
+func test_ordens_de_equipe_na_aba_de_missoes() -> void:
 	var panel: CarControlPanel = screen._car_panels[0]
 	watch_signals(screen.sim)
-	assert_eq(panel._order_btns.size(), 3, "briga liberada, não defender, não atacar")
-	var found := false
-	for b in panel._order_btns:
-		if b.text.to_upper().begins_with("NÃO\nATACAR"):  # o jogo mostra tudo em caixa alta
-			b.emit_signal("pressed")
-			found = true
-	assert_true(found, "botão 'Não atacar' no cartão")
+	var root_before: int = screen._layer.get_child_count()
+	panel._mission_btn.emit_signal("pressed")
+	assert_gt(screen._layer.get_child_count(), root_before)
+	var tiles: Array[Button] = []
+	for b in _all_buttons(screen._layer):
+		if b.has_meta("order"):
+			tiles.append(b)
+	assert_eq(tiles.size(), 3, "briga liberada, não defender, não atacar")
+	var no_attack: Button = null
+	for b in tiles:
+		if int(b.get_meta("order")) == CarState.TeamOrder.NO_ATTACK:
+			no_attack = b
+	assert_not_null(no_attack)
+	no_attack.button_pressed = true
+	var confirm: Button = null
+	for b in _all_buttons(screen._layer):
+		if b.text.to_upper() == "CONFIRMAR" and b.is_visible_in_tree() == false:
+			confirm = b  # o botão da aba de ordens fica na aba escondida
+	assert_not_null(confirm, "botão de confirmar da aba de ordens")
+	confirm.emit_signal("pressed")
 	assert_signal_emitted(screen.sim, "team_order_result", "a ordem chegou à simulação (o piloto pode obedecer ou não)")
+	await wait_process_frames(2)
 
 
 func test_folha_de_missoes_define_a_base_e_da_missao_curta() -> void:
@@ -332,3 +379,10 @@ func _first_panel(n: Node) -> Control:
 		if r != null:
 			return r
 	return null
+
+
+func _count_diagrams(node: Node) -> int:
+	var n := 1 if node is CarDiagram else 0
+	for c in node.get_children():
+		n += _count_diagrams(c)
+	return n

@@ -745,3 +745,16 @@ Respostas do usuário:
   8%** (abandona; em 20% dos casos o outro carro também; pode vir safety car/VSC). Também há chance de toque nos cruzamentos da
   largada (5× a de uma ultrapassagem comum). A frequência de toques (~5 por corrida) e a investigação seguem como antes;
   `incident_rate = 0` continua sem toques. Em `RaceControl._contact_outcome` (PROVISÓRIO, ajustável).
+- **2026-11-10 — Danos por peça e carro no cartão do piloto (mockup v33 aprovado).** O carro tem **5 peças** com dano de 0 a 100%:
+  asa dianteira, asa traseira, assoalho, suspensão e motor/câmbio (`CarState.add_damage/part_state/damage_loss_s`). **Só a asa
+  dianteira se troca no box**; o resto fica até o fim da prova (o "reparo parcial do assoalho" foi removido). Impacto **médio e que
+  soma**: com a peça 100% danificada, asa dianteira −1,0 s/volta, asa traseira −0,8, assoalho −1,0, suspensão −0,9, motor/câmbio
+  −0,4 (`RaceControl.PART_PENALTY_S`, PROVISÓRIO; a quebra parcial por problema mecânico continua somando). Quanto mais **dano
+  permanente** (tudo menos a asa dianteira), maior a chance de quebra mais tarde (+120% por ponto de dano; suspensão machucada
+  passa a poder causar a quebra). Em toque, quem **ataca** danifica a frente (asa dianteira, suspensão) e quem é **atingido**
+  danifica a traseira/lateral (asa traseira, assoalho, suspensão). **Cartão do piloto:** sai o desgaste do pneu da parte de cima e
+  as ordens de equipe; entra o mini-carro (`CarDiagram`) com **!** amarelo (desgaste) ou vermelho (dano) nas peças, o pneu (barra e
+  %) e o que o dano custa por volta; tocar nele (ou no botão do carro) abre a folha com o desenho grande, as peças com problema, o
+  pneu, a perda total, o risco de quebra e **TROCAR ASA**. As **ordens de equipe** (briga liberada, não defender, não atacar) viraram
+  a aba "Ordens de equipe" da folha de Missões (base e curta continuam juntas na aba "Missões"). **Sem textos explicativos** nessas
+  telas: só o carro, números e ícones (pedido do usuário).

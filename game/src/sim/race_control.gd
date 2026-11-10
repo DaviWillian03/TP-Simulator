@@ -19,8 +19,9 @@ const SC_PACE := 1.6  ## fila atrás do safety car: volta ~60% mais lenta
 const VSC_PACE := 1.35
 const SC_CATCH_UP := 1.2  ## quem ainda não alcançou a fila anda no tempo mínimo exigido (~1,33x), como na F1
 const SC_TARGET_GAP_M := 25.0
-const WING_PENALTY_S := 1.8  ## asa totalmente destruída
-const FLOOR_PENALTY_S := 1.0
+## Segundos por volta perdidos com a peça 100% danificada (danos médios e que se somam; PROVISÓRIO)
+const PART_PENALTY_S := {"front_wing": 1.0, "rear_wing": 0.8, "floor": 1.0, "susp": 0.9, "pu": 0.4}
+const DAMAGE_FAILURE_K := 1.2  ## cada ponto de dano permanente soma 120% à chance de quebra por volta
 const WING_CHANGE_S := 7.0  ## tempo extra parado para trocar a asa
 const RED_FLAG_SUSPENSION_S := 900.0
 # estouro de pneu (decisão 2026-11-09): possível com 20% de vida ou menos, mais provável quanto mais gasto
@@ -129,8 +130,8 @@ func _failure_mult(car: CarState) -> float:
 	var team_m := float(car.team.get("failure_mult", 1.0))
 	var by: Dictionary = car.team.get("failure_by_driver", {})
 	if by.has(car.driver.get("id", "")):
-		return team_m * float(by[car.driver["id"]])  # fator relativo das peças de confiabilidade deste carro
-	return team_m
+		team_m *= float(by[car.driver["id"]])  # fator relativo das peças de confiabilidade deste carro
+	return team_m * (1.0 + DAMAGE_FAILURE_K * car.permanent_damage())  # carro machucado quebra mais
 
 
 ## Chance de incidente por volta para este carro, agora (pista, pneus, ordens, piloto).
@@ -205,12 +206,16 @@ func _incident(car: CarState) -> void:
 			deploy_vsc("Batida de %s" % car.display_name())
 	else:
 		car.stall_s = sim.rng.randf_range(2.0, 4.0)
-		if sim.rng.randf() < 0.5:
-			car.damage_wing = minf(1.0, car.damage_wing + sim.rng.randf_range(0.3, 0.7))
-			sim.incident.emit(car, "damage", "%s sai da pista e danifica a asa" % car.display_name())
-		else:
-			car.damage_floor = minf(1.0, car.damage_floor + sim.rng.randf_range(0.3, 0.6))
+		var pick := sim.rng.randf()
+		if pick < 0.4:
+			car.add_damage("front_wing", sim.rng.randf_range(0.3, 0.7))
+			sim.incident.emit(car, "damage", "%s sai da pista e danifica a asa dianteira" % car.display_name())
+		elif pick < 0.75:
+			car.add_damage("floor", sim.rng.randf_range(0.3, 0.6))
 			sim.incident.emit(car, "damage", "%s passa por cima da zebra e danifica o assoalho" % car.display_name())
+		else:
+			car.add_damage("susp", sim.rng.randf_range(0.25, 0.55))
+			sim.incident.emit(car, "damage", "%s bate no muro e danifica a suspensão" % car.display_name())
 
 
 func _blowout(car: CarState) -> void:
@@ -225,7 +230,7 @@ func _blowout(car: CarState) -> void:
 		return
 	car.punctured = true
 	car.stall_s = sim.rng.randf_range(1.5, 3.5)
-	car.damage_floor = minf(1.0, car.damage_floor + sim.rng.randf_range(0.1, 0.35))
+	car.add_damage("floor", sim.rng.randf_range(0.1, 0.35))
 	if not car.in_pit and not car.pit_requested:
 		sim.request_pit(car, StrategyAI.choose_compound(sim, car, sim.total_laps - car.laps_done))
 	sim.incident.emit(car, "blowout", "%s: pneu estoura (%d%% de vida)! Volta lenta para o box" % [car.display_name(), life])
@@ -234,7 +239,10 @@ func _blowout(car: CarState) -> void:
 
 
 func _failure(car: CarState) -> void:
-	var what: String = ["motor", "câmbio", "sistema híbrido", "freios", "hidráulica"][sim.rng.randi() % 5]
+	var causes := ["motor", "câmbio", "sistema híbrido", "freios", "hidráulica"]
+	if car.damage_susp > 0.3:  # suspensão machucada numa batida cede mais tarde
+		causes.append_array(["suspensão", "suspensão", "suspensão"])
+	var what: String = causes[sim.rng.randi() % causes.size()]
 	if car.power_loss_s <= 0.0 and sim.rng.randf() < PARTIAL_FAILURE_SHARE:
 		# quebra parcial: segue na prova, mas mais lento até o fim (não se conserta no box)
 		car.power_loss_s = sim.rng.randf_range(POWER_LOSS_S.x, POWER_LOSS_S.y)
@@ -259,7 +267,7 @@ func check_contact(att: CarState, def: CarState, chance_mult: float = 1.0) -> bo
 		return false
 	var victim := att if sim.rng.randf() < 0.6 else def
 	sim.incident.emit(att, "contact", "Toque entre %s e %s!" % [att.display_name(), def.display_name()])
-	_contact_outcome(victim, def if victim == att else att)
+	_contact_outcome(victim, def if victim == att else att, victim == att)
 	# o causador fica sob investigação; o veredito sai depois (a chance de punição segue 50%)
 	if att.investigation.is_empty():
 		var guilty := sim.rng.randf() < 0.5
@@ -270,36 +278,47 @@ func check_contact(att: CarState, def: CarState, chance_mult: float = 1.0) -> bo
 	return true
 
 
-## Consequência do toque (pedido de 2026-11-10: batida precisa custar algo). Quase sempre alguém perde tempo ou
-## ritmo; de vez em quando há rodada, pneu furado ou batida que tira um (raramente os dois) da prova.
+## Consequência do toque (pedido de 2026-11-10: batida precisa custar algo). Quem ataca bate com a FRENTE (asa dianteira,
+## suspensão); quem é atingido, com a traseira/lateral (asa traseira, assoalho, suspensão). Só a asa dianteira se troca no
+## box; os outros danos ficam até o fim da prova.
 ##   leve 38% · danos 27% · rodada 17% · furo 10% · batida forte 8%
-func _contact_outcome(victim: CarState, other: CarState) -> void:
+func _contact_outcome(victim: CarState, other: CarState, victim_is_attacker: bool) -> void:
 	var roll := sim.rng.randf()
 	if roll < 0.38:
 		victim.stall_s = sim.rng.randf_range(0.8, 2.2)  # escapa da trajetória e perde tempo
-		victim.damage_wing = minf(1.0, victim.damage_wing + sim.rng.randf_range(0.08, 0.25))
+		_hit_wing(victim, victim_is_attacker, 0.08, 0.25)
 		if sim.rng.randf() < 0.4:
 			other.stall_s = sim.rng.randf_range(0.5, 1.2)
 		sim.incident.emit(victim, "lockup", "%s perde tempo no toque (%.1f s)" % [victim.display_name(), victim.stall_s])
 	elif roll < 0.65:
-		victim.damage_wing = minf(1.0, victim.damage_wing + sim.rng.randf_range(0.3, 0.7))
 		victim.stall_s = sim.rng.randf_range(1.0, 3.0)
-		var what := "asa"
-		if sim.rng.randf() < 0.4:
-			victim.damage_floor = minf(1.0, victim.damage_floor + sim.rng.randf_range(0.15, 0.4))
-			what = "asa e assoalho"
+		var what := ""
+		if victim_is_attacker:
+			_hit_wing(victim, true, 0.3, 0.7)
+			what = "a asa dianteira"
+			if sim.rng.randf() < 0.4:
+				victim.add_damage("susp", sim.rng.randf_range(0.15, 0.4))
+				what = "a asa dianteira e a suspensão"
+		else:
+			_hit_wing(victim, false, 0.25, 0.6)
+			what = "a asa traseira"
+			if sim.rng.randf() < 0.5:
+				victim.add_damage("floor", sim.rng.randf_range(0.15, 0.4))
+				what = "a asa traseira e o assoalho"
 		if sim.rng.randf() < 0.35:
-			other.damage_wing = minf(1.0, other.damage_wing + sim.rng.randf_range(0.1, 0.3))
+			_hit_wing(other, not victim_is_attacker, 0.1, 0.3)
 		sim.incident.emit(victim, "damage", "%s danifica %s no toque" % [victim.display_name(), what])
 	elif roll < 0.82:
 		var loss := sim.rng.randf_range(4.0, 9.0)
 		victim.stall_s = loss
-		victim.damage_wing = minf(1.0, victim.damage_wing + sim.rng.randf_range(0.15, 0.45))
+		_hit_wing(victim, victim_is_attacker, 0.15, 0.45)
+		if sim.rng.randf() < 0.4:
+			victim.add_damage("susp" if victim_is_attacker else "floor", sim.rng.randf_range(0.1, 0.3))
 		sim.incident.emit(victim, "spin", "%s roda depois do toque e perde %.0f s" % [victim.display_name(), loss])
 	elif roll < 0.92:
 		victim.punctured = true
 		victim.stall_s = sim.rng.randf_range(1.5, 3.0)
-		victim.damage_floor = minf(1.0, victim.damage_floor + sim.rng.randf_range(0.1, 0.3))
+		victim.add_damage("floor", sim.rng.randf_range(0.1, 0.3))
 		if not victim.in_pit and not victim.pit_requested:
 			sim.request_pit(victim, StrategyAI.choose_compound(sim, victim, sim.total_laps - victim.laps_done))
 		sim.incident.emit(victim, "blowout", "%s fura o pneu no toque! Volta lenta para o box" % victim.display_name())
@@ -314,6 +333,11 @@ func _contact_outcome(victim: CarState, other: CarState) -> void:
 			deploy_sc("Batida entre %s e %s" % [victim.display_name(), other.display_name()])
 		elif neut < 0.85:
 			deploy_vsc("Batida entre %s e %s" % [victim.display_name(), other.display_name()])
+
+
+## Dano na asa do lado do toque: dianteira para quem ataca, traseira para quem é atingido.
+func _hit_wing(car: CarState, front: bool, lo: float, hi: float) -> void:
+	car.add_damage("front_wing" if front else "rear_wing", sim.rng.randf_range(lo, hi))
 
 
 func on_pit_stop(car: CarState) -> void:

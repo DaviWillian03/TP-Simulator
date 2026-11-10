@@ -78,8 +78,12 @@ var confidence_until_lap := 0
 
 # incidentes, danos e punições
 var stall_s := 0.0  ## rodou/saiu da pista: parado ou fora do traçado por alguns segundos
-var damage_wing := 0.0  ## 0..1 (reparável no box trocando a asa)
-var damage_floor := 0.0  ## 0..1 (não reparável)
+## Danos por peça (0..1). Só a asa dianteira se troca no box; as outras ficam até o fim da prova (pedido de 2026-11-10).
+var damage_wing := 0.0  ## asa dianteira (reparável no box)
+var damage_rear := 0.0  ## asa traseira
+var damage_floor := 0.0  ## assoalho
+var damage_susp := 0.0  ## suspensão
+var damage_pu := 0.0  ## motor/câmbio (dano de batida; as quebras parciais entram em `power_loss_s`)
 var punctured := false  ## pneu estourado: volta lenta até o box (troca obrigatória)
 var power_loss_s := 0.0  ## quebra parcial: segundos por volta perdidos até o fim da corrida
 var repair_wing := false  ## trocar a asa na próxima parada
@@ -110,6 +114,50 @@ func lane() -> int:
 	if stall_s > 0.0:
 		return 2
 	return 0
+
+
+const PARTS := ["front_wing", "rear_wing", "floor", "susp", "pu"]
+
+
+func damage_of(part: String) -> float:
+	match part:
+		"front_wing": return damage_wing
+		"rear_wing": return damage_rear
+		"floor": return damage_floor
+		"susp": return damage_susp
+		"pu": return damage_pu
+	return 0.0
+
+
+func add_damage(part: String, amount: float) -> void:
+	var v := clampf(damage_of(part) + amount, 0.0, 1.0)
+	match part:
+		"front_wing": damage_wing = v
+		"rear_wing": damage_rear = v
+		"floor": damage_floor = v
+		"susp": damage_susp = v
+		"pu": damage_pu = v
+
+
+## Estado da peça para a tela: 0 = ok, 1 = desgaste leve, 2 = danificada (ou com mau funcionamento).
+func part_state(part: String) -> int:
+	if part == "pu" and power_loss_s > 0.0:
+		return 2
+	var d := damage_of(part)
+	return 0 if d < 0.05 else (1 if d < 0.4 else 2)
+
+
+## Segundos por volta perdidos por todos os danos (e pela quebra parcial).
+func damage_loss_s() -> float:
+	var t := power_loss_s
+	for p: String in PARTS:
+		t += damage_of(p) * float(RaceControl.PART_PENALTY_S[p])
+	return t
+
+
+## Soma dos danos que não se consertam (sobe a chance de quebra mais tarde).
+func permanent_damage() -> float:
+	return damage_rear + damage_floor + damage_susp + damage_pu
 
 
 func code() -> String:

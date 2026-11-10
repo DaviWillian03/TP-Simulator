@@ -274,6 +274,8 @@ const G_DRIVER := Color("#3c9d5d")
 const G_LUCK := Color("#8f98a7")
 const G_UP := Color("#7fe0b1")  ## melhora
 const G_DOWN := Color("#ff8a80")  ## piora / problema
+const G_WARN := Color("#ffb020")  ## desgaste / atenção (peça do carro, pneu no meio)
+const G_BAD := Color("#ff4d4d")  ## dano / mau funcionamento (peça do carro, pneu no fim)
 const G_GRADE := {"A": Color("#3c9d5d"), "B": Color("#5c93ea"), "C": Color("#ffd24a"), "D": Color("#ff8a80")}
 
 const R_TILE := 16  ## blocos de modo, cartões

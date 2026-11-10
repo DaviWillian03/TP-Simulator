@@ -177,7 +177,7 @@ func test_asa_danificada_deixa_mais_lento_e_o_box_conserta() -> void:
 	var car := _player_cars(sim)[0]
 	var pace := sim.ideal_pace(car)
 	car.damage_wing = 0.5
-	assert_almost_eq(sim.ideal_pace(car) - pace, 0.5 * RaceControl.WING_PENALTY_S, 0.01)
+	assert_almost_eq(sim.ideal_pace(car) - pace, 0.5 * float(RaceControl.PART_PENALTY_S["front_wing"]), 0.01)
 	car.repair_wing = true
 	sim.request_pit(car, "hard")
 	var n := 0

@@ -27,7 +27,6 @@ var _compound := "medium"
 var _use_used := false
 var _wing := 0
 var _repair_wing := false
-var _repair_floor := false
 var _serve := true
 var _double := 0  ## 0 só este carro · 1 companheiro na volta seguinte · 2 companheiro junto
 
@@ -63,7 +62,6 @@ func setup(p_sim: RaceSim, p_car: CarState, view: TrackView3D, home: Control) ->
 		_use_used = bool(car.plan.get("use_used", false))
 		_wing = int(car.plan.get("wing_step", _wing))
 		_repair_wing = bool(car.plan.get("repair_wing", _repair_wing))
-		_repair_floor = bool(car.plan.get("repair_floor", false))
 		_serve = bool(car.plan.get("serve_penalty", _serve))
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build()
@@ -394,7 +392,7 @@ func _set_row(k: String, wet_now: bool) -> Control:
 # --- ajustes, tempo e confirmação ---------------------------------------------------------
 
 func _plan() -> Dictionary:
-	return PitStop.make_plan(_compound, _use_used, _wing, _repair_wing, _repair_floor, _serve)
+	return PitStop.make_plan(_compound, _use_used, _wing, _repair_wing, _serve)
 
 
 func _estimate_total() -> float:
@@ -431,17 +429,10 @@ func _build_right() -> void:
 	av.add_child(wing_row)
 	# asa danificada
 	var dmg := car.damage_wing > 0.0
-	av.add_child(_toggle_row("Trocar a asa danificada",
-		("asa com −%d%% de eficiência" % roundi(car.damage_wing * 100.0)) if dmg else "asa sem dano", _repair_wing and dmg, dmg,
+	av.add_child(_toggle_row("Trocar a asa dianteira",
+		("−%d%%" % roundi(car.damage_wing * 100.0)) if dmg else "sem dano", _repair_wing and dmg, dmg,
 		func(on: bool) -> void:
 			_repair_wing = on
-			_refresh()))
-	# assoalho
-	var fl := car.damage_floor > 0.0
-	av.add_child(_toggle_row("Reparo parcial do assoalho",
-		("recupera metade do dano (−%d%%)" % roundi(car.damage_floor * 100.0)) if fl else "assoalho sem dano", _repair_floor and fl, fl,
-		func(on: bool) -> void:
-			_repair_floor = on
 			_refresh()))
 	# punição de tempo
 	var pen := car.penalty_pending_s > 0.0
@@ -471,8 +462,6 @@ func _build_right() -> void:
 		tv.add_child(_cost_row("Asa dianteira %+d" % _wing, float(est["wing_adjust"]), true))
 	if float(est["wing_change"]) > 0.0:
 		tv.add_child(_cost_row("Troca da asa danificada", float(est["wing_change"]), true))
-	if float(est["floor"]) > 0.0:
-		tv.add_child(_cost_row("Reparo do assoalho", float(est["floor"]), true))
 	if float(est["penalty"]) > 0.0:
 		tv.add_child(_cost_row("Punição de %d s cumprida" % int(car.penalty_pending_s), float(est["penalty"]), true))
 	_col_right.add_child(tm)
@@ -548,7 +537,7 @@ func _confirm() -> void:
 	if not sim.set_pit_plan(car, plan):
 		return
 	if mate != null and not (mate.retired or mate.finished or mate.in_pit):
-		var mplan := PitStop.make_plan(_compound, false, mate.wing_step, mate.damage_wing > 0.0, false, mate.penalty_pending_s > 0.0)
+		var mplan := PitStop.make_plan(_compound, false, mate.wing_step, mate.damage_wing > 0.0, mate.penalty_pending_s > 0.0)
 		if not PitStop.has_set(mate, _compound, false):
 			mplan["use_used"] = true
 		match _double:

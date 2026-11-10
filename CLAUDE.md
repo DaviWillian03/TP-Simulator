@@ -35,7 +35,7 @@ das escolhas técnicas.
 - `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). **Todas** as
   cores/fontes/raios/espaços vêm de `UiStyle` — nada de cor solta nas telas. Direção atual:
   **Garagem** (seção "Garagem" do UiStyle + peças em `ScreenKit`, `GarageBackdrop`, `CutButton`,
-  `CarHero`); migradas: tudo (tela inicial, GP, fim de semana, treino, classificação, corrida, box e campanha)
+  `CarHero`, `CarDiagram`: carro visto de cima com o estado das 5 peças e do pneu; no cartão do piloto e na folha do carro); migradas: tudo (tela inicial, GP, fim de semana, treino, classificação, corrida, box e campanha)
   (`TimingTable` com estilo "garage"). Todas as telas jogáveis já são Garagem (corrida, box, classificação, resultados e campanha).
   Fonte: **Kanit** e tudo em **caixa alta** (`AllCaps` no `Session`; meta `keep_case` para exceção). Cartão do piloto: cores via
   `UiStyle.team_accent/team_glass/ink_on`, nome + bandeira via `NameFlag`.

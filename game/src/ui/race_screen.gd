@@ -174,6 +174,7 @@ func _build_ui() -> void:
 			p.setup(sim, car)
 			p.pit_pressed.connect(_open_pit)
 			p.mission_pressed.connect(_open_missions)
+			p.car_pressed.connect(_open_car)
 			p.focus_pressed.connect(_on_driver_pressed)  # tocar no cartão segue o piloto, como a linha da torre
 			_car_panels.append(p)
 
@@ -327,6 +328,18 @@ func _connect_sim_signals() -> void:
 		for c in sim.cars:
 			if c.is_player:
 				_open_pit.call_deferred(c)
+				break
+	if Session.debug_ui in ["car", "carcard", "orders"]:  # (captura) danos de exemplo; car = folha do carro; orders = aba de ordens
+		for c in sim.cars:
+			if c.is_player:
+				c.add_damage("front_wing", 0.6)
+				c.add_damage("floor", 0.35)
+				c.add_damage("rear_wing", 0.2)
+				c.tyre_wear = 0.32
+				if Session.debug_ui == "car":
+					_open_car.call_deferred(c)
+				elif Session.debug_ui == "orders":
+					_open_missions.call_deferred(c)
 				break
 	if Session.debug_ui == "missions":  # (captura) --ui=missions abre a folha de missões do primeiro piloto
 		for c in sim.cars:
@@ -664,12 +677,20 @@ func _open_missions(car: CarState) -> void:
 		return
 	var was_paused := paused
 	paused = true  # a corrida espera a decisão
-	var sh := ScreenKit.sheet("Missões de %s" % _surname(car).capitalize(), 1120)
+	var sh := ScreenKit.sheet(_surname(car).capitalize(), 1120)
 	var root: Control = sh["root"]
 	root.tree_exited.connect(func() -> void: paused = was_paused)
-	var body: VBoxContainer = sh["body"]
-	var c: Dictionary = sim.tyres.compounds[car.tyre]
-	body.add_child(UiStyle.g_caption("Volta %d de %d · P%d · %s %dv" % [car.laps_done + 1, sim.total_laps, sim.standings().find(car) + 1, c["name"], car.tyre_laps]))
+	var outer: VBoxContainer = sh["body"]
+	var body := VBoxContainer.new()  # aba "Missões" (base e curta juntas); a outra aba é "Ordens de equipe"
+	body.add_theme_constant_override("separation", UiStyle.SP_M)
+	var ord_box := _orders_box(car, root)
+	ord_box.visible = Session.debug_ui == "orders"  # (captura) abre já na aba de ordens
+	body.visible = not ord_box.visible
+	outer.add_child(ScreenKit.segmented([["m", "Missões"], ["o", "Ordens de equipe"]], "m", func(v: String) -> void:
+		body.visible = v == "m"
+		ord_box.visible = v == "o"))
+	outer.add_child(body)
+	outer.add_child(ord_box)
 	var base_kind := String(car.mission_base.get("kind", "save"))
 	var until := int(car.mission_base.get("until", 0))
 	if until <= car.laps_done:
@@ -763,6 +784,165 @@ func _open_missions(car: CarState) -> void:
 		root.queue_free())
 	body.add_child(go)
 	_layer.add_child(root)
+
+
+## Aba "Ordens de equipe": como o piloto trata o companheiro (saiu do cartão do piloto, mockup v33).
+func _orders_box(car: CarState, root: Control) -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", UiStyle.SP_M)
+	var pick := {"order": int(car.team_order)}
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var group := ButtonGroup.new()
+	for o: Array in [[CarState.TeamOrder.FREE, "users", "Briga liberada"], [CarState.TeamOrder.NO_DEFEND, "shield", "Não defender"],
+			[CarState.TeamOrder.NO_ATTACK, "arrow", "Não atacar"]]:
+		var b := Button.new()
+		b.toggle_mode = true
+		b.button_group = group
+		b.focus_mode = Control.FOCUS_NONE
+		b.custom_minimum_size = Vector2(0, 110)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.set_meta("order", o[0])
+		b.button_pressed = int(o[0]) == int(car.team_order)
+		for st: String in ["normal", "hover"]:
+			b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE, 16, 0, 0))
+		for st: String in ["pressed", "hover_pressed"]:
+			b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT, 16, 0, 0))
+		var v := VBoxContainer.new()
+		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.add_theme_constant_override("separation", 8)
+		b.add_child(v)
+		v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		v.offset_left = 14
+		v.offset_top = 14
+		var ic := ScreenKit.icon(o[1], 28, UiStyle.G_TEXT)
+		v.add_child(ic)
+		var lbl := UiStyle.g_label(String(o[2]), UiStyle.FS_H2, UiStyle.G_TEXT, "black")
+		v.add_child(lbl)
+		var val: int = o[0]
+		b.toggled.connect(func(on: bool) -> void:
+			if on:
+				pick["order"] = val
+			var ink := UiStyle.G_INK if on else UiStyle.G_TEXT
+			ic.modulate = ink
+			lbl.add_theme_color_override("font_color", ink))
+		if b.button_pressed:
+			ic.modulate = UiStyle.G_INK
+			lbl.add_theme_color_override("font_color", UiStyle.G_INK)
+		row.add_child(b)
+	box.add_child(row)
+	var go := CutButton.new()
+	go.text = "CONFIRMAR"
+	go.custom_minimum_size = Vector2(260, UiStyle.TOUCH_MAIN)
+	go.size_flags_horizontal = Control.SIZE_SHRINK_END
+	go.pressed.connect(func() -> void:
+		if int(pick["order"]) != int(car.team_order):
+			sim.set_team_order(car, int(pick["order"]))
+		root.queue_free())
+	box.add_child(go)
+	return box
+
+
+## Folha do carro: desenho com as peças (exclamação onde há dano), o que cada dano custa, o pneu e a troca da asa dianteira.
+func _open_car(car: CarState) -> void:
+	if car.finished or car.retired:
+		return
+	var was_paused := paused
+	paused = true
+	var sh := ScreenKit.sheet(_surname(car).capitalize(), 1020)
+	var root: Control = sh["root"]
+	root.tree_exited.connect(func() -> void: paused = was_paused)
+	var body: VBoxContainer = sh["body"]
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 30)
+	var diagram := CarDiagram.new()
+	diagram.custom_minimum_size = Vector2(300, 420)
+	diagram.setup(car)
+	row.add_child(diagram)
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override("separation", 8)
+	var any := false
+	for part: String in CarState.PARTS:
+		var st := car.part_state(part)
+		if st == 0:
+			continue
+		any = true
+		var loss: float = car.damage_of(part) * float(RaceControl.PART_PENALTY_S[part])
+		if part == "pu":
+			loss += car.power_loss_s
+		col.add_child(_car_row(CarDiagram.state_color(st), "!", String(CarDiagram.NAMES[part]), "−%s s" % String.num(loss, 2).replace(".", ",")))
+	if not any:
+		col.add_child(_car_row(UiStyle.G_UP, "✓", "100%", ""))
+	var c: Dictionary = sim.tyres.compounds[car.tyre]
+	var tr := HBoxContainer.new()
+	tr.add_theme_constant_override("separation", 12)
+	var badge := TyreBadge.new()
+	badge.custom_minimum_size = Vector2(34, 34)
+	badge.set_compound(c["letter"], Color(c["color"]))
+	badge.tooltip_text = "%s · %dv" % [c["name"], car.tyre_laps]
+	tr.add_child(badge)
+	var bar := StandingsPanel.LifeBar.new()
+	bar.custom_minimum_size = Vector2(0, 18)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var life := 1.0 - clampf(car.tyre_wear, 0.0, 1.0)
+	bar.set_life(life)
+	tr.add_child(bar)
+	tr.add_child(UiStyle.g_label("%d%%" % roundi(life * 100.0), 20, UiStyle.G_TEXT, "black"))
+	col.add_child(_car_wrap(tr))
+	if car.damage_loss_s() > 0.0:
+		var tot := HBoxContainer.new()
+		tot.add_theme_constant_override("separation", 10)
+		tot.add_child(ScreenKit.icon("clock", 24, UiStyle.G_WARN))
+		var tl := UiStyle.g_label("−%s s" % String.num(car.damage_loss_s(), 1).replace(".", ","), 20, UiStyle.G_TEXT, "black")
+		tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tot.add_child(tl)
+		var perm := car.permanent_damage()
+		if perm > 0.05:  # dano que fica até o fim da prova faz o carro quebrar mais
+			tot.add_child(ScreenKit.icon("fire", 22, UiStyle.G_WARN))
+			tot.add_child(UiStyle.g_label("baixo" if perm < 0.4 else ("médio" if perm < 1.0 else "alto"), 18, UiStyle.G_WARN, "black"))
+		col.add_child(_car_wrap(tot))
+	if car.damage_wing > 0.0 and not car.in_pit:
+		var fix := CutButton.new()
+		fix.text = "TROCAR ASA"
+		fix.icon = load("res://assets/icons/wrench.svg")
+		fix.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
+		fix.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		fix.pressed.connect(func() -> void:
+			root.queue_free()
+			_open_pit.call_deferred(car))
+		col.add_child(fix)
+	row.add_child(col)
+	body.add_child(row)
+	_layer.add_child(root)
+
+
+func _car_wrap(inner: Control) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE, 14, 12, 8))
+	p.add_child(inner)
+	return p
+
+
+func _car_row(color: Color, mark: String, title: String, value: String) -> PanelContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 12)
+	var dot := PanelContainer.new()
+	dot.custom_minimum_size = Vector2(32, 32)
+	dot.add_theme_stylebox_override("panel", UiStyle.g_box(color, 16, 0, 0))
+	var m := UiStyle.g_label(mark, 18, UiStyle.G_INK, "black")
+	m.set_meta("keep_case", true)
+	m.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	m.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	dot.add_child(m)
+	h.add_child(dot)
+	var t := UiStyle.g_label(title, 18, UiStyle.G_TEXT, "black")
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(t)
+	h.add_child(UiStyle.g_label(value, 18, UiStyle.G_TEXT_2, "black"))
+	return _car_wrap(h)
 
 
 func _mission_tile(t: Array, group: ButtonGroup) -> Button:

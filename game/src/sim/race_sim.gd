@@ -614,7 +614,7 @@ func _lap_time(car: CarState, with_traffic: bool) -> float:
 	t -= PitStop.WING_LAP_S * car.wing_step
 	if car.energy_mode != CarState.EnergyMode.DEPLOY or car.battery > 0.0:
 		t += ENERGY_TIME[car.energy_mode] * energy_k
-	t += car.damage_wing * RaceControl.WING_PENALTY_S + car.damage_floor * RaceControl.FLOOR_PENALTY_S + car.power_loss_s
+	t += car.damage_loss_s()
 	t += radio.confidence_delta_s(car)
 	if car.punctured:
 		t *= RaceControl.PUNCTURE_LAP_MULT
@@ -830,8 +830,6 @@ func _service_car(car: CarState) -> void:
 	if car.repair_wing or plan.get("repair_wing", false):
 		car.damage_wing = 0.0
 		car.repair_wing = false
-	if plan.get("repair_floor", false):
-		car.damage_floor *= 0.5
 	if car.is_player:
 		car.wing_step = int(plan.get("wing_step", car.wing_step))
 	var used := PitStop.take_set(car, car.pit_compound, plan.get("use_used", false))

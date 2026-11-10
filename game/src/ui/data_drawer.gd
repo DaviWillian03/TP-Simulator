@@ -181,7 +181,7 @@ func _refresh_mine() -> void:
 		_table.set_pos(i, 1, "–" if car.retired else str(order.find(car) + 1), car.team_color())
 		_table.set_text(i, 2, " → ".join(used))
 		_table.set_tyre(i, 3, c["letter"], Color(c["color"]), "%d v · %d%%" % [car.tyre_laps, roundi(clampf(car.tyre_wear, 0.0, 1.0) * 100.0)])
-		_table.set_text(i, 4, "asa %d%%" % roundi(car.damage_wing * 100.0) if car.damage_wing > 0.0 else "—")
+		_table.set_text(i, 4, "−%s s" % String.num(car.damage_loss_s(), 1).replace(".", ",") if car.damage_loss_s() > 0.0 else "—")
 		_table.set_text(i, 5, "%d s" % int(car.penalties_total_s))
 		_table.set_text(i, 6, "%d pts" % car.license_points)
 		_table.set_text(i, 7, conf)

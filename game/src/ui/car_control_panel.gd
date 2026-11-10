@@ -9,6 +9,7 @@ extends PanelContainer
 signal pit_pressed(car: CarState)
 signal focus_pressed(car: CarState)
 signal mission_pressed(car: CarState)
+signal car_pressed(car: CarState)
 
 const WIDTH := 236.0
 const PHOTO := 46
@@ -20,7 +21,9 @@ var _pos_label: Label
 var _sub_label: Label
 var _num_label: Label
 var _tyre_badge: TyreBadge
-var _tyre_label: Label
+var _diagram: CarDiagram
+var _loss_label: Label
+var _car_block: PanelContainer
 var _drs_box: PanelContainer
 var _drs_icon: TextureRect
 var _drs_title: Label
@@ -32,14 +35,13 @@ var _gauge: GaugeIcon
 var _logo: TextureRect
 var _style: StyleBoxFlat
 var _last_pos := 0
-var _hint_label: Label
 var _box_btn: Button
-var _order_btns: Array[Button] = []
 var _last_position := 0
 var _auto_label: Label
 var _base_box: Dictionary
 var _short_box: Dictionary
 var _mission_btn: Button
+var _car_btn: Button
 ## Cores da equipe no cartão (pedido do usuário: nada de cinza com vermelho/branco em tudo).
 var _accent: Color  ## botões cheios
 var _hi: Color  ## textos e realces sobre o vidro escuro
@@ -99,27 +101,6 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	head.add_child(names)
 	v.add_child(head)
 
-	# pneu: círculo, nome e voltas, barra de vida (esvazia) e %
-	var tyre := HBoxContainer.new()
-	tyre.add_theme_constant_override("separation", 6)
-	tyre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tyre_badge = TyreBadge.new()
-	_tyre_badge.custom_minimum_size = Vector2(22, 22)
-	_tyre_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	tyre.add_child(_tyre_badge)
-	_tyre_label = UiStyle.g_label("", 12, Color("#c3c9d3"))
-	tyre.add_child(_tyre_label)
-	_life_bar = StandingsPanel.LifeBar.new()
-	_life_bar.custom_minimum_size = Vector2(0, 16)
-	_life_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_life_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	tyre.add_child(_life_bar)
-	_life_label = UiStyle.g_label("", 12, UiStyle.G_TEXT, "black")
-	_life_label.custom_minimum_size = Vector2(36, 0)
-	_life_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	tyre.add_child(_life_label)
-	v.add_child(tyre)
-
 	# missões (2026-11-09, mockup v25): o piloto dosa ritmo e bateria; o cartão mostra os dois só como informação
 	var auto_row := HBoxContainer.new()
 	auto_row.add_theme_constant_override("separation", 6)
@@ -149,12 +130,50 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_short_box = _mission_box(true)
 	v.add_child(_short_box["root"])
 
-	# avisos (regra dos compostos, dano na asa) só ocupam espaço quando existem
-	_hint_label = UiStyle.g_label("", 12, Color("#ffb4a8"), "bold")
-	_hint_label.clip_text = true  # uma linha só (o texto inteiro fica na dica): o cartão não cresce
-	_hint_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_hint_label.visible = false
-	v.add_child(_hint_label)
+	# carro (mockup v33): mini-carro com ! nas peças com problema, pneu (barra e %) e o que o dano custa por volta
+	_car_block = PanelContainer.new()
+	_car_block.mouse_filter = Control.MOUSE_FILTER_STOP
+	_car_block.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_car_block.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE, 14, 8, 6))
+	_car_block.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+			car_pressed.emit(car)
+			accept_event())
+	var cb := HBoxContainer.new()
+	cb.add_theme_constant_override("separation", 10)
+	cb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_diagram = CarDiagram.new()
+	_diagram.custom_minimum_size = Vector2(62, 88)
+	_diagram.setup(car, 27.0)
+	cb.add_child(_diagram)
+	var cv := VBoxContainer.new()
+	cv.add_theme_constant_override("separation", 6)
+	cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cv.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	cv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tyre := HBoxContainer.new()
+	tyre.add_theme_constant_override("separation", 6)
+	tyre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tyre_badge = TyreBadge.new()
+	_tyre_badge.custom_minimum_size = Vector2(24, 24)
+	_tyre_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tyre.add_child(_tyre_badge)
+	_life_bar = StandingsPanel.LifeBar.new()
+	_life_bar.custom_minimum_size = Vector2(0, 16)
+	_life_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_life_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tyre.add_child(_life_bar)
+	_life_label = UiStyle.g_label("", 13, UiStyle.G_TEXT, "black")
+	_life_label.custom_minimum_size = Vector2(38, 0)
+	_life_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	tyre.add_child(_life_label)
+	cv.add_child(tyre)
+	_loss_label = UiStyle.g_label("", 13, UiStyle.G_BAD, "black")
+	_loss_label.visible = false
+	cv.add_child(_loss_label)
+	cb.add_child(cv)
+	_car_block.add_child(cb)
+	v.add_child(_car_block)
 
 	# ações (2026-11-10): símbolos no lugar de "MISSÃO" e "P/ BOX"; embaixo, as ordens de equipe sempre à mostra
 	var pit := HBoxContainer.new()
@@ -176,6 +195,21 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_mission_btn.pressed.connect(func() -> void: mission_pressed.emit(car))
 	ScreenKit.press_feedback(_mission_btn)
 	pit.add_child(_mission_btn)
+	_car_btn = Button.new()
+	_car_btn.focus_mode = Control.FOCUS_NONE
+	_car_btn.custom_minimum_size = Vector2(0, 44)
+	_car_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_car_btn.icon = load("res://assets/icons/car.svg")
+	_car_btn.expand_icon = false
+	_car_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_car_btn.add_theme_constant_override("icon_max_width", 26)
+	for k: String in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
+		_car_btn.add_theme_color_override(k, Color.WHITE)
+	for st: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		_car_btn.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_OFF if st == "disabled" else Color(1, 1, 1, 0.10 if st in ["normal", "hover"] else 0.18), 12, 4, 0))
+	_car_btn.pressed.connect(func() -> void: car_pressed.emit(car))
+	ScreenKit.press_feedback(_car_btn)
+	pit.add_child(_car_btn)
 	_box_btn = CutButton.new()
 	_box_btn.tooltip_text = "Chamar para o box"
 	_box_btn.fill_color = _accent
@@ -197,29 +231,6 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_box_btn.pressed.connect(func() -> void: pit_pressed.emit(car))
 	pit.add_child(_box_btn)
 	v.add_child(pit)
-	var orders := HBoxContainer.new()
-	orders.add_theme_constant_override("separation", 4)
-	for o: Array in [[CarState.TeamOrder.FREE, "Briga\nliberada", "Briga liberada com o companheiro"],
-			[CarState.TeamOrder.NO_DEFEND, "Não\ndefender", "Não defender do companheiro (abre quando ele encosta)"],
-			[CarState.TeamOrder.NO_ATTACK, "Não\natacar", "Não atacar o companheiro"]]:
-		var b2 := Button.new()
-		b2.text = o[1]
-		b2.tooltip_text = o[2]
-		b2.focus_mode = Control.FOCUS_NONE
-		b2.custom_minimum_size = Vector2(0, 44)
-		b2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b2.add_theme_font_size_override("font_size", UiStyle.fs(11))
-		b2.add_theme_constant_override("line_spacing", -4)
-		b2.set_meta("order", o[0])
-		var val: int = o[0]
-		b2.pressed.connect(func() -> void:
-			if car.team_order != val:
-				sim.set_team_order(car, val)
-				refresh(_last_position))
-		ScreenKit.press_feedback(b2)
-		orders.add_child(b2)
-		_order_btns.append(b2)
-	v.add_child(orders)
 
 
 ## Destaque do cartão quando a câmera da pista está seguindo este piloto.
@@ -299,7 +310,7 @@ func refresh(race_position: int) -> void:
 	_sub_label.text = _gaps_text(race_position)
 	var c: Dictionary = sim.tyres.compounds[car.tyre]
 	_tyre_badge.set_compound(c["letter"], Color(c["color"]))
-	_tyre_label.text = "%s · %dv" % [c["name"], car.tyre_laps]
+	_tyre_badge.tooltip_text = "%s · %dv" % [c["name"], car.tyre_laps]
 	if _drs_box != null:
 		var open := sim.drs_open(car)
 		_drs_box.add_theme_stylebox_override("panel", UiStyle.g_box(Color(UiStyle.G_UP, 0.15) if open else Color(1, 1, 1, 0.05), 12, 10, 6))
@@ -334,26 +345,15 @@ func refresh(race_position: int) -> void:
 	if not car.mission_short.is_empty() and short.is_empty():  # agendada (o piloto pediu para esperar)
 		short = car.mission_short
 	_paint_mission(_short_box, short)
-	for ob: Button in _order_btns:  # ordem de equipe em vigor: clara; as outras, vidro
-		var on: bool = int(ob.get_meta("order")) == int(car.team_order)
-		for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
-			ob.add_theme_stylebox_override(st, UiStyle.g_box(_accent if on else Color(1, 1, 1, 0.07), 10, 2, 0))
-		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
-			ob.add_theme_color_override(k, UiStyle.ink_on(_accent) if on else UiStyle.G_TEXT_2)
-	var hints: Array[String] = []
-	if car.damage_wing > 0.0:
-		hints.append("Asa −%d%%" % roundi(car.damage_wing * 100.0))
-	if car.damage_floor > 0.0:
-		hints.append("Assoalho −%d%%" % roundi(car.damage_floor * 100.0))
-	if car.power_loss_s > 0.0:
-		hints.append("Motor −%s s/v" % String.num(car.power_loss_s, 1).replace(".", ","))
-	_hint_label.text = " · ".join(hints)
-	_hint_label.tooltip_text = _hint_label.text
-	_hint_label.visible = not hints.is_empty()
+	_diagram.refresh()
+	var loss := car.damage_loss_s()
+	_loss_label.visible = loss > 0.0
+	if loss > 0.0:
+		_loss_label.text = "−%s s" % String.num(loss, 1).replace(".", ",")
+		_loss_label.add_theme_color_override("font_color", UiStyle.G_BAD if loss >= 0.6 else UiStyle.G_WARN)
 	var active := not (car.retired or car.finished)
 	_mission_btn.disabled = not active
-	for ob2: Button in _order_btns:
-		ob2.disabled = not active
+	_car_btn.disabled = not active
 	_box_btn.disabled = car.in_pit or car.finished or car.retired
 	_box_btn.text = _box_text()
 

@@ -44,9 +44,9 @@ func test_custos_do_plano_somam_as_parcelas() -> void:
 	var sim := _sim()
 	var car := _mine(sim)[0]
 	car.penalty_pending_s = 5.0
-	var plan := PitStop.make_plan("hard", false, 1, true, true, true)
+	var plan := PitStop.make_plan("hard", false, 1, true, true)
 	var e := PitStop.estimate(car, plan)
-	assert_almost_eq(float(e["total"]), PitStop.BASE_S + RaceControl.WING_CHANGE_S + PitStop.WING_STEP_S + PitStop.FLOOR_REPAIR_S + 5.0, 0.001)
+	assert_almost_eq(float(e["total"]), PitStop.BASE_S + RaceControl.WING_CHANGE_S + PitStop.WING_STEP_S + 5.0, 0.001)
 	plan["serve_penalty"] = false
 	assert_almost_eq(float(PitStop.estimate(car, plan)["penalty"]), 0.0, 0.001, "punição fica de fora se não for cumprida")
 
@@ -55,7 +55,7 @@ func test_carro_para_de_verdade_no_box_pelo_tempo_do_plano() -> void:
 	var sim := _sim()
 	var car := _mine(sim)[0]
 	sim.advance(20.0)
-	assert_true(sim.set_pit_plan(car, PitStop.make_plan("hard", false, 0, false, false, true)))
+	assert_true(sim.set_pit_plan(car, PitStop.make_plan("hard", false, 0, false, true)))
 	assert_true(_until_stopped(sim, car), "chega ao box e para")
 	var hold := car.box_hold_s
 	assert_gt(hold, PitStop.BASE_S - 0.01)
@@ -149,16 +149,24 @@ func test_parada_com_ajuste_de_asa_muda_o_passo_e_custa_tempo() -> void:
 	assert_eq(car.wing_step, 2)
 
 
-func test_reparo_do_assoalho_corta_o_dano_pela_metade() -> void:
+func test_box_conserta_so_a_asa_dianteira() -> void:
 	var sim := _sim()
 	var car := _mine(sim)[0]
+	car.damage_wing = 0.5
 	car.damage_floor = 0.4
+	car.damage_rear = 0.3
+	car.damage_susp = 0.2
+	car.damage_pu = 0.1
 	sim.advance(20.0)
-	sim.set_pit_plan(car, PitStop.make_plan("hard", false, 0, false, true))
+	sim.set_pit_plan(car, PitStop.make_plan("hard", false, 0, true))
 	_until_stopped(sim, car)
 	while car.in_pit:
 		sim.step()
-	assert_almost_eq(car.damage_floor, 0.2, 0.001)
+	assert_eq(car.damage_wing, 0.0, "asa dianteira trocada")
+	assert_almost_eq(car.damage_floor, 0.4, 0.0001, "assoalho não tem conserto")
+	assert_almost_eq(car.damage_rear, 0.3, 0.0001, "asa traseira não tem conserto")
+	assert_almost_eq(car.damage_susp, 0.2, 0.0001, "suspensão não tem conserto")
+	assert_almost_eq(car.damage_pu, 0.1, 0.0001, "motor/câmbio não tem conserto")
 
 
 func test_punicao_cumprida_no_box_ou_levada_ao_fim() -> void:
@@ -167,7 +175,7 @@ func test_punicao_cumprida_no_box_ou_levada_ao_fim() -> void:
 		var car := _mine(sim)[0]
 		car.penalty_pending_s = 5.0
 		sim.advance(20.0)
-		sim.set_pit_plan(car, PitStop.make_plan("hard", false, 0, false, false, serve))
+		sim.set_pit_plan(car, PitStop.make_plan("hard", false, 0, false, serve))
 		_until_stopped(sim, car)
 		if serve:
 			assert_gt(car.box_hold_s, PitStop.BASE_S + 4.0, "parado a mais pelos 5 s")
