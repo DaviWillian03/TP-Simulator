@@ -158,7 +158,7 @@ static func _top(key: String, title: String, extras: Array[Control]) -> Control:
 		bell.pressed.connect(func() -> void:
 			Session.campaign_open_news = true
 			Session.open_campaign_hub())
-		var unseen := c.events.unseen.size()
+		var unseen := c.events.unseen.size() + c.personnel.transfers.decisions.size()
 		if unseen > 0:
 			var dot := PanelContainer.new()
 			dot.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.RED, 10, 5, 0))
@@ -201,6 +201,9 @@ static func continue_campaign() -> void:
 		return
 	if c.season_over() or c.state != "active":
 		Session.open_campaign_report()
+		return
+	if not c.personnel.transfers.decisions.is_empty():  # decisão de mercado aberta: a campanha para até você decidir
+		Session.open_campaign_hub()
 		return
 	var r := c.next_round()
 	if not r.is_empty():

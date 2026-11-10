@@ -120,6 +120,15 @@ func _driver_card(id: String, color: Color, r: Rect2, rows: Array) -> Control:
 	var pl := UiStyle.g_label("%dº" % pos, 28, UiStyle.G_TEXT, "black")
 	pl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(pl)
+	var tm: TransferMarket = campaign.personnel.transfers
+	if tm.future.has(id):  # sai: equipe nova e ano (v27-3)
+		var f: Dictionary = tm.future[id]
+		var chip := PanelContainer.new()
+		chip.add_theme_stylebox_override("panel", UiStyle.g_box(Color(0.88, 0.02, 0.0, 0.85), 12, 10, 3))
+		chip.add_child(UiStyle.g_label("→ %s %d" % [String(GameData.team_by_id(campaign.teams(), String(f["team"])).get("name", "")).to_upper(), int(f["start"])], 13, Color.WHITE, "black"))
+		chip.position = Vector2(110, 20)
+		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(chip)
 	h.position = Vector2(18, 150)
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(h)

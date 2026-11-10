@@ -186,6 +186,7 @@ P&D, fábrica, IA rival, pessoal e contratos, patrocínios, finanças, eventos, 
 16. **Balanceamento de economia** (simular várias temporadas em lote: caixa, P&D, folha, patrocínio) e de eventos; pesos de IA.
 17. **Acabamento**: tela de configurações, tutorial/ajuda, vários slots de campanha, versão do save (migração), tela de abertura e ícone finais,
     revisão de textos, `docs/THIRD_PARTY.md` completo. Som: já há som na corrida (2026-11-02); faltam música/sons de menu se o usuário quiser.
+- 2026-11-10 — ✅ **Mercado vivo** (v27): contratos futuros da IA, propostas de rivais e pedidos de renovação, com a campanha parada até decidir; aba Mercado nas notícias; quem sai aparece na Equipe e no Pessoal. Próximos: componentes com limite, finanças.
 - 2026-11-09 — ✅ **Menus v26** (inspiração: campanha do MM3): moldura da campanha (barra do topo com caixa, diretoria,
   avisos e CONTINUAR + barra de ícones com cor por seção), Início em mosaico, Agenda em cartões, Equipe (carro grande),
   Sede 3D isométrica com as estruturas da fábrica, tela inicial em mosaico, Grande Prêmio e fim de semana com a pista 3D

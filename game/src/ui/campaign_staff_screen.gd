@@ -167,7 +167,10 @@ func _driver_card(d: Dictionary) -> Control:
 	var tags := HBoxContainer.new()
 	tags.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tags.add_theme_constant_override("separation", 6)
-	if pe.dismissed.has(id):
+	var fut: Dictionary = pe.transfers.future.get(id, {})
+	if not fut.is_empty():
+		tags.add_child(_tag("→ %s em %d" % [String(GameData.team_by_id(campaign.teams(), String(fut["team"])).get("name", "")), int(fut["start"])], "bad"))
+	elif pe.dismissed.has(id):
 		tags.add_child(_tag("será dispensado", "bad"))
 	elif pe.pending.has(id):
 		tags.add_child(_tag("renovado até %d" % int(pe.pending[id]["until"]), "ok"))

@@ -49,11 +49,11 @@ func after_round(camp: Campaign) -> void:
 		_renewal_requests(camp, rng)
 
 
-func _news(camp: Campaign, budget: Array, title: String, text: String, chips: Array, force := false) -> void:
+func _news(camp: Campaign, budget: Array, title: String, text: String, chips: Array, force := false, team := "") -> void:
 	if not force and int(budget[0]) <= 0:
 		return
 	budget[0] = int(budget[0]) - 1
-	camp.events._add(camp, {"day": camp.day, "cat": "market", "id": "market", "title": title, "text": text, "chips": chips})
+	camp.events._add(camp, {"day": camp.day, "cat": "market", "id": "market", "title": title, "text": text, "chips": chips, "team": team})
 
 
 func _team_name(camp: Campaign, id: String) -> String:
@@ -98,7 +98,7 @@ func _ai_decisions(camp: Campaign, rng: RandomNumberGenerator, budget: Array) ->
 			if int(d["rating"]) >= 80:
 				_news(camp, budget, "%s RENOVA COM A %s" % [String(d["name"]).to_upper(), _team_name(camp, d["team"]).to_upper()],
 					"%s fica na %s até %d." % [d["name"], _team_name(camp, d["team"]), int(c["until"])],
-					[{"kind": "good", "big": "até %d" % int(c["until"]), "small": "renovado"}])
+					[{"kind": "good", "big": "até %d" % int(c["until"]), "small": "renovado"}], false, String(d["team"]))
 		else:
 			decided[d["id"]] = "released"
 
@@ -124,7 +124,7 @@ func _ai_signings(camp: Campaign, rng: RandomNumberGenerator, budget: Array) -> 
 		_news(camp, budget, "%s ASSINA COM A %s PARA %d" % [String(pick["name"]).to_upper(), String(t["name"]).to_upper(), camp.season + 1],
 			"%s%s correrá pela %s a partir da próxima temporada." % [pick["name"], (" (hoje na %s)" % _team_name(camp, from)) if from != "" else "", t["name"]],
 			[{"kind": "", "big": str(camp.season + 1), "small": "contrato futuro"}, {"kind": "", "big": "nota %d" % int(pick["rating"]), "small": "piloto"}],
-			int(pick["rating"]) >= 78)
+			int(pick["rating"]) >= 78, String(t["id"]))
 
 
 ## Quem pode ser contratado para o ano seguinte: liberados da IA, agentes livres e a base (melhor primeiro).

@@ -70,3 +70,24 @@ func test_continuar_avanca_ate_o_gp() -> void:
 	CampaignFrame.continue_campaign.call()
 	await wait_process_frames(1)
 	assert_true(camp.event_ready() or camp.day > day)
+
+
+func test_decisao_de_mercado_abre_no_inicio_e_bloqueia_o_continuar() -> void:
+	var tm: TransferMarket = camp.personnel.transfers
+	var id: String = camp.personnel.player_drivers(camp)[0]["id"]
+	tm._add_decision(camp, {"kind": "offer", "id": id, "team": "ferrari", "salary": 9.0, "years": 2, "fee": 5.0, "ends_now": false})
+	camp.events.unseen.clear()
+	var screen: Control = await _open("res://src/ui/campaign_hub_screen.tscn")
+	await wait_process_frames(2)
+	var dlgs := screen.find_children("*", "MarketDialog", true, false)
+	assert_eq(dlgs.size(), 1, "a proposta aparece ao abrir o Início")
+	var day := camp.day
+	CampaignFrame.continue_campaign()
+	assert_eq(camp.day, day, "com decisão aberta o CONTINUAR não avança")
+	var before := camp.budget_musd
+	var dlg: MarketDialog = dlgs[0]
+	for b in dlg.find_children("*", "Button", true, false):
+		if (b as Button).find_children("*", "Label", true, false).any(func(l: Label) -> bool: return l.text == "ACEITAR A MULTA"):
+			(b as Button).pressed.emit()
+	assert_almost_eq(camp.budget_musd, before + 5.0, 0.01)
+	assert_true(tm.decisions.is_empty())

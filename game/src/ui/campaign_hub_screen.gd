@@ -569,6 +569,9 @@ func _on_advance() -> void:
 
 
 func _on_one_day() -> void:
+	if not campaign.personnel.transfers.decisions.is_empty():
+		_show_next_decision()
+		return
 	campaign.advance_days(1)
 	campaign.save()
 	Session.open_campaign_hub()
@@ -943,7 +946,10 @@ func _notification(what: int) -> void:
 
 ## Mostra, um de cada vez, os eventos que aconteceram desde a última visita (consequência já aplicada).
 func _show_next_event() -> void:
-	if campaign.events.unseen.is_empty() or not is_inside_tree():
+	if not is_inside_tree():
+		return
+	if campaign.events.unseen.is_empty():
+		_show_next_decision()  # depois das notícias, as decisões do mercado (a campanha fica parada até decidir)
 		return
 	var item: Dictionary = campaign.events.unseen.pop_back()  # a mais antiga primeiro
 	var card := EventCard.new()
@@ -954,8 +960,29 @@ func _show_next_event() -> void:
 	_layer.add_child(card)
 
 
+## Proposta de rival ou pedido de renovação aberto: uma janela de cada vez (mockups v27-1/v27-2).
+func _show_next_decision() -> void:
+	var list: Array = campaign.personnel.transfers.decisions
+	if list.is_empty() or not is_inside_tree():
+		return
+	var dlg := MarketDialog.new()
+	dlg.setup(campaign, list[0])
+	dlg.resolved.connect(func(text: String) -> void:
+		if text != "":
+			_toast(text)
+		_show_next_decision.call_deferred())
+	_layer.add_child(dlg)
+
+
+func _toast(text: String) -> void:
+	var feed := ToastFeed.new()
+	ScreenKit.place(feed, _layer, Control.PRESET_TOP_LEFT, Vector2(420, 96), Vector2(440, 0))
+	feed.push(text)
+
+
 func _open_news() -> void:
 	var sheet := NewsSheet.new()
-	sheet.setup(campaign)
+	sheet.setup(campaign, "market" if not campaign.personnel.transfers.decisions.is_empty() else "all")
+	sheet.decision_requested.connect(func(_uid: int) -> void: _show_next_decision.call_deferred())
 	sheet.closed.connect(func() -> void: campaign.events.unseen.clear())
 	_layer.add_child(sheet)
