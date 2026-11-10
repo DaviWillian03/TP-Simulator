@@ -27,7 +27,7 @@ das escolhas técnicas.
   `tools/make_rd_tree.py`, e fábrica em `data/factory.json`). Passo fixo `DT`, semente
   determinística. Regras novas entram aqui, com teste.
 - Telas do GP: `gp_setup_screen`, `weekend_screen` (treino é sempre simulado: engenheiro, chance de acerto e folha de resultado), `quali_screen` (folha de saída: jogo, atitude, voltas), `strategy_screen` (estratégia antes da largada) e
-  `grid_screen` (grid fila a fila) antes de toda corrida/sprint jogada (peças comuns
+  `QualiResultSheet` (resultado entre Q1/Q2/Q3; `QualiSim.pause_between`/`resume()`), `SafeArea` (furo da câmera), `grid_screen` (grid fila a fila) antes de toda corrida/sprint jogada (peças comuns
   em `ScreenKit`); o fim de semana ativo fica em `Session.weekend`.
   Módulos que guardam o RaceSim usam `WeakRef` (ciclo de referência vazaria memória).
 - `src/ui/` — telas montadas em código (os `.tscn` só apontam para o script). **Todas** as

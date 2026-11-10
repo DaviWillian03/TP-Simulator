@@ -669,3 +669,14 @@ Respostas do usuário:
   com a cor da equipe (mais transparente que antes: a pista aparece), faixa lateral e botões na cor de destaque da
   equipe (Haas/Audi/Cadillac, de cor principal cinza ou escura, usam a secundária). A **bandeira do país** fica logo
   depois do sobrenome, num recorte inclinado (mesmo ângulo dos botões), na altura das maiúsculas (`NameFlag`).
+- **2026-11-10 — Folhas sempre cabem na tela.** Com a fonte Kanit em caixa alta a folha de missões passou da largura da
+  tela, o X de fechar saiu e o fundo escuro bloqueava o toque (o jogo parecia travado). `ScreenKit.sheet` agora reduz o
+  painel para caber. **Área segura**: `SafeArea` (recortes do sistema, ex.: furo da câmera do Galaxy S23) encolhe cada
+  tela inteira; sem recorte nada muda; `--cutout=44` simula no PC.
+- **2026-11-10 — Missões num só OK.** A folha escolhe a missão de base e a curta juntas, com um único botão CONFIRMAR
+  (a curta é opcional: "Sem missão curta").
+- **2026-11-10 — Pneus estilizados** (`TyreBadge`): borracha com banda de rodagem, faixa lateral na cor do composto com
+  brilho, aro e letra, em todo o jogo.
+- **2026-11-10 — Resultado entre as partes da classificação** (mockup v28 aprovado): ao fim do Q1/Q2 a sessão para e
+  mostra quem passa e, em vermelho, os eliminados (com a distância para o corte); ao fim do Q3, a pole em destaque e o
+  grid do 2º ao 10º. Sempre pede CONTINUAR. "Simular o resto" não para nas partes do meio.

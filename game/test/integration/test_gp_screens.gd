@@ -96,6 +96,27 @@ func test_simular_resto_da_classificacao_gera_o_grid() -> void:
 	assert_eq(w.session_id(), "race")
 
 
+func test_classificacao_para_no_fim_do_q1_e_mostra_o_resultado_ate_confirmar() -> void:
+	_weekend_at("quali")
+	var screen: Control = await _open("res://src/ui/quali_screen.tscn")
+	screen.q.auto_player = true
+	var guard := 0
+	while not screen.q.waiting and guard < 100000:
+		screen.q.step()
+		guard += 1
+	screen._show_result(0)
+	await wait_process_frames(2)
+	assert_not_null(screen._result, "a folha de resultado do Q1 abre")
+	var t: float = screen.q.total_time
+	screen._process(5.0)
+	assert_eq(screen.q.total_time, t, "o Q2 não começa sozinho")
+	assert_eq(screen.q.segment, 0)
+	var res: QualiResultSheet = screen._result
+	res.confirmed.emit()  # o que o botão CONTINUAR faz
+	assert_eq(screen.q.segment, 1, "confirmou: começa o Q2")
+	assert_false(screen.q.waiting)
+
+
 func test_corrida_do_gp_larga_com_o_grid_da_classificacao() -> void:
 	var w := _weekend_at("race")
 	var screen: Control = await _open("res://src/ui/race_screen.tscn")

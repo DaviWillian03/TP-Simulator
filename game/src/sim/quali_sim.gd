@@ -63,6 +63,10 @@ var cars: Array[CarState] = []
 var setups: Dictionary = {}
 var segments: Array = SEGMENTS
 var segment := 0  ## parte atual (0..2)
+## A tela liga isto para mostrar o resultado entre as partes: ao fim do Q1/Q2 a sessão para (`waiting`) e só
+## continua com `resume()`. Desligado (simulações da IA, testes), as partes seguem sozinhas como antes.
+var pause_between := false
+var waiting := false  ## parte encerrada, esperando a confirmação para começar a próxima
 var seg_time := 0.0  ## relógio da parte atual (segundos desde o início)
 var total_time := 0.0
 var over := false
@@ -174,12 +178,23 @@ func advance(seconds: float) -> void:
 func run_to_end(max_steps: int = 100_000) -> void:
 	var n := 0
 	while not over and n < max_steps:
+		if waiting:
+			resume()  # simular o resto não espera confirmação
 		step()
 		n += 1
 
 
+## Começa a parte seguinte depois do resultado da anterior (só tem efeito com `waiting`).
+func resume() -> void:
+	if not waiting:
+		return
+	waiting = false
+	segment += 1
+	_begin_segment()
+
+
 func step() -> void:
-	if over:
+	if over or waiting:
 		return
 	if red_flag_until > seg_time:
 		# bandeira vermelha: relógio parado, todos na garagem
@@ -614,6 +629,9 @@ func _end_segment() -> void:
 	if segment >= segments.size() - 1:
 		over = true
 		session_finished.emit()
+		return
+	if pause_between:
+		waiting = true  # o relógio para; a tela mostra o resultado e chama resume()
 		return
 	segment += 1
 	_begin_segment()

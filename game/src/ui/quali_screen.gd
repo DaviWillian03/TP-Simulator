@@ -40,9 +40,13 @@ func _ready() -> void:
 		Session.go_to_title.call_deferred()
 		return
 	q = weekend.make_quali()
+	q.pause_between = true  # ao fim do Q1/Q2 a sessão para e mostra o resultado até você confirmar
 	if Session.debug_advance_s > 0.0:  # (capturas de tela: a IA leva também os carros do jogador)
 		q.auto_player = true
-		q.advance(Session.debug_advance_s)
+		if Session.debug_advance_s >= 99999.0:  # (captura) vai até o fim da classificação, sem parar nas partes
+			q.run_to_end()
+		else:
+			q.advance(Session.debug_advance_s)
 		q.auto_player = false
 	var page := ScreenKit.garage_page(self, weekend.player_team)
 	var layer: Control = page["layer"]
@@ -136,6 +140,8 @@ func _ready() -> void:
 	q.lap_completed.connect(_on_lap)
 	q.decision_needed.connect(_on_decision)
 	_refresh_ui()
+	if q.waiting or q.is_over():  # (capturas com --advance chegam aqui já com a parte encerrada)
+		_show_result.call_deferred(q.segment)
 
 
 func _build_top_bar(layer: Control) -> void:
@@ -598,7 +604,7 @@ func _confirm_out() -> void:
 func _process(delta: float) -> void:
 	if q == null:
 		return
-	if not q.is_over() and _out_sheet == null:  # folha de saída aberta: a sessão espera a decisão
+	if not q.is_over() and not q.waiting and _out_sheet == null:  # folha de saída aberta: a sessão espera a decisão
 		q.advance(delta * time_scale)
 	_refresh -= delta
 	if _refresh <= 0.0:
@@ -702,19 +708,48 @@ func _on_lap(car: CarState, lap_time: float, valid: bool) -> void:
 
 
 func _on_segment_finished(index: int, eliminated: Array) -> void:
-	var seg_name: String = q.segments[index]["name"]
-	if eliminated.is_empty():
-		var pole: CarState = q.segment_order()[0]
-		_toasts.push("Pole position: %s." % pole.display_name(), "hot")
+	var last := index >= q.segments.size() - 1
+	if _skipping and not last:
+		return  # "simular o resto" não para nas partes do meio
+	if not last and eliminated.is_empty():
 		return
-	var codes: Array[String] = []
-	for car: CarState in eliminated:
-		codes.append(car.code())
-	_toasts.push("Fim do %s. Eliminados: %s." % [seg_name, ", ".join(codes)])
+	_show_result.call_deferred(index)
+
+
+var _result: QualiResultSheet
+var _skipping := false
+
+
+## Resultado da parte que acabou (mockups v28): eliminados em destaque; no fim do Q3, a pole.
+func _show_result(index: int) -> void:
+	if _result != null and is_instance_valid(_result):
+		return
+	var last := index >= q.segments.size() - 1
+	var order := q.segment_order()
+	var out: Array[CarState] = []
+	for car in q.cars:
+		if q.eliminated_in[car] == index:
+			out.append(car)
+	out.sort_custom(func(a: CarState, b: CarState) -> bool:
+		if q.best[a][index] != q.best[b][index]:
+			return q.best[a][index] < q.best[b][index]
+		return a.index < b.index)
+	if not last and out.is_empty() and not q.waiting:
+		return
+	_result = QualiResultSheet.make(q, index, order, out, String(weekend.circuit["grand_prix"]), last)
+	_result.confirmed.connect(func() -> void:
+		if last:
+			weekend.finish_quali(q)
+			Session.go_to_weekend()
+		else:
+			q.resume()
+			_refresh_ui())
+	add_child(_result)
 
 
 func _simulate_rest() -> void:
 	q.auto_player = true  # a IA da equipe decide as saídas dos seus carros até o fim
+	_skipping = true
 	q.run_to_end()
 	_refresh_ui()
 
