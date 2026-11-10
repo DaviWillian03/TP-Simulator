@@ -172,7 +172,6 @@ func _build_ui() -> void:
 			cards.add_child(p)
 			p.setup(sim, car)
 			p.pit_pressed.connect(_open_pit)
-			p.orders_pressed.connect(_open_orders)
 			p.mission_pressed.connect(_open_missions)
 			p.focus_pressed.connect(_on_driver_pressed)  # tocar no cartão segue o piloto, como a linha da torre
 			_car_panels.append(p)
@@ -792,18 +791,6 @@ func _mission_tile(t: Array, group: ButtonGroup) -> Button:
 			(_mission_ui["refresh"] as Callable).call())
 	ScreenKit.press_feedback(b)
 	return b
-
-
-func _open_orders(car: CarState, anchor: Control) -> void:
-	var opts := [
-		[CarState.TeamOrder.FREE, "Liberado"],
-		[CarState.TeamOrder.HOLD, "Não brigar com o companheiro"],
-		[CarState.TeamOrder.LET_BY, "Deixar o companheiro passar"],
-	]
-	ScreenKit.popover(self, anchor, "Ordem de equipe · %s" % car.code(), opts, car.team_order,
-		func(o: int) -> void:
-			sim.set_team_order(car, o)
-			_refresh_ui())
 
 
 # --- tela do box -----------------------------------------------------------------------

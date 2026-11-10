@@ -450,30 +450,28 @@ func _plan_base_mission(car: CarState) -> void:
 ## para o companheiro. O piloto pode desobedecer (mais provável se estiver brigando por pódio
 ## ou se for melhor que o companheiro).
 func set_team_order(car: CarState, order: CarState.TeamOrder) -> void:
-	var mate := teammate_of(car)
+	## Ordem de cada carro (vale até mudar): briga liberada, não atacar o companheiro (não tenta passá-lo) ou não
+	## defender do companheiro (abre quando ele encosta atrás). O piloto às vezes recusa.
 	if order == CarState.TeamOrder.FREE:
 		car.team_order = order
-		if mate != null and mate.team_order == CarState.TeamOrder.HOLD:
-			mate.team_order = order
-		team_order_result.emit(car, true, "Pilotos liberados para disputar.")
+		team_order_result.emit(car, true, "%s liberado para brigar com o companheiro." % car.code())
 		return
+	var mate := teammate_of(car)
 	var p := 0.85
 	var pos := standings().find(car) + 1
-	if order == CarState.TeamOrder.LET_BY and pos <= 3:
+	if order == CarState.TeamOrder.NO_DEFEND and pos <= 3:
 		p -= 0.2
 	if mate != null and DriverStats.overall(car.driver) > DriverStats.overall(mate.driver):
 		p -= 0.15
 	var who := car.display_name().get_slice(" ", 0)
 	if rng.randf() >= p:
 		car.team_order = CarState.TeamOrder.FREE
-		var text := "%s: \"Não vou abrir! Ele que me passe na pista.\"" % who if order == CarState.TeamOrder.LET_BY \
+		var text := "%s: \"Não vou abrir! Ele que me passe na pista.\"" % who if order == CarState.TeamOrder.NO_DEFEND \
 			else "%s: \"Desculpa, mas eu vou atacar.\"" % who
 		team_order_result.emit(car, false, text)
 		return
 	car.team_order = order
-	if order == CarState.TeamOrder.HOLD and mate != null:
-		mate.team_order = order
-	var ok := "%s: \"Entendido, vou abrir.\"" % who if order == CarState.TeamOrder.LET_BY else "%s: \"Ok, posições mantidas.\"" % who
+	var ok := "%s: \"Entendido, não vou segurar.\"" % who if order == CarState.TeamOrder.NO_DEFEND else "%s: \"Ok, não ataco o companheiro.\"" % who
 	team_order_result.emit(car, true, ok)
 
 
@@ -622,8 +620,8 @@ func _resolve_overtakes(order: Array[CarState]) -> void:
 		var def := _same_lane_ahead(order, i)
 		if def == null:
 			continue
-		if att.team["id"] == def.team["id"] and (att.team_order == CarState.TeamOrder.HOLD or def.team_order == CarState.TeamOrder.HOLD):
-			continue  # "não brigar"
+		if att.team["id"] == def.team["id"] and att.team_order == CarState.TeamOrder.NO_ATTACK:
+			continue  # "não atacar o companheiro"
 		var gap_m := def.distance - att.distance
 		if gap_m > att.speed * ATTACK_WINDOW_S:
 			continue
@@ -666,21 +664,21 @@ func _swap(behind: CarState, ahead: CarState, loss_s: float) -> void:
 	behind.distance = ahead_d
 
 
-## "Deixar passar": quando o companheiro encosta, o carro abre a posição.
+## "Não defender do companheiro": quando o companheiro encosta atrás, o carro abre a posição (vale até mudar a ordem;
+## depois de abrir, espera uma volta — e não abre para quem também está em "não defender", senão trocariam sem parar).
 func _apply_let_by(order: Array[CarState]) -> void:
 	for i in order.size():
 		var car := order[i]
-		if car.team_order != CarState.TeamOrder.LET_BY or car.lane() != 0:
+		if car.team_order != CarState.TeamOrder.NO_DEFEND or car.lane() != 0 or car.laps_done <= car.let_by_cooldown_lap:
 			continue
 		var mate := teammate_of(car)
-		if mate == null or mate.lane() != 0 or mate.finished or mate.retired:
-			car.team_order = CarState.TeamOrder.FREE
+		if mate == null or mate.lane() != 0 or mate.finished or mate.retired or mate.team_order == CarState.TeamOrder.NO_DEFEND:
 			continue
 		var gap := (car.distance - mate.distance) / maxf(mate.speed, 1.0)
 		var j := order.find(mate)
 		if j == i + 1 and gap > 0.0 and gap < LET_BY_WINDOW_S:
 			_swap(mate, car, 0.4)
-			car.team_order = CarState.TeamOrder.FREE
+			car.let_by_cooldown_lap = car.laps_done + 1
 			team_order_result.emit(car, true, "%s abre para %s." % [car.code(), mate.code()])
 
 

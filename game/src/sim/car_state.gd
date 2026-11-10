@@ -4,7 +4,7 @@ extends RefCounted
 
 enum PaceMode { CONSERVE, NORMAL, ATTACK }
 enum EnergyMode { HARVEST, BALANCED, DEPLOY }
-enum TeamOrder { FREE, HOLD, LET_BY }  ## liberado · não brigar · deixar o companheiro passar
+enum TeamOrder { FREE, NO_ATTACK, NO_DEFEND }  ## briga liberada · não atacar o companheiro · não defender do companheiro (2026-11-10)
 
 var index := 0
 var driver: Dictionary = {}
@@ -69,6 +69,7 @@ var pit_defer_laps := -1  ## volta (voltas completas) em que o pedido de box vol
 
 # ordens de equipe e rádio
 var team_order := TeamOrder.FREE
+var let_by_cooldown_lap := -1  ## não defender: só abre de novo depois desta volta (evita troca sem fim)
 var defend_hard := false  ## resposta "defender forte" no rádio: mais difícil passar, mais risco
 var confidence := 0  ## +1 confiante / -1 irritado (efeito no ritmo por algumas voltas)
 var confidence_until_lap := 0

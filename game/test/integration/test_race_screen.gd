@@ -179,17 +179,16 @@ func test_rival_mostra_so_idade_do_pneu_e_meu_carro_mostra_barra_de_vida() -> vo
 		assert_eq(st._rows[i]["age"].visible, not mine)
 
 
-func test_ordens_de_equipe_pelo_popover() -> void:
+func test_ordens_de_equipe_no_cartao() -> void:
 	var panel: CarControlPanel = screen._car_panels[0]
 	watch_signals(screen.sim)
-	panel.orders_pressed.emit(panel.car, panel._orders_btn)
+	assert_eq(panel._order_btns.size(), 3, "briga liberada, não defender, não atacar")
 	var found := false
-	for b in _all_buttons(screen):
-		if b.text.begins_with("Não brigar"):
+	for b in panel._order_btns:
+		if b.text.begins_with("Não\natacar"):
 			b.emit_signal("pressed")
 			found = true
-			break
-	assert_true(found, "popover com as ordens")
+	assert_true(found, "botão 'Não atacar' no cartão")
 	assert_signal_emitted(screen.sim, "team_order_result", "a ordem chegou à simulação (o piloto pode obedecer ou não)")
 
 

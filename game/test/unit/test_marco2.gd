@@ -227,17 +227,17 @@ func test_deixar_passar_troca_os_companheiros() -> void:
 	var ahead := cars[0] if cars[0].distance > cars[1].distance else cars[1]
 	var behind := sim.teammate_of(ahead)
 	behind.distance = ahead.distance - 15.0  # companheiro colado atrás
-	ahead.team_order = CarState.TeamOrder.LET_BY  # (obediência testada à parte)
+	ahead.team_order = CarState.TeamOrder.NO_DEFEND  # (obediência testada à parte)
 	for i in 30:
 		sim.step()
 	assert_gt(behind.distance, ahead.distance, "%s abriu para %s" % [ahead.code(), behind.code()])
-	assert_eq(ahead.team_order, CarState.TeamOrder.FREE)
+	assert_eq(ahead.team_order, CarState.TeamOrder.NO_DEFEND, "a ordem vale até ser trocada")
 
 
 func test_nao_brigar_impede_disputa_entre_companheiros() -> void:
 	var sim := _sim({"duration_pct": 0.5})
 	for c in sim.cars:
-		c.team_order = CarState.TeamOrder.HOLD
+		c.team_order = CarState.TeamOrder.NO_ATTACK
 	var same_team := [0]
 	sim.overtake.connect(func(a: CarState, d: CarState, _z: String) -> void:
 		if a.team["id"] == d.team["id"]:
@@ -252,8 +252,8 @@ func test_piloto_as_vezes_desobedece() -> void:
 	for s in 40:
 		var sim := _sim({"player_team": "ferrari", "seed": s})
 		var car := _player_cars(sim)[0]
-		sim.set_team_order(car, CarState.TeamOrder.LET_BY)
-		if car.team_order == CarState.TeamOrder.LET_BY:
+		sim.set_team_order(car, CarState.TeamOrder.NO_DEFEND)
+		if car.team_order == CarState.TeamOrder.NO_DEFEND:
 			obeyed += 1
 		else:
 			refused += 1

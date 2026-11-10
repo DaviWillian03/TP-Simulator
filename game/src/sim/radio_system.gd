@@ -213,7 +213,7 @@ func _resolve(m: Dictionary, option: int, auto: bool) -> void:
 		"swap":
 			var mate := sim.teammate_of(car)
 			if mate != null:
-				sim.set_team_order(mate, CarState.TeamOrder.LET_BY)
+				sim.set_team_order(mate, CarState.TeamOrder.NO_DEFEND)
 		"defend":
 			car.defend_hard = true
 		"safe":

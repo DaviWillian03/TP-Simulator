@@ -657,3 +657,8 @@ Respostas do usuário:
   posições = largada do fundo. Vale só para a corrida principal (não a sprint). Motor/câmbio acima de 80% de desgaste
   quebram mais. A IA troca a 70% de desgaste dentro do limite e, no limite, só perto de 95%. A tela de peças mostra
   "usados X de 4" e avisa a punição; os seus carros punidos viram notícia.
+- **2026-11-10 — Cartão do piloto na corrida.** Sem o aviso "falta usar outro composto seco" (a regra continua valendo
+  na simulação). "MISSÃO" e "P/ BOX" viraram símbolos (alvo e chave). Ordens de equipe sempre à mostra embaixo, por
+  carro e valendo até mudar: **Briga liberada**, **Não defender do companheiro** (abre quando ele encosta atrás) e
+  **Não atacar companheiro** (não tenta passá-lo). O piloto às vezes recusa. Ritmo e bateria viraram ícones na linha da
+  missão de base.
