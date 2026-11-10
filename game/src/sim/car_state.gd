@@ -85,6 +85,7 @@ var investigation: Dictionary = {}  ## {until_s, secs, reason, guilty}; vazio = 
 var penalties_total_s := 0.0
 var drive_through := false
 var license_points := 0
+var grid_penalty := 0  ## posições perdidas no grid (motor/câmbio além do limite)
 var retired := false
 var retire_reason := ""
 

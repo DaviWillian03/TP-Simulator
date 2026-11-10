@@ -235,6 +235,37 @@ func _fill_panel() -> void:
 
 # --- aba Usar ------------------------------------------------------------------------------------------
 
+## "Usados: 3 de 4" por carro; se a unidade instalada agora passar do limite, avisa a punição da próxima corrida.
+func _limit_row(ids: Array) -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	var lim := int(CarParts.LIMITS[_part])
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 12)
+	for car in 2:
+		var n := parts.used_count(car, _part)
+		var code := Campaign.driver_code(String(_driver_name(ids[car]))) if car < ids.size() else "?"
+		var col := UiStyle.G_DOWN if n >= lim else (Color("#ffd24a") if n == lim - 1 else UiStyle.G_TEXT)
+		h.add_child(UiStyle.g_label("%s · %d de %d" % [code, n, lim], 14, col, "black"))
+	var cap := UiStyle.g_caption("Usados na temporada · limite %d" % lim)
+	v.add_child(cap)
+	v.add_child(h)
+	for car in 2:
+		var pen := parts.penalty_for(car)
+		if int(pen["places"]) > 0:
+			var code2 := Campaign.driver_code(String(_driver_name(ids[car]))) if car < ids.size() else "?"
+			var warn := UiStyle.g_label("%s: unidade nova além do limite → %s na próxima corrida" % [code2, "larga do fundo" if bool(pen["back"]) else "−%d posições no grid" % int(pen["places"])], 13, UiStyle.G_DOWN, "bold")
+			warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			v.add_child(warn)
+	return v
+
+
+func _driver_name(id: String) -> String:
+	for d: Dictionary in campaign.drivers():
+		if d["id"] == id:
+			return String(d["name"])
+	return id
+
 func _fill_use() -> void:
 	_panel.add_child(UiStyle.g_caption("Unidades · desgaste"))
 	var flow := HFlowContainer.new()
@@ -256,6 +287,8 @@ func _fill_use() -> void:
 		flow.add_child(_unit_tile(u, ids))
 		shown += 1
 	_panel.add_child(flow)
+	if CarParts.LIMITS.has(_part):  # motor e câmbio: limite por temporada e punição de grid
+		_panel.add_child(_limit_row(ids))
 	var nxt := campaign.next_round()
 	var cap := HBoxContainer.new()
 	cap.add_theme_constant_override("separation", 6)

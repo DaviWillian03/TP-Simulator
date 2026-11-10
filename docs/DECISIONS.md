@@ -652,3 +652,8 @@ Respostas do usuário:
   perto do fim do contrato (recusar baixa a moral). Sem boatos. **Finanças**: patrocínio garantido × bônus por meta,
   prêmio oficial por posição com tabela visível e projeção, compromissos (gastos já assumidos) e gráfico do caixa até o
   fim do ano. Ordem: **mercado vivo primeiro**, depois componentes, depois finanças.
+- **2026-11-10 — Componentes: valores aplicados** (PROVISÓRIO): 4 motores e 4 câmbios por carro na temporada; o motor
+  gasta 18%/corrida e o câmbio 13%; 5º motor = 10 posições, seguintes = 5; câmbio além do limite = 5; mais de 15
+  posições = largada do fundo. Vale só para a corrida principal (não a sprint). Motor/câmbio acima de 80% de desgaste
+  quebram mais. A IA troca a 70% de desgaste dentro do limite e, no limite, só perto de 95%. A tela de peças mostra
+  "usados X de 4" e avisa a punição; os seus carros punidos viram notícia.

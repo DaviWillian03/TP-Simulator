@@ -34,6 +34,7 @@ var tyres: TyreModel
 var teams: Array = []
 var drivers: Array = []
 var player_team := ""
+var grid_penalties: Dictionary = {}  ## driver id -> {places, back, parts} (campanha: motor/câmbio além do limite)
 var duration_pct := 1.0
 var weather_mode := "realistic"
 var race_only := false
@@ -81,6 +82,7 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 		for t: Dictionary in teams:
 			t["category"] = category
 	player_team = options.get("player_team", "")
+	grid_penalties = options.get("grid_penalties", {})
 	seed_value = int(options.get("seed", 1))
 	# forma do fim de semana: cada equipe chega um pouco acima/abaixo da nota do carro (CarForm); "form": 0 desliga
 	# F2/F3: chassi igual — a forma da equipe no GP pesa bem menos (senão engoliria a diferença pequena entre os carros)
@@ -293,6 +295,8 @@ func make_race(extra: Dictionary = {}) -> RaceSim:
 	opts["tech"] = tech
 	if grids.has(id):
 		opts["grid"] = grids[id]
+	if id == "race" and not grid_penalties.is_empty():  # motor/câmbio além do limite (só a corrida principal)
+		opts["grid_penalties"] = grid_penalties
 	opts.merge(extra, true)
 	return RaceSim.new(track, tyres, teams, drivers, opts)
 

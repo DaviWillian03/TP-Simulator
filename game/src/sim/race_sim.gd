@@ -77,7 +77,8 @@ var radio: RadioSystem
 var cars: Array[CarState] = []
 var total_laps := 0
 var duration_pct := 1.0
-var tyre_pace_k := 1.0  ## tyre_pace_k_for(duration_pct)
+var tyre_pace_k := 1.0
+var _grid_penalties: Dictionary = {}  ## driver id -> {places, back} (motor/câmbio além do limite)  ## tyre_pace_k_for(duration_pct)
 var sprint := false
 var time_s := 0.0
 var chequered := false
@@ -158,6 +159,7 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 		if setups.has(d["id"]):
 			(setups[d["id"]] as CarSetup).apply_to(car)
 		cars.append(car)
+	_grid_penalties = options.get("grid_penalties", {})
 	_setup_grid(options.get("grid", []))
 
 
@@ -186,8 +188,10 @@ func _setup_grid(grid_ids: Array = []) -> void:
 		else:
 			scored.append([float(pos if pos >= 0 else 1000 + car.index), car])
 	scored.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
-	for i in scored.size():
-		var car: CarState = scored[i][1]
+	var order: Array = scored.map(func(x: Array) -> CarState: return x[1])
+	order = apply_grid_penalties(order, _grid_penalties)
+	for i in order.size():
+		var car: CarState = order[i]
 		car.grid_position = i
 		car.distance = -GRID_SPACING_M * i - 5.0
 		car.tyre = StrategyAI.choose_start_compound(i, rng, tyres.dry_compounds())
@@ -205,6 +209,32 @@ func _setup_grid(grid_ids: Array = []) -> void:
 		if car.is_player:
 			_plan_base_mission(car)
 		car.lap_noise = rng.randfn(0.0, LAP_NOISE_SIGMA)
+
+
+## Punições de grid (motor/câmbio além do limite): cada punido recua N posições, da frente para trás; quem passou de
+## 15 posições larga do fundo (na ordem em que se classificou).
+static func apply_grid_penalties(order: Array, pens: Dictionary) -> Array:
+	if pens.is_empty():
+		return order
+	var out := order.duplicate()
+	var back: Array = []
+	for car in order:
+		var id: String = (car as CarState).driver["id"]
+		if not pens.has(id):
+			continue
+		var p: Dictionary = pens[id]
+		(car as CarState).grid_penalty = int(p["places"])
+		if bool(p.get("back", false)):
+			out.erase(car)
+			back.append(car)
+	for car in order:
+		var id2: String = (car as CarState).driver["id"]
+		if not pens.has(id2) or bool(pens[id2].get("back", false)):
+			continue
+		var idx := out.find(car)
+		out.remove_at(idx)
+		out.insert(mini(idx + int(pens[id2]["places"]), out.size()), car)
+	return out + back
 
 
 # --- consultas usadas pela tela e pela IA ---------------------------------------------

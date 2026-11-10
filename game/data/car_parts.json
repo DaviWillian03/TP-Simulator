@@ -1,42 +1,262 @@
 {
- "_notas": "PROVISÓRIO (2026-11-04). Peças físicas do carro. fx = pontos de característica prometidos pela nova versão (reta, lentas, rápidas, rel = confiabilidade). risk = pontos a menos na chance de acerto. Custo em US$ mi; dias de calendário (pesquisa: antes dos descontos do departamento; unidade: por unidade, 1 linha de produção).",
+ "_notas": "PROVISÓRIO (2026-11-04). Peças físicas do carro. fx = pontos de característica prometidos pela nova versão (reta, lentas, rápidas, rel = confiabilidade). risk = pontos a menos na chance de acerto. Custo em US$ mi; dias de calendário (pesquisa: antes dos descontos do departamento; unidade: por unidade, 1 linha de produção). Limites por temporada (2026-11-10): motor 4 e câmbio 4 por carro; desgaste do motor 18/corrida e do câmbio 13/corrida (PROVISÓRIO).",
  "parts": [
-  {"id": "fwing", "name": "Asa dianteira", "short": "ASA DIANT.", "area": "AERODINÂMICA", "dept": "aero", "color": "#ff6a5a",
-   "desc": "Apoio na frente do carro.", "research_cost": 2.2, "research_days": 16, "unit_cost": 0.35, "unit_days": 5, "wear": 7,
+  {
+   "id": "fwing",
+   "name": "Asa dianteira",
+   "short": "ASA DIANT.",
+   "area": "AERODINÂMICA",
+   "dept": "aero",
+   "color": "#ff6a5a",
+   "desc": "Apoio na frente do carro.",
+   "research_cost": 2.2,
+   "research_days": 16,
+   "unit_cost": 0.35,
+   "unit_days": 5,
+   "wear": 7,
    "dirs": [
-    {"id": "high", "name": "Alta carga", "fx": {"slow": 2.0, "straight": -1.0}},
-    {"id": "low", "name": "Baixo arrasto", "fx": {"straight": 2.0, "slow": -0.5}},
-    {"id": "bold", "name": "Ousada", "fx": {"slow": 3.0, "fast": 1.0}, "risk": 15, "cost_k": 1.35, "days_k": 1.3}]},
-  {"id": "rwing", "name": "Asa traseira", "short": "ASA TRAS.", "area": "AERODINÂMICA", "dept": "aero", "color": "#5c93ea",
-   "desc": "Equilíbrio entre apoio e velocidade de reta.", "research_cost": 2.4, "research_days": 18, "unit_cost": 0.4, "unit_days": 5, "wear": 5,
+    {
+     "id": "high",
+     "name": "Alta carga",
+     "fx": {
+      "slow": 2.0,
+      "straight": -1.0
+     }
+    },
+    {
+     "id": "low",
+     "name": "Baixo arrasto",
+     "fx": {
+      "straight": 2.0,
+      "slow": -0.5
+     }
+    },
+    {
+     "id": "bold",
+     "name": "Ousada",
+     "fx": {
+      "slow": 3.0,
+      "fast": 1.0
+     },
+     "risk": 15,
+     "cost_k": 1.35,
+     "days_k": 1.3
+    }
+   ]
+  },
+  {
+   "id": "rwing",
+   "name": "Asa traseira",
+   "short": "ASA TRAS.",
+   "area": "AERODINÂMICA",
+   "dept": "aero",
+   "color": "#5c93ea",
+   "desc": "Equilíbrio entre apoio e velocidade de reta.",
+   "research_cost": 2.4,
+   "research_days": 18,
+   "unit_cost": 0.4,
+   "unit_days": 5,
+   "wear": 5,
    "dirs": [
-    {"id": "high", "name": "Alta carga", "fx": {"slow": 2.0, "straight": -1.0}},
-    {"id": "low", "name": "Baixa carga", "fx": {"straight": 2.0, "slow": -0.5}},
-    {"id": "bold", "name": "Ousada", "fx": {"slow": 3.0, "fast": 1.0}, "risk": 15, "cost_k": 1.35, "days_k": 1.3}]},
-  {"id": "floor", "name": "Assoalho", "short": "ASSOALHO", "area": "AERODINÂMICA", "dept": "aero", "color": "#3c9d5d",
-   "desc": "Efeito solo: apoio nas curvas rápidas.", "research_cost": 3.0, "research_days": 22, "unit_cost": 0.9, "unit_days": 9, "wear": 6,
+    {
+     "id": "high",
+     "name": "Alta carga",
+     "fx": {
+      "slow": 2.0,
+      "straight": -1.0
+     }
+    },
+    {
+     "id": "low",
+     "name": "Baixa carga",
+     "fx": {
+      "straight": 2.0,
+      "slow": -0.5
+     }
+    },
+    {
+     "id": "bold",
+     "name": "Ousada",
+     "fx": {
+      "slow": 3.0,
+      "fast": 1.0
+     },
+     "risk": 15,
+     "cost_k": 1.35,
+     "days_k": 1.3
+    }
+   ]
+  },
+  {
+   "id": "floor",
+   "name": "Assoalho",
+   "short": "ASSOALHO",
+   "area": "AERODINÂMICA",
+   "dept": "aero",
+   "color": "#3c9d5d",
+   "desc": "Efeito solo: apoio nas curvas rápidas.",
+   "research_cost": 3.0,
+   "research_days": 22,
+   "unit_cost": 0.9,
+   "unit_days": 9,
+   "wear": 6,
    "dirs": [
-    {"id": "fast", "name": "Curvas rápidas", "fx": {"fast": 2.0, "slow": 0.5}},
-    {"id": "eff", "name": "Eficiência", "fx": {"fast": 1.0, "straight": 1.0}},
-    {"id": "bold", "name": "Ousada", "fx": {"fast": 3.0, "slow": 1.0}, "risk": 15, "cost_k": 1.35, "days_k": 1.3}]},
-  {"id": "susp", "name": "Suspensão", "short": "SUSPENSÃO", "area": "CHASSI", "dept": "chassis", "color": "#ffd24a",
-   "desc": "Aderência mecânica e tração.", "research_cost": 2.0, "research_days": 16, "unit_cost": 0.5, "unit_days": 6, "wear": 5,
+    {
+     "id": "fast",
+     "name": "Curvas rápidas",
+     "fx": {
+      "fast": 2.0,
+      "slow": 0.5
+     }
+    },
+    {
+     "id": "eff",
+     "name": "Eficiência",
+     "fx": {
+      "fast": 1.0,
+      "straight": 1.0
+     }
+    },
+    {
+     "id": "bold",
+     "name": "Ousada",
+     "fx": {
+      "fast": 3.0,
+      "slow": 1.0
+     },
+     "risk": 15,
+     "cost_k": 1.35,
+     "days_k": 1.3
+    }
+   ]
+  },
+  {
+   "id": "susp",
+   "name": "Suspensão",
+   "short": "SUSPENSÃO",
+   "area": "CHASSI",
+   "dept": "chassis",
+   "color": "#ffd24a",
+   "desc": "Aderência mecânica e tração.",
+   "research_cost": 2.0,
+   "research_days": 16,
+   "unit_cost": 0.5,
+   "unit_days": 6,
+   "wear": 5,
    "dirs": [
-    {"id": "traction", "name": "Tração", "fx": {"slow": 2.0}},
-    {"id": "stable", "name": "Estabilidade", "fx": {"fast": 2.0}},
-    {"id": "bold", "name": "Ousada", "fx": {"slow": 2.0, "fast": 1.5}, "risk": 15, "cost_k": 1.35, "days_k": 1.3}]},
-  {"id": "pu", "name": "Unidade de potência", "short": "MOTOR", "area": "MOTOR", "dept": "engine", "color": "#c77dff",
-   "desc": "Potência e consumo. Só quem fabrica o próprio motor desenvolve.", "research_cost": 4.0, "research_days": 24, "unit_cost": 1.2, "unit_days": 10, "wear": 0,
+    {
+     "id": "traction",
+     "name": "Tração",
+     "fx": {
+      "slow": 2.0
+     }
+    },
+    {
+     "id": "stable",
+     "name": "Estabilidade",
+     "fx": {
+      "fast": 2.0
+     }
+    },
+    {
+     "id": "bold",
+     "name": "Ousada",
+     "fx": {
+      "slow": 2.0,
+      "fast": 1.5
+     },
+     "risk": 15,
+     "cost_k": 1.35,
+     "days_k": 1.3
+    }
+   ]
+  },
+  {
+   "id": "pu",
+   "name": "Unidade de potência",
+   "short": "MOTOR",
+   "area": "MOTOR",
+   "dept": "engine",
+   "color": "#c77dff",
+   "desc": "Potência e consumo. Só quem fabrica o próprio motor desenvolve.",
+   "research_cost": 4.0,
+   "research_days": 24,
+   "unit_cost": 1.2,
+   "unit_days": 10,
+   "wear": 18,
    "own_engine": true,
    "dirs": [
-    {"id": "power", "name": "Potência", "fx": {"straight": 2.0, "rel": -2.0}},
-    {"id": "rel", "name": "Confiabilidade", "fx": {"rel": 5.0}},
-    {"id": "bold", "name": "Ousada", "fx": {"straight": 3.0, "slow": 0.5, "rel": -3.0}, "risk": 15, "cost_k": 1.35, "days_k": 1.3}]},
-  {"id": "gearbox", "name": "Câmbio", "short": "CÂMBIO", "area": "DURABILIDADE", "dept": "durability", "color": "#8f98a7",
-   "desc": "Trocas de marcha e confiabilidade.", "research_cost": 1.6, "research_days": 14, "unit_cost": 0.6, "unit_days": 7, "wear": 0,
+    {
+     "id": "power",
+     "name": "Potência",
+     "fx": {
+      "straight": 2.0,
+      "rel": -2.0
+     }
+    },
+    {
+     "id": "rel",
+     "name": "Confiabilidade",
+     "fx": {
+      "rel": 5.0
+     }
+    },
+    {
+     "id": "bold",
+     "name": "Ousada",
+     "fx": {
+      "straight": 3.0,
+      "slow": 0.5,
+      "rel": -3.0
+     },
+     "risk": 15,
+     "cost_k": 1.35,
+     "days_k": 1.3
+    }
+   ]
+  },
+  {
+   "id": "gearbox",
+   "name": "Câmbio",
+   "short": "CÂMBIO",
+   "area": "DURABILIDADE",
+   "dept": "durability",
+   "color": "#8f98a7",
+   "desc": "Trocas de marcha e confiabilidade.",
+   "research_cost": 1.6,
+   "research_days": 14,
+   "unit_cost": 0.6,
+   "unit_days": 7,
+   "wear": 13,
    "dirs": [
-    {"id": "rel", "name": "Confiabilidade", "fx": {"rel": 4.0}},
-    {"id": "fast", "name": "Trocas rápidas", "fx": {"straight": 1.0, "slow": 0.5}},
-    {"id": "bold", "name": "Ousada", "fx": {"straight": 1.0, "slow": 1.0, "rel": 2.0}, "risk": 15, "cost_k": 1.35, "days_k": 1.3}]}
+    {
+     "id": "rel",
+     "name": "Confiabilidade",
+     "fx": {
+      "rel": 4.0
+     }
+    },
+    {
+     "id": "fast",
+     "name": "Trocas rápidas",
+     "fx": {
+      "straight": 1.0,
+      "slow": 0.5
+     }
+    },
+    {
+     "id": "bold",
+     "name": "Ousada",
+     "fx": {
+      "straight": 1.0,
+      "slow": 1.0,
+      "rel": 2.0
+     },
+     "risk": 15,
+     "cost_k": 1.35,
+     "days_k": 1.3
+    }
+   ]
+  }
  ]
 }

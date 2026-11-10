@@ -26,6 +26,15 @@ const FIX_DAYS_K := 0.5
 const SPARE_A := 1  ## reservas da versão A (asas, assoalho, suspensão) no começo do ano
 const AI_BOLD_CHANCE := 0.2
 const AI_REPLACE_WEAR := 70.0
+## Limite por temporada (decisão de 2026-11-10): unidades de motor e câmbio por carro. Passou do limite, punição de grid
+## na corrida em que a unidade nova estreia: motor 10 posições na primeira vez e 5 nas seguintes; câmbio 5; mais de 15
+## posições = largada do fundo. Valores PROVISÓRIOS.
+const LIMITS := {"pu": 4, "gearbox": 4}
+const PENALTY_FIRST := {"pu": 10, "gearbox": 5}
+const PENALTY_NEXT := {"pu": 5, "gearbox": 5}
+const BACK_OF_GRID := 15
+const LIMIT_REPLACE_WEAR := 95.0  ## já no limite: só troca com a unidade quase quebrando
+const WORN_FAIL_FROM := 80.0  ## motor/câmbio acima disto quebram mais
 
 ## Estado (salvo na campanha)
 var team_id := ""
@@ -38,6 +47,7 @@ var done_research: Array = []  ## pesquisas concluídas ainda não vistas pelo j
 var next_uid := 1
 var ai_cursor := 0
 var gain_k := 1.0  ## IA: tamanho das peças (dificuldade, ranking, sorte do ano, corpo técnico)
+var used: Dictionary = {}  ## "carro|peça" -> [uids] de motor/câmbio que já correram nesta temporada
 
 static var _data: Dictionary = {}
 
@@ -105,6 +115,7 @@ func setup(p_team_id: String) -> void:
 	reveals = []
 	done_research = []
 	next_uid = 1
+	used = {}
 	for pid: String in part_ids():
 		specs[pid] = [{"v": "A", "dir": "", "fx": {}, "real": {}, "outcome": "base", "revealed": true, "fixed": false}]
 		for car in 2:
@@ -564,7 +575,50 @@ func _auto_install_new(u: Dictionary) -> void:
 
 ## Depois de cada corrida: desgaste das unidades nos carros e revelação das peças novas.
 ## Devolve as revelações desta corrida: [{part, spec, outcome}].
+# --- limite de motor e câmbio ----------------------------------------------------------------------------
+
+func used_count(car: int, pid: String) -> int:
+	return (used.get("%d|%s" % [car, pid], []) as Array).size()
+
+
+## Punição de grid se o carro correr agora com as unidades instaladas: {places, back, parts: [{part, n}]}.
+func penalty_for(car: int) -> Dictionary:
+	var out := {"places": 0, "back": false, "parts": []}
+	for pid: String in LIMITS:
+		var u := unit_on(pid, car)
+		if u.is_empty():
+			continue
+		var list: Array = used.get("%d|%s" % [car, pid], [])
+		if list.has(int(u["uid"])):
+			continue
+		var n := list.size() + 1
+		if n > int(LIMITS[pid]):
+			out["places"] = int(out["places"]) + (int(PENALTY_FIRST[pid]) if n == int(LIMITS[pid]) + 1 else int(PENALTY_NEXT[pid]))
+			out["parts"].append({"part": pid, "n": n})
+	out["back"] = int(out["places"]) > BACK_OF_GRID
+	return out
+
+
+## Multiplicador de quebras pelo desgaste do motor e do câmbio do carro (1 = novo).
+func worn_fail_mult(car: int) -> float:
+	var m := 1.0
+	for pid: String in LIMITS:
+		var u := unit_on(pid, car)
+		if not u.is_empty():
+			m *= 1.0 + maxf(0.0, float(u["wear"]) - WORN_FAIL_FROM) / (100.0 - WORN_FAIL_FROM) * 0.8
+	return m
+
+
 func after_race(camp: Campaign) -> Array:
+	for car in 2:  # motor e câmbio que correram entram na conta do limite
+		for pid: String in LIMITS:
+			var cu := unit_on(pid, car)
+			var key := "%d|%s" % [car, pid]
+			if not cu.is_empty():
+				var list: Array = used.get(key, [])
+				if not list.has(int(cu["uid"])):
+					list.append(int(cu["uid"]))
+				used[key] = list
 	var out: Array = []
 	var seen := {}
 	for u: Dictionary in units:
@@ -592,7 +646,10 @@ func _replace_worn(camp: Campaign) -> void:
 	for pid: String in part_ids():
 		for car in 2:
 			var u := unit_on(pid, car)
-			if u.is_empty() or float(u["wear"]) < AI_REPLACE_WEAR or queued(pid).size() >= 2:
+			var limit_wear := AI_REPLACE_WEAR
+			if LIMITS.has(pid) and used_count(car, pid) >= int(LIMITS[pid]):
+				limit_wear = LIMIT_REPLACE_WEAR  # no limite: estica a unidade para não tomar punição à toa
+			if u.is_empty() or float(u["wear"]) < limit_wear or queued(pid).size() >= 2:
 				continue
 			var alt := best_stock_unit(pid)
 			if not alt.is_empty() and float(alt["wear"]) < AI_REPLACE_WEAR:
@@ -722,7 +779,7 @@ func rollover(p_team_id: String = "") -> void:
 
 func to_dict() -> Dictionary:
 	return {"team": team_id, "specs": specs, "units": units, "research": research, "queue": queue, "reveals": reveals,
-		"done_research": done_research, "next_uid": next_uid, "ai_cursor": ai_cursor, "gain_k": gain_k}
+		"done_research": done_research, "next_uid": next_uid, "ai_cursor": ai_cursor, "gain_k": gain_k, "used": used}
 
 
 static func from_dict(d: Dictionary) -> CarParts:
@@ -755,4 +812,7 @@ static func from_dict(d: Dictionary) -> CarParts:
 	c.next_uid = int(d.get("next_uid", 1))
 	c.ai_cursor = int(d.get("ai_cursor", 0))
 	c.gain_k = float(d.get("gain_k", 1.0))
+	c.used = d.get("used", {})
+	for k: String in c.used:
+		c.used[k] = (c.used[k] as Array).map(func(x: Variant) -> int: return int(x))
 	return c

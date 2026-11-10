@@ -1290,6 +1290,7 @@ func weekend_options(extra: Dictionary = {}) -> Dictionary:
 		"tech": regs.tech_options(), "teams": teams_for_gp(String(next_round().get("id", "")) if not season_over() else "")}
 	if not season_over():
 		o["sprint"] = regs.is_sprint(next_round()["id"])
+		o["grid_penalties"] = grid_penalties()
 	# posição de cada piloto no campeonato, a partir da metade da temporada: quem briga pelo título arrisca
 	# menos na classificação (QualiSim.choose_lap_mode)
 	if round >= calendar().size() / 2:
@@ -1300,6 +1301,21 @@ func weekend_options(extra: Dictionary = {}) -> Dictionary:
 		o["championship"] = champ
 	o.merge(extra, true)
 	return o
+
+
+## Punições de grid desta rodada (motor/câmbio além do limite): driver id -> {places, back, parts}.
+func grid_penalties() -> Dictionary:
+	var out := {}
+	for t: Dictionary in _teams:
+		var cp: CarParts = parts.get(t["id"])
+		if cp == null:
+			continue
+		var ids := team_driver_ids(t["id"])
+		for i in mini(ids.size(), 2):
+			var pen := cp.penalty_for(i)
+			if int(pen["places"]) > 0:
+				out[ids[i]] = pen
+	return out
 
 
 ## Cópia das equipes para um GP: cada carro leva o efeito das SUAS peças nesta pista (`car_delta` por piloto, que a
@@ -1318,7 +1334,7 @@ func teams_for_gp(circuit_id: String) -> Array:
 			var rel0 := float((t.get("car_traits", {}) as Dictionary).get("rel", CarParts.REL_NEUTRAL))
 			for i in ids.size():
 				delta[ids[i]] = cp.car_effect(i, prof)
-				fail[ids[i]] = CarParts.rel_mult(rel0 + cp.trait_delta(i, "rel")) / CarParts.rel_mult(rel0)
+				fail[ids[i]] = CarParts.rel_mult(rel0 + cp.trait_delta(i, "rel")) / CarParts.rel_mult(rel0) * cp.worn_fail_mult(i)
 			c["car_delta"] = delta
 			c["failure_by_driver"] = fail
 		out.append(c)
@@ -1348,6 +1364,18 @@ func record_weekend(w: WeekendSim, skip_cat: String = "") -> void:
 				best_finish = mini(best_finish, i + 1)
 				break
 	history.append({"round": round + 1, "circuit": w.circuit.get("id", ""), "results": race})
+	for did: String in w.grid_penalties:  # notícia das punições de grid dos seus carros (motor/câmbio além do limite)
+		if team_of(did) != player_team:
+			continue
+		var pen: Dictionary = w.grid_penalties[did]
+		var what: Array = (pen["parts"] as Array).map(func(x: Dictionary) -> String: return "%dº %s" % [int(x["n"]), "motor" if x["part"] == "pu" else "câmbio"])
+		var dname := did
+		for dd: Dictionary in _drivers:
+			if dd["id"] == did:
+				dname = String(dd["name"])
+		events._add(self, {"day": day, "cat": "team", "id": "grid_penalty", "title": "PUNIÇÃO DE GRID: %s" % dname.to_upper(),
+			"text": "%s largou %s por usar o %s da temporada (limite: 4)." % [dname, "do fundo do grid" if bool(pen["back"]) else "%d posições atrás" % int(pen["places"]), ", ".join(what)],
+			"chips": [{"kind": "bad", "big": "fundo" if bool(pen["back"]) else "+%d" % int(pen["places"]), "small": "posições no grid"}]})
 	for cp: CarParts in parts.values():  # desgaste das peças e revelação dos upgrades estreados nesta corrida
 		cp.after_race(self)
 	_run_series(round, skip_cat)
