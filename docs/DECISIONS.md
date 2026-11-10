@@ -759,3 +759,6 @@ Respostas do usuário:
   a aba "Ordens de equipe" da folha de Missões (base e curta continuam juntas na aba "Missões"). **Sem textos explicativos** nessas
   telas: só o carro, números e ícones (pedido do usuário).
 - **2026-11-10 — Classificação sem aviso de evolução da pista.** O texto "Pista evoluindo: +x s" saiu da tela (a evolução continua na simulação, de forma implícita); só aparece o aviso quando a pista está molhada.
+- **2026-11-10 — Sem ajuste técnico de asa no box.** Saiu a opção de ajustar a asa dianteira (−1…+2: "mais asa, mais rápido, gasta mais
+  pneu"): não existe mais `wing_step`, nem o efeito no ritmo e no desgaste do pneu, nem o custo em tempo parado. No box só resta
+  **trocar a asa dianteira quando está danificada** (a opção nem aparece sem dano), além do pneu e da punição de tempo.

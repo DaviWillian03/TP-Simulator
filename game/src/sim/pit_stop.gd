@@ -4,16 +4,10 @@ extends RefCounted
 ## Valores PROVISÓRIOS (balancear depois). Sem dependência de tela.
 
 const BASE_S := 2.4  ## troca dos 4 pneus
-const WING_STEP_S := 0.3  ## cada passo de ajuste da asa dianteira
 const TAP_PERFECT_S := -0.3  ## mini-jogo: toque perfeito
 const TAP_MISS_S := 0.6  ## mini-jogo: toque longe do verde (ou sem toque com a tela aberta)
 const QUEUE_GAP_S := 0.5  ## folga de segurança entre dois carros da equipe no box
 const USED_SET_WEAR := 0.15  ## jogo usado já rodou na classificação
-const WING_MIN := -1
-const WING_MAX := 2
-## Efeito de cada passo de asa dianteira (positivo = mais pressão aerodinâmica)
-const WING_LAP_S := 0.06  ## segundos por volta mais rápido
-const WING_WEAR := 0.05  ## 5% mais desgaste de pneu
 
 ## Estoque padrão por piloto (corrida rápida); no GP desce da classificação (WeekendSim).
 const DEFAULT_STOCK := {
@@ -27,19 +21,16 @@ static func default_stock() -> Dictionary:
 
 
 ## Plano de parada. compound: composto a montar; use_used: gastar um jogo usado (se houver).
-static func make_plan(compound: String, use_used := false, wing_step := 0, repair_wing := false,
-		serve_penalty := true) -> Dictionary:
-	return {"compound": compound, "use_used": use_used, "wing_step": clampi(wing_step, WING_MIN, WING_MAX),
-		"repair_wing": repair_wing, "serve_penalty": serve_penalty}
+static func make_plan(compound: String, use_used := false, repair_wing := false, serve_penalty := true) -> Dictionary:
+	return {"compound": compound, "use_used": use_used, "repair_wing": repair_wing, "serve_penalty": serve_penalty}
 
 
 ## Custos do plano em segundos parado (sem a sorte da parada). Devolve cada parcela e o total.
 static func estimate(car: CarState, plan: Dictionary) -> Dictionary:
 	var wing_change := RaceControl.WING_CHANGE_S if plan.get("repair_wing", false) else 0.0
-	var wing_adj := absf(float(plan.get("wing_step", car.wing_step) - car.wing_step)) * WING_STEP_S
 	var penalty := car.penalty_pending_s if plan.get("serve_penalty", true) else 0.0
-	var total := BASE_S + wing_change + wing_adj + penalty
-	return {"base": BASE_S, "wing_change": wing_change, "wing_adjust": wing_adj, "penalty": penalty, "total": total}
+	var total := BASE_S + wing_change + penalty
+	return {"base": BASE_S, "wing_change": wing_change, "penalty": penalty, "total": total}
 
 
 ## O jogo pedido existe no estoque? (estoque vazio = ilimitado, caso da IA)

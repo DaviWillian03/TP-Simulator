@@ -62,7 +62,6 @@ var mission_short: Dictionary = {}  ## missão curta com fim automático (volta 
 var manual_modes := false  ## ritmo/bateria postos à mão (testes/desenvolvimento): o piloto não decide sozinho
 var stints: Array = []  ## stints já encerrados: [{compound, laps}] (devolução de pneus depois da sprint)
 var plan: Dictionary = {}  ## plano da parada (PitStop.make_plan); vazio = parada padrão
-var wing_step := 0  ## ajuste da asa dianteira (−1..+2) em vigor
 var tyre_stock: Dictionary = {}  ## composto -> {"new": n, "used": n}; vazio = estoque ilimitado (IA)
 var box_hold_s := 0.0  ## tempo que ainda fica parado no box
 var box_wait_s := 0.0  ## parte desse tempo que é fila (box ocupado pelo companheiro)

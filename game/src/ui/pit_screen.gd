@@ -25,7 +25,6 @@ var _prev_cam_car := false
 
 var _compound := "medium"
 var _use_used := false
-var _wing := 0
 var _repair_wing := false
 var _serve := true
 var _double := 0  ## 0 só este carro · 1 companheiro na volta seguinte · 2 companheiro junto
@@ -54,13 +53,11 @@ func setup(p_sim: RaceSim, p_car: CarState, view: TrackView3D, home: Control) ->
 	if not next.is_empty() and PitStop.sets_left(car, next["compound"]) > 0:
 		_compound = next["compound"]
 		_use_used = not (bool(next["new"]) and PitStop.has_set(car, _compound, false))
-	_wing = car.wing_step
 	_repair_wing = car.damage_wing > 0.0
 	_serve = car.penalty_pending_s > 0.0
 	if not car.plan.is_empty():  # já havia um plano confirmado: reabre com ele
 		_compound = String(car.plan.get("compound", _compound))
 		_use_used = bool(car.plan.get("use_used", false))
-		_wing = int(car.plan.get("wing_step", _wing))
 		_repair_wing = bool(car.plan.get("repair_wing", _repair_wing))
 		_serve = bool(car.plan.get("serve_penalty", _serve))
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -394,7 +391,7 @@ func _set_row(k: String, wet_now: bool) -> Control:
 # --- ajustes, tempo e confirmação ---------------------------------------------------------
 
 func _plan() -> Dictionary:
-	return PitStop.make_plan(_compound, _use_used, _wing, _repair_wing, _serve)
+	return PitStop.make_plan(_compound, _use_used, _repair_wing, _serve)
 
 
 func _estimate_total() -> float:
@@ -408,34 +405,13 @@ func _build_right() -> void:
 	av.add_theme_constant_override("separation", 0)
 	adj.add_child(av)
 	av.add_child(UiStyle.g_caption("Ajustes do carro"))
-	# asa dianteira: passos −1…+2
-	var wing_row := _adj_row("Asa dianteira", "mais asa: mais rápido, gasta mais pneu", 60)
-	var steps := HBoxContainer.new()
-	steps.add_theme_constant_override("separation", 4)
-	for s in range(PitStop.WING_MIN, PitStop.WING_MAX + 1):
-		var b := Button.new()
-		b.text = ("+%d" % s) if s > 0 else ("−%d" % -s if s < 0 else "0")
-		b.toggle_mode = true
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN - 4, UiStyle.TOUCH_MIN - 4)
-		ScreenKit._selectable_styles(b, 10)
-		b.add_theme_stylebox_override("normal", UiStyle.g_box(Color(1, 1, 1, 0.08), 10, 4, 0))
-		b.add_theme_font_size_override("font_size", UiStyle.fs(14))
-		b.set_pressed_no_signal(_wing == s)
-		var val := s
-		b.pressed.connect(func() -> void:
-			_wing = val
-			_refresh())
-		steps.add_child(b)
-	wing_row.add_child(steps)
-	av.add_child(wing_row)
-	# asa danificada
+	# a asa dianteira só aparece para trocar quando está danificada (sem ajuste técnico de asa)
 	var dmg := car.damage_wing > 0.0
-	av.add_child(_toggle_row("Trocar a asa dianteira",
-		("−%d%%" % roundi(car.damage_wing * 100.0)) if dmg else "sem dano", _repair_wing and dmg, dmg,
-		func(on: bool) -> void:
-			_repair_wing = on
-			_refresh()))
+	if dmg:
+		av.add_child(_toggle_row("Trocar a asa dianteira", "−%d%%" % roundi(car.damage_wing * 100.0), _repair_wing, true,
+			func(on: bool) -> void:
+				_repair_wing = on
+				_refresh()))
 	# punição de tempo
 	var pen := car.penalty_pending_s > 0.0
 	av.add_child(_toggle_row("Cumprir a punição de %d s agora" % int(car.penalty_pending_s) if pen else "Cumprir punição de tempo",
@@ -460,8 +436,6 @@ func _build_right() -> void:
 	big.add_child(unit)
 	tv.add_child(big)
 	tv.add_child(_cost_row("Troca de pneus", float(est["base"]), false))
-	if _wing != car.wing_step:
-		tv.add_child(_cost_row("Asa dianteira %+d" % _wing, float(est["wing_adjust"]), true))
 	if float(est["wing_change"]) > 0.0:
 		tv.add_child(_cost_row("Troca da asa danificada", float(est["wing_change"]), true))
 	if float(est["penalty"]) > 0.0:
@@ -540,7 +514,7 @@ func _confirm() -> void:
 	if not sim.set_pit_plan(car, plan):
 		return
 	if mate != null and not (mate.retired or mate.finished or mate.in_pit):
-		var mplan := PitStop.make_plan(_compound, false, mate.wing_step, mate.damage_wing > 0.0, mate.penalty_pending_s > 0.0)
+		var mplan := PitStop.make_plan(_compound, false, mate.damage_wing > 0.0, mate.penalty_pending_s > 0.0)
 		if not PitStop.has_set(mate, _compound, false):
 			mplan["use_used"] = true
 		match _double:

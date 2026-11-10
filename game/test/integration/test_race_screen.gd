@@ -47,7 +47,6 @@ func test_confirmar_plano_leva_o_carro_ao_box_com_o_pneu_escolhido() -> void:
 	var target := "hard" if car.tyre != "hard" else "medium"
 	screen._open_pit(car)
 	screen._pit._compound = target
-	screen._pit._wing = 1
 	screen._pit._confirm()
 	assert_null(screen._pit, "tela fecha ao confirmar")
 	assert_true(car.pit_requested)
@@ -58,7 +57,6 @@ func test_confirmar_plano_leva_o_carro_ao_box_com_o_pneu_escolhido() -> void:
 		steps += 1
 	assert_eq(car.pit_stops, 1)
 	assert_eq(car.tyre, target)
-	assert_eq(car.wing_step, 1, "ajuste de asa aplicado na parada")
 	assert_eq(PitStop.sets_left(car, target), PitStop.DEFAULT_STOCK[target]["new"] - 1, "gastou um jogo do estoque")
 
 

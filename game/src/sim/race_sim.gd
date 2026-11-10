@@ -611,7 +611,6 @@ func _lap_time(car: CarState, with_traffic: bool) -> float:
 	else:
 		t += FUEL_START_S * (1.0 - clampf(car.distance / race_distance(), 0.0, 1.0))
 	t += PACE_TIME[car.pace_mode]
-	t -= PitStop.WING_LAP_S * car.wing_step
 	if car.energy_mode != CarState.EnergyMode.DEPLOY or car.battery > 0.0:
 		t += ENERGY_TIME[car.energy_mode] * energy_k
 	t += car.damage_loss_s()
@@ -735,7 +734,6 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 	var lap_part := moved / track.length_m
 	var wear: float = tyres.wear_per_lap(car.tyre) * wear_multiplier() * PACE_WEAR[car.pace_mode]
 	wear *= tyres.wet_wear_multiplier(car.tyre, weather.wetness)
-	wear *= 1.0 + PitStop.WING_WEAR * car.wing_step
 	wear *= clampf(1.0 + (75.0 - DriverStats.attr(car.driver, "tyres")) * DriverStats.TYRE_K, 0.85, 1.2)
 	if control.is_neutralized():
 		wear *= 0.5
@@ -830,8 +828,6 @@ func _service_car(car: CarState) -> void:
 	if car.repair_wing or plan.get("repair_wing", false):
 		car.damage_wing = 0.0
 		car.repair_wing = false
-	if car.is_player:
-		car.wing_step = int(plan.get("wing_step", car.wing_step))
 	var used := PitStop.take_set(car, car.pit_compound, plan.get("use_used", false))
 	car.stints.append({"compound": car.tyre, "laps": car.tyre_laps})
 	car.tyre = car.pit_compound
