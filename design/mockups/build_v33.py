@@ -87,89 +87,63 @@ def card(x, y, did, name, pos, state, tyre_pct, tyre_k, alert=None, note=None):
     n_dmg = sum(1 for v in state.values() if v)
     tone = RED if any(v == 2 for v in state.values()) else (AMB if n_dmg else GRN)
     status = "Danos no carro" if n_dmg else "Carro 100%"
-    sub = alert or ("toque para ver o carro" if not n_dmg else "")
+    sub = alert or ""
     return (f'<div class="glass" style="left:{x}px;top:{y}px;width:250px"><div style="display:flex;gap:10px;align-items:center">{face(did, 42)}'
             f'<div><b style="font-size:17px;font-weight:900">{name}</b><div style="color:#E10600;font-weight:900">{pos}</div></div>'
             f'<span style="margin-left:auto;display:flex;gap:4px;align-items:center;font-size:11px;font-weight:900;color:#8f98a7">{g("bat", 16, "#7fe0b1")}piloto</span></div>'
             f'<div class="mis" style="padding:6px 10px"><b>{g("tyre", 16, "#5c93ea")}Poupar pneus até a volta 30</b>'
             f'<div class="bar"><i style="width:78%;background:#7fe0b1"></i></div></div>'
             f'<div class="mis" style="display:flex;gap:10px;align-items:center;padding:8px 10px"><div class="mini" style="margin:-4px 0">{mini_car(state, wear=tyre_k)}</div>'
-            f'<div style="flex:1;min-width:0"><div class="cap">SITUAÇÃO DO CARRO</div>'
-            f'<b style="font-size:14px;color:{tone}">{status}</b>'
-            f'<div style="display:flex;align-items:center;gap:6px;margin-top:6px">{tyre("medium", 18)}<div class="bar" style="flex:1;margin:0"><i style="width:{tyre_pct}%;background:#ffd24a"></i></div>'
-            f'<span style="font-size:12px;font-weight:900">{tyre_pct}%</span></div>'
-            f'<small style="font-size:11px;margin-top:3px">{sub}</small></div></div>'
+            f'<div style="flex:1;min-width:0">'
+            f'<div style="display:flex;align-items:center;gap:6px">{tyre("medium", 22)}<div class="bar" style="flex:1;margin:0"><i style="width:{tyre_pct}%;background:#ffd24a"></i></div>'
+            f'<span style="font-size:13px;font-weight:900">{tyre_pct}%</span></div>'
+            f'{f"<b style=font-size:13px;color:{tone};display:block;margin-top:6px>{sub}</b>" if sub else ""}</div></div>'
             f'<div style="display:flex;gap:6px;margin-top:10px"><div class="ghost" style="flex:1">{g("atk", 20, "#fff")}</div>'
             f'<div class="ghost" style="flex:1">{g("car", 20, "#fff")}</div><div class="cta" style="flex:1.2">{g("wrench", 20, "#fff")}</div></div></div>')
 
 
 def corrida():
-    a = card(12, 70, "albon", "Albon", "P7", {"fw": 2, "fl": 1, "rw": 1}, 68, 0.32, "perde ~1,1 s/volta")
+    a = card(12, 70, "albon", "Albon", "P7", {"fw": 2, "fl": 1, "rw": 1}, 68, 0.32, "−1,1 s/volta")
     b = card(12, 378, "sainz", "Sainz", "P11", {}, 41, 0.59)
-    note = ('<div class="glass" style="right:24px;top:24px;width:430px;font-size:13px;font-weight:800;color:#c3c9d3;line-height:1.5">'
-            '<div class="cap">O QUE MUDA NO CARTÃO</div>'
-            '<b style="color:#fff">Sai</b> o desgaste do pneu da parte de cima e as 3 ordens de equipe (viram aba em Missões).<br>'
-            '<b style="color:#fff">Entra</b> o bloco <b style="color:#fff">Situação do carro</b>: mini-carro com <span style="color:#ffb020">!</span> / <span style="color:#ff4d4d">!</span> nas peças com problema, '
-            'o pneu (barra e %) e o efeito no ritmo. Tocar nele abre a folha completa.<br>'
-            'Linha de baixo: <b style="color:#fff">Missões</b> · <b style="color:#fff">Situação do carro</b> · <b style="color:#fff">Box</b>.</div>')
+    note = ""
     return V.page("V33 · Corrida · cartão com situação do carro", CSS, f'<div class="scene"><div class="track"></div>{note}{a}{b}</div>')
 
 
 def parts_list():
-    rows = [
-        ("fw", "Asa dianteira", "danificada · −60%", 2, "−0,6 s/volta", "troca no box (+7 s parado)", GRN),
-        ("fl", "Assoalho", "desgaste · −35%", 1, "−0,35 s/volta", "sem conserto · até o fim da prova", RED),
-        ("rw", "Asa traseira", "desgaste leve · −20%", 1, "−0,16 s/volta", "sem conserto · até o fim da prova", RED),
-        ("su", "Suspensão", "ok", 0, "sem perda", "", MUT),
-        ("pu", "Motor / câmbio", "ok · risco de quebra médio", 0, "sem perda", "dano acumulado aumenta o risco", AMB),
-    ]
+    rows = [("fw", "Asa dianteira", 2, "−0,6 s"), ("fl", "Assoalho", 1, "−0,35 s"), ("rw", "Asa traseira", 1, "−0,16 s")]
     out = ""
-    for pid, name, st, lvl, eff, note, ncol in rows:
-        dot = (f'<span class="dot" style="background:{RED if lvl == 2 else AMB}">!</span>' if lvl else
-               f'<span class="dot" style="background:rgba(127,224,177,.2);color:{GRN}">{g("check", 16, GRN)}</span>')
-        right = (f'<span class="chip2" style="background:rgba(255,255,255,.08);color:#c3c9d3">{eff}</span>' if lvl or pid == "pu" else "")
-        extra = f' · <span style="color:{ncol}">{note}</span>' if note else ""
-        out += (f'<div class="part">{dot}<div style="flex:1"><b>{name}</b><small>{st}{extra}</small></div>{right}</div>')
+    for pid, name, lvl, eff in rows:
+        out += (f'<div class="part"><span class="dot" style="background:{RED if lvl == 2 else AMB}">!</span>'
+                f'<b style="flex:1">{name}</b><b style="font-size:16px;color:#c3c9d3">{eff}</b></div>')
     return out
 
 
 def situacao():
     state = {"fw": 2, "fl": 1, "rw": 1}
-    car = (f'<div style="position:relative;display:flex;justify-content:center;width:330px">{car_svg(state, 0.98, wear=0.32)}</div>')
-    legend = (f'<div style="display:flex;gap:14px;font-size:12px;font-weight:800;color:#a8b0bd;margin-top:6px;justify-content:center">'
-              f'<span><b style="color:{GRN}">●</b> ok</span><span><b style="color:{AMB}">●</b> desgaste</span><span><b style="color:{RED}">●</b> danificado</span></div>')
-    tyre_blk = (f'<div class="part" style="margin-top:10px">{tyre("medium", 30)}<div style="flex:1"><b>Pneu médio · 14 voltas</b>'
-                f'<small>as quatro rodas · contorno verde = vida boa</small></div>'
-                f'<div style="width:150px"><div class="bar" style="height:10px;margin:0"><i style="width:68%;background:#ffd24a"></i></div></div>'
-                f'<b style="font-size:18px;width:54px;text-align:right">68%</b></div>')
-    total = (f'<div style="display:flex;gap:10px;margin-top:8px"><div class="part" style="flex:1;margin:0"><span class="dot" style="background:{AMB}">{g("clock", 16, "#11141a")}</span>'
-             f'<div><b>Perda total</b><small>−1,1 s por volta</small></div></div>'
-             f'<div class="part" style="flex:1;margin:0"><span class="dot" style="background:{AMB}">{g("warn", 16, "#11141a")}</span>'
-             f'<div><b>Risco de quebra</b><small>médio · sobe com os danos</small></div></div></div>')
-    body = (f'<div class="scene"><div class="track"></div><div class="dim"></div><div class="sheet">'
-            f'<div style="display:flex;align-items:center;gap:12px">{face("albon", 46)}<div><div class="cap">VOLTA 18 DE 57 · P7 · MÉDIO 14V</div><h2>SITUAÇÃO DO CARRO · ALBON</h2></div>'
+    car = f'<div style="position:relative;display:flex;justify-content:center;width:330px">{car_svg(state, 1.3, wear=0.32)}</div>'
+    tyre_blk = (f'<div class="part" style="margin-top:14px">{tyre("medium", 34)}'
+                f'<div style="flex:1"><div class="bar" style="height:10px;margin:0"><i style="width:68%;background:#ffd24a"></i></div></div>'
+                f'<b style="font-size:20px;width:58px;text-align:right">68%</b></div>')
+    total = (f'<div class="part" style="margin-top:14px">{g("clock", 22, AMB)}<b style="flex:1;font-size:18px">−1,1 s</b>'
+             f'<span style="display:flex;gap:8px;align-items:center">{g("warn", 22, AMB)}<b style="font-size:16px;color:{AMB}">média</b></span></div>')
+    body = (f'<div class="scene"><div class="track"></div><div class="dim"></div><div class="sheet" style="height:620px;top:50px">'
+            f'<div style="display:flex;align-items:center;gap:12px">{face("albon", 46)}<h2>ALBON</h2>'
             f'<span style="margin-left:auto;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center;font-weight:900">✕</span></div>'
-            f'<div style="display:flex;gap:26px;margin-top:10px"><div>{car}{legend}</div>'
-            f'<div style="flex:1">{parts_list()}{tyre_blk}{total}'
-            f'<div style="display:flex;gap:10px;margin-top:10px;align-items:center"><div style="flex:1;font-size:12px;font-weight:800;color:#a8b0bd;line-height:1.4">'
-            f'Só a <b style="color:#fff">asa dianteira</b> pode ser trocada no box. Os outros danos ficam até o fim da prova.</div>'
-            f'<div class="cta" style="height:52px;padding:0 22px;font-size:15px">{g("wrench", 20, "#fff")}CHAMAR PARA O BOX · TROCAR ASA</div></div></div></div></div></div>')
-    return V.page("V33 · Folha da situação do carro", CSS, body)
+            f'<div style="display:flex;gap:30px;margin-top:6px">{car}'
+            f'<div style="flex:1;padding-top:10px">{parts_list()}{tyre_blk}{total}'
+            f'<div class="cta" style="height:56px;margin-top:22px;font-size:16px;width:100%">{g("wrench", 22, "#fff")}TROCAR ASA</div></div></div></div></div>')
+    return V.page("V33 · Carro", CSS, body)
 
 
 def ordens():
-    opts = [("users", "Briga liberada", "Os dois pilotos disputam posição normalmente, sem ordem da equipe.", True),
-            ("def", "Não defender", "Quando o companheiro encosta atrás, o piloto abre a posição (uma vez por volta).", False),
-            ("atk", "Não atacar", "O piloto não tenta ultrapassar o companheiro enquanto estiver atrás dele.", False)]
-    tiles = "".join(f'<div class="o{" on" if on else ""}">{g(i, 26, "#11141a" if on else "#fff")}<b>{n}</b><small>{d}</small></div>' for i, n, d, on in opts)
+    opts = [("users", "Briga liberada", True), ("def", "Não defender", False), ("atk", "Não atacar", False)]
+    tiles = "".join(f'<div class="o{" on" if on else ""}" style="min-height:110px">{g(i, 30, "#11141a" if on else "#fff")}<b>{n}</b></div>' for i, n, on in opts)
     body = (f'<div class="scene"><div class="track"></div><div class="dim"></div><div class="sheet" style="height:auto;padding-bottom:26px">'
-            f'<div style="display:flex;align-items:center;gap:12px">{face("albon", 46)}<div><div class="cap">VOLTA 18 DE 57 · P7 · MÉDIO 14V</div><h2>MISSÕES E BASES · ALBON</h2></div>'
+            f'<div style="display:flex;align-items:center;gap:12px">{face("albon", 46)}<h2>ALBON</h2>'
             f'<span style="margin-left:auto;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center;font-weight:900">✕</span></div>'
             f'<div class="tabs"><span>{g("tyre", 18)}Missão de base</span><span>{g("atk", 18)}Missão curta</span><span class="on">{g("users", 18, "#11141a")}Ordens de equipe</span></div>'
-            f'<div class="cap" style="margin-top:18px">COMPANHEIRO: SAINZ · P11</div><div class="ord">{tiles}</div>'
-            f'<div style="display:flex;align-items:center;gap:12px;margin-top:16px;font-size:13px;font-weight:800;color:#a8b0bd">'
-            f'<span class="chip2" style="background:rgba(255,255,255,.08);color:#c3c9d3">vale para o Albon · o Sainz tem a própria ordem</span>'
-            f'<div class="cta" style="margin-left:auto;height:52px;padding:0 26px;font-size:16px">CONFIRMAR</div></div></div></div>')
+            f'<div class="ord">{tiles}</div>'
+            f'<div style="display:flex;margin-top:16px"><div class="cta" style="margin-left:auto;height:52px;padding:0 26px;font-size:16px">CONFIRMAR</div></div></div></div>')
     return V.page("V33 · Missões e bases · ordens de equipe", CSS, body)
 
 
