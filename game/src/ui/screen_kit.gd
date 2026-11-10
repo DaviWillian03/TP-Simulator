@@ -550,8 +550,13 @@ static func sheet(title: String, width: float = 860.0) -> Dictionary:
 ## Garante que a folha cabe na tela. O tamanho mínimo do painel vem do conteúdo (textos largos em caixa alta,
 ## fontes maiores…); se passar do espaço útil, o painel é reduzido para caber, e o botão de fechar nunca
 ## sai da tela (antes ele ficava de fora e o fundo escuro bloqueava o toque: o jogo parecia travado).
-static func fit_to_screen(panel: Control, dim: Control) -> void:
-	if not is_instance_valid(panel) or not is_instance_valid(dim) or not dim.is_inside_tree():
+## Os argumentos não são tipados: a chamada adiada pode chegar depois de a folha ser liberada.
+static func fit_to_screen(panel_obj: Variant, dim_obj: Variant) -> void:
+	if not is_instance_valid(panel_obj) or not is_instance_valid(dim_obj):
+		return
+	var panel := panel_obj as Control
+	var dim := dim_obj as Control
+	if not dim.is_inside_tree():
 		return
 	var room := dim.get_viewport_rect().size - UiStyle.safe_insets_size() - Vector2(24, 24)
 	var need := panel.size  # o CenterContainer dá ao painel o tamanho mínimo do conteúdo (sem escala)
