@@ -57,6 +57,10 @@ func _top_bar(team: Dictionary) -> void:
 	_stage.add_child(v)
 	var pills := HBoxContainer.new()
 	pills.add_theme_constant_override("separation", 10)
+	var stats := ScreenKit.glass_pill_button("Estatísticas", 150)
+	stats.pressed.connect(Session.open_world_result.bind("stats"))
+	stats.custom_minimum_size = Vector2(150, 46)
+	pills.add_child(stats)
 	var cal_n := WorldChampionship.calendar().size()
 	pills.add_child(_pill("RD %d/%d" % [world.round + 1, cal_n], "cal", UiStyle.G_TEXT))
 	var drivers := world.driver_ids_of(world.player_team)
@@ -219,7 +223,7 @@ func _standings_card(r: Rect2) -> Control:
 	tabs.add_child(_chip("Após %d GP%s" % [world.round, "" if world.round == 1 else "s"], "trophy", Color(1, 1, 1, 0.1), UiStyle.G_TEXT))
 	c.add_child(tabs)
 	_standings_box = VBoxContainer.new()
-	_standings_box.add_theme_constant_override("separation", 5)
+	_standings_box.add_theme_constant_override("separation", 4)
 	_standings_box.position = Vector2(20, 66)
 	_standings_box.size = Vector2(r.size.x - 40, r.size.y - 80)
 	c.add_child(_standings_box)
@@ -242,11 +246,12 @@ func _fill_standings() -> void:
 		if is_mine:
 			mine.append(i)
 	var show: Array = []
-	for i in mini(7, rows.size()):
+	for i in mini(5, rows.size()):
 		show.append(i)
-	for i: int in mine:  # sempre mostra os seus, mesmo fora do topo
-		if not show.has(i) and show.size() < 10:
+	for i: int in mine:  # mostra o seu melhor, mesmo fora do topo
+		if not show.has(i) and show.size() < 6:
 			show.append(i)
+			break
 	for i: int in show:
 		_standings_box.add_child(_standing_row(i + 1, String(rows[i][0]), int(rows[i][1])))
 
@@ -254,31 +259,75 @@ func _fill_standings() -> void:
 func _standing_row(pos: int, id: String, pts: int) -> Control:
 	var team_id := world.team_of(id) if _tab == "drivers" else id
 	var mine := team_id == world.player_team
-	var accent := UiStyle.team_accent(GameData.team_by_id(GameData.teams(), team_id))
+	var team := GameData.team_by_id(GameData.teams(), team_id)
+	var accent := UiStyle.team_accent(team)
 	var p := PanelContainer.new()
-	var st := UiStyle.g_box(Color(accent, 0.2) if mine else Color(1, 1, 1, 0.05), 12, 12, 0)
+	var st := UiStyle.g_box(Color(accent, 0.22) if mine else Color(1, 1, 1, 0.05), 14, 12, 0)
 	if mine:
 		st.border_width_left = 4
 		st.border_color = accent
 	p.add_theme_stylebox_override("panel", st)
-	p.custom_minimum_size = Vector2(0, 38)
+	p.custom_minimum_size = Vector2(0, 46)
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 10)
 	var pl := UiStyle.g_label(str(pos), 15, UiStyle.G_TEXT_2, "black")
 	pl.custom_minimum_size = Vector2(24, 0)
 	pl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	h.add_child(pl)
-	h.add_child(TeamEmblems.make_rect(team_id, 26))
+	var wins := 0
+	var pods := 0
 	var label := ""
+	var team_name := String(team.get("name", id))
 	if _tab == "drivers":
-		for d: Dictionary in world.drivers():
-			if d["id"] == id:
-				label = String(d["code"]) + "  " + String(d["name"]).get_slice(" ", String(d["name"]).get_slice_count(" ") - 1)
+		var d: Dictionary = {}
+		for dd: Dictionary in world.drivers():
+			if dd["id"] == id:
+				d = dd
+		var av := DriverPhotos.make_avatar(d, Color(team["color"]), 38)
+		av.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(av)
+		label = String(d.get("name", ""))  # nome e sobrenome
+		wins = int(world.wins.get(id, 0))
+		pods = int(world.podiums.get(id, 0))
 	else:
-		label = String(GameData.team_by_id(GameData.teams(), id).get("name", id))
-	h.add_child(UiStyle.g_label(label, 15, UiStyle.G_TEXT, "black"))
+		var em := TeamEmblems.make_rect(id, 34)
+		em.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(em)
+		label = team_name
+		for did: String in world.driver_ids_of(id):
+			wins += int(world.wins.get(did, 0))
+			pods += int(world.podiums.get(did, 0))
+	var nm := VBoxContainer.new()
+	nm.add_theme_constant_override("separation", -2)
+	nm.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	nm.add_child(UiStyle.g_label(label, 15, UiStyle.G_TEXT, "black"))
+	if _tab == "drivers":
+		var sub := HBoxContainer.new()
+		sub.add_theme_constant_override("separation", 5)
+		sub.add_child(TeamEmblems.make_rect(team_id, 14))
+		sub.add_child(UiStyle.g_label(team_name, 12, UiStyle.G_TEXT_3, "bold"))
+		nm.add_child(sub)
+	h.add_child(nm)
 	h.add_child(UiStyle.hspacer())
-	h.add_child(UiStyle.g_label(str(pts), 15, UiStyle.G_TEXT, "black"))
+	for kv: Array in [["trophy", wins, Color("#F5C542")], ["up", pods, Color("#7fe0b1")]]:
+		var m := HBoxContainer.new()
+		m.add_theme_constant_override("separation", 3)
+		m.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		m.add_child(ScreenKit.icon(String(kv[0]), 13, kv[2]))
+		m.add_child(UiStyle.g_label(str(int(kv[1])), 12, UiStyle.G_TEXT_2, "black"))
+		h.add_child(m)
+	var pv := VBoxContainer.new()
+	pv.add_theme_constant_override("separation", -3)
+	pv.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pv.custom_minimum_size = Vector2(64, 0)
+	var pt_l := UiStyle.g_label(str(pts), 19, UiStyle.G_TEXT, "black")
+	pt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	pv.add_child(pt_l)
+	var rows: Array = world.driver_standings() if _tab == "drivers" else world.team_standings()
+	var gap := UiStyle.g_label("LÍDER" if pos == 1 else "−%d" % (int(rows[0][1]) - pts), 11, UiStyle.G_TEXT_3, "bold")
+	gap.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	pv.add_child(gap)
+	h.add_child(pv)
 	p.add_child(h)
 	return p
 

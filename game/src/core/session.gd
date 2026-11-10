@@ -45,6 +45,7 @@ const CAMPAIGN_FACTORY_SCENE := "res://src/ui/campaign_factory_screen.tscn"
 const CAMPAIGN_REPORT_SCENE := "res://src/ui/campaign_report_screen.tscn"
 const WORLD_HUB_SCENE := "res://src/ui/world_hub_screen.tscn"  ## painel do Campeonato Mundial F1 (v29)
 const WORLD_FINAL_SCENE := "res://src/ui/world_final_screen.tscn"
+const WORLD_RESULT_SCENE := "res://src/ui/world_result_screen.tscn"  ## resultado de cada GP + estatísticas (v30)
 
 var circuit_id := "interlagos"
 var player_team := "mclaren"
@@ -244,7 +245,11 @@ func _ready() -> void:
 				wk.simulate_current()
 				guard += 1
 			world.record_weekend(wk)
-		open_world_hub.call_deferred()
+		if debug_ui in ["result", "champ", "stats"]:  # (captura) --ui=result|champ|stats abre o resultado do último GP
+			world_result_tab = debug_ui
+			open_world_result.call_deferred()
+		else:
+			open_world_hub.call_deferred()
 	elif args.has("hub"):
 		var c := Campaign.load_saved()
 		if args.has("fresh"):  # (captura) campanha nova da equipe --team; --event=<id> aplica um evento de exemplo
@@ -469,6 +474,15 @@ func open_world_hub() -> void:
 	get_tree().change_scene_to_file(WORLD_FINAL_SCENE if world != null and world.season_over() else WORLD_HUB_SCENE)
 
 
+var world_result_tab := "result"  ## aba aberta ao entrar no resultado do Mundial: result | champ | stats
+
+
+func open_world_result(tab: String = "") -> void:
+	if tab != "":
+		world_result_tab = tab
+	get_tree().change_scene_to_file(WORLD_RESULT_SCENE)
+
+
 func open_world_final() -> void:
 	get_tree().change_scene_to_file(WORLD_FINAL_SCENE)
 
@@ -493,11 +507,13 @@ func reset_world() -> void:
 ## Fim do fim de semana da campanha: soma os pontos, avança a rodada, salva e volta para a sede.
 func finish_campaign_weekend() -> void:
 	if world != null and weekend != null and weekend.world:
-		if weekend.is_over():
+		var fresh := weekend.is_over()
+		if fresh:
 			world.record_weekend(weekend)
 			world.save()
 		weekend = null
-		open_world_hub()
+		world_result_tab = "result" if fresh else "champ"
+		open_world_result()  # resultado do GP (pódio, campeonato e estatísticas); de lá segue para o painel
 		return
 	if campaign != null and weekend != null and weekend.campaign and weekend.is_over():
 		campaign.record_weekend(weekend)

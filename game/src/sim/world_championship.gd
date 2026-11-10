@@ -211,6 +211,8 @@ func weekend_options(extra: Dictionary = {}) -> Dictionary:
 # --- fim de semana ----------------------------------------------------------------------------
 
 func record_weekend(w: WeekendSim) -> void:
+	var before_drivers := _positions(driver_standings())  # para mostrar quem subiu e quem desceu
+	var before_teams := _positions(team_standings())
 	var race: Array = w.results.get("race", [])
 	var pole := ""
 	if w.quali_times.has("race") and w.grids.has("race") and not (w.grids["race"] as Array).is_empty():
@@ -229,7 +231,21 @@ func record_weekend(w: WeekendSim) -> void:
 	var out: Array = (w.retired.get("race", []) as Array).duplicate()
 	for id: String in out:
 		dnfs[id] = int(dnfs.get(id, 0)) + 1
-	history.append({"round": round + 1, "circuit": String(w.circuit.get("id", "")), "results": race, "pole": pole, "retired": out})
+	var pole_time := 0.0
+	if pole != "" and w.quali_times.has("race"):
+		pole_time = float((w.quali_times["race"] as Dictionary).get(pole, {}).get("time", 0.0))
+	var gains: Dictionary = {}  # posições ganhas/perdidas em relação à largada
+	var grid: Array = w.grids.get("race", [])
+	for i in race.size():
+		var gi := grid.find(race[i])
+		if gi >= 0:
+			gains[race[i]] = gi - i
+	var race_pts: Dictionary = {}
+	for id: String in w.points:
+		race_pts[id] = int(w.points[id])
+	history.append({"round": round + 1, "circuit": String(w.circuit.get("id", "")), "results": race, "pole": pole, "pole_time": pole_time,
+		"retired": out, "fastest": w.fastest_laps.get("race", {}), "grid": grid, "gains": gains, "points": race_pts,
+		"before_drivers": before_drivers, "before_teams": before_teams, "sprint": (w.results.get("sprint", []) as Array)})
 	for did: String in w.grid_penalties:  # punição de grid dos seus carros vira notícia
 		if team_of(did) != player_team:
 			continue
@@ -239,6 +255,28 @@ func record_weekend(w: WeekendSim) -> void:
 	_rebuild_log()
 	parts.after_race(GameData.teams())
 	round += 1
+
+
+func _positions(rows: Array) -> Dictionary:
+	var out := {}
+	for i in rows.size():
+		out[rows[i][0]] = i + 1
+	return out
+
+
+## Contagens da temporada por piloto ou equipe: stat = wins | poles | podiums | dnfs. [[id, n], ...] do maior ao menor (só quem tem n > 0).
+func stat_table(stat: String, by_team: bool = false) -> Array:
+	var src: Dictionary = {"wins": wins, "poles": poles, "podiums": podiums, "dnfs": dnfs}.get(stat, {})
+	var acc: Dictionary = {}
+	for id: String in src:
+		var key := team_of(id) if by_team else id
+		acc[key] = int(acc.get(key, 0)) + int(src[id])
+	var rows: Array = []
+	for k: String in acc:
+		if int(acc[k]) > 0:
+			rows.append([k, int(acc[k])])
+	rows.sort_custom(func(a: Array, b: Array) -> bool: return a[1] > b[1] if a[1] != b[1] else String(a[0]) < String(b[0]))
+	return rows
 
 
 ## Resumo do campeão no fim da temporada.

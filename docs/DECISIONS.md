@@ -688,3 +688,9 @@ Respostas do usuário:
   fontes), com o grid **~40% mais equilibrado** e ajuste fino calibrado em `tools/world_report.gd`. Rodadas ainda sem
   resultado real usam só a nota base. Bloco próprio no menu inicial e **save separado** (`user://world_championship.json`);
   a Campanha continua intacta. O **campeonato ao vivo da corrida** (pop-ups "se terminar assim" e as animações de campeão de pilotos/construtores) também vale no Mundial (mesmo contrato da campanha; sem a frase do número 1 do ano seguinte). Fica para depois: mais temporadas, controle manual das peças.
+- **2026-11-10 — Mundial: tabela, resultado de cada GP e estatísticas** (mockups v30 aprovados). A tabela do painel mostra foto,
+  **nome e sobrenome**, equipe, vitórias e pódios (sem a sigla antes do nome). Depois de cada corrida abre o menu de resultado
+  (`WorldResult`): aba RESULTADO (pódio, pole com tempo, melhor volta, do 4º em diante com posições ganhas e pontos), CAMPEONATO
+  (pilotos e construtores com quem subiu/desceu) e ESTATÍSTICAS (vitórias, poles, pódios e abandonos, por piloto ou por equipe);
+  as estatísticas também abrem pelo botão do painel.
+

@@ -24,10 +24,10 @@ func _open(path: String) -> Control:
 func test_painel_mostra_proximo_gp_tabela_e_pecas() -> void:
 	var hub: WorldHub = await _open("res://src/ui/world_hub_screen.tscn")
 	assert_eq(hub.world.next_round()["id"], "albertpark")
-	assert_gte(hub._standings_box.get_child_count(), 8, "tabela de pilotos com o topo e os seus")
+	assert_gte(hub._standings_box.get_child_count(), 6, "tabela de pilotos com o topo e a sua")
 	hub._set_tab("teams")
 	await wait_process_frames(2)
-	assert_gte(hub._standings_box.get_child_count(), 8, "tabela de construtores")
+	assert_gte(hub._standings_box.get_child_count(), 6, "tabela de construtores")
 
 
 func test_painel_avisa_a_punicao_de_grid_do_motor() -> void:
@@ -102,3 +102,46 @@ func test_mundial_guarda_vitorias_para_a_animacao_de_campeao() -> void:
 		if dd["id"] == winner:
 			d = dd
 	assert_gte(int(w.career_of(d)["wins"]), 1)
+
+
+func _play_one_round() -> void:
+	var w := Session.world
+	var wk := WeekendSim.new(w.next_round()["id"], w.weekend_options({"weather": "dry", "incident_rate": 0.0, "duration_pct": 0.1}))
+	var guard := 0
+	while not wk.is_over() and guard < 20:
+		wk.simulate_current()
+		guard += 1
+	w.record_weekend(wk)
+
+
+func test_historico_guarda_pole_melhor_volta_e_posicoes() -> void:
+	_play_one_round()
+	var h: Dictionary = Session.world.history.back()
+	assert_ne(String(h["pole"]), "")
+	assert_gt(float(h["pole_time"]), 0.0, "tempo da pole")
+	assert_false((h["fastest"] as Dictionary).is_empty(), "melhor volta da corrida")
+	assert_true((h["gains"] as Dictionary).has(String(h["results"][0])))
+	assert_eq((h["before_drivers"] as Dictionary).size(), 22, "posições antes da corrida, para mostrar quem subiu")
+
+
+func test_estatisticas_por_piloto_e_por_equipe() -> void:
+	_play_one_round()
+	var w := Session.world
+	var by_driver := w.stat_table("wins")
+	assert_eq(by_driver.size(), 1)
+	assert_eq(int(by_driver[0][1]), 1)
+	var by_team := w.stat_table("wins", true)
+	assert_eq(by_team[0][0], w.team_of(String(by_driver[0][0])))
+	assert_gte(w.stat_table("podiums").size(), 3)
+
+
+func test_tela_de_resultado_tem_as_tres_abas() -> void:
+	_play_one_round()
+	for tab: String in ["result", "champ", "stats"]:
+		Session.world_result_tab = tab
+		var scr: WorldResult = await _open("res://src/ui/world_result_screen.tscn")
+		assert_eq(scr._tab, tab)
+		assert_gt(scr._body.get_child_count(), 0, "aba %s montou o conteúdo" % tab)
+		scr.queue_free()
+		await wait_process_frames(2)
+	Session.world_result_tab = "result"
