@@ -635,7 +635,7 @@ Respostas do usuário:
   configurável (`pit_side`), padrão esquerda.
 - **2026-11-09 — Cores das zebras por circuito** (tabela enviada pelo usuário; referência geral, não curva a curva):
   Albert Park verde/amarelo, Spa vermelho/amarelo, Interlagos verde/amarelo/branco, Monza verde/branco/vermelho,
-  Madring vermelho/amarelo/branco; as demais vermelho/branco (inclusive Silverstone, pela tabela). Campo `scenery.kerbs`.
+  Madring vermelho/amarelo/branco; as demais vermelho/branco (Silverstone preto/branco (confirmado pelo usuário)). Campo `scenery.kerbs`.
 - **2026-11-10 — Marcos visuais por circuito** (lista do usuário; prioridade para os que funcionam em tela pequena).
   `Landmarks3D`, lista em `scenery.landmarks`, formas originais e sem logotipos, ampliadas (~1,5–3,4×) para aparecer na
   vista geral: roda-gigante (Suzuka, Singapura), escultura de touro em bronze genérica (Áustria), esfera de telão (Las
