@@ -312,6 +312,7 @@ func _build_top_bar() -> void:
 
 func _connect_sim_signals() -> void:
 	sim.overtake.connect(_on_overtake)
+	sim.start_result.connect(_on_start_result)
 	sim.pit_stop.connect(_on_pit_stop)
 	sim.plan_stop_due.connect(_on_plan_due)
 	if Session.debug_ui == "pitback":  # (captura) abre o box, volta à corrida e segue
@@ -932,6 +933,12 @@ func _on_incident(car: CarState, kind: String, text: String) -> void:
 	var important := car.is_player or kind in ["crash", "failure", "blowout", "issue", "contact", "investigation", "cleared"] or sim.standings().find(car) < 5
 	if important:
 		_toasts.push(text, "hot" if car.is_player or kind in ["crash", "blowout"] else "note")
+
+
+func _on_start_result(car: CarState, places: int) -> void:
+	var good := places > 0
+	var text := "%s: %s largada, %s %d %s." % [_surname(car), "boa" if good else "má", "ganhou" if good else "perdeu", absi(places), "posição" if absi(places) == 1 else "posições"]
+	_toasts.push(text, "hot" if car.is_player else "note")
 
 
 func _on_flag_changed(_flag: int, text: String) -> void:

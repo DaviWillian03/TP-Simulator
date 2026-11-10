@@ -11,6 +11,8 @@ var driver: Dictionary = {}
 var team: Dictionary = {}
 var is_player := false
 var grid_position := 0
+var start_gain := 0.0  ## fator de largada sorteado (StartModel): + largada boa, − largada ruim
+var start_kind := ""  ## "great", "bad" ou "" (largada normal)
 
 # posição na corrida
 var distance := 0.0  ## metros percorridos desde a linha (negativo no grid de largada)

@@ -383,7 +383,7 @@ func _grid_marks() -> void:
 		var d := -RaceSim.GRID_SPACING_M * slot - 5.0 - 2.0
 		var f := fposmod(d, t3.track.length_m) / t3.track.length_m
 		var b := t3.basis_at(f)
-		var p := t3.point_at(f) + b.x * (3.0 if slot % 2 == 0 else -3.0) + Vector3.UP * 0.09
+		var p := t3.point_at(f) + b.x * (RaceSim.GRID_LATERAL_M if slot % 2 == 0 else -RaceSim.GRID_LATERAL_M) + Vector3.UP * 0.09
 		_box(Vector3(2.6, 0.05, 0.35), Transform3D(b, p), grid_mat)
 		_box(Vector3(0.3, 0.05, 2.0), Transform3D(b, p + b.x * 1.15 + b.z * 1.0), grid_mat)
 		_box(Vector3(0.3, 0.05, 2.0), Transform3D(b, p - b.x * 1.15 + b.z * 1.0), grid_mat)

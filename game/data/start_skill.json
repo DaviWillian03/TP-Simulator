@@ -1,0 +1,24 @@
+{
+  "_comment": "Habilidade de largada (0-100, 50 = neutro; quem não está na lista usa 50). PROVISÓRIO: inspirado nas largadas reais (ganhos/perdas de posições na 1ª volta nas primeiras corridas de 2026 e fama dos pilotos). Só desloca as chances de largada boa/ruim — a sorte continua mandando.",
+  "skill": {
+    "sainz": 78,
+    "alonso": 72,
+    "albon": 66,
+    "leclerc": 62,
+    "hamilton": 62,
+    "stroll": 60,
+    "antonelli": 60,
+    "russell": 58,
+    "ocon": 58,
+    "piastri": 55,
+    "lindblad": 52,
+    "lawson": 46,
+    "bottas": 46,
+    "perez": 46,
+    "norris": 42,
+    "verstappen": 42,
+    "bortoleto": 36,
+    "hadjar": 36,
+    "hulkenberg": 30
+  }
+}

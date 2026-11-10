@@ -15,6 +15,7 @@ const ZOOM_MAX := 4000.0
 func _car_scale() -> float:
 	return clampf(distance / 80.0, 1.0, CAR_SCALE)
 const PIT_OFFSET_M := 15.0
+const GRID_BLEND_M := 160.0  ## depois da linha, em quantos metros o carro sai da fila do grid e vai para o eixo da pista
 
 enum CamMode { OVERVIEW, FOLLOW_1, FOLLOW_2, LEADER, CAR }
 
@@ -61,6 +62,7 @@ func setup(source: Variant) -> void:
 		sim = source
 	if source is RaceSim:  # animações de ultrapassagem, rodada e batida
 		(source as RaceSim).overtake.connect(func(att: CarState, def: CarState, _z: String) -> void: _motion.on_overtake(att, def))
+		(source as RaceSim).start_pass.connect(func(att: CarState, def: CarState) -> void: _motion.on_overtake(att, def))
 		(source as RaceSim).incident.connect(func(car: CarState, kind: String, _t: String) -> void:
 			_motion.on_incident(car, kind, Track3D.WIDTH, (source as RaceSim).render_distance(car)))
 	stretch = true
@@ -221,8 +223,13 @@ func _process(delta: float) -> void:
 			mi.set_fade(1.0)
 			if car.in_pit:  # segue o pit lane, inclusive as diagonais de entrada e saída
 				pos += basis.x * t3.pit_offset(frac)
-			elif d < 0.0 and car.laps_done == 0 and sim.render_distance(car) < 0.0:
-				pos += basis.x * (3.0 if car.grid_position % 2 == 0 else -3.0)
+			elif car.laps_done == 0 and d < GRID_BLEND_M:
+				# grid em duas filas; depois das luzes, abre para o eixo da pista aos poucos (e as trocas da largada
+				# balançam para o lado). `d` negativo = ainda atrás da linha.
+				var side := RaceSim.GRID_LATERAL_M * (1.0 if car.grid_position % 2 == 0 else -1.0)
+				var k := clampf(1.0 - maxf(d, 0.0) / GRID_BLEND_M, 0.0, 1.0)
+				var lat := side * k + (_motion.lateral(car) if d >= 0.0 else 0.0)
+				pos += basis.x * clampf(lat, -Track3D.WIDTH * 0.46, Track3D.WIDTH * 0.46)
 			else:
 				pos += basis.x * _motion.lateral(car)
 		mi.set_alert(not wreck and _motion.is_off_track(car))

@@ -729,3 +729,12 @@ Respostas do usuário:
 - **2026-11-10 — Voltar do box sem perder a pista.** A pista 3D não é mais movida (`reparent`) para a miniatura do box: a miniatura
   espelha a imagem da pista (`TrackView3D.view_texture()`). Não foi possível reproduzir o sumiço fora do aparelho; precisa de
   validação no S23.
+- **2026-11-10 — Largada com sorte e habilidade (`StartModel`).** O grid fica em **duas filas escalonadas** (pole à esquerda, 2º à
+  direita, 14 m entre um carro e o seguinte, 4,2 m do eixo; antes 10 m e 3 m) e, depois das luzes, os carros abrem para o eixo da
+  pista aos poucos. Cada piloto sorteia um **fator de largada** por corrida (semente determinística): a maioria sai no padrão
+  (~70% termina a largada a ±1 posição do grid); uma minoria faz largada **muito boa** (ganha até ~8 posições) ou **muito ruim**
+  (perde até ~9). Chances-base 6% / 6%; a **habilidade de largada** de `data/start_skill.json` (PROVISÓRIO, inspirada nas
+  largadas reais de 2026 — ex.: Sainz entre os que mais ganham; Hülkenberg, Hadjar e Verstappen entre os que mais perdem) sobe ou
+  desce as chances; chuva aumenta a chance de largada ruim. Durante os 10 primeiros segundos os carros **não se bloqueiam** (a
+  posição vem só da distância, senão o carro lento virava "rolha" e afundava até o último); ao fim, o espaço mínimo é devolvido.
+  Todos arrancam do zero (rampa igual). A tela avisa quem ganhou/perdeu ≥ 2 posições de verdade e o jogador.

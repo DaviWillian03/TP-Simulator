@@ -17,7 +17,7 @@ das escolhas técnicas.
 - `data/` — JSON orientado a dados (equipes, pilotos, pneus, circuitos). Valores de desempenho
   marcados PROVISÓRIO até a pesquisa de atributos.
 - `src/sim/` — simulação **sem dependência de tela**: RaceSim (orquestra), TrackModel, TyreModel,
-  WeatherModel (clima/radar), RaceControl (incidentes, bandeiras, punições), RadioSystem (rádio),
+  WeatherModel (clima/radar), RaceControl (incidentes, bandeiras, punições), StartModel (largada: fator sorteado + habilidade em `data/start_skill.json`), RadioSystem (rádio),
   StrategyAI (IA), Missions (missões do stint: o piloto dosa ritmo e bateria; a IA usa as mesmas); fim de semana: WeekendSim (sessões, previsão, grids, pontos), CarSetup (acerto),
   PracticeSession (programas de blocos), TyreAllocation (jogos de pneus reais do fim de semana), RaceStrategy (planos dos
   engenheiros; na corrida só avisam), QualiSim (Q1/Q2/Q3; cortes pelo nº de carros);

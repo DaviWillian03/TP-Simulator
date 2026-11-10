@@ -121,7 +121,7 @@ func _draw_car(car: CarState) -> void:
 		pos -= _inside_normal(frac) * PIT_OFFSET_PX  # rodou: fora do traçado
 	elif d < 0.0:
 		# no grid de largada, os carros ficam em duas filas
-		pos += _inside_normal(frac) * (4.0 if car.grid_position % 2 == 0 else -4.0)
+		pos += _inside_normal(frac) * (6.0 if car.grid_position % 2 == 0 else -6.0)
 	var r := PLAYER_RADIUS if car.is_player else CAR_RADIUS
 	if car.is_player:
 		draw_circle(pos, r + 4.0, UiStyle.PAPER, true, -1.0, true)

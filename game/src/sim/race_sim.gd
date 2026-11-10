@@ -10,6 +10,8 @@ extends RefCounted
 ## RadioSystem (rádio dos pilotos do jogador), StrategyAI (decisões das equipes rivais).
 
 signal overtake(attacker: CarState, defender: CarState, zone_name: String)
+signal start_pass(attacker: CarState, defender: CarState)  ## troca de posição durante a largada (só animação)
+signal start_result(car: CarState, places: int)  ## fim da largada: posições ganhas (+) ou perdidas (−) de quem foi bem/mal
 signal pit_stop(car: CarState, compound: String, stationary_s: float)
 signal fastest_lap(car: CarState, lap_time: float)
 @warning_ignore("unused_signal")  # emitido por RaceControl/RadioSystem
@@ -33,7 +35,8 @@ signal plan_stop_due(car: CarState, lap: int, compound: String, fresh: bool)  ##
 const DEG_SHORT_RACE_EXP := 0.65
 const WEAR_SHORT_RACE_EXP := 0.9  ## corridas curtas gastam o pneu na proporção (decisão 2026-11-09: 25% perto do limite)
 const DT := 0.1  ## segundos de corrida por passo
-const GRID_SPACING_M := 10.0
+const GRID_SPACING_M := 14.0  ## distância entre um carro e o seguinte no grid (filas de 2, escalonadas como na F1)
+const GRID_LATERAL_M := 4.2  ## quanto cada fila se afasta do eixo da pista (pole à esquerda, 2º à direita)
 const MIN_GAP_M := 9.0  ## sem ultrapassar, um carro não chega mais perto que isso do da frente
 const ATTACK_WINDOW_S := 1.0  ## a menos de 1 s do carro da frente: pode tentar ultrapassar
 const DRS_BONUS_S := 0.45  ## F2/F3: asa móvel aberta na zona (a menos de 1 s) vale essa vantagem na tentativa
@@ -104,6 +107,8 @@ var engine_pitch := 1.0
 var fuel_window_laps := 999
 var team_box_free_at: Dictionary = {}  ## id da equipe -> instante em que o box fica livre
 var _accum := 0.0
+var _start_active := true  ## ainda na fase de largada (StartModel)
+var _start_reported := false
 var _mode_timer := 0.0
 var _finish_count := 0
 var _leader_laps := 0
@@ -209,6 +214,9 @@ func _setup_grid(grid_ids: Array = []) -> void:
 		if car.is_player:
 			_plan_base_mission(car)
 		car.lap_noise = rng.randfn(0.0, LAP_NOISE_SIGMA)
+		var st := StartModel.roll(String(car.driver["id"]), int(options_seed), weather.wetness)
+		car.start_gain = float(st[0])
+		car.start_kind = String(st[1])
 
 
 ## Punições de grid (motor/câmbio além do limite): cada punido recua N posições, da frente para trás; quem passou de
@@ -495,6 +503,9 @@ func run_to_end(max_steps: int = 2_000_000) -> void:
 
 func step() -> void:
 	time_s += DT
+	_start_active = StartModel.active(time_s) and _leader_laps == 0
+	if not _start_active and not _start_reported:
+		_report_start()
 	weather.step(DT, control.flag == RaceControl.Flag.GREEN)
 	_mode_timer -= DT
 	if _mode_timer <= 0.0:
@@ -523,6 +534,8 @@ func step() -> void:
 			car.speed = 0.0
 		else:
 			car.speed = control.flag_speed(car, track.length_m / _lap_time(car, true))
+			if _start_active and control.flag == RaceControl.Flag.GREEN:
+				car.speed *= StartModel.speed_mult(car.start_gain, time_s)
 
 	if control.flag == RaceControl.Flag.GREEN:
 		_resolve_overtakes(order)
@@ -533,13 +546,15 @@ func step() -> void:
 		var car: CarState = order[i]
 		var prev := car.distance
 		var target := prev + car.speed * DT
-		if car.lane() == 0:
+		if car.lane() == 0 and not _start_active:
 			var ahead := _same_lane_ahead(order, i)
 			if ahead != null:
 				target = minf(target, ahead.distance - MIN_GAP_M)
 		target = maxf(target, prev)  # nunca anda para trás
 		car.distance = target
 		_after_move(car, prev, target)
+	if _start_active:
+		_emit_start_passes(order)
 
 	control.step(DT, _running_order())
 	_update_trace()
@@ -635,6 +650,33 @@ func _resolve_overtakes(order: Array[CarState]) -> void:
 					overtakes_count += 1
 					overtake.emit(att, def, zone["name"])
 				break
+
+
+## Na largada os carros não se bloqueiam (cada um está na sua fila e passa de lado): a posição vem só da distância
+## percorrida. Isto avisa a tela de cada cruzamento, para ela animar o carro que passou.
+func _emit_start_passes(before: Array[CarState]) -> void:
+	for i in range(1, before.size()):
+		var att: CarState = before[i]
+		var def: CarState = before[i - 1]
+		if att.lane() == 0 and def.lane() == 0 and att.distance > def.distance:
+			start_pass.emit(att, def)
+
+
+## Fim da largada: avisa quem ganhou ou perdeu posições de verdade (largada boa/ruim) e o jogador.
+func _report_start() -> void:
+	_start_reported = true
+	var order := _running_order()
+	var limit := INF  # a largada deixou carros sobrepostos: devolve o espaço mínimo entre eles (alguns metros)
+	for car in order:
+		if car.lane() != 0:
+			continue
+		car.distance = minf(car.distance, limit)
+		limit = car.distance - MIN_GAP_M
+	for i in order.size():
+		var car: CarState = order[i]
+		var places := car.grid_position - i
+		if absi(places) >= 2 and (car.start_kind != "" or car.is_player):
+			start_result.emit(car, places)
 
 
 func _try_overtake(att: CarState, def: CarState, zone: Dictionary) -> bool:
