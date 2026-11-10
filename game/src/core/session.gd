@@ -69,7 +69,11 @@ var debug_ui := ""  ## --ui=team (abre a folha na tela inicial) · --ui=gallery 
 var debug_view_only := false  ## --view-only: só o cenário 3D em tela cheia (base para mockups)
 var debug_camera: Dictionary = {}  ## --yaw --pitch --dist --cam=<n> (capturas da vista 3D)
 var sim_overrides: Dictionary = {}  ## opções extras da RaceSim (testes: clima, incidentes)
-var weekend: WeekendSim = null  ## Grande Prêmio em andamento (null = corrida rápida)
+var weekend: WeekendSim = null:  ## Grande Prêmio em andamento (null = corrida rápida)
+	set(v):
+		weekend = v
+		if v != null and not v.session_done.is_connected(_on_session_done):
+			v.session_done.connect(_on_session_done)
 var campaign: Campaign = null  ## campanha em andamento (carregada do arquivo salvo)
 var world: WorldChampionship = null  ## Campeonato Mundial F1 em andamento (save separado, v29)
 var campaign_open_news := false  ## o sino da barra do topo pede as notícias ao abrir o Início
@@ -247,6 +251,19 @@ func _ready() -> void:
 			weekend = WeekendSim.new(campaign.next_round()["id"], campaign.weekend_options({"duration_pct": duration_pct, "format": "race_only",
 				"weather": args.get("weather", "realistic")}))
 			play_session.call_deferred()
+	elif args.has("worldrace"):  # (capturas) corrida do próximo GP do Mundial (equipe --team), com as sessões anteriores simuladas
+		world = WorldChampionship.start(player_team)
+		weekend = WeekendSim.new(world.next_round()["id"], world.weekend_options({"duration_pct": duration_pct}))
+		circuit_id = String(world.next_round()["id"])
+		while weekend.session_id() != "race":
+			weekend.simulate_current()
+		var wplans := weekend.engineer_strategy()
+		for wd: String in wplans:
+			weekend.strategy[wd] = wplans[wd][0]
+		start_race_from_grid.call_deferred(weekend.make_race())
+	elif args.has("worldresume"):  # (capturas) retoma o fim de semana do Mundial salvo (rodada 1)
+		world = WorldChampionship.start(player_team)
+		resume_weekend.call_deferred("world")
 	elif args.has("settings"):  # (capturas) tela de configurações
 		open_settings.call_deferred()
 	elif args.has("slots"):  # (capturas) --slots[=world]: escolha de slot
@@ -334,11 +351,55 @@ func open_team_select(mode: String) -> void:
 # --- Grande Prêmio ----------------------------------------------------------------------
 
 func open_gp_setup() -> void:
+	if weekend != null and weekend.is_over():  # GP avulso terminado: o save do fim de semana não serve mais
+		SaveSlots.delete_weekend("gp")
 	get_tree().change_scene_to_file(GP_SETUP_SCENE)
 
 
 ## Cria o fim de semana com as escolhas da configuração e abre o painel.
+## Tipo do fim de semana em andamento para o save: "gp" (avulso), "campaign" ou "world".
+func _weekend_kind() -> String:
+	if weekend != null and weekend.world:
+		return "world"
+	return "campaign" if weekend != null and weekend.campaign else "gp"
+
+
+## Rodada do campeonato a que o fim de semana pertence (o save é descartado se o campeonato já passou dela).
+func _weekend_ctx() -> int:
+	match _weekend_kind():
+		"world":
+			return world.round if world != null else 0
+		"campaign":
+			return campaign.round if campaign != null else 0
+	return 0
+
+
+## Salvamento automático: depois de cada treino, classificação, sprint (e da corrida, para a tela de resultado).
+func _on_session_done() -> void:
+	if weekend == null or DisplayServer.get_name() == "headless":  # (testes e relatórios não gravam)
+		return
+	SaveSlots.save_weekend(weekend, _weekend_kind(), _weekend_ctx())
+
+
+## Retoma o fim de semana salvo do tipo dado (devolve true e abre o painel); false se não houver.
+func resume_weekend(kind: String) -> bool:
+	var ctx := 0
+	if kind == "world" and world != null:
+		ctx = world.round
+	elif kind == "campaign" and campaign != null:
+		ctx = campaign.round
+	var w := SaveSlots.load_weekend(kind, ctx)
+	if w == null:
+		return false
+	weekend = w
+	circuit_id = String(w.circuit.get("id", circuit_id))
+	player_team = w.player_team
+	go_to_weekend()
+	return true
+
+
 func start_gp() -> void:
+	SaveSlots.delete_weekend("gp")  # começar outro GP descarta o fim de semana salvo
 	var opts := {"player_team": player_team, "duration_pct": duration_pct, "weather": gp_weather,
 		"format": gp_format, "seed": randi(), "category": category}
 	opts.merge(sim_overrides.duplicate(), false)
@@ -364,6 +425,8 @@ func start_campaign(c: Campaign) -> void:
 		TeamEmblems.register_custom(c.team())
 		CarModel3D._cache.erase(c.player_team)
 	c.save()
+	if resume_weekend("campaign"):  # parou no meio de um fim de semana: volta de onde parou
+		return
 	get_tree().change_scene_to_file(CAMPAIGN_FEEDER_HUB_SCENE if c.is_feeder() else CAMPAIGN_HUB_SCENE)
 
 
@@ -475,6 +538,8 @@ func open_world() -> void:
 		return
 	world = saved
 	player_team = saved.player_team
+	if resume_weekend("world"):
+		return
 	open_world_hub()
 
 
@@ -539,6 +604,7 @@ func finish_campaign_weekend() -> void:
 		if fresh:
 			world.record_weekend(weekend)
 			world.save()
+			SaveSlots.delete_weekend("world")  # fim de semana concluído: o save intermediário sai
 		weekend = null
 		world_result_tab = "result" if fresh else "champ"
 		open_world_result()  # resultado do GP (pódio, campeonato e estatísticas); de lá segue para o painel
@@ -546,6 +612,7 @@ func finish_campaign_weekend() -> void:
 	if campaign != null and weekend != null and weekend.campaign and weekend.is_over():
 		campaign.record_weekend(weekend)
 		campaign.save()
+		SaveSlots.delete_weekend("campaign")
 	weekend = null
 	if campaign.is_feeder():  # a sede da F2/F3 mostra o fim de temporada
 		open_campaign_hub()

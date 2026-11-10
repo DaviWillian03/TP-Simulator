@@ -314,6 +314,14 @@ func _connect_sim_signals() -> void:
 	sim.overtake.connect(_on_overtake)
 	sim.pit_stop.connect(_on_pit_stop)
 	sim.plan_stop_due.connect(_on_plan_due)
+	if Session.debug_ui == "pitback":  # (captura) abre o box, volta à corrida e segue
+		for c in sim.cars:
+			if c.is_player:
+				_open_pit.call_deferred(c)
+				get_tree().create_timer(0.3).timeout.connect(func() -> void:
+					if _pit != null:
+						_pit._close())
+				break
 	if Session.debug_ui == "pit":  # (captura) --ui=pit abre a tela do box do primeiro piloto
 		for c in sim.cars:
 			if c.is_player:

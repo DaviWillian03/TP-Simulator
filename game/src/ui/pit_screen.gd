@@ -32,6 +32,7 @@ var _serve := true
 var _double := 0  ## 0 só este carro · 1 companheiro na volta seguinte · 2 companheiro junto
 
 var _mini: Panel
+var _mirror: TextureRect
 var _col_left: VBoxContainer
 var _col_mid: VBoxContainer
 var _col_right: VBoxContainer
@@ -92,17 +93,24 @@ func _attach_view() -> void:
 	_prev_followed = _view.followed
 	if not (_prev_cam_car and _view.followed == car):
 		_view.follow(car)
-	_view.reparent(_mini, false)
-	_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# a miniatura só espelha a textura da vista 3D (antes a vista era reparentada para cá e, num aparelho real, podia
+	# voltar sem desenhar a pista)
+	_mirror = TextureRect.new()
+	_mirror.texture = _view.view_texture()
+	_mirror.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_mirror.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_mirror.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mini.add_child(_mirror)
+	_mini.move_child(_mirror, 0)
+	_mirror.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 
 func _detach_view() -> void:
-	if _view == null or not is_instance_valid(_view) or _home == null or not is_instance_valid(_home):
+	if _view == null or not is_instance_valid(_view):
 		return
-	if _view.get_parent() != _home:
-		_view.reparent(_home, false)
-		_home.move_child(_view, 0)
-		_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if _mirror != null and is_instance_valid(_mirror):
+		_mirror.queue_free()
+		_mirror = null
 	if _prev_cam_car and _prev_followed != null:
 		if _view.followed != _prev_followed:
 			_view.follow(_prev_followed)

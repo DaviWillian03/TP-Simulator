@@ -102,6 +102,33 @@ func _world_tile(r: Rect2) -> Button:
 	return b
 
 
+## Grande Prêmio: com um fim de semana salvo, pergunta se continua ou começa outro.
+func _gp_pressed() -> void:
+	var w := SaveSlots.load_weekend("gp")
+	if w == null:
+		Session.open_team_select("gp")
+		return
+	var sh := ScreenKit.sheet("Grande Prêmio em andamento", 680)
+	var body: VBoxContainer = sh["body"]
+	var where := String(w.circuit.get("grand_prix", ""))
+	var nxt := "fim de semana encerrado" if w.is_over() else "próxima sessão: %s" % w.session_name(w.session_id())
+	body.add_child(UiStyle.g_label("%s · %s" % [where, nxt], 18, UiStyle.G_TEXT_2, "bold"))
+	var go := CutButton.new()
+	go.text = "CONTINUAR"
+	go.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
+	go.pressed.connect(func() -> void:
+		(sh["root"] as Control).queue_free()
+		Session.resume_weekend("gp"))
+	body.add_child(go)
+	var fresh := ScreenKit.light_button("Novo Grande Prêmio")
+	fresh.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
+	fresh.pressed.connect(func() -> void:
+		SaveSlots.delete_weekend("gp")
+		Session.open_team_select("gp"))
+	body.add_child(fresh)
+	add_child(sh["root"])
+
+
 func _tile(r: Rect2, fill: Color) -> Button:
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_NONE
@@ -178,7 +205,7 @@ func _campaign_tile(saved: Campaign, r: Rect2) -> Button:
 
 func _gp_block(r: Rect2) -> Button:
 	var b := _tile(r, Color("#171a21"))
-	b.pressed.connect(Session.open_team_select.bind("gp"))
+	b.pressed.connect(_gp_pressed)
 	var art := TextureRect.new()
 	art.texture = CampaignHub.track_art(GP_ART[Time.get_date_dict_from_system()["day"] % GP_ART.size()])
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

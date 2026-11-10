@@ -28,6 +28,12 @@ var pitch := 0.62  ## radianos acima do horizonte
 var distance := 1400.0
 
 var _vp: SubViewport
+
+
+## Textura da vista 3D: a miniatura do box só espelha a pista (nada de tirar a pista do lugar).
+func view_texture() -> Texture2D:
+	return _vp.get_texture()
+
 var _world_root: Node3D
 var _cam: Camera3D
 var _sun: DirectionalLight3D

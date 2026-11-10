@@ -718,3 +718,14 @@ Respostas do usuário:
   **Prêmio oficial**: tabela por posição com a sua posição, o que vale subir/descer e a distância em pontos. **Compromissos**:
   folha, operação, parcelas de empréstimo, adiantamento e juros até o fim da temporada; **caixa livre = caixa − compromissos**,
   com a projeção do caixa. Obras e peças já saem do caixa na encomenda, então não são compromissos futuros.
+- **2026-11-10 — Salvamento automático entre as sessões (todos os modos).** Ao fim de cada sessão do fim de semana (TL1/TL2/TL3,
+  classificação, sprint) e também após a corrida (para o painel de resultado) o jogo grava `weekend.sav` no slot ativo
+  (`SaveSlots.save_weekend`; Campanha e Mundial por slot, Grande Prêmio avulso em `gp_weekend.sav`). A **corrida em andamento não
+  é salva**: se travar, o jogador volta ao painel já na sessão seguinte (grid, previsão, acertos e jogos de pneus preservados; a
+  corrida retomada dá o mesmo resultado, pois o estado do sorteio também é salvo). Retomada **automática** ao abrir a Campanha ou o
+  Mundial do slot; no Grande Prêmio, a ficha do bloco pergunta CONTINUAR × Novo. O save é descartado ao terminar o fim de semana
+  (resultado registrado) ou se pertencer a outra rodada (`ctx_round`). Gravação em arquivo temporário + renomeação (não corrompe se
+  o app fechar no meio). Dev: `--worldrace` (corrida do Mundial direto), `--worldresume` (retoma o save do Mundial).
+- **2026-11-10 — Voltar do box sem perder a pista.** A pista 3D não é mais movida (`reparent`) para a miniatura do box: a miniatura
+  espelha a imagem da pista (`TrackView3D.view_texture()`). Não foi possível reproduzir o sumiço fora do aparelho; precisa de
+  validação no S23.

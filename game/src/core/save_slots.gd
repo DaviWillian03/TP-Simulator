@@ -56,6 +56,61 @@ static func latest(kind: String) -> int:
 	return best
 
 
+# --- fim de semana em andamento (salvamento automático entre as sessões) ---------------------------------------------
+
+const WEEKEND_VERSION := 1
+
+
+## Caminho do save do fim de semana: por slot (Campanha/Mundial) ou o do Grande Prêmio avulso (kind "gp").
+static func weekend_path(kind: String, slot: int = 0) -> String:
+	return "user://saves/gp_weekend.sav" if kind == "gp" else dir(slot) + "weekend.sav"
+
+
+## Grava (escreve num arquivo temporário e troca, para um travamento no meio não deixar o save pela metade).
+static func save_weekend(w: WeekendSim, kind: String, ctx_round: int = 0) -> bool:
+	if kind != "gp":
+		ensure()
+	else:
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://saves/"))
+	var path := weekend_path(kind)
+	var tmp := path + ".tmp"
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
+	if f == null:
+		return false
+	f.store_var({"version": WEEKEND_VERSION, "kind": kind, "ctx_round": ctx_round, "data": w.to_save()}, false)
+	f.close()
+	DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(path))
+	return true
+
+
+## Fim de semana salvo, ou null (sem arquivo, versão desconhecida, de outro tipo ou de outra rodada).
+static func load_weekend(kind: String, ctx_round: int = 0) -> WeekendSim:
+	var path := weekend_path(kind)
+	if not FileAccess.file_exists(path):
+		return null
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return null
+	var d: Variant = f.get_var(false)
+	f.close()
+	if not d is Dictionary or int(d.get("version", 0)) > WEEKEND_VERSION or String(d.get("kind", "")) != kind:
+		return null
+	if kind != "gp" and int(d.get("ctx_round", -1)) != ctx_round:  # o campeonato já passou desta rodada: save velho
+		delete_weekend(kind)
+		return null
+	return WeekendSim.from_save(d["data"])
+
+
+static func has_weekend(kind: String, slot: int = 0) -> bool:
+	return FileAccess.file_exists(weekend_path(kind, slot))
+
+
+static func delete_weekend(kind: String, slot: int = 0) -> void:
+	var p := weekend_path(kind, slot)
+	if FileAccess.file_exists(p):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+
+
 static func has_campaign(slot: int) -> bool:
 	return FileAccess.file_exists(campaign_path(slot))
 
@@ -76,7 +131,7 @@ static func first_free() -> int:
 
 
 static func delete(slot: int) -> void:
-	for p: String in [campaign_path(slot), world_path(slot)]:
+	for p: String in [campaign_path(slot), world_path(slot), weekend_path("campaign", slot)]:
 		if FileAccess.file_exists(p):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
 

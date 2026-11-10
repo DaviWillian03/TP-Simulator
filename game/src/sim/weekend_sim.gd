@@ -48,6 +48,11 @@ var incident_rate := 1.0
 var campaign := false  ## fim de semana de uma campanha (volta para a sede ao terminar)
 var world := false  ## fim de semana do Campeonato Mundial F1 (volta para o painel da temporada ao terminar)
 
+signal session_done  ## uma sessão terminou (treino, classificação, sprint ou corrida): o Session salva o fim de semana
+
+var _init_circuit := ""  ## para recriar o fim de semana ao carregar um save
+var _init_options: Dictionary = {}
+
 var sessions: Array[String] = []
 var current := 0
 var setups: Dictionary = {}  ## id do piloto -> CarSetup
@@ -71,6 +76,8 @@ var last_practice: Dictionary = {}  ## resultado do último treino (tela de resu
 ## options: player_team, duration_pct, weather ("realistic"/"dry"/"rain"/"variable"),
 ##          format ("full"/"race_only"), seed, incident_rate, teams/drivers (grid da campanha), category ("F1"/"F2"/"F3").
 func _init(circuit_id: String, options: Dictionary = {}) -> void:
+	_init_circuit = circuit_id
+	_init_options = options.duplicate(true)
 	circuit = GameData.circuit(circuit_id)
 	track = TrackModel.new(circuit)
 	tyres = TyreModel.new(GameData.tyres())
@@ -410,6 +417,56 @@ func _store(order: Array) -> void:
 
 func _next() -> void:
 	current += 1
+	session_done.emit()
+
+
+# --- salvamento automático (entre as sessões) ------------------------------------------------------------
+
+## Estado do fim de semana para o save: as opções de criação (a semente refaz clima e forma dos carros) mais o que as
+## sessões já produziram. A corrida em andamento NÃO é salva (se travar, volta ao início da corrida).
+func to_save() -> Dictionary:
+	var setups_d := {}
+	for id: String in setups:
+		var s: CarSetup = setups[id]
+		setups_d[id] = {"aero": s.aero, "mech": s.mech, "balance": s.balance, "race_prep": s.race_prep, "quali_prep": s.quali_prep}
+	return {"circuit": _init_circuit, "options": _init_options, "state": {
+		"current": current, "results": results, "summaries": summaries, "grids": grids, "points": points, "forecast": Array(forecast),
+		"retired": retired, "fastest_laps": fastest_laps, "quali_times": quali_times, "strategy": strategy, "programs": programs,
+		"show_practice_report": show_practice_report, "last_practice": last_practice, "setups": setups_d,
+		"tyre_sets": tyre_alloc.sets, "tyre_feeder": tyre_alloc.feeder, "tyre_return_after": tyre_alloc.return_after,
+		"rng_state": rng.state}}
+
+
+static func from_save(d: Dictionary) -> WeekendSim:
+	var w := WeekendSim.new(String(d["circuit"]), (d["options"] as Dictionary).duplicate(true))
+	var st: Dictionary = d["state"]
+	w.current = int(st["current"])
+	w.results = st["results"]
+	w.summaries = st["summaries"]
+	w.grids = st["grids"]
+	w.points = st["points"]
+	w.forecast.assign(st["forecast"])
+	w.retired = st["retired"]
+	w.fastest_laps = st["fastest_laps"]
+	w.quali_times = st["quali_times"]
+	w.strategy = st["strategy"]
+	w.programs = st["programs"]
+	w.show_practice_report = bool(st["show_practice_report"])
+	w.last_practice = st["last_practice"]
+	for id: String in st["setups"]:
+		var s := CarSetup.new()
+		var sd: Dictionary = st["setups"][id]
+		s.aero = float(sd["aero"])
+		s.mech = float(sd["mech"])
+		s.balance = float(sd["balance"])
+		s.race_prep = float(sd["race_prep"])
+		s.quali_prep = float(sd["quali_prep"])
+		w.setups[id] = s
+	w.tyre_alloc.sets = st["tyre_sets"]
+	w.tyre_alloc.feeder = bool(st["tyre_feeder"])
+	w.tyre_alloc.return_after = st["tyre_return_after"]
+	w.rng.state = int(st["rng_state"])
+	return w
 
 
 ## Pontos do fim de semana em ordem decrescente: [[id, pontos], ...].
