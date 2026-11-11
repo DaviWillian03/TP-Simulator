@@ -769,3 +769,8 @@ Respostas do usuário:
   (vitórias, poles, pódios, abandonos) são **clicáveis**: tocar abre o **ranking completo** daquela estatística (com quem tem zero no fim),
   trocando de estatística pelas abas e de pilotos para equipes pelo seletor. O componente `WorldTables` também serve às abas
   Campeonato/Estatísticas do resultado de cada GP. Dev: `--world --team=<id> --rounds=<n> --ui=wtable|wteams|wstats|wrank`.
+- **2026-11-11 — Pista 3D que some (depois do grid ou do box): mitigação.** Sintoma no S23: a corrida começa só com os painéis e o
+  fundo da equipe, sem pista nem carros. Não reproduz fora do aparelho. Suspeito: o alvo de renderização do 3D (SubViewport com MSAA no
+  GLES/Compatibility) fica vazio ou com tamanho errado ao trocar de tela. Mudanças em `TrackView3D`: no celular o 3D roda **sem MSAA**,
+  o alvo **sempre atualiza** e um vigia (`heal_viewport`, a cada 20 quadros) recalcula o tamanho se ele não bater com a área. Precisa
+  de validação no aparelho; se voltar a acontecer, o próximo passo é registrar um log no aparelho.

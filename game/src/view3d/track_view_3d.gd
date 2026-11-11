@@ -22,6 +22,7 @@ enum CamMode { OVERVIEW, FOLLOW_1, FOLLOW_2, LEADER, CAR }
 var sim: TrackFeed  ## o que a pista mostra (corrida ou classificação)
 var t3: Track3D
 var cam_mode := CamMode.OVERVIEW
+var _heal_tick := 0
 var followed: CarState = null  ## carro em foco (CamMode.CAR): escolhido tocando na torre
 var yaw := 0.6
 var snap_camera := false  ## câmera vai direto ao alvo (capturas de tela)
@@ -68,7 +69,10 @@ func setup(source: Variant) -> void:
 	stretch = true
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_vp = SubViewport.new()
-	_vp.msaa_3d = Viewport.MSAA_2X
+	# No celular (GLES/Compatibility) o alvo de renderização com MSAA é o suspeito da "pista que some" (a imagem 3D fica vazia e
+	# aparece só o fundo da equipe, depois do grid ou do box): ali o 3D roda sem MSAA e sempre atualizando.
+	_vp.msaa_3d = Viewport.MSAA_DISABLED if OS.has_feature("mobile") else Viewport.MSAA_2X
+	_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_vp.positional_shadow_atlas_size = 0
 	add_child(_vp)
 	_world_root = Node3D.new()
@@ -196,7 +200,24 @@ func _build_cars() -> void:
 
 # --- atualização por quadro ------------------------------------------------------------
 
+## Vigia do alvo de renderização: se o tamanho do 3D não bate com o da área (ficou 0 ou antigo depois de trocar de tela),
+## força o recálculo. Devolve true se precisou corrigir.
+func heal_viewport() -> bool:
+	if _vp == null or size.x < 4.0 or size.y < 4.0:
+		return false
+	var want := Vector2i(size) / maxi(stretch_shrink, 1)
+	if absi(_vp.size.x - want.x) <= 2 and absi(_vp.size.y - want.y) <= 2:
+		return false
+	stretch = false
+	_vp.size = want
+	stretch = true
+	return true
+
+
 func _process(delta: float) -> void:
+	_heal_tick += 1
+	if _heal_tick % 20 == 0:
+		heal_viewport()
 	if sim == null:
 		return
 	_rank_timer -= delta
