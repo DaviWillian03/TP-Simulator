@@ -211,6 +211,7 @@ func _in_water(p: Vector3) -> bool:
 
 func _trees_and_buildings() -> void:
 	var tree_density: float = float(t3.track.scenery.get("trees", TREE_THEMES.get(theme, 0.05)))
+	var street := bool(t3.track.scenery.get("street", false))
 	var city_density: float = float(t3.track.scenery.get("city", CITY_THEMES.get(theme, 0.0)))
 	var trees: Array[Transform3D] = []
 	var tree_cols: Array[Color] = []
@@ -229,7 +230,8 @@ func _trees_and_buildings() -> void:
 				continue
 			var cluster := sin(p.x / 140.0 + 1.3) * cos(p.z / 110.0) + rng.randf_range(-0.35, 0.35)
 			var y := ground_height(p)
-			if city_density > 0.0 and near.x > 60.0 and cluster < -0.1 and rng.randf() < city_density:
+			# prédios só do lado de fora do traçado (o miolo da pista fica livre; pistas de rua são a exceção: a cidade está em volta e dentro)
+			if city_density > 0.0 and near.x > 60.0 and cluster < -0.1 and rng.randf() < city_density and (street or not t3.inside(p)):
 				var hgt := rng.randf_range(12.0, 38.0) * (1.6 if theme in ["strip", "bay", "city"] else 1.0)
 				var w := rng.randf_range(14.0, 26.0)
 				var b := Basis().scaled(Vector3(w, hgt, rng.randf_range(14.0, 26.0))).rotated(Vector3.UP, rng.randf() * 0.4)

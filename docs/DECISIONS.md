@@ -790,3 +790,4 @@ Respostas do usuário:
   e `scenery.ground` (cor do terreno): Austin e Barcelona com terreno seco e poucas árvores, Interlagos cercado de cidade, Miami com
   terreno urbano, Madring e Silverstone com terreno próprio, Suzuka com menos floresta e alguma cidade; México e Xangai quase sem
   árvores; Monza continua a mais arborizada (parque). Valores PROVISÓRIOS, revisados por captura em lote.
+- **2026-11-11 — Sem prédios dentro do traçado.** Os prédios do cenário só nascem do lado de fora da pista (`Track3D.inside`); nas pistas de rua (`street`) a regra não vale, porque a cidade fica em volta e dentro.
