@@ -3,7 +3,8 @@
  "name": "Autodromo Nazionale Monza",
  "short_name": "Monza",
  "grand_prix": "GP da Itália",
- "country": "Itália", "country_code": "it",
+ "country": "Itália",
+ "country_code": "it",
  "city": "Monza",
  "round": 13,
  "date": "2026-09-06",
@@ -35,13 +36,24 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.7, "slow": 0.15, "fast": 0.15},
+ "profile": {
+  "straight": 0.7,
+  "slow": 0.15,
+  "fast": 0.15
+ },
  "rain_probability": 0.15,
  "scenery": {
-  "landmarks": ["banking"],
-  "kerbs": ["#1f9d3a", "#f2f2f2", "#d42020"],
+  "landmarks": [
+   "banking"
+  ],
+  "kerbs": [
+   "#1f9d3a",
+   "#f2f2f2",
+   "#d42020"
+  ],
   "theme": "park",
-  "landmark": "trees"
+  "landmark": "trees",
+  "trees": 0.42
  },
  "elevation": [],
  "_notas": {

@@ -3,7 +3,8 @@
  "name": "Miami International Autodrome",
  "short_name": "Miami",
  "grand_prix": "GP de Miami",
- "country": "Estados Unidos", "country_code": "us",
+ "country": "Estados Unidos",
+ "country_code": "us",
  "city": "Miami",
  "round": 4,
  "date": "2026-05-03",
@@ -35,13 +36,26 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.4, "slow": 0.35, "fast": 0.25},
+ "profile": {
+  "straight": 0.4,
+  "slow": 0.35,
+  "fast": 0.25
+ },
  "rain_probability": 0.25,
  "scenery": {
-  "landmarks": ["stadium", "yachts", "palms"],
-  "kerbs": ["#d42020", "#f2f2f2"],
+  "landmarks": [
+   "stadium",
+   "yachts",
+   "palms"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f2f2f2"
+  ],
   "theme": "coast",
-  "landmark": "stadium"
+  "landmark": "stadium",
+  "ground": "#7a776e",
+  "trees": 0.03
  },
  "elevation": [],
  "_notas": {

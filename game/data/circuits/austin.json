@@ -51,7 +51,9 @@
    "#f2f2f2"
   ],
   "theme": "prairie",
-  "landmark": "tower"
+  "landmark": "tower",
+  "ground": "#8a8752",
+  "trees": 0.04
  },
  "elevation": [
   [

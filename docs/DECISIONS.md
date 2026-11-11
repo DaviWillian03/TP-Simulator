@@ -785,3 +785,8 @@ Respostas do usuário:
   Raidillon até Les Combes, ~+62 m, e cai até Stavelot, ~−38 m), **Austin** (subida de ~30 m até a curva 1), **Spielberg** (sobe ~62 m
   até a curva 3) e **Suzuka** (desce para a curva 1, sobe nos S e na Spoon). Em Suzuka as duas pistas ficam na **mesma altura no
   cruzamento**: com alturas diferentes o terreno enterra a de baixo, e falta uma ponte no cenário (pendente). Interlagos já tinha relevo.
+- **2026-11-11 — Menos verde e biomas por pista** (pedido do usuário: árvores e grama exagerados; variar conforme o lugar real).
+  Densidade de árvores cortada quase pela metade em todos os temas e cada pista pode definir `scenery.trees`, `scenery.city` (prédios)
+  e `scenery.ground` (cor do terreno): Austin e Barcelona com terreno seco e poucas árvores, Interlagos cercado de cidade, Miami com
+  terreno urbano, Madring e Silverstone com terreno próprio, Suzuka com menos floresta e alguma cidade; México e Xangai quase sem
+  árvores; Monza continua a mais arborizada (parque). Valores PROVISÓRIOS, revisados por captura em lote.

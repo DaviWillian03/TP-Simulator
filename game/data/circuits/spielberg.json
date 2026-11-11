@@ -52,7 +52,8 @@
    "#f2f2f2"
   ],
   "theme": "mountains",
-  "landmark": "mountains"
+  "landmark": "mountains",
+  "trees": 0.16
  },
  "elevation": [
   [

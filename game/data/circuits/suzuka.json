@@ -51,7 +51,9 @@
    "#f2f2f2"
   ],
   "theme": "forest",
-  "landmark": "ferris_wheel"
+  "landmark": "ferris_wheel",
+  "trees": 0.22,
+  "city": 0.15
  },
  "elevation": [
   [

@@ -3,7 +3,8 @@
  "name": "Hungaroring",
  "short_name": "Hungaroring",
  "grand_prix": "GP da Hungria",
- "country": "Hungria", "country_code": "hu",
+ "country": "Hungria",
+ "country_code": "hu",
  "city": "Mogyoród",
  "round": 11,
  "date": "2026-07-26",
@@ -35,13 +36,24 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.15, "slow": 0.55, "fast": 0.3},
+ "profile": {
+  "straight": 0.15,
+  "slow": 0.55,
+  "fast": 0.3
+ },
  "rain_probability": 0.15,
  "scenery": {
-  "landmarks": ["hills"],
-  "kerbs": ["#d42020", "#f2f2f2"],
+  "landmarks": [
+   "hills"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f2f2f2"
+  ],
   "theme": "hills",
-  "landmark": "grandstand"
+  "landmark": "grandstand",
+  "ground": "#869a50",
+  "trees": 0.14
  },
  "elevation": [],
  "_notas": {

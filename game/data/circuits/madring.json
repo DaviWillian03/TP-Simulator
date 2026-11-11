@@ -3,7 +3,8 @@
  "name": "Circuito de Madring",
  "short_name": "Madri",
  "grand_prix": "GP de Madri",
- "country": "Espanha", "country_code": "es",
+ "country": "Espanha",
+ "country_code": "es",
  "city": "Madri",
  "round": 14,
  "date": "2026-09-13",
@@ -35,14 +36,26 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.35, "slow": 0.4, "fast": 0.25},
+ "profile": {
+  "straight": 0.35,
+  "slow": 0.4,
+  "fast": 0.25
+ },
  "rain_probability": 0.1,
  "scenery": {
-  "landmarks": ["towers"],
-  "kerbs": ["#d42020", "#f5c400", "#f2f2f2"],
+  "landmarks": [
+   "towers"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f5c400",
+   "#f2f2f2"
+  ],
   "street": true,
   "theme": "city",
-  "landmark": "towers"
+  "landmark": "towers",
+  "ground": "#8d8672",
+  "trees": 0.03
  },
  "elevation": [],
  "_notas": {

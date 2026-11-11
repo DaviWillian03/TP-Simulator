@@ -8,7 +8,9 @@ const MARGIN := 700.0
 const GRID := 72
 const TRACK_CLEAR_M := 40.0  ## gramado aparado, escapes e barreiras (CircuitDressing)
 
-const TREE_THEMES := {"park": 0.55, "forest": 0.7, "lake": 0.4, "hills": 0.35, "mountains": 0.3, "river": 0.4, "airfield": 0.12, "prairie": 0.1}
+## Densidade de árvores por tema (reduzida em 2026-11-11: o verde estava exagerado). Cada pista pode trocar por `scenery.trees`,
+## `scenery.city` (prédios) e `scenery.ground` (cor do terreno), conforme o lugar real.
+const TREE_THEMES := {"park": 0.3, "forest": 0.4, "lake": 0.2, "hills": 0.2, "mountains": 0.18, "river": 0.2, "airfield": 0.05, "prairie": 0.04}
 const CITY_THEMES := {"city": 0.5, "oldcity": 0.45, "harbor": 0.55, "bay": 0.5, "strip": 0.55, "marina": 0.35, "coast": 0.35, "lake": 0.12}
 const WATER_THEMES := ["lake", "harbor", "marina", "bay", "coast", "river", "dunes"]
 const GROUND := {"desert": Color("#c9a970"), "dunes": Color("#d9c08a"), "city": Color("#6e6a60"), "oldcity": Color("#857a5e"),
@@ -84,7 +86,10 @@ func _terrain() -> void:
 				st.add_vertex(quad[k])
 	var mesh := MeshInstance3D.new()
 	mesh.mesh = st.commit()
+	var sc: Dictionary = t3.track.scenery
 	var mat := Materials3D.grass() if not GROUND.has(theme) else Materials3D.ground(GROUND[theme])
+	if sc.has("ground"):
+		mat = Materials3D.ground(Color(String(sc["ground"])))
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	if night:
 		mat.albedo_color = Color(0.45, 0.48, 0.6)
@@ -205,8 +210,8 @@ func _in_water(p: Vector3) -> bool:
 # --- árvores e prédios ----------------------------------------------------------------
 
 func _trees_and_buildings() -> void:
-	var tree_density: float = TREE_THEMES.get(theme, 0.08)
-	var city_density: float = CITY_THEMES.get(theme, 0.0)
+	var tree_density: float = float(t3.track.scenery.get("trees", TREE_THEMES.get(theme, 0.05)))
+	var city_density: float = float(t3.track.scenery.get("city", CITY_THEMES.get(theme, 0.0)))
 	var trees: Array[Transform3D] = []
 	var tree_cols: Array[Color] = []
 	var rounds: Array[Transform3D] = []
@@ -230,7 +235,7 @@ func _trees_and_buildings() -> void:
 				var b := Basis().scaled(Vector3(w, hgt, rng.randf_range(14.0, 26.0))).rotated(Vector3.UP, rng.randf() * 0.4)
 				builds.append(Transform3D(b, Vector3(p.x, y + hgt / 2.0, p.z)))
 			elif tree_density > 0.0 and cluster > 0.6 - tree_density * 1.6:
-				for k in 4:
+				for k in 3:
 					var q := p + Vector3(rng.randf_range(-11, 11), 0, rng.randf_range(-11, 11))
 					var s := rng.randf_range(0.8, 1.5)
 					var xf := Transform3D(Basis().scaled(Vector3(s, s * rng.randf_range(0.9, 1.3), s)).rotated(Vector3.UP, rng.randf() * TAU), Vector3(q.x, ground_height(q), q.z))
