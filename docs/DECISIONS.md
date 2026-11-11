@@ -780,3 +780,8 @@ Respostas do usuário:
   **vantagem média de tempo na classificação**. O histórico de cada GP passou a guardar a melhor volta de classificação de cada piloto
   (`quali`); em GPs de saves antigos, sem esse dado, o placar usa a posição no grid e a média ignora aquele GP
   (`WorldChampionship.teammate_duel`). Dev: `--ui=wmates`.
+- **2026-11-11 — Relevo em mais pistas 3D** (escolha do usuário; revisão em lote por capturas). Perfis de altura aproximados, modelados
+  à mão (`elevation` no JSON da pista, como já havia em Mônaco e Interlagos): **Spa** (desce da La Source até a Eau Rouge, sobe o
+  Raidillon até Les Combes, ~+62 m, e cai até Stavelot, ~−38 m), **Austin** (subida de ~30 m até a curva 1), **Spielberg** (sobe ~62 m
+  até a curva 3) e **Suzuka** (desce para a curva 1, sobe nos S e na Spoon). Em Suzuka as duas pistas ficam na **mesma altura no
+  cruzamento**: com alturas diferentes o terreno enterra a de baixo, e falta uma ponte no cenário (pendente). Interlagos já tinha relevo.

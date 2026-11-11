@@ -3,7 +3,8 @@
  "name": "Circuit de Spa-Francorchamps",
  "short_name": "Spa",
  "grand_prix": "GP da Bélgica",
- "country": "Bélgica", "country_code": "be",
+ "country": "Bélgica",
+ "country_code": "be",
  "city": "Stavelot",
  "round": 10,
  "date": "2026-07-19",
@@ -35,20 +36,98 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.45, "slow": 0.15, "fast": 0.4},
+ "profile": {
+  "straight": 0.45,
+  "slow": 0.15,
+  "fast": 0.4
+ },
  "rain_probability": 0.45,
  "scenery": {
-  "landmarks": ["hills"],
-  "kerbs": ["#d42020", "#f5c400"],
+  "landmarks": [
+   "hills"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f5c400"
+  ],
   "theme": "forest",
   "landmark": "hills"
  },
- "elevation": [],
+ "elevation": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   0.037,
+   3.0
+  ],
+  [
+   0.07,
+   -6.0
+  ],
+  [
+   0.1,
+   -12.0
+  ],
+  [
+   0.14,
+   26.0
+  ],
+  [
+   0.22,
+   45.0
+  ],
+  [
+   0.3,
+   62.0
+  ],
+  [
+   0.36,
+   52.0
+  ],
+  [
+   0.413,
+   38.0
+  ],
+  [
+   0.47,
+   22.0
+  ],
+  [
+   0.54,
+   4.0
+  ],
+  [
+   0.624,
+   -22.0
+  ],
+  [
+   0.688,
+   -38.0
+  ],
+  [
+   0.76,
+   -30.0
+  ],
+  [
+   0.85,
+   -15.0
+  ],
+  [
+   0.95,
+   -3.0
+  ],
+  [
+   1.0,
+   0.0
+  ]
+ ],
  "_notas": {
   "tracado": "bacinger/f1-circuits be-1925.geojson (MIT), escalado para 7004 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
   "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
-  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana"
+  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão pelo perfil conhecido da pista; vazio = plana"
  },
  "points": [
   [

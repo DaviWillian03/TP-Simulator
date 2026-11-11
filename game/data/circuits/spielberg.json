@@ -3,7 +3,8 @@
  "name": "Red Bull Ring",
  "short_name": "Spielberg",
  "grand_prix": "GP da Áustria",
- "country": "Áustria", "country_code": "at",
+ "country": "Áustria",
+ "country_code": "at",
  "city": "Spielberg",
  "round": 8,
  "date": "2026-06-28",
@@ -35,20 +36,79 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.45, "slow": 0.3, "fast": 0.25},
+ "profile": {
+  "straight": 0.45,
+  "slow": 0.3,
+  "fast": 0.25
+ },
  "rain_probability": 0.3,
  "scenery": {
-  "landmarks": ["bull", "mountains"],
-  "kerbs": ["#d42020", "#f2f2f2"],
+  "landmarks": [
+   "bull",
+   "mountains"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f2f2f2"
+  ],
   "theme": "mountains",
   "landmark": "mountains"
  },
- "elevation": [],
+ "elevation": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   0.076,
+   14.0
+  ],
+  [
+   0.16,
+   36.0
+  ],
+  [
+   0.294,
+   62.0
+  ],
+  [
+   0.38,
+   50.0
+  ],
+  [
+   0.485,
+   38.0
+  ],
+  [
+   0.56,
+   24.0
+  ],
+  [
+   0.64,
+   14.0
+  ],
+  [
+   0.72,
+   10.0
+  ],
+  [
+   0.82,
+   6.0
+  ],
+  [
+   0.9,
+   3.0
+  ],
+  [
+   1.0,
+   0.0
+  ]
+ ],
  "_notas": {
   "tracado": "bacinger/f1-circuits at-1969.geojson (MIT), escalado para 4318 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
   "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
-  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana"
+  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão pelo perfil conhecido da pista; vazio = plana"
  },
  "points": [
   [
