@@ -44,7 +44,8 @@
  "rain_probability": 0.1,
  "scenery": {
   "landmarks": [
-   "towers"
+   "towers",
+   "banked_turn"
   ],
   "kerbs": [
    "#d42020",
@@ -55,7 +56,13 @@
   "theme": "city",
   "landmark": "towers",
   "ground": "#8d8672",
-  "trees": 0.03
+  "trees": 0.03,
+  "spans": {
+   "banked_turn": [
+    0.55,
+    0.62
+   ]
+  }
  },
  "elevation": [],
  "_notas": {

@@ -791,3 +791,7 @@ Respostas do usuário:
   terreno urbano, Madring e Silverstone com terreno próprio, Suzuka com menos floresta e alguma cidade; México e Xangai quase sem
   árvores; Monza continua a mais arborizada (parque). Valores PROVISÓRIOS, revisados por captura em lote.
 - **2026-11-11 — Sem prédios dentro do traçado.** Os prédios do cenário só nascem do lado de fora da pista (`Track3D.inside`); nas pistas de rua (`street`) a regra não vale, porque a cidade fica em volta e dentro.
+- **2026-11-11 — Marcos em cima do traçado.** Novos marcos que acompanham um trecho da pista (`scenery.spans[chave] = [início, fim]`,
+  frações da volta, PROVISÓRIAS): **túnel** de Mônaco, **muro branco** na saída da última chicane de Montreal, **cobertura em asa** sobre
+  os boxes de Silverstone, **muralha com torres** em Baku, **arquibancadas dos dois lados** (estádio) no México e **curva inclinada** no
+  Madring. Formas genéricas, sem marcas. Ainda falta: ponte de Suzuka e conferir de perto o muro de Montreal.

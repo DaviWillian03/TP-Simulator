@@ -3,7 +3,8 @@
  "name": "Baku City Circuit",
  "short_name": "Baku",
  "grand_prix": "GP do Azerbaijão",
- "country": "Azerbaijão", "country_code": "az",
+ "country": "Azerbaijão",
+ "country_code": "az",
  "city": "Baku",
  "round": 15,
  "date": "2026-09-26",
@@ -35,14 +36,30 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.55, "slow": 0.35, "fast": 0.1},
+ "profile": {
+  "straight": 0.55,
+  "slow": 0.35,
+  "fast": 0.1
+ },
  "rain_probability": 0.05,
  "scenery": {
-  "landmarks": ["flame_towers"],
-  "kerbs": ["#d42020", "#f2f2f2"],
+  "landmarks": [
+   "flame_towers",
+   "old_walls"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f2f2f2"
+  ],
   "street": true,
   "theme": "oldcity",
-  "landmark": "flame_towers"
+  "landmark": "flame_towers",
+  "spans": {
+   "old_walls": [
+    0.33,
+    0.43
+   ]
+  }
  },
  "elevation": [],
  "_notas": {

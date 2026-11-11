@@ -3,7 +3,8 @@
  "name": "Circuit Gilles-Villeneuve",
  "short_name": "Montreal",
  "grand_prix": "GP do Canadá",
- "country": "Canadá", "country_code": "ca",
+ "country": "Canadá",
+ "country_code": "ca",
  "city": "Montreal",
  "round": 5,
  "date": "2026-05-24",
@@ -35,13 +36,29 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.5, "slow": 0.4, "fast": 0.1},
+ "profile": {
+  "straight": 0.5,
+  "slow": 0.4,
+  "fast": 0.1
+ },
  "rain_probability": 0.3,
  "scenery": {
-  "landmarks": ["biosphere"],
-  "kerbs": ["#d42020", "#f2f2f2"],
+  "landmarks": [
+   "biosphere",
+   "champions_wall"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f2f2f2"
+  ],
   "theme": "river",
-  "landmark": "biosphere"
+  "landmark": "biosphere",
+  "spans": {
+   "champions_wall": [
+    0.975,
+    0.995
+   ]
+  }
  },
  "elevation": [],
  "_notas": {

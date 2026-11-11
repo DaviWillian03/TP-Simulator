@@ -44,7 +44,8 @@
  "rain_probability": 0.35,
  "scenery": {
   "landmarks": [
-   "hangars"
+   "hangars",
+   "wing_roof"
   ],
   "kerbs": [
    "#1b1b1b",
@@ -52,7 +53,13 @@
   ],
   "theme": "airfield",
   "landmark": "hangars",
-  "ground": "#7f9650"
+  "ground": "#7f9650",
+  "spans": {
+   "wing_roof": [
+    0.968,
+    1.03
+   ]
+  }
  },
  "elevation": [],
  "_notas": {

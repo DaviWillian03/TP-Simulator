@@ -102,6 +102,9 @@ func build(keys: Array) -> void:
 				_strip_hotels()
 			"floodlights":
 				_floodlights()
+			"tunnel", "champions_wall", "wing_roof", "old_walls", "stadium_section", "banked_turn":
+				var sp: Array = (t3.track.scenery.get("spans", {}) as Dictionary).get(k, [0.0, 0.05])
+				call("_" + k, float(sp[0]), float(sp[1]))
 	root = main_root
 
 
@@ -432,3 +435,95 @@ func _floodlights() -> void:
 			_box(Vector3(1.4, 40.0, 1.4), Transform3D(Basis(), p + Vector3.UP * 20.0), pole)
 			_box(Vector3(8.0, 4.0, 1.6), Transform3D(t3.basis_at(float(i) / t3.n), p + Vector3.UP * 41.0), lamp)
 		i += 20
+
+
+# --- marcos em cima do traçado (2026-11-11): usam o trecho `scenery.spans[chave] = [início, fim]` (frações da volta) ---------
+
+## Lado de fora da curva na fração dada (+1 ou −1 em relação ao eixo lateral da pista).
+func _outer(f: float) -> float:
+	var b := t3.basis_at(f)
+	var ahead := t3.point_at(fposmod(f + 0.02, 1.0)) - t3.point_at(f)
+	return -1.0 if ahead.dot(b.x) > 0.0 else 1.0
+
+
+func _along(f0: float, f1: float, step_m: float, fn: Callable) -> void:
+	var n := maxi(2, int((f1 - f0) * t3.track.length_m / step_m))
+	for i in n:
+		var f := fposmod(f0 + (f1 - f0) * (i + 0.5) / n, 1.0)
+		fn.call(f, t3.point_at(f), t3.basis_at(f), (f1 - f0) * t3.track.length_m / n)
+
+
+## Túnel (Mônaco): laje sobre a pista com parede dos dois lados e as bocas iluminadas.
+func _tunnel(f0: float, f1: float) -> void:
+	var conc := _mat(Color("#8f9399"), 0.9)
+	var lamp := _mat(Color("#ffe9a8"), 0.4, 1.2)
+	var w := Track3D.WIDTH
+	_along(f0, f1, 14.0, func(_f: float, p: Vector3, b: Basis, len_m: float) -> void:
+		_box(Vector3(w + 8.0, 1.6, len_m + 1.0), Transform3D(b, p + Vector3.UP * 9.0), conc)
+		for sd: float in [-1.0, 1.0]:
+			_box(Vector3(1.4, 9.0, len_m + 1.0), Transform3D(b, p + b.x * sd * (w / 2.0 + 3.4) + Vector3.UP * 4.5), conc)
+		_box(Vector3(w - 2.0, 0.2, 1.2), Transform3D(b, p + Vector3.UP * 8.1), lamp))
+	_box(Vector3(w + 30.0, 16.0, (f1 - f0) * 0.0 + 30.0), Transform3D(t3.basis_at(fposmod((f0 + f1) / 2.0, 1.0)), t3.point_at(fposmod((f0 + f1) / 2.0, 1.0)) + Vector3.UP * 18.0), Materials3D.facade(Color("#e8dcc8"), night))
+
+
+## Muro branco na saída da última chicane (Montreal), colado na pista do lado de fora.
+func _champions_wall(f0: float, f1: float) -> void:
+	var white := _mat(Color("#f4f5f7"), 0.5)
+	var band := _mat(Color("#1f4fa0"), 0.5)
+	var sd := _outer(fposmod(f0 - 0.01, 1.0))
+	_along(f0, f1, 10.0, func(_f: float, p: Vector3, b: Basis, len_m: float) -> void:
+		var c := p + b.x * sd * (Track3D.WIDTH / 2.0 + 1.6)
+		_box(Vector3(1.2, 4.2, len_m + 0.5), Transform3D(b, c + Vector3.UP * 2.1), white)
+		_box(Vector3(1.3, 1.1, len_m + 0.5), Transform3D(b, c + Vector3.UP * 3.0), band))
+
+
+## Cobertura branca em asa sobre o prédio dos boxes (Silverstone).
+func _wing_roof(f0: float, f1: float) -> void:
+	var white := _mat(Color("#f6f7f9"), 0.35)
+	var sd := float(t3.track.pit_side)
+	var n := maxi(2, int((f1 - f0) * t3.track.length_m / 16.0))
+	_along(f0, f1, 16.0, func(f: float, p: Vector3, b: Basis, len_m: float) -> void:
+		var t := fposmod(f - f0, 1.0) / maxf(f1 - f0, 0.001)
+		var peak := 15.0 + 9.0 * sin(t * PI)  # sobe no meio e desce nas pontas, como uma asa
+		var tilt := Basis(Vector3.FORWARD, 0.22 * sd)
+		_box(Vector3(40.0, 1.2, len_m + 1.0), Transform3D(b * tilt, p + b.x * sd * 44.0 + Vector3.UP * (peak + 4.0)), white))
+	if n < 0:
+		return
+
+
+## Muralha de pedra com torres ao lado da pista (cidade velha de Baku).
+func _old_walls(f0: float, f1: float) -> void:
+	var stone := _mat(Color("#b89f74"), 0.95)
+	var sd := -_outer(fposmod((f0 + f1) / 2.0, 1.0))
+	var count := [0]
+	_along(f0, f1, 18.0, func(_f: float, p: Vector3, b: Basis, len_m: float) -> void:
+		var c := p + b.x * sd * (Track3D.WIDTH / 2.0 + 7.0)
+		_box(Vector3(4.0, 13.0, len_m + 0.5), Transform3D(b, c + Vector3.UP * 6.5), stone)
+		_box(Vector3(5.0, 2.0, len_m * 0.45), Transform3D(b, c + Vector3.UP * 14.0), stone)
+		if count[0] % 4 == 0:
+			_cyl(6.5, 7.5, 20.0, Transform3D(Basis(), c + Vector3.UP * 10.0), stone, 12)
+		count[0] += 1)
+
+
+## Arquibancadas altas dos dois lados da pista, como um estádio que a pista atravessa (Cidade do México).
+func _stadium_section(f0: float, f1: float) -> void:
+	var conc := _mat(Color("#cfd3d8"), 0.7)
+	var cols := [Color("#1d8a4a"), Color("#f2f2f2"), Color("#c8102e")]
+	var idx := [0]
+	_along(f0, f1, 16.0, func(_f: float, p: Vector3, b: Basis, len_m: float) -> void:
+		for sd: float in [-1.0, 1.0]:
+			var c := p + b.x * sd * (Track3D.WIDTH / 2.0 + 24.0)
+			_box(Vector3(26.0, 14.0, len_m + 0.5), Transform3D(b, c + Vector3.UP * 7.0), conc)
+			_box(Vector3(27.0, 0.8, len_m + 0.5), Transform3D(b * Basis(Vector3.FORWARD, 0.5 * sd), c - b.x * sd * 1.0 + Vector3.UP * 16.5), _mat(cols[idx[0] % 3], 0.6))
+		idx[0] += 1)
+
+
+## Curva inclinada (Madring): faixa de concreto que sobe para o lado de fora, com muro no topo.
+func _banked_turn(f0: float, f1: float) -> void:
+	var conc := _mat(Color("#c4c0b6"), 0.9)
+	var wall := _mat(Color("#e8392e"), 0.6)
+	var sd := _outer(fposmod((f0 + f1) / 2.0, 1.0))
+	_along(f0, f1, 12.0, func(_f: float, p: Vector3, b: Basis, len_m: float) -> void:
+		var c := p + b.x * sd * (Track3D.WIDTH / 2.0 + 9.0)
+		_box(Vector3(18.0, 0.8, len_m + 0.8), Transform3D(b * Basis(Vector3.FORWARD, -0.42 * sd), c + Vector3.UP * 3.6), conc)
+		_box(Vector3(1.2, 3.0, len_m + 0.8), Transform3D(b, c + b.x * sd * 8.6 + Vector3.UP * 8.6), wall))

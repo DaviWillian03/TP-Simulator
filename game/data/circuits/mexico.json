@@ -44,7 +44,8 @@
  "rain_probability": 0.1,
  "scenery": {
   "landmarks": [
-   "stadium"
+   "stadium",
+   "stadium_section"
   ],
   "kerbs": [
    "#d42020",
@@ -52,7 +53,13 @@
   ],
   "theme": "city",
   "landmark": "stadium",
-  "trees": 0.03
+  "trees": 0.03,
+  "spans": {
+   "stadium_section": [
+    0.8,
+    0.88
+   ]
+  }
  },
  "elevation": [],
  "_notas": {

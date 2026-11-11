@@ -3,7 +3,8 @@
  "name": "Circuit de Monaco",
  "short_name": "Mônaco",
  "grand_prix": "GP de Mônaco",
- "country": "Mônaco", "country_code": "mc",
+ "country": "Mônaco",
+ "country_code": "mc",
  "city": "Monte Carlo",
  "round": 6,
  "date": "2026-06-07",
@@ -35,16 +36,81 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.05, "slow": 0.8, "fast": 0.15},
+ "profile": {
+  "straight": 0.05,
+  "slow": 0.8,
+  "fast": 0.15
+ },
  "rain_probability": 0.15,
  "scenery": {
-  "landmarks": ["yachts"],
-  "kerbs": ["#d42020", "#f2f2f2"],
+  "landmarks": [
+   "yachts",
+   "tunnel"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f2f2f2"
+  ],
   "street": true,
   "theme": "harbor",
-  "landmark": "yachts"
+  "landmark": "yachts",
+  "spans": {
+   "tunnel": [
+    0.43,
+    0.5
+   ]
+  }
  },
- "elevation": [[0.0, 0.0], [0.06, 2.0], [0.12, 24.0], [0.18, 38.0], [0.22, 42.0], [0.27, 32.0], [0.33, 16.0], [0.4, 9.0], [0.48, 4.0], [0.6, 2.0], [0.8, 1.0], [1.0, 0.0]],
+ "elevation": [
+  [
+   0.0,
+   0.0
+  ],
+  [
+   0.06,
+   2.0
+  ],
+  [
+   0.12,
+   24.0
+  ],
+  [
+   0.18,
+   38.0
+  ],
+  [
+   0.22,
+   42.0
+  ],
+  [
+   0.27,
+   32.0
+  ],
+  [
+   0.33,
+   16.0
+  ],
+  [
+   0.4,
+   9.0
+  ],
+  [
+   0.48,
+   4.0
+  ],
+  [
+   0.6,
+   2.0
+  ],
+  [
+   0.8,
+   1.0
+  ],
+  [
+   1.0,
+   0.0
+  ]
+ ],
  "_notas": {
   "tracado": "bacinger/f1-circuits mc-1929.geojson (MIT), escalado para 3337 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
