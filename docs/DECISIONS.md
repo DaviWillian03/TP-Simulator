@@ -774,3 +774,9 @@ Respostas do usuário:
   GLES/Compatibility) fica vazio ou com tamanho errado ao trocar de tela. Mudanças em `TrackView3D`: no celular o 3D roda **sem MSAA**,
   o alvo **sempre atualiza** e um vigia (`heal_viewport`, a cada 20 quadros) recalcula o tamanho se ele não bater com a área. Precisa
   de validação no aparelho; se voltar a acontecer, o próximo passo é registrar um log no aparelho.
+- **2026-11-11 — Duelo de companheiros no Mundial (mockup v35).** Nova aba **Companheiros** na tela cheia do campeonato: um cartão por
+  equipe (a sua em destaque) com os dois pilotos (vitórias, pódios, abandonos), o placar de **classificação** (quem ficou à frente),
+  de **corrida** (quem chegou à frente; se só um abandona, vence o outro; se os dois abandonam, não conta) e de **pontos**, mais a
+  **vantagem média de tempo na classificação**. O histórico de cada GP passou a guardar a melhor volta de classificação de cada piloto
+  (`quali`); em GPs de saves antigos, sem esse dado, o placar usa a posição no grid e a média ignora aquele GP
+  (`WorldChampionship.teammate_duel`). Dev: `--ui=wmates`.

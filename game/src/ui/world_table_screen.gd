@@ -41,6 +41,6 @@ func _ready() -> void:
 	tables.position = Vector2(40, 84)
 	tables.size = Vector2(W - 80, H - 84 - 30)
 	stage.add_child(tables)
-	tables.setup(world, ["drivers", "teams", "stats"], Session.world_table_mode, Session.world_table_stat)
+	tables.setup(world, ["drivers", "teams", "mates", "stats"], Session.world_table_mode, Session.world_table_stat)
 	layer.modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)

@@ -6,7 +6,7 @@ extends PanelContainer
 
 const GOLD := Color("#F5C542")
 const VIOLET := Color("#C77DFF")
-const MODE_NAMES := {"drivers": "Pilotos", "teams": "Construtores", "stats": "Estatísticas"}
+const MODE_NAMES := {"drivers": "Pilotos", "teams": "Construtores", "mates": "Companheiros", "stats": "Estatísticas"}
 const STATS := [["wins", "Vitórias", "trophy"], ["poles", "Poles", "flag"], ["podiums", "Pódios", "up"], ["dnfs", "Abandonos", "lock"]]
 
 var world: WorldChampionship
@@ -42,6 +42,8 @@ func _render() -> void:
 		"drivers", "teams":
 			_col.add_child(_columns())
 			_col.add_child(_table_list())
+		"mates":
+			_col.add_child(_mates_list())
 		_:
 			if stat == "":
 				_col.add_child(_stat_grid())
@@ -262,6 +264,114 @@ func _table_row(pos: int, id: String, pts: int, lead: int) -> Control:
 	gap.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	pv.add_child(gap)
 	h.add_child(pv)
+	p.add_child(h)
+	return p
+
+
+# --- duelo de companheiros (mockup v35) ------------------------------------------------------------
+
+func _mates_list() -> Control:
+	var box := VBoxContainer.new()
+	for row: Array in world.team_standings():
+		var duel := world.teammate_duel(String(row[0]))
+		if not duel.is_empty():
+			box.add_child(_mate_card(String(row[0]), duel))
+	var sc := _scroller(box)
+	box.add_theme_constant_override("separation", 8)
+	return sc
+
+
+func _mate_side(id: String, team_color: Color, right: bool) -> Control:
+	var d := _driver(id)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 12)
+	h.custom_minimum_size = Vector2(250, 0)
+	var face := DriverPhotos.make_avatar(d, team_color, 52)
+	face.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 2)
+	v.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var nm := UiStyle.g_label(String(d.get("name", id)), 17, UiStyle.G_TEXT, "black")
+	nm.clip_text = true
+	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if right else HORIZONTAL_ALIGNMENT_LEFT
+	v.add_child(nm)
+	var st := HBoxContainer.new()
+	st.add_theme_constant_override("separation", 10)
+	st.alignment = BoxContainer.ALIGNMENT_END if right else BoxContainer.ALIGNMENT_BEGIN
+	for kv: Array in [["trophy", world.wins, "wins"], ["up", world.podiums, "podiums"], ["lock", world.dnfs, "dnfs"]]:
+		var m := HBoxContainer.new()
+		m.add_theme_constant_override("separation", 3)
+		m.add_child(ScreenKit.icon(String(kv[0]), 13, stat_color(String(kv[2]))))
+		m.add_child(UiStyle.g_label(str(int((kv[1] as Dictionary).get(id, 0))), 12, UiStyle.G_TEXT_2, "black"))
+		st.add_child(m)
+	v.add_child(st)
+	if right:
+		h.add_child(v)
+		h.add_child(face)
+	else:
+		h.add_child(face)
+		h.add_child(v)
+	return h
+
+
+func _mate_row(x: int, y: int, col: Color, icon_name: String, label: String) -> Control:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 10)
+	for side in 2:
+		if side == 1:
+			var bar := ProgressBar.new()
+			bar.show_percentage = false
+			bar.max_value = maxf(1.0, float(x + y))
+			bar.value = x if x + y > 0 else 0.5
+			bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			bar.custom_minimum_size = Vector2(0, 10)
+			bar.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.32 if x + y > 0 else 0.12), 5, 0, 0))
+			bar.add_theme_stylebox_override("fill", UiStyle.g_box(col if x + y > 0 else Color(1, 1, 1, 0.12), 5, 0, 0))
+			h.add_child(bar)
+		var n := UiStyle.g_label(str(x if side == 0 else y), 19, UiStyle.G_TEXT, "black")
+		n.custom_minimum_size = Vector2(46, 0)
+		n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if side == 0:
+			h.add_child(n)
+		else:
+			h.add_child(n)
+	var lb := HBoxContainer.new()
+	lb.add_theme_constant_override("separation", 5)
+	lb.custom_minimum_size = Vector2(104, 0)
+	lb.add_child(ScreenKit.icon(icon_name, 14, UiStyle.G_TEXT_3))
+	lb.add_child(UiStyle.g_label(label, 12, UiStyle.G_TEXT_3, "black"))
+	h.add_child(lb)
+	return h
+
+
+func _mate_card(team_id: String, duel: Dictionary) -> Control:
+	var team := GameData.team_by_id(GameData.teams(), team_id)
+	var accent := UiStyle.team_accent(team)
+	var p := _row_panel(team_id, 124)
+	(p.get_theme_stylebox("panel") as StyleBoxFlat).content_margin_right = 16
+	p.set_meta("team", team_id)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 16)
+	h.add_child(_mate_side(String(duel["a"]), Color(team.get("color", "#888888")), false))
+	var mid := VBoxContainer.new()
+	mid.add_theme_constant_override("separation", 4)
+	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mid.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	mid.add_child(_mate_row(int(duel["quali"][0]), int(duel["quali"][1]), accent, "flag", "Quali"))
+	mid.add_child(_mate_row(int(duel["race"][0]), int(duel["race"][1]), accent, "cal", "Corrida"))
+	mid.add_child(_mate_row(int(duel["points"][0]), int(duel["points"][1]), accent, "trophy", "Pontos"))
+	h.add_child(mid)
+	var gap := float(duel["gap"])
+	var fast := String(duel["a"] if gap >= 0.0 else duel["b"])
+	var gl := UiStyle.g_label("—" if int(duel["gap_n"]) == 0 else "%s +%s s" % [String(_driver(fast).get("code", fast)), String.num(absf(gap), 3).replace(".", ",")], 13, UiStyle.G_TEXT_2, "black")
+	gl.custom_minimum_size = Vector2(104, 0)
+	gl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	gl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	gl.tooltip_text = "Vantagem média na classificação"
+	h.add_child(gl)
+	h.add_child(_mate_side(String(duel["b"]), Color(team.get("color", "#888888")), true))
 	p.add_child(h)
 	return p
 

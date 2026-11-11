@@ -206,3 +206,20 @@ func _buttons(n: Node) -> Array[Button]:
 			out.append(c)
 		out.append_array(_buttons(c))
 	return out
+
+
+func test_duelo_de_companheiros_conta_quali_corrida_e_pontos() -> void:
+	_play_one_round()
+	_play_one_round()
+	var w := Session.world
+	assert_true((w.history[0] as Dictionary).has("quali"), "histórico guarda os tempos da classificação")
+	for t: Dictionary in GameData.teams():
+		var d := w.teammate_duel(String(t["id"]))
+		assert_eq(int(d["quali"][0]) + int(d["quali"][1]), 2, "um vencedor de classificação por GP (%s)" % t["id"])
+		assert_lte(int(d["race"][0]) + int(d["race"][1]), 2)
+		assert_eq(int(d["points"][0]), int(w.driver_points.get(d["a"], 0)))
+		if int(d["quali"][0]) == 2:
+			assert_gt(float(d["gap"]), 0.0, "quem venceu as duas classificações tem vantagem média positiva")
+	Session.world_table_mode = "mates"
+	var scr: WorldTableScreen = await _open("res://src/ui/world_table_screen.tscn")
+	assert_eq(_count_rows(scr.tables), GameData.teams().size(), "um cartão por equipe")

@@ -278,8 +278,8 @@ func _ready() -> void:
 				wk.simulate_current()
 				guard += 1
 			world.record_weekend(wk)
-		if debug_ui in ["wtable", "wteams", "wstats", "wrank"]:  # (captura) campeonato em tela cheia: pilotos | equipes | estatísticas | ranking de vitórias
-			open_world_table.call_deferred({"wtable": "drivers", "wteams": "teams"}.get(debug_ui, "stats"), "wins" if debug_ui == "wrank" else "")
+		if debug_ui in ["wtable", "wteams", "wmates", "wstats", "wrank"]:  # (captura) campeonato em tela cheia: pilotos | equipes | estatísticas | ranking de vitórias
+			open_world_table.call_deferred({"wtable": "drivers", "wteams": "teams", "wmates": "mates"}.get(debug_ui, "stats"), "wins" if debug_ui == "wrank" else "")
 		elif debug_ui in ["result", "champ", "stats"]:  # (captura) --ui=result|champ|stats abre o resultado do último GP
 			world_result_tab = debug_ui
 			open_world_result.call_deferred()

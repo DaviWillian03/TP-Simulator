@@ -243,7 +243,12 @@ func record_weekend(w: WeekendSim) -> void:
 	var race_pts: Dictionary = {}
 	for id: String in w.points:
 		race_pts[id] = int(w.points[id])
-	history.append({"round": round + 1, "circuit": String(w.circuit.get("id", "")), "results": race, "pole": pole, "pole_time": pole_time,
+	var quali: Dictionary = {}  # melhor volta de cada piloto na classificação (duelo de companheiros)
+	for id: String in (w.quali_times.get("race", {}) as Dictionary):
+		var qt := float((w.quali_times["race"][id] as Dictionary).get("time", 0.0))
+		if qt > 0.0 and qt < 100000.0:
+			quali[id] = qt
+	history.append({"quali": quali, "round": round + 1, "circuit": String(w.circuit.get("id", "")), "results": race, "pole": pole, "pole_time": pole_time,
 		"retired": out, "fastest": w.fastest_laps.get("race", {}), "grid": grid, "gains": gains, "points": race_pts,
 		"before_drivers": before_drivers, "before_teams": before_teams, "sprint": (w.results.get("sprint", []) as Array)})
 	for did: String in w.grid_penalties:  # punição de grid dos seus carros vira notícia
@@ -277,6 +282,41 @@ func stat_table(stat: String, by_team: bool = false) -> Array:
 			rows.append([k, int(acc[k])])
 	rows.sort_custom(func(a: Array, b: Array) -> bool: return a[1] > b[1] if a[1] != b[1] else String(a[0]) < String(b[0]))
 	return rows
+
+
+## Duelo entre os dois pilotos de uma equipe na temporada: placar da classificação e da corrida (quem ficou à frente),
+## vantagem média de tempo na classificação (gap > 0: o piloto "a" é mais rápido) e pontos.
+func teammate_duel(team_id: String) -> Dictionary:
+	var ids := driver_ids_of(team_id)
+	if ids.size() < 2:
+		return {}
+	var a := String(ids[0])
+	var b := String(ids[1])
+	var q := [0, 0]
+	var r := [0, 0]
+	var gap_sum := 0.0
+	var gap_n := 0
+	for h: Dictionary in history:
+		var times: Dictionary = h.get("quali", {})
+		var grid: Array = h.get("grid", [])
+		if times.has(a) and times.has(b):
+			q[0 if float(times[a]) <= float(times[b]) else 1] += 1
+			gap_sum += float(times[b]) - float(times[a])
+			gap_n += 1
+		elif grid.has(a) and grid.has(b):  # save antigo, sem os tempos: vale a posição no grid
+			q[0 if grid.find(a) < grid.find(b) else 1] += 1
+		var res: Array = h.get("results", [])
+		var out: Array = h.get("retired", [])
+		var a_out := out.has(a) or not res.has(a)
+		var b_out := out.has(b) or not res.has(b)
+		if a_out and b_out:
+			continue
+		if a_out != b_out:
+			r[1 if a_out else 0] += 1
+		else:
+			r[0 if res.find(a) < res.find(b) else 1] += 1
+	return {"a": a, "b": b, "quali": q, "race": r, "gap": gap_sum / gap_n if gap_n > 0 else 0.0, "gap_n": gap_n,
+		"points": [int(driver_points.get(a, 0)), int(driver_points.get(b, 0))]}
 
 
 ## Resumo do campeão no fim da temporada.
