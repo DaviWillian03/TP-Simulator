@@ -97,7 +97,8 @@ func _verges() -> void:
 	if night:
 		stripes.albedo_color = Color(0.5, 0.55, 0.68)
 	for s: float in [-1.0, 1.0]:
-		var normal := func(i: int) -> bool: return not (s == side and _pit_side_zone(i))
+		# trecho sobre ponte (scenery.spans.bridge): sem gramado ao lado, para não cobrir a pista que passa por baixo
+		var normal := func(i: int) -> bool: return not (s == side and _pit_side_zone(i)) and not _on_bridge(i)
 		if s > 0:
 			_mesh(t3.band(w, w + VERGE_W, 0.0, -VERGE_DROP, 12.0, normal), stripes)
 		else:
@@ -115,6 +116,14 @@ func _verges() -> void:
 		else:
 			_mesh(t3.band(w, far, 0.0, 0.0, 12.0, spec[0]), stripes)
 			_mesh(t3.band(far, far + 24.0, 0.0, -VERGE_DROP, 12.0, spec[0]), stripes)
+
+
+func _on_bridge(i: int) -> bool:
+	var sp: Array = (t3.track.scenery.get("spans", {}) as Dictionary).get("bridge", [])
+	if sp.size() < 2:
+		return false
+	var f := float(i) / t3.n
+	return f >= float(sp[0]) and f <= float(sp[1])
 
 
 ## Rua: calçada clara dos dois lados (o resto é a cidade).

@@ -389,6 +389,14 @@ func nearest(p: Vector3, stride: int = 6) -> Vector2:
 			best = d
 			h = c.y
 		i += stride
+	# onde dois trechos se cruzam em alturas diferentes (ponte de Suzuka), o chão acompanha o de BAIXO; o de cima vira ponte
+	if best < 60.0:
+		i = 0
+		while i < n:
+			var c2 := center[i]
+			if c2.y < h - 3.0 and Vector2(p.x - c2.x, p.z - c2.z).length() < best + 26.0:
+				h = c2.y
+			i += stride
 	return Vector2(best, h)
 
 

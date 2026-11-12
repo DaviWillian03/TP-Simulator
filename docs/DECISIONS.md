@@ -799,3 +799,7 @@ Respostas do usuário:
   pela geometria de cada traçado (entrada logo depois do fim da última curva, saída pouco antes da primeira), com Monza (0,93) e
   Zandvoort (0,95) ajustadas à mão. PROVISÓRIO: é uma aproximação; pistas com entrada de box antes da última curva na vida real
   ainda podem precisar de ajuste individual, como foi feito em Interlagos, Mônaco e Silverstone.
+- **2026-11-12 — Ponte de Suzuka e cobertura de Silverstone.** Em Suzuka a reta de trás volta a passar ~12 m acima da saída da Degner:
+  onde dois trechos se cruzam em alturas diferentes o terreno segue o de **baixo** (`Track3D.nearest`), o trecho de cima ganha tabuleiro,
+  muretas e pilares (marco `bridge`, `scenery.spans.bridge`) e fica sem gramado lateral para não cobrir a pista de baixo. A cobertura dos
+  boxes de Silverstone passou a ter duas abas (uma sobe para trás, outra levanta sobre o pit lane) e pilares.

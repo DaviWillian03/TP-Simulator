@@ -44,7 +44,8 @@
  "rain_probability": 0.3,
  "scenery": {
   "landmarks": [
-   "ferris_wheel"
+   "ferris_wheel",
+   "bridge"
   ],
   "kerbs": [
    "#d42020",
@@ -53,7 +54,13 @@
   "theme": "forest",
   "landmark": "ferris_wheel",
   "trees": 0.22,
-  "city": 0.15
+  "city": 0.15,
+  "spans": {
+   "bridge": [
+    0.775,
+    0.82
+   ]
+  }
  },
  "elevation": [
   [
@@ -78,11 +85,11 @@
   ],
   [
    0.34,
-   14.0
+   12.0
   ],
   [
    0.388,
-   11.0
+   4.0
   ],
   [
    0.463,
@@ -98,15 +105,15 @@
   ],
   [
    0.72,
-   18.0
+   20.0
   ],
   [
    0.797,
-   11.0
+   16.0
   ],
   [
    0.86,
-   8.0
+   10.0
   ],
   [
    0.9,
@@ -121,7 +128,7 @@
   "tracado": "bacinger/f1-circuits jp-1962.geojson (MIT), escalado para 5807 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
   "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
-  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão pelo perfil conhecido da pista; vazio = plana No cruzamento (frações 0,388 e 0,797) as duas pistas ficam na mesma altura: ainda não há ponte no cenário.",
+  "relevo": "elevation = [fração, metros] APROXIMADO. No cruzamento a reta de trás (0,797) passa ~12 m acima da saída da Degner (0,388), sobre uma ponte.",
   "box": "entrada/saída do pit lane calculadas pela geometria (fim da última curva / antes da primeira); PROVISÓRIO"
  },
  "points": [

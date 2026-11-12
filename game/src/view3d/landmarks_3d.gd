@@ -102,7 +102,7 @@ func build(keys: Array) -> void:
 				_strip_hotels()
 			"floodlights":
 				_floodlights()
-			"tunnel", "champions_wall", "wing_roof", "old_walls", "stadium_section", "banked_turn":
+			"tunnel", "champions_wall", "wing_roof", "old_walls", "stadium_section", "banked_turn", "bridge":
 				var sp: Array = (t3.track.scenery.get("spans", {}) as Dictionary).get(k, [0.0, 0.05])
 				call("_" + k, float(sp[0]), float(sp[1]))
 	root = main_root
@@ -486,7 +486,11 @@ func _wing_roof(f0: float, f1: float) -> void:
 		var t := fposmod(f - f0, 1.0) / maxf(f1 - f0, 0.001)
 		var peak := 15.0 + 9.0 * sin(t * PI)  # sobe no meio e desce nas pontas, como uma asa
 		var tilt := Basis(Vector3.FORWARD, 0.22 * sd)
-		_box(Vector3(40.0, 1.2, len_m + 1.0), Transform3D(b * tilt, p + b.x * sd * 44.0 + Vector3.UP * (peak + 4.0)), white))
+		var c := p + b.x * sd * 44.0 + Vector3.UP * (peak + 4.0)
+		_box(Vector3(30.0, 1.2, len_m + 1.0), Transform3D(b * tilt, c + b.x * sd * 12.0), white)  # aba de trás, sobe para fora
+		_box(Vector3(26.0, 1.2, len_m + 1.0), Transform3D(b * Basis(Vector3.FORWARD, -0.38 * sd), c - b.x * sd * 14.0 + Vector3.UP * 2.0), white)  # aba da frente, levanta sobre o pit lane
+		if int(t * 12.0) % 3 == 0:
+			_box(Vector3(1.4, peak + 4.0, 1.4), Transform3D(b, Vector3(c.x, c.y - (peak + 4.0) / 2.0, c.z)), _mat(Color("#c8ccd2"), 0.6)))
 	if n < 0:
 		return
 
@@ -527,3 +531,22 @@ func _banked_turn(f0: float, f1: float) -> void:
 		var c := p + b.x * sd * (Track3D.WIDTH / 2.0 + 9.0)
 		_box(Vector3(18.0, 0.8, len_m + 0.8), Transform3D(b * Basis(Vector3.FORWARD, -0.42 * sd), c + Vector3.UP * 3.6), conc)
 		_box(Vector3(1.2, 3.0, len_m + 0.8), Transform3D(b, c + b.x * sd * 8.6 + Vector3.UP * 8.6), wall))
+
+
+## Ponte (Suzuka): onde a pista passa alto sobre o chão, ganha tabuleiro, muretas e pilares.
+func _bridge(f0: float, f1: float) -> void:
+	var conc := _mat(Color("#a9adb3"), 0.85)
+	var rail := _mat(Color("#2f6fd0"), 0.5)
+	var w := Track3D.WIDTH
+	var k := [0]
+	_along(f0, f1, 12.0, func(_f: float, p: Vector3, b: Basis, len_m: float) -> void:
+		var gap := p.y - sc.ground_height(p)
+		if gap < 2.5:
+			return
+		_box(Vector3(w + 5.0, 1.4, len_m + 0.6), Transform3D(b, p + Vector3.DOWN * 0.9), conc)
+		for sd: float in [-1.0, 1.0]:
+			_box(Vector3(0.7, 1.6, len_m + 0.6), Transform3D(b, p + b.x * sd * (w / 2.0 + 2.2) + Vector3.UP * 0.6), rail)
+		if k[0] % 3 == 0 and gap > 5.0:
+			for sd2: float in [-1.0, 1.0]:
+				_box(Vector3(2.2, gap, 2.2), Transform3D(b, p + b.x * sd2 * (w / 2.0 + 1.0) + Vector3.DOWN * (gap / 2.0 + 1.0)), conc)
+		k[0] += 1)
