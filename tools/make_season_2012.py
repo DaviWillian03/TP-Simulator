@@ -127,8 +127,53 @@ PODIUMS = {
 POD_PTS = (25, 18, 15)
 
 
-def attrs_of(vals):
-    return dict(zip(WEIGHTS, vals))
+# Nota geral de 2012 definida pelo usuário (2026-11-12). Os atributos saem do PERFIL abaixo (desvios em relação à nota,
+# na ordem ritmo, quali, constância, disputa, chuva, pneus) e são acertados para a média ponderada bater exatamente.
+TARGET = {"alonso": 96, "hamilton": 95, "vettel": 93, "raikkonen": 89, "rosberg": 89, "button": 88, "schumacher": 86,
+          "perez": 84, "hulkenberg": 83, "massa": 83, "webber": 82, "kovalainen": 81, "ricciardo": 81, "kobayashi": 80,
+          "glock": 79, "grosjean": 78, "maldonado": 76, "vergne": 76, "petrov": 75, "diresta": 73, "senna": 71,
+          "delarosa": 71, "pic": 70, "karthikeyan": 70}
+# Perfil pela temporada real (ESTIMATIVA do projeto):
+PROFILE = {
+    "alonso": (0, -3, 2, 2, 0, 1),        # o mais completo; poucas poles com a Ferrari, mas máximo em corrida
+    "hamilton": (1, 3, -3, 0, 1, -2),     # mais poles do ano (7); erros e um carro que quebrava; gasta mais pneu
+    "vettel": (0, 3, 0, -2, -1, 0),       # sábado forte, domínio na reta final; menos à vontade no meio do pelotão
+    "raikkonen": (0, -4, 5, 0, -1, 3),    # completou todas as corridas, pontuou em quase todas; quali era o ponto fraco
+    "rosberg": (0, 3, 0, -2, 0, -2),      # pole e vitória na China; batia o Schumacher no sábado; pneus traseiros
+    "button": (-1, -2, -2, 1, 4, 4),      # mestre da chuva e do pneu; oscilou no meio do ano por acerto
+    "schumacher": (0, 0, -2, 1, 3, -1),   # mais rápido no sábado em Mônaco; batidas (Barcelona); excelente na chuva
+    "perez": (0, -4, -1, 1, -1, 6),       # pódios com uma parada só e pneu poupado; classificação fraca
+    "hulkenberg": (0, 1, 1, 1, 2, -1),    # liderou no molhado em Interlagos; regular
+    "massa": (-1, 0, -2, 0, -1, 1),       # primeira metade ruim, reta final forte
+    "webber": (0, 2, 0, 1, -1, -1),       # venceu Mônaco e Silverstone; bom no sábado (largada ruim está na habilidade de largada)
+    "kovalainen": (0, 1, 2, 0, 0, -1),    # tirava o máximo da Caterham
+    "ricciardo": (0, 4, 0, -1, -2, -1),   # batia o Vergne na classificação com folga
+    "kobayashi": (0, 1, -2, 4, -1, 1),    # o grande ultrapassador; pódio em Suzuka; alguns toques
+    "glock": (0, 0, 3, 0, 1, 0),          # regular, líder da Marussia
+    "grosjean": (3, 4, -8, -3, -1, 1),    # muito rápido, mas acidentes de 1ª volta (suspenso após Spa)
+    "maldonado": (3, 5, -8, -3, -2, 0),   # pole e vitória em Barcelona; muitas batidas e punições
+    "vergne": (0, -2, 1, 1, 1, 2),        # melhor no domingo que no sábado
+    "petrov": (0, -1, 1, 1, 0, 0),        # cresceu no fim do ano
+    "diresta": (0, 0, 2, -1, -1, 1),      # constante, sem brilho no ataque
+    "senna": (0, -3, 1, 1, 0, 2),         # perdia muito na classificação para o Maldonado; corrida razoável
+    "delarosa": (-1, -1, 3, 0, 0, 2),     # experiente e limpo
+    "pic": (0, 0, 1, 0, 0, 1),            # estreante regular
+    "karthikeyan": (0, 0, -1, 1, 0, 0),
+}
+
+
+def attrs_of(did):
+    """Atributos que somam (média ponderada) exatamente a nota escolhida pelo usuário."""
+    target = TARGET[did]
+    prof = dict(zip(WEIGHTS, PROFILE[did]))
+    bias = sum(WEIGHTS[k] * v for k, v in prof.items())
+    a = {k: min(99, round(target + v - bias)) for k, v in prof.items()}
+    for _ in range(20):  # acerta o arredondamento no ritmo (peso maior)
+        err = sum(WEIGHTS[k] * a[k] for k in WEIGHTS) - target
+        if abs(err) < 0.5:
+            break
+        a["pace"] -= round(err / WEIGHTS["pace"]) or (1 if err > 0 else -1)
+    return a
 
 
 def main() -> None:
@@ -156,18 +201,22 @@ def main() -> None:
                       "car_traits": {"straight": tr[0], "slow": tr[1], "fast": tr[2], "rel": tr[3]},
                       "hq": hq, "founded": founded, "heritage": story, "era": "2012"})
     drivers = []
-    for (did, name, code, num, nat, team, birth, titles, car, at, pot, h, w, _start) in DRIVERS:
-        a = attrs_of(at)
+    for (did, name, code, num, nat, team, birth, titles, car, _at, _pot, h, w, _start) in DRIVERS:
+        a = attrs_of(did)
+        rating = round(sum(a[k] * wt for k, wt in WEIGHTS.items()))
+        assert rating == TARGET[did], (did, rating)
+        age = 2012 - int(birth[:4])
+        pot = min(97, rating + max(0, 27 - age))  # jovens ainda crescem (Ricciardo, Pérez, Vergne, Pic…)
         drivers.append({"id": did, "name": name, "code": code, "number": num, "nationality": nat, "team": team,
-                        "rating": round(sum(a[k] * wt for k, wt in WEIGHTS.items())), "birth": birth, "titles": titles,
+                        "rating": rating, "birth": birth, "titles": titles,
                         "attrs": a, "potential": pot,
                         "career": dict(zip(("starts", "wins", "podiums", "poles", "fastest_laps"), car)),
                         "height_cm": h, "weight_kg": w})
 
     note_t = ("Grid de 2012 (tools/make_season_2012.py). Nomes reais; cores e emblemas ORIGINAIS (sem logos oficiais). "
               "car_rating = forma real (pontos de construtores de 2012, equilíbrio 0.48). car_traits: ESTIMATIVA.")
-    note_d = ("Grid titular de 2012, sem substitutos. career = carreira até o FIM DE 2011 (aproximada). attrs/potential: "
-              "ESTIMATIVA do projeto (fama e resultados da época); rating = média ponderada dos atributos.")
+    note_d = ("Grid titular de 2012, sem substitutos. career = carreira até o FIM DE 2011 (aproximada). rating: definido pelo "
+              "usuário em 2026-11-12; attrs: perfil da temporada real (ESTIMATIVA) acertado para a média ponderada = rating.")
     (OUT / "teams.json").write_text(json.dumps({"season": 2012, "_notas": note_t, "teams": teams}, ensure_ascii=False, indent=1), encoding="utf-8")
     (OUT / "drivers.json").write_text(json.dumps({"season": 2012, "_notas": note_d, "drivers": drivers}, ensure_ascii=False, indent=1), encoding="utf-8")
     (OUT / "real_form.json").write_text(json.dumps({
