@@ -667,51 +667,53 @@ func _on_driver_pressed(car: CarState) -> void:
 
 # --- missões (mockup v25-2) ---------------------------------------------------------------------------
 
-const MISSION_TILES := [["save", "tyre", "Fazer o pneu chegar até a volta escolhida.", "pneu −35% · ritmo −0,3 s · risco baixo"],
-	["attack", "arrow", "Pressionar o carro da frente: bateria nas retas, freadas no limite.", "pneu +40% · ritmo +0,3 s · risco alto"],
-	["defend", "shield", "Segurar o carro de trás: bateria guardada para as zonas de ultrapassagem.", "pneu +15% · risco médio"],
-	["push", "bolt", "Voltas fortes no ar limpo antes (ou logo depois) da parada.", "pneu +30% · ritmo +0,4 s"],
-	["safe", "check", "Sem riscos: proteger o carro, o pneu no fim ou os pontos.", "pneu −20% · risco mínimo"]]
 var _mission_ui := {}
 
 
+## Folha de Missões (mockup v36): RITMO (5 modos) e ABORDAGEM NA DIREÇÃO (3 níveis), símbolos e barrinhas, na cor da equipe.
 func _open_missions(car: CarState) -> void:
 	if car.finished or car.retired:
 		return
 	var was_paused := paused
 	paused = true  # a corrida espera a decisão
-	var accent := UiStyle.team_accent(car.team)  # as folhas seguem a cor da equipe do piloto
+	var accent := UiStyle.team_accent(car.team)
 	var sh := ScreenKit.sheet(_surname(car).capitalize(), 1120, accent)
 	var root: Control = sh["root"]
 	root.tree_exited.connect(func() -> void: paused = was_paused)
 	var outer: VBoxContainer = sh["body"]
-	var body := VBoxContainer.new()  # aba "Missões" (base e curta juntas); a outra aba é "Ordens de equipe"
+	var body := VBoxContainer.new()
 	body.add_theme_constant_override("separation", UiStyle.SP_M)
 	var ord_box := _orders_box(car, root, accent)
-	ord_box.visible = Session.debug_ui == "orders"  # (captura) abre já na aba de ordens
+	ord_box.visible = Session.debug_ui == "orders"
 	body.visible = not ord_box.visible
 	outer.add_child(ScreenKit.segmented([["m", "Missões"], ["o", "Ordens de equipe"]], "m", func(v: String) -> void:
 		body.visible = v == "m"
 		ord_box.visible = v == "o", accent))
 	outer.add_child(body)
 	outer.add_child(ord_box)
-	var base_kind := String(car.mission_base.get("kind", "save"))
+	var kind := String(car.mission_base.get("kind", "normal"))
 	var until := int(car.mission_base.get("until", 0))
 	if until <= car.laps_done:
 		var nxt := sim.player_plan_next(car)
 		until = int(nxt["lap"]) if not nxt.is_empty() else sim.total_laps
-	_mission_ui = {"car": car, "kind": base_kind if base_kind in ["save", "attack", "defend", "push", "safe"] else "save", "until": until,
-		"short": "attack", "laps": 3, "root": root, "accent": accent}
-	body.add_child(UiStyle.g_caption("Missão de base · o stint inteiro"))
-	var tiles := HBoxContainer.new()
-	tiles.add_theme_constant_override("separation", 10)
-	var group := ButtonGroup.new()
-	for t: Array in MISSION_TILES:
-		tiles.add_child(_mission_tile(t, group))
-	body.add_child(tiles)
+	_mission_ui = {"car": car, "kind": kind if kind in Missions.RITMO else "normal", "until": until, "approach": car.approach,
+		"root": root, "accent": accent}
+	body.add_child(UiStyle.g_caption("Ritmo"))
+	var rrow := HBoxContainer.new()
+	rrow.add_theme_constant_override("separation", 10)
+	var rgroup := ButtonGroup.new()
+	for i in Missions.RITMO.size():
+		var k: String = Missions.RITMO[i]
+		rrow.add_child(_choice_tile(String(Missions.RITMO_ICONS[k]), String(Missions.NAMES[k]), i + 1, 5, accent, rgroup,
+			k == _mission_ui["kind"], func() -> void:
+				_mission_ui["kind"] = k
+				(_mission_ui["refresh"] as Callable).call()))
+	body.add_child(rrow)
+	# volta-alvo do Conservador (só aparece com ele escolhido)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	var lbl := UiStyle.g_label("Poupar até a volta", UiStyle.FS_SMALL, Color("#c3c9d3"), "bold")
+	row.add_child(ScreenKit.icon("leaf", 20, UiStyle.G_UP))
+	var lbl := UiStyle.g_label("Até a volta", UiStyle.FS_SMALL, UiStyle.G_TEXT_2, "black")
 	lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(lbl)
 	var minus := ScreenKit.light_button("−")
@@ -726,19 +728,16 @@ func _open_missions(car: CarState) -> void:
 	plus.custom_minimum_size = Vector2(UiStyle.TOUCH_MIN, UiStyle.TOUCH_MIN)
 	row.add_child(plus)
 	var calc := UiStyle.g_label("", UiStyle.FS_SMALL, UiStyle.G_UP, "bold")
-	calc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	calc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(calc)
 	body.add_child(row)
 	var refresh_calc := func() -> void:
+		row.visible = _mission_ui["kind"] == "save"
 		lap_l.text = str(int(_mission_ui["until"]))
 		var per := Missions.wear_per_lap(sim, car, CarState.PaceMode.CONSERVE)
 		var left := 1.0 - (car.tyre_wear + per * maxi(int(_mission_ui["until"]) - car.laps_done, 0))
-		calc.text = "o engenheiro calcula: pneu chega com %d%% na volta %d" % [maxi(roundi(left * 100.0), 0), int(_mission_ui["until"])]
+		calc.text = "pneu chega com %d%%" % maxi(roundi(left * 100.0), 0)
 		calc.add_theme_color_override("font_color", UiStyle.G_UP if left >= 1.0 - Missions.WEAR_LIMIT else UiStyle.G_DOWN)
-		var on: bool = _mission_ui["kind"] == "save"
-		for n: Control in [lbl, minus, lap_l, plus, calc]:
-			n.modulate.a = 1.0 if on else 0.3
 	minus.pressed.connect(func() -> void:
 		_mission_ui["until"] = maxi(car.laps_done + 1, int(_mission_ui["until"]) - 1)
 		refresh_calc.call())
@@ -747,51 +746,100 @@ func _open_missions(car: CarState) -> void:
 		refresh_calc.call())
 	_mission_ui["refresh"] = refresh_calc
 	refresh_calc.call()
-	body.add_child(UiStyle.g_caption("Missão curta"))
-	var srow := HBoxContainer.new()
-	srow.add_theme_constant_override("separation", 10)
-	var order := sim.standings()
-	var idx := order.find(car)
-	var ahead: String = order[idx - 1].code() if idx > 0 else ""
-	var behind: String = order[idx + 1].code() if idx < order.size() - 1 else ""
-	var kinds: Array = []
-	if ahead != "":
-		kinds.append(["attack", "Atacar %s (P%d)" % [ahead, idx]])
-	if behind != "":
-		kinds.append(["defend", "Defender de %s (P%d)" % [behind, idx + 2]])
-	kinds.append(["push", "Undercut / abrir gap"])
-	kinds.push_front(["none", "Sem missão curta"])  # base e curta se escolhem juntas; a curta é opcional
-	_mission_ui["short"] = "none"
-	_mission_ui["targets"] = {"attack": ahead, "defend": behind, "push": ""}
-	srow.add_child(ScreenKit.segmented(kinds, "none", func(v: String) -> void: _mission_ui["short"] = v))
-	var to_stop := sim.player_plan_next(car)
-	var till_stop := maxi(int(to_stop.get("lap", sim.total_laps)) - car.laps_done, 1)
-	srow.add_child(ScreenKit.segmented([[2, "2 voltas"], [3, "3 voltas"], [5, "5 voltas"], [till_stop, "até a parada"]], 3, func(v: int) -> void: _mission_ui["laps"] = v))
-	body.add_child(srow)
-	# um só botão confirma as duas escolhas (pedido do usuário): base só se mudou; curta só se escolhida
+	body.add_child(UiStyle.g_caption("Abordagem na direção"))
+	var arow := HBoxContainer.new()
+	arow.add_theme_constant_override("separation", 10)
+	var agroup := ButtonGroup.new()
+	for lv: int in [-1, 0, 1]:
+		var t := _choice_tile(String(Missions.APPROACH_ICONS[lv]), String(Missions.APPROACH_NAMES[lv]), lv + 2, 3, accent, agroup,
+			lv == car.approach, func() -> void: _mission_ui["approach"] = lv)
+		t.size_flags_stretch_ratio = 1.0
+		arow.add_child(t)
+	var filler := Control.new()  # as 3 abordagens ocupam ~60% da largura, como no mockup
+	filler.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	filler.size_flags_stretch_ratio = 2.0
+	arow.add_child(filler)
+	body.add_child(arow)
 	var go := CutButton.new()
 	go.text = "CONFIRMAR"
 	go.custom_minimum_size = Vector2(260, UiStyle.TOUCH_MAIN)
 	go.size_flags_horizontal = Control.SIZE_SHRINK_END
 	ScreenKit.tint_button(go, accent)
 	go.pressed.connect(func() -> void:
-		var kind := String(_mission_ui["kind"])
+		var k2 := String(_mission_ui["kind"])
 		var until_lap := int(_mission_ui["until"])
-		var changed := kind != String(car.mission_base.get("kind", "")) or (kind == "save" and until_lap != int(car.mission_base.get("until", 0)))
+		var changed := k2 != String(car.mission_base.get("kind", "")) or (k2 == "save" and until_lap != int(car.mission_base.get("until", 0)))
 		if changed:
-			sim.set_mission_base(car, kind, until_lap)
-			_toasts.push("%s: nova missão de base — %s." % [_surname(car), Missions.title(car.mission_base).to_lower()])
-		var k := String(_mission_ui["short"])
-		if k != "none":
-			sim.give_short_mission(car, k, int(_mission_ui["laps"]), String(_mission_ui["targets"].get(k, "")))
-			if not car.mission_short.is_empty():
-				_toasts.push("%s: %s." % [_surname(car), Missions.title(car.mission_short).to_lower()], "hot")
+			sim.set_mission_base(car, k2, until_lap)
+			_toasts.push("%s: %s." % [_surname(car), Missions.title(car.mission_base).to_lower()])
+		var ap := int(_mission_ui["approach"])
+		if ap != car.approach:
+			sim.set_approach(car, ap)
+			_toasts.push("%s: abordagem %s." % [_surname(car), String(Missions.APPROACH_NAMES[ap]).to_lower()])
 		root.queue_free())
 	body.add_child(go)
 	_layer.add_child(root)
 
 
-## Aba "Ordens de equipe": como o piloto trata o companheiro (saiu do cartão do piloto, mockup v33).
+## Opção com símbolo, nome e barrinhas amarelas (nível de 1 a `of`), selecionada na cor da equipe.
+func _choice_tile(icon_name: String, title: String, level: int, of: int, accent: Color, group: ButtonGroup, on: bool, pick: Callable) -> Button:
+	var b := Button.new()
+	b.toggle_mode = true
+	b.button_group = group
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(0, 124)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.set_meta("choice", title)
+	for st: String in ["normal", "hover"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE, 18, 0, 0))
+	for st: String in ["pressed", "hover_pressed"]:
+		b.add_theme_stylebox_override(st, UiStyle.g_box(accent, 18, 0, 0))
+	var v := VBoxContainer.new()
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_theme_constant_override("separation", 8)
+	b.add_child(v)
+	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var ring := PanelContainer.new()
+	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ring.custom_minimum_size = Vector2(52, 52)
+	ring.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	ring.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.12), 26, 0, 0))
+	var ic := ScreenKit.icon(icon_name, 28, UiStyle.G_TEXT)
+	ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	ring.add_child(ic)
+	v.add_child(ring)
+	var t := UiStyle.g_label(title, UiStyle.FS_BODY, UiStyle.G_TEXT, "black")
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(t)
+	var bars := HBoxContainer.new()
+	bars.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bars.alignment = BoxContainer.ALIGNMENT_CENTER
+	bars.add_theme_constant_override("separation", 3)
+	var dots: Array[ColorRect] = []
+	for k in of:
+		var d := ColorRect.new()
+		d.custom_minimum_size = Vector2(14, 6)
+		d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bars.add_child(d)
+		dots.append(d)
+	v.add_child(bars)
+	var ink := UiStyle.ink_on(accent)
+	var paint := func() -> void:
+		var sel := b.button_pressed
+		for k in dots.size():
+			dots[k].color = (ink if sel else UiStyle.G_DIRECTOR) if k < level else Color(1, 1, 1, 0.15)
+		t.add_theme_color_override("font_color", ink if sel else UiStyle.G_TEXT)
+		ic.modulate = ink if sel else UiStyle.G_TEXT
+	b.toggled.connect(func(_on: bool) -> void: paint.call())
+	b.button_pressed = on
+	paint.call()
+	b.pressed.connect(pick)
+	ScreenKit.press_feedback(b)
+	return b
+
+
 func _orders_box(car: CarState, root: Control, accent: Color) -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", UiStyle.SP_M)
@@ -951,60 +999,6 @@ func _car_row(color: Color, mark: String, title: String, value: String) -> Panel
 	h.add_child(t)
 	h.add_child(UiStyle.g_label(value, 18, UiStyle.G_TEXT_2, "black"))
 	return _car_wrap(h)
-
-
-func _mission_tile(t: Array, group: ButtonGroup) -> Button:
-	var b := Button.new()
-	b.toggle_mode = true
-	b.button_group = group
-	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(0, 150)
-	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for st: String in ["normal", "hover"]:
-		b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_SURFACE, 16, 0, 0))
-	var accent: Color = _mission_ui.get("accent", UiStyle.G_LIGHT)
-	var ink := UiStyle.ink_on(accent)
-	for st: String in ["pressed", "hover_pressed"]:
-		b.add_theme_stylebox_override(st, UiStyle.g_box(accent, 16, 0, 0))
-	var v := VBoxContainer.new()
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_theme_constant_override("separation", 4)
-	b.add_child(v)
-	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	v.offset_left = 12
-	v.offset_right = -12
-	v.offset_top = 12
-	var h := HBoxContainer.new()
-	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_theme_constant_override("separation", 8)
-	var ic := ScreenKit.icon(t[1], 20, UiStyle.G_TEXT)
-	h.add_child(ic)
-	var title := UiStyle.g_label(String(Missions.NAMES[t[0]]), UiStyle.FS_BODY, UiStyle.G_TEXT, "black")
-	h.add_child(title)
-	v.add_child(h)
-	var d := UiStyle.g_label(t[2], UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold")
-	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(d)
-	var e := UiStyle.g_label(t[3], UiStyle.FS_CAPTION, UiStyle.G_TEXT_3, "black")
-	e.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(e)
-	var paint := func() -> void:
-		var on := b.button_pressed
-		for l: Label in [title]:
-			l.add_theme_color_override("font_color", ink if on else UiStyle.G_TEXT)
-		d.add_theme_color_override("font_color", Color(ink, 0.8) if on else UiStyle.G_TEXT_2)
-		e.add_theme_color_override("font_color", Color(ink, 0.7) if on else UiStyle.G_TEXT_3)
-		ic.modulate = ink if on else UiStyle.G_TEXT
-	b.toggled.connect(func(_on: bool) -> void: paint.call())
-	b.button_pressed = t[0] == _mission_ui["kind"]
-	paint.call()
-	var kind: String = t[0]
-	b.pressed.connect(func() -> void:
-		_mission_ui["kind"] = kind
-		if _mission_ui.has("refresh"):
-			(_mission_ui["refresh"] as Callable).call())
-	ScreenKit.press_feedback(b)
-	return b
 
 
 # --- tela do box -----------------------------------------------------------------------

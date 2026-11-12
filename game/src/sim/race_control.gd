@@ -270,6 +270,7 @@ func check_contact(att: CarState, def: CarState, chance_mult: float = 1.0) -> bo
 	var p := CONTACT_CHANCE * rate * chance_mult * (1.0 + 3.0 * sim.weather.wetness)
 	if att.pace_mode == CarState.PaceMode.ATTACK:
 		p *= 1.5
+	p *= float(Missions.APPROACH_CONTACT.get(att.approach, 1.0))  # abordagem na direção de quem ataca
 	if def.defend_hard:
 		p *= 1.6
 	if sim.rng.randf() >= p:

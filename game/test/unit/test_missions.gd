@@ -75,12 +75,24 @@ func test_piloto_discorda_e_sem_resposta_faz_do_jeito_dele() -> void:
 	assert_eq(String(me.mission_short["kind"]), "attack", "insistiu: vale a missão")
 
 
-func test_plano_vira_missao_de_base() -> void:
+func test_corrida_comeca_em_ritmo_normal_e_abordagem_normal() -> void:
+	# 2026-11-12: o plano dos engenheiros não vira mais "poupar" automático; o jogador escolhe o ritmo durante a corrida
 	var w := WeekendSim.new("interlagos", {"seed": 6, "format": "race_only", "player_team": "williams", "weather": "dry", "incident_rate": 0.0})
 	var plan: Dictionary = w.engineer_strategy()["albon"][0]
 	w.strategy = {"albon": plan}
 	var sim := w.make_race({"radio": false})
 	for c in sim.cars:
-		if c.driver["id"] == "albon":
-			assert_eq(String(c.mission_base["kind"]), "save")
-			assert_eq(int(c.mission_base["until"]), int(RaceStrategy.stop_laps(plan)[0]) if (plan["stints"] as Array).size() > 1 else sim.total_laps)
+		if c.is_player:
+			assert_eq(String(c.mission_base["kind"]), "normal")
+			assert_eq(c.approach, 0)
+
+
+func test_abordagem_muda_a_nota_e_o_risco() -> void:
+	var sim := _sim()
+	var me := _me(sim)
+	var base := DriverStats.attr(me.driver, "racecraft")
+	for lv: int in [-1, 0, 1]:
+		sim.set_approach(me, lv)
+		assert_almost_eq(sim.racecraft_of(me), base + 10.0 * lv, 0.001)
+	assert_lt(float(Missions.APPROACH_CONTACT[-1]), 1.0)
+	assert_gt(float(Missions.APPROACH_CONTACT[1]), 1.0)

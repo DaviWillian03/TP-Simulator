@@ -37,7 +37,7 @@ CSS = P.CSS + """
 """ % TC
 
 RITMO = [("home", "Trazendo pra casa", 1), ("leaf", "Conservador", 2), ("gauge", "Ritmo normal", 3), ("chev2", "Agressivo", 4), ("bolt", "Potência máxima", 5)]
-ABORD = [("shield2", "Sem riscos", "−10"), ("dot", "Normal", "82"), ("flame", "Agressivo", "+10")]
+ABORD = [("shield2", "Sem riscos", 1), ("dot", "Normal", 2), ("flame", "Agressivo", 3)]
 
 
 def tile(icon, name, extra, on):
@@ -46,8 +46,9 @@ def tile(icon, name, extra, on):
 
 def folha():
     meter = lambda n: '<span class="m6m">' + "".join(f'<i class="{"f" if k < n else ""}"></i>' for k in range(5)) + "</span>"
-    rit = "".join(tile(i, n, meter(lvl), n == "Conservador") for i, n, lvl in RITMO)
-    abd = "".join(tile(i, n, f'<span class="m6v">{v}</span>', n == "Normal") for i, n, v in ABORD)
+    rit = "".join(tile(i, n, meter(lvl), n == "Ritmo normal") for i, n, lvl in RITMO)
+    meter3 = lambda n: '<span class="m6m">' + "".join(f'<i class="{"f" if k < n else ""}"></i>' for k in range(3)) + "</span>"
+    abd = "".join(tile(i, n, meter3(v), n == "Normal") for i, n, v in ABORD)
     body = (f'<div class="scene"><div class="track"></div><div class="dim"></div>'
             f'<div class="sheet" style="height:auto;padding-bottom:24px;background:#141a2e;box-shadow:inset 6px 0 0 {TC}">'
             f'<div style="display:flex;align-items:center;gap:12px">{face("albon", 46)}<h2>ALBON</h2>'

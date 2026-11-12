@@ -812,3 +812,11 @@ Respostas do usuário:
   O carro do SC deixou de ser uma caixa amarela: carro genérico branco com faixas amarelas, para-brisa escuro, rodas e **barra de luzes
   que pisca**, 1,6× maior que o real para ser visto de longe. Na volta de recolher ele **entra no pit lane** ao chegar à entrada dos boxes
   e segue por ele até sumir, mesmo depois da bandeira verde.
+- **2026-11-12 — Missões reformuladas: Ritmo e Abordagem na direção (mockup v36 aprovado com ajustes).** As missões de base viraram
+  **Ritmo**, com 5 modos e símbolos: **Trazendo pra casa** (era Ritmo seguro), **Conservador** (era Poupar pneus, com a volta-alvo),
+  **Ritmo normal**, **Agressivo** (era Atacar) e **Potência máxima** (era Abrir gap/undercut); o comportamento de cada um não mudou.
+  "Defender" e as missões curtas saíram da folha do jogador (a IA e o rádio ainda usam as curtas internamente). Nova **Abordagem na
+  direção** com 3 níveis: **Sem riscos** (−10 na nota de ultrapassagem e defesa, chance de toque ao atacar ×0,6), **Normal** (a nota do
+  piloto) e **Agressivo** (+10, toque ×1,5); vale até o jogador trocar e vale para atacar e para se defender (`RaceSim.racecraft_of`).
+  Não foi criado atributo novo de agressividade. Na tela, Ritmo e Abordagem mostram barrinhas amarelas de intensidade, sem números.
+  **A corrida começa sempre em Ritmo normal e Abordagem normal** (o plano dos engenheiros deixou de virar "poupar" automático).

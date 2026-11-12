@@ -336,22 +336,29 @@ func _find_confirm(n: Node) -> Button:
 	return null
 
 
-func test_folha_de_missoes_confirma_base_e_curta_de_uma_vez() -> void:
+func test_folha_de_missoes_confirma_ritmo_e_abordagem_de_uma_vez() -> void:
 	var panel: CarControlPanel = screen._car_panels[0]
 	var car: CarState = panel.car
 	panel._mission_btn.emit_signal("pressed")
 	await wait_process_frames(2)
 	var ui: Dictionary = screen._mission_ui
 	var root: Control = ui["root"]
+	assert_eq(String(car.mission_base["kind"]), "normal", "a corrida começa em Ritmo normal")
+	assert_eq(car.approach, 0, "e em Abordagem normal")
+	var tiles := 0
+	for b in _all_buttons(root):
+		if b.has_meta("choice"):
+			tiles += 1
+	assert_eq(tiles, 8, "5 ritmos + 3 abordagens, cada um com símbolo")
 	ui["kind"] = "attack"
-	ui["short"] = "push"
-	ui["laps"] = 2
+	ui["approach"] = 1
 	var ok := _find_confirm(root)
-	assert_not_null(ok, "um só botão CONFIRMAR (sem Definir base / Dar missão)")
+	assert_not_null(ok, "um só botão CONFIRMAR")
 	ok.emit_signal("pressed")
 	await wait_process_frames(2)
-	assert_eq(String(car.mission_base["kind"]), "attack", "a base foi aplicada")
-	assert_eq(String(Missions.active(car)["kind"]), "push", "a missão curta foi aplicada na mesma janela")
+	assert_eq(String(car.mission_base["kind"]), "attack", "o ritmo foi aplicado")
+	assert_eq(car.approach, 1, "a abordagem foi aplicada na mesma janela")
+	assert_almost_eq(screen.sim.racecraft_of(car), DriverStats.attr(car.driver, "racecraft") + 10.0, 0.001, "Agressivo: +10 na ultrapassagem e defesa")
 	assert_false(is_instance_valid(root) and root.is_inside_tree(), "a folha fechou")
 
 

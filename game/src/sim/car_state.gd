@@ -11,6 +11,7 @@ var driver: Dictionary = {}
 var team: Dictionary = {}
 var is_player := false
 var grid_position := 0
+var approach := 0  ## abordagem na direção (2026-11-12): −1 sem riscos, 0 normal, +1 agressivo
 var start_gain := 0.0  ## fator de largada sorteado (StartModel): + largada boa, − largada ruim
 var start_kind := ""  ## "great", "bad" ou "" (largada normal)
 

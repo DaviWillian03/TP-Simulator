@@ -7,8 +7,16 @@ extends RefCounted
 ## A IA usa as mesmas missões. Sem tela.
 
 const KINDS := ["save", "attack", "defend", "push", "safe", "normal"]
-const NAMES := {"save": "Poupar pneus", "attack": "Atacar", "defend": "Defender", "push": "Abrir gap / undercut",
-	"safe": "Ritmo seguro", "normal": "Ritmo normal"}
+## Nomes da tela (2026-11-12: missões viraram "Ritmo"): Trazendo pra casa, Conservador, Ritmo normal, Agressivo, Potência máxima.
+const NAMES := {"save": "Conservador", "attack": "Agressivo", "defend": "Defender", "push": "Potência máxima",
+	"safe": "Trazendo pra casa", "normal": "Ritmo normal"}
+const RITMO := ["safe", "save", "normal", "attack", "push"]  ## ordem na tela, do mais calmo ao mais forte
+const RITMO_ICONS := {"safe": "home", "save": "leaf", "normal": "gauge", "attack": "chev2", "push": "bolt"}
+## Abordagem na direção: soma à nota de ultrapassagem e defesa e muda a chance de toque ao atacar.
+const APPROACH_POINTS := 10.0
+const APPROACH_NAMES := {-1: "Sem riscos", 0: "Normal", 1: "Agressivo"}
+const APPROACH_ICONS := {-1: "shield", 0: "target", 1: "fire"}
+const APPROACH_CONTACT := {-1: 0.6, 0: 1.0, 1: 1.5}
 const WEAR_LIMIT := 0.78  ## "o pneu chega": desgaste abaixo disso na volta-alvo (antes do penhasco)
 const ATTACK_TYRE_LIMIT := 0.72  ## atacando, um bom piloto alivia acima disso se não estiver a menos de 1 s
 const MISTAKE_K := 0.004  ## chance (por avaliação) de errar a mão, por ponto de regularidade abaixo de 100
@@ -137,7 +145,7 @@ static func ai_choose(sim: RaceSim, car: CarState) -> void:
 static func title(m: Dictionary) -> String:
 	var k := String(m.get("kind", "normal"))
 	if k == "save":
-		return "Poupar pneus até a volta %d" % int(m.get("until", 0))
+		return "Conservador · até a volta %d" % int(m.get("until", 0))
 	if m.has("end"):
 		var tgt := String(m.get("target", ""))
 		return "%s%s · %d voltas" % [NAMES[k], (" " + tgt) if tgt != "" else "", int(m["end"]) - int(m["start"])]

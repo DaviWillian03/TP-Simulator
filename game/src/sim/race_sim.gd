@@ -446,13 +446,19 @@ func give_short_mission(car: CarState, kind: String, laps: int, target := "", as
 
 
 ## Missão de base dos carros do jogador pelo plano: poupar pneus até a próxima parada planejada (ou ritmo normal).
+## A corrida começa sempre em Ritmo normal e Abordagem normal (pedido de 2026-11-12); o jogador muda na folha de Missões.
 func _plan_base_mission(car: CarState) -> void:
-	if car.player_plan.is_empty():
-		if car.mission_base.is_empty():
-			car.mission_base = Missions.base_mission("normal")
-		return
-	var next := player_plan_next(car)
-	car.mission_base = Missions.base_mission("save", int(next["lap"])) if not next.is_empty() else Missions.base_mission("save", total_laps)
+	car.mission_base = Missions.base_mission("normal")
+	car.approach = 0
+
+
+## Nota de ultrapassagem e defesa em vigor: a do piloto ± 10 pela abordagem escolhida.
+func racecraft_of(car: CarState) -> float:
+	return DriverStats.attr(car.driver, "racecraft") + Missions.APPROACH_POINTS * car.approach
+
+
+func set_approach(car: CarState, level: int) -> void:
+	car.approach = clampi(level, -1, 1)
 
 
 ## Ordem de equipe. "Não brigar" vale para a dupla; "deixar passar" é para este carro abrir
@@ -682,7 +688,7 @@ func _report_start() -> void:
 
 func _try_overtake(att: CarState, def: CarState, zone: Dictionary) -> bool:
 	var advantage := _lap_time(def, false) - _lap_time(att, false)  # > 0: atacante mais rápido
-	advantage += (DriverStats.attr(att.driver, "racecraft") - DriverStats.attr(def.driver, "racecraft")) * DriverStats.RACECRAFT_K
+	advantage += (racecraft_of(att) - racecraft_of(def)) * DriverStats.RACECRAFT_K
 	var required_base := (OVERTAKE_BASE_REQUIRED_S + track.overtaking_difficulty * OVERTAKE_DIFFICULTY_S \
 		+ maxf(0.0, track.overtaking_difficulty - 0.7) * OVERTAKE_HARD_TRACK_S) * overtake_k + (DEFEND_HARD_S if def.defend_hard else 0.0)
 	# modo de ultrapassagem: gasta bateria só quando faz diferença (sem ele faltaria vantagem) e no máximo uma
