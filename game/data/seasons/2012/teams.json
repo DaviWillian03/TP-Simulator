@@ -120,7 +120,7 @@
    "power_unit": "Mercedes",
    "color": "#BFC5CC",
    "color2": "#00B5A5",
-   "emblem_bg": "#BFC5CC",
+   "emblem_bg": "#16181d",
    "car_rating": 84.76,
    "emblem": {
     "shape": "ring",
@@ -176,7 +176,7 @@
    "power_unit": "Mercedes",
    "color": "#F28C28",
    "color2": "#1B8A3A",
-   "emblem_bg": "#F28C28",
+   "emblem_bg": "#f4f5f7",
    "car_rating": 84.36,
    "emblem": {
     "shape": "hex",
@@ -316,7 +316,7 @@
    "power_unit": "Cosworth",
    "color": "#E4E2DC",
    "color2": "#B3122E",
-   "emblem_bg": "#E4E2DC",
+   "emblem_bg": "#2a2a2e",
    "car_rating": 80.28,
    "emblem": {
     "shape": "hex",

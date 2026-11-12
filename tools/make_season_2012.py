@@ -101,6 +101,10 @@ DRIVERS = [
     ("pic", "Charles Pic", "PIC", 25, "França", "marussia", "1990-02-15", 0, (0, 0, 0, 0, 0), (76, 76, 78, 75, 75, 77), 80, 180, 68, 48),
 ]
 
+# Fundo do quadradinho do logo onde a cor da equipe não dá contraste com o logo da época (estrela prateada da Mercedes,
+# bandeira laranja/verde da Force India, letras douradas da HRT). O carro continua com as cores da equipe.
+EMBLEM_BG = {"mercedes": "#16181d", "forceindia": "#f4f5f7", "hrt": "#2a2a2e"}
+
 # Pódio real de cada GP de 2012 (1º, 2º, 3º).
 PODIUMS = {
     "albertpark": ("button", "vettel", "hamilton"),
@@ -195,7 +199,7 @@ def main() -> None:
 
     teams = []
     for (tid, name, pu, c1, c2, boss, td, debut, titles, pts, hq, founded, tr, emb, story) in TEAMS:
-        teams.append({"id": tid, "name": name, "power_unit": pu, "color": c1, "color2": c2, "emblem_bg": c1,
+        teams.append({"id": tid, "name": name, "power_unit": pu, "color": c1, "color2": c2, "emblem_bg": EMBLEM_BG.get(tid, c1),
                       "car_rating": base[tid], "emblem": {"shape": emb[0], "text": emb[1]}, "principal": boss,
                       "technical_director": td, "debut": debut, "constructors_titles": titles, "points_2012": pts,
                       "car_traits": {"straight": tr[0], "slow": tr[1], "fast": tr[2], "rel": tr[3]},

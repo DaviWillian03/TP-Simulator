@@ -95,7 +95,7 @@ static func use_season(sid: String) -> void:
 			for ext: String in ["png", "svg", "webp", "jpg"]:
 				var p := LOCAL_DIR + sid + "/" + id + "." + ext
 				if ResourceLoader.exists(p):
-					tex = _framed_with(_frame_color(t), load(p), true)
+					tex = _framed_with(_frame_color(t), load(p))  # logos da época são coloridos: todos no quadradinho
 					break
 		if tex == null:
 			var e: Dictionary = t.get("emblem", {})
