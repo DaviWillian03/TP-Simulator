@@ -42,7 +42,6 @@ var _auto_label: Label
 var _base_box: Dictionary
 var _short_box: Dictionary
 var _mission_btn: Button
-var _car_btn: Button
 ## Cores da equipe no cartão (pedido do usuário: nada de cinza com vermelho/branco em tudo).
 var _accent: Color  ## botões cheios
 var _hi: Color  ## textos e realces sobre o vidro escuro
@@ -181,7 +180,8 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_car_block.add_child(cb)
 	v.add_child(_car_block)
 
-	# ações (2026-11-10): símbolos no lugar de "MISSÃO" e "P/ BOX"; embaixo, as ordens de equipe sempre à mostra
+	# ações (2026-11-10): símbolos no lugar de "MISSÃO" e "P/ BOX". Situação do carro: toque no próprio carro do cartão
+	# (o botão do carrinho saiu em 2026-11-12, em todos os modos, anos e categorias)
 	var pit := HBoxContainer.new()
 	pit.add_theme_constant_override("separation", 6)
 	_mission_btn = Button.new()
@@ -201,21 +201,6 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_mission_btn.pressed.connect(func() -> void: mission_pressed.emit(car))
 	ScreenKit.press_feedback(_mission_btn)
 	pit.add_child(_mission_btn)
-	_car_btn = Button.new()
-	_car_btn.focus_mode = Control.FOCUS_NONE
-	_car_btn.custom_minimum_size = Vector2(0, 44)
-	_car_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_car_btn.icon = load("res://assets/icons/car.svg")
-	_car_btn.expand_icon = false
-	_car_btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_car_btn.add_theme_constant_override("icon_max_width", 26)
-	for k: String in ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"]:
-		_car_btn.add_theme_color_override(k, Color.WHITE)
-	for st: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
-		_car_btn.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_OFF if st == "disabled" else Color(1, 1, 1, 0.10 if st in ["normal", "hover"] else 0.18), 12, 4, 0))
-	_car_btn.pressed.connect(func() -> void: car_pressed.emit(car))
-	ScreenKit.press_feedback(_car_btn)
-	pit.add_child(_car_btn)
 	_box_btn = CutButton.new()
 	_box_btn.tooltip_text = "Chamar para o box"
 	_box_btn.fill_color = _accent
@@ -364,7 +349,6 @@ func refresh(race_position: int) -> void:
 		_loss_label.add_theme_color_override("font_color", UiStyle.G_BAD if loss >= 0.6 else UiStyle.G_WARN)
 	var active := not (car.retired or car.finished)
 	_mission_btn.disabled = not active
-	_car_btn.disabled = not active
 	_box_btn.disabled = car.in_pit or car.finished or car.retired
 	_box_btn.text = _box_text()
 

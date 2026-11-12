@@ -184,7 +184,11 @@ func test_cartao_nao_tem_mais_ordens_de_equipe_e_mostra_o_carro() -> void:
 		assert_false(b.text.to_upper().contains("ATACAR") or b.text.to_upper().contains("DEFENDER"), "ordens saíram do cartão")
 	assert_not_null(panel._diagram, "mini-carro no cartão")
 	assert_true(panel._diagram.is_inside_tree())
-	assert_not_null(panel._car_btn, "botão do carro")
+	assert_false("_car_btn" in panel, "o botão do carrinho saiu: o toque no próprio carro abre a folha")
+	var icons := 0
+	for b in _all_buttons(panel):
+		icons += 1
+	assert_eq(icons, 2, "ações do cartão: missões e box")
 	panel.car.add_damage("floor", 0.5)
 	panel.refresh(1)
 	assert_true(panel._loss_label.visible, "o que o dano custa por volta aparece")
@@ -198,7 +202,10 @@ func test_toque_no_carro_abre_a_folha_e_pausa() -> void:
 	var panel: CarControlPanel = screen._car_panels[0]
 	var before: bool = screen.paused
 	panel.car.add_damage("front_wing", 0.6)
-	panel._car_btn.emit_signal("pressed")
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	panel._car_block.gui_input.emit(click)  # toque no mini-carro do cartão
 	assert_true(screen.paused, "a corrida espera enquanto a folha está aberta")
 	var diagrams := 0
 	for n in screen._layer.get_children():
