@@ -3,7 +3,8 @@
  "name": "Lusail International Circuit",
  "short_name": "Lusail",
  "grand_prix": "GP do Catar",
- "country": "Catar", "country_code": "qa",
+ "country": "Catar",
+ "country_code": "qa",
  "city": "Lusail",
  "round": 21,
  "date": "2026-11-29",
@@ -13,9 +14,9 @@
  "laps": 57,
  "base_lap_time_s": 84.5,
  "pit_lane_loss_s": 26.0,
- "pit_entry_frac": 0.95,
+ "pit_entry_frac": 0.886,
  "pit_box_frac": 0.0,
- "pit_exit_frac": 0.05,
+ "pit_exit_frac": 0.073,
  "tyre_wear_factor": 1.28,
  "overtaking_difficulty": 0.55,
  "overtaking_zones": [
@@ -35,11 +36,20 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.25, "slow": 0.2, "fast": 0.55},
+ "profile": {
+  "straight": 0.25,
+  "slow": 0.2,
+  "fast": 0.55
+ },
  "rain_probability": 0.01,
  "scenery": {
-  "landmarks": ["floodlights"],
-  "kerbs": ["#d42020", "#f2f2f2"],
+  "landmarks": [
+   "floodlights"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f2f2f2"
+  ],
   "theme": "desert",
   "landmark": "lights"
  },
@@ -48,7 +58,8 @@
   "tracado": "bacinger/f1-circuits qa-2004.geojson (MIT), escalado para 5380 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
   "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
-  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana"
+  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana",
+  "box": "entrada/saída do pit lane calculadas pela geometria (fim da última curva / antes da primeira); PROVISÓRIO"
  },
  "points": [
   [

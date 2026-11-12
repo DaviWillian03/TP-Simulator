@@ -14,7 +14,7 @@
  "laps": 71,
  "base_lap_time_s": 80.0,
  "pit_lane_loss_s": 22.0,
- "pit_entry_frac": 0.95,
+ "pit_entry_frac": 0.97,
  "pit_box_frac": 0.0,
  "pit_exit_frac": 0.05,
  "tyre_wear_factor": 0.92,
@@ -66,7 +66,8 @@
   "tracado": "bacinger/f1-circuits mx-1962.geojson (MIT), escalado para 4304 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
   "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
-  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana"
+  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana",
+  "box": "entrada/saída do pit lane calculadas pela geometria (fim da última curva / antes da primeira); PROVISÓRIO"
  },
  "points": [
   [

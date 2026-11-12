@@ -3,7 +3,8 @@
  "name": "Las Vegas Strip Circuit",
  "short_name": "Las Vegas",
  "grand_prix": "GP de Las Vegas",
- "country": "Estados Unidos", "country_code": "us",
+ "country": "Estados Unidos",
+ "country_code": "us",
  "city": "Las Vegas",
  "round": 20,
  "date": "2026-11-21",
@@ -13,9 +14,9 @@
  "laps": 50,
  "base_lap_time_s": 95.5,
  "pit_lane_loss_s": 20.0,
- "pit_entry_frac": 0.95,
+ "pit_entry_frac": 0.967,
  "pit_box_frac": 0.0,
- "pit_exit_frac": 0.05,
+ "pit_exit_frac": 0.025,
  "tyre_wear_factor": 0.84,
  "overtaking_difficulty": 0.3,
  "overtaking_zones": [
@@ -35,11 +36,21 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.6, "slow": 0.3, "fast": 0.1},
+ "profile": {
+  "straight": 0.6,
+  "slow": 0.3,
+  "fast": 0.1
+ },
  "rain_probability": 0.02,
  "scenery": {
-  "landmarks": ["sphere", "strip_hotels"],
-  "kerbs": ["#d42020", "#f2f2f2"],
+  "landmarks": [
+   "sphere",
+   "strip_hotels"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f2f2f2"
+  ],
   "street": true,
   "theme": "strip",
   "landmark": "sphere"
@@ -49,7 +60,8 @@
   "tracado": "bacinger/f1-circuits us-2023.geojson (MIT), escalado para 6201 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
   "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
-  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana"
+  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana",
+  "box": "entrada/saída do pit lane calculadas pela geometria (fim da última curva / antes da primeira); PROVISÓRIO"
  },
  "points": [
   [

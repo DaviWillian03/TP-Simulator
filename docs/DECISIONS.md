@@ -795,3 +795,7 @@ Respostas do usuário:
   frações da volta, PROVISÓRIAS): **túnel** de Mônaco, **muro branco** na saída da última chicane de Montreal, **cobertura em asa** sobre
   os boxes de Silverstone, **muralha com torres** em Baku, **arquibancadas dos dois lados** (estádio) no México e **curva inclinada** no
   Madring. Formas genéricas, sem marcas. Ainda falta: ponte de Suzuka e conferir de perto o muro de Montreal.
+- **2026-11-12 — Boxes das outras 19 pistas.** A entrada e a saída do pit lane deixaram de ser genéricas (0,95 → 0,05): foram calculadas
+  pela geometria de cada traçado (entrada logo depois do fim da última curva, saída pouco antes da primeira), com Monza (0,93) e
+  Zandvoort (0,95) ajustadas à mão. PROVISÓRIO: é uma aproximação; pistas com entrada de box antes da última curva na vida real
+  ainda podem precisar de ajuste individual, como foi feito em Interlagos, Mônaco e Silverstone.

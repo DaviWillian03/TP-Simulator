@@ -3,7 +3,8 @@
  "name": "Albert Park",
  "short_name": "Melbourne",
  "grand_prix": "GP da Austrália",
- "country": "Austrália", "country_code": "au",
+ "country": "Austrália",
+ "country_code": "au",
  "city": "Melbourne",
  "round": 1,
  "date": "2026-03-08",
@@ -13,7 +14,7 @@
  "laps": 58,
  "base_lap_time_s": 79.0,
  "pit_lane_loss_s": 19.0,
- "pit_entry_frac": 0.95,
+ "pit_entry_frac": 0.917,
  "pit_box_frac": 0.0,
  "pit_exit_frac": 0.05,
  "tyre_wear_factor": 1.0,
@@ -35,11 +36,21 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.35, "slow": 0.3, "fast": 0.35},
+ "profile": {
+  "straight": 0.35,
+  "slow": 0.3,
+  "fast": 0.35
+ },
  "rain_probability": 0.15,
  "scenery": {
-  "landmarks": ["palms", "skyline"],
-  "kerbs": ["#1f9d3a", "#f5c400"],
+  "landmarks": [
+   "palms",
+   "skyline"
+  ],
+  "kerbs": [
+   "#1f9d3a",
+   "#f5c400"
+  ],
   "theme": "lake",
   "landmark": "lake"
  },
@@ -48,7 +59,8 @@
   "tracado": "bacinger/f1-circuits au-1953.geojson (MIT), escalado para 5278 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
   "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
-  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana"
+  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana",
+  "box": "entrada/saída do pit lane calculadas pela geometria (fim da última curva / antes da primeira); PROVISÓRIO"
  },
  "points": [
   [

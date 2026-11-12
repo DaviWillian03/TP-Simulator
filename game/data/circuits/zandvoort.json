@@ -3,7 +3,8 @@
  "name": "Circuit Zandvoort",
  "short_name": "Zandvoort",
  "grand_prix": "GP da Holanda",
- "country": "Países Baixos", "country_code": "nl",
+ "country": "Países Baixos",
+ "country_code": "nl",
  "city": "Zandvoort",
  "round": 12,
  "date": "2026-08-23",
@@ -15,7 +16,7 @@
  "pit_lane_loss_s": 21.0,
  "pit_entry_frac": 0.95,
  "pit_box_frac": 0.0,
- "pit_exit_frac": 0.05,
+ "pit_exit_frac": 0.082,
  "tyre_wear_factor": 1.16,
  "overtaking_difficulty": 0.8,
  "overtaking_zones": [
@@ -35,11 +36,20 @@
    "strength": 0.4
   }
  ],
- "profile": {"straight": 0.15, "slow": 0.35, "fast": 0.5},
+ "profile": {
+  "straight": 0.15,
+  "slow": 0.35,
+  "fast": 0.5
+ },
  "rain_probability": 0.3,
  "scenery": {
-  "landmarks": ["dunes"],
-  "kerbs": ["#d42020", "#f2f2f2"],
+  "landmarks": [
+   "dunes"
+  ],
+  "kerbs": [
+   "#d42020",
+   "#f2f2f2"
+  ],
   "theme": "dunes",
   "landmark": "sea"
  },
@@ -48,7 +58,8 @@
   "tracado": "bacinger/f1-circuits nl-1948.geojson (MIT), escalado para 4259 m",
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability e posição do box são PROVISÓRIOS",
   "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
-  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana"
+  "relevo": "elevation = [fração, metros] APROXIMADO, modelado à mão; vazio = plana",
+  "box": "entrada/saída do pit lane calculadas pela geometria (fim da última curva / antes da primeira); PROVISÓRIO"
  },
  "points": [
   [
