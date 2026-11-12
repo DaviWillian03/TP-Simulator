@@ -70,7 +70,7 @@ func test_dois_compostos_por_pista() -> void:
 func test_mundial_2012_usa_o_calendario_e_as_regras_da_temporada() -> void:
 	var w := WorldChampionship.start("williams", "2012")
 	assert_eq(w.season, 2012)
-	assert_eq(w.cal().size(), 20, "20 GPs de 2012")
+	assert_eq(w.cal().size(), 17, "20 GPs de 2012 menos os 3 sem traçado (Valência, Coreia, Índia)")
 	assert_eq(String(w.next_round()["id"]), "albertpark")
 	var o := w.weekend_options()
 	assert_eq(String(o["category"]), "F1_2012")

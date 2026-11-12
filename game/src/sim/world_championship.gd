@@ -46,8 +46,10 @@ static func calendar() -> Array:
 	return Campaign.calendar()
 
 
+## Etapas sem traçado ainda (2012: Valência, Coreia e Índia, `missing` no calendário) ficam de fora por enquanto
+## (decisão de 2026-11-12: Mundial 2012 com 17 GPs até as pistas existirem).
 func cal() -> Array:
-	return Season.calendar(season_id)
+	return Season.calendar(season_id).filter(func(r: Dictionary) -> bool: return not bool(r.get("missing", false)))
 
 
 func season_over() -> bool:
@@ -209,7 +211,7 @@ func weekend_options(extra: Dictionary = {}) -> Dictionary:
 		if rd.has("compounds"):
 			o["dry_pair"] = rd["compounds"]
 		o["grid_penalties"] = grid_penalties()
-		if round >= calendar().size() / 2:  # quem briga pelo título arrisca menos na classificação
+		if round >= cal().size() / 2:  # quem briga pelo título arrisca menos na classificação
 			var champ := {}
 			var rows := driver_standings()
 			for i in rows.size():

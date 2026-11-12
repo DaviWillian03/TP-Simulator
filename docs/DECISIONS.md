@@ -857,3 +857,7 @@ Respostas do usuário:
   pódio real de cada GP. Atributos dos pilotos, carreira até 2011 e largada: ESTIMATIVA. Fora da campanha, temporada extra
   usa engenheiros genéricos (não mistura os de 2026). **Fotos e logos oficiais de 2012** enviados pelo usuário ficam só em
   `game/local/drivers/2012/` e `game/local/emblems/2012/` (ignoradas pelo git; `tools/prepare_season_media.py`).
+- **2026-11-12 — Seletor de temporada 2026 | 2012 (mockup v37 aprovado).** No Grande Prêmio fica abaixo do título
+  (só na F1; em 2012, F2/F3 ficam apagados): o calendário de 2012 vem primeiro (pistas sem traçado aparecem apagadas) e
+  depois as pistas de 2026; cada cartão mostra os dois compostos daquele GP. Na escolha de equipe do Mundial fica no canto
+  superior direito. **Mundial 2012 pula Valência, Coreia e Índia** até existirem os traçados (17 GPs; escolha do usuário).

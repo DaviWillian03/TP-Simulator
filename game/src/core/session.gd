@@ -106,6 +106,7 @@ func _ready() -> void:
 	category = String(args.get("category", GameData.category_of(player_team)))  # --category=F2 (com --team=f2_...)
 	if args.has("season"):  # (capturas) --season=2012: Grande Prêmio/corrida com as regras da temporada extra
 		gp_season = String(args["season"])
+		world_season = gp_season
 		sim_overrides["category"] = Season.category(gp_season)
 	duration_pct = float(args.get("pct", duration_pct))
 	debug_advance_s = float(args.get("advance", "0"))
@@ -571,7 +572,7 @@ func open_world() -> void:
 
 
 func start_world(team_id: String) -> void:
-	world = WorldChampionship.start(team_id)
+	world = WorldChampionship.start(team_id, world_season)
 	TeamEmblems.use_season(world.season_id)
 	player_team = team_id
 	world.save()
@@ -584,6 +585,7 @@ func open_world_hub() -> void:
 
 var dev_flags := false  ## alguma opção de desenvolvimento/captura foi passada (pula a abertura)
 var slots_mode := "campaign"  ## o que um slot vazio começa: "campaign" | "world"
+var world_season := Season.DEFAULT  ## temporada escolhida para um Mundial novo (seletor 2026 | 2012, mockup v37)
 var gp_season := Season.DEFAULT  ## temporada do Grande Prêmio avulso (2026 ou extra, ex.: 2012); a Campanha não usa
 var world_table_mode := "drivers"  ## aba aberta na tela do campeonato: drivers | teams | stats
 var world_table_stat := ""  ## estatística aberta (wins | poles | podiums | dnfs) ou vazio

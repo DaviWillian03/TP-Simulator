@@ -279,3 +279,37 @@ func test_gp_da_f2_mostra_so_as_etapas_da_categoria() -> void:
 	assert_eq(Session.category, "F2")
 	Session.player_team = before_team
 	Session.category = "F1"
+
+
+func test_seletor_2012_no_grande_premio_troca_grid_e_calendario() -> void:
+	Session.gp_season = "2012"
+	Session.player_team = "lotus"
+	Session.category = "F1"
+	Session.circuit_id = "suzuka"
+	var screen: Control = await _open("res://src/ui/gp_setup_screen.tscn")
+	assert_eq(String(screen._calendar[0]["id"]), "albertpark", "calendário de 2012 primeiro")
+	assert_true((screen._rows["yeongam"] as Button).disabled, "Coreia ainda sem traçado: apagada")
+	assert_false((screen._rows["suzuka"] as Button).disabled)
+	assert_true(screen._rows.has("miami"), "as pistas de 2026 continuam disponíveis depois")
+	assert_eq(screen._teams.get_child_count(), 12, "grid de 2012")
+	assert_eq(Season.active, "2012", "cores e logos da época")
+	Session.gp_season = Season.DEFAULT
+	Session.player_team = "williams"
+	TeamEmblems.use_season(Season.DEFAULT)
+
+
+func test_seletor_de_ano_no_mundial_comeca_a_temporada_escolhida() -> void:
+	Session.team_select_mode = "world"
+	Session.world_season = "2012"
+	Session.category = "F1"
+	Session.player_team = "lotus"
+	var screen: Control = await _open("res://src/ui/team_select_screen.tscn")
+	assert_eq(screen._teams.size(), 12)
+	assert_eq(screen._team, "lotus")
+	screen._set_season("2026")
+	assert_eq(screen._teams.size(), 11, "de volta a 2026")
+	assert_eq(screen._team, "mclaren", "Lotus não existe em 2026: vai para a primeira equipe")
+	assert_eq(Session.world_season, "2026")
+	Session.world_season = Season.DEFAULT
+	Session.player_team = "williams"
+	TeamEmblems.use_season(Season.DEFAULT)

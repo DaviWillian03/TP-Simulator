@@ -10,6 +10,7 @@ const TRAITS := [["straight", "Reta", "#ffd24a"], ["slow", "Curvas lentas", "#ff
 
 var _mode := "gp"
 var _cat := "F1"  ## categoria mostrada (F1/F2/F3; mockup v23-1)
+var _season := Season.DEFAULT  ## temporada (2026 | 2012, mockup v37): Mundial e Grande Prêmio; a campanha é sempre 2026
 var _team := ""
 var _teams: Array = []
 var _layer: Control
@@ -28,7 +29,9 @@ var _mode_label: Label
 func _ready() -> void:
 	_mode = Session.team_select_mode
 	_cat = Session.category
-	_teams = GameData.category_teams(_cat)
+	_season = {"world": Session.world_season, "gp": Session.gp_season}.get(_mode, Season.DEFAULT) if _cat == "F1" else Season.DEFAULT
+	TeamEmblems.use_season(_season)
+	_teams = _season_teams()
 	_team = Session.player_team if not GameData.team_by_id(_teams, Session.player_team).is_empty() else String(_teams[0]["id"])
 	var page := ScreenKit.garage_page(self, _team)
 	_backdrop = page["backdrop"]
@@ -60,8 +63,16 @@ func _ready() -> void:
 	_mode_label = UiStyle.g_label("", 13, Color("#c3c9d3"), "bold")
 	head.add_child(_mode_label)
 	ScreenKit.place(head, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 26))
-	# F1 / F2 / F3 nos dois modos (decisão de 2026-11-08)
-	if _mode != "world":  # o Mundial é só F1
+	# F1 / F2 / F3 nos dois modos (decisão de 2026-11-08); no Mundial, o ano (mockup v37)
+	if _mode == "world":
+		var years: Array = []
+		for sid: String in Season.ids():
+			if Season.is_ready(sid):
+				years.append([sid, sid])
+		var yseg := ScreenKit.segmented(years, _season, _set_season)
+		yseg.custom_minimum_size = Vector2(180, 0)
+		ScreenKit.place(yseg, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 30))
+	else:
 		var seg := ScreenKit.segmented([["F1", "F1"], ["F2", "F2"], ["F3", "F3"]], _cat, _set_category)
 		seg.custom_minimum_size = Vector2(240, 0)
 		ScreenKit.place(seg, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 30))
@@ -102,10 +113,34 @@ func _ready() -> void:
 	_apply()
 
 
+func _season_teams() -> Array:
+	return Season.teams(_season) if _season != Season.DEFAULT else GameData.category_teams(_cat)
+
+
+func _season_drivers() -> Array:
+	return Season.drivers(_season) if _season != Season.DEFAULT else GameData.category_drivers(_cat)
+
+
+## Troca o ano no Mundial: grid, cores, logos e fotos daquela temporada.
+func _set_season(sid: String) -> void:
+	if sid == _season:
+		return
+	_season = sid
+	Session.world_season = sid
+	TeamEmblems.use_season(sid)
+	_teams = _season_teams()
+	if GameData.team_by_id(_teams, _team).is_empty():
+		_team = String(_teams[0]["id"])
+	_apply()
+
+
 func _set_category(cat: String) -> void:
 	_cat = cat
 	Session.category = cat
-	_teams = GameData.category_teams(cat)
+	if CategoryRules.is_feeder(cat):
+		_season = Season.DEFAULT
+		TeamEmblems.use_season(_season)
+	_teams = _season_teams()
 	if GameData.team_by_id(_teams, _team).is_empty():
 		_team = String(_teams[0]["id"])
 	_apply()
@@ -147,7 +182,7 @@ func _apply() -> void:
 	while fs > 80 and UiStyle.G_BLACK.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > 1220:
 		fs -= 6
 	_giant.add_theme_font_size_override("font_size", fs)
-	var drivers: Array = GameData.category_drivers(_cat).filter(func(d: Dictionary) -> bool: return d["team"] == _team)
+	var drivers: Array = _season_drivers().filter(func(d: Dictionary) -> bool: return d["team"] == _team)
 	var c2 := Color(t.get("color2", "#ffffff"))
 	_car.set_team(_team, int(drivers[0]["number"]) if not drivers.is_empty() else 0, c2 if c2.get_luminance() > 0.35 else Color.WHITE, t)
 	_fill_info(t)
@@ -177,7 +212,7 @@ func _fill_info(t: Dictionary) -> void:
 	if CategoryRules.is_feeder(_cat):
 		_fill_feeder_info(t)
 		return
-	_info.add_child(UiStyle.g_caption("Carro %d" % 2026))
+	_info.add_child(UiStyle.g_caption("Carro %d" % Season.year(_season)))
 	var big := HBoxContainer.new()
 	big.add_theme_constant_override("separation", 8)
 	var base := float(t["car_rating"])
@@ -267,7 +302,7 @@ func _fill_drivers(drivers: Array, col: Color) -> void:
 		nm.clip_text = true
 		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		v.add_child(nm)
-		var age := DriverCareer.age_in(d, 2026)
+		var age := DriverCareer.age_in(d, Season.year(_season))
 		v.add_child(UiStyle.g_label("%s · %d anos" % [d.get("nationality", ""), age], 12, UiStyle.G_TEXT_2, "bold"))
 		var chips := HBoxContainer.new()
 		chips.add_theme_constant_override("separation", 6)
@@ -289,12 +324,14 @@ func _fill_drivers(drivers: Array, col: Color) -> void:
 func _fill_strip() -> void:
 	for c in _strip.get_children():
 		c.queue_free()
+	var px := 64 if _teams.size() <= 11 else 58  # 2012 tem 12 equipes: a fileira não pode encostar no Voltar
+	_strip.add_theme_constant_override("separation", 6 if _teams.size() <= 11 else 4)
 	for t: Dictionary in _teams:
 		var tid := String(t["id"])
 		var on := tid == _team
 		var b := Button.new()
 		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(64, 64)
+		b.custom_minimum_size = Vector2(px, px)
 		b.tooltip_text = String(t["name"])
 		var st := UiStyle.g_box(TeamEmblems._frame_color(t), 14, 0, 0)  # todos com a cor de fundo da equipe (pedido do usuário)
 		st.set_border_width_all(3 if on else 0)
@@ -307,7 +344,7 @@ func _fill_strip() -> void:
 		var cc := CenterContainer.new()
 		cc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		var em := TeamEmblems.make_rect(tid, 44)
+		var em := TeamEmblems.make_rect(tid, px - 20)
 		em.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cc.add_child(em)
 		b.add_child(cc)
@@ -316,10 +353,10 @@ func _fill_strip() -> void:
 			_apply())
 		ScreenKit.press_feedback(b)
 		var wrap := Control.new()  # o escolhido sobe um pouco, sem empurrar os outros
-		wrap.custom_minimum_size = Vector2(64, 64)
+		wrap.custom_minimum_size = Vector2(px, px)
 		wrap.add_child(b)
 		b.position = Vector2(0, -8 if on else 0)
-		b.size = Vector2(64, 64)
+		b.size = Vector2(px, px)
 		_strip.add_child(wrap)
 
 

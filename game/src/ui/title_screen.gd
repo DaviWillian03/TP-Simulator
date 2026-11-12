@@ -86,7 +86,8 @@ func _world_tile(r: Rect2) -> Button:
 	var saved: WorldChampionship = WorldChampionship.load_saved(SaveSlots.world_path(latest_w)) if latest_w > 0 else null
 	var sub := "22 GPs · sem desenvolvimento"
 	if saved != null:
-		sub = "%s · rodada %d/22 · %dº" % [String(GameData.team_by_id(GameData.teams(), saved.player_team).get("name", "")), mini(saved.round + 1, 22), saved.team_position(saved.player_team)]
+		var n := saved.cal().size()
+		sub = "%d · %s · rodada %d/%d · %dº" % [Season.year(saved.season_id), String(GameData.team_by_id(saved.teams(), saved.player_team).get("name", "")), mini(saved.round + 1, n), n, saved.team_position(saved.player_team)]
 	var sl := UiStyle.g_label(sub, 13, Color("#c9b27a"), "bold")
 	sl.clip_text = true
 	v.add_child(sl)

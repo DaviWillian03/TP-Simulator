@@ -62,7 +62,7 @@ func _top_bar(team: Dictionary) -> void:
 	stats.pressed.connect(Session.open_world_table.bind("stats", ""))
 	stats.custom_minimum_size = Vector2(150, 46)
 	pills.add_child(stats)
-	var cal_n := WorldChampionship.calendar().size()
+	var cal_n := world.cal().size()
 	pills.add_child(_pill("RD %d/%d" % [world.round + 1, cal_n], "cal", UiStyle.G_TEXT))
 	var drivers := world.driver_ids_of(world.player_team)
 	var best_pos := 99
@@ -341,7 +341,7 @@ func _strip_card(r: Rect2) -> Control:
 	v.add_child(UiStyle.g_caption("Vencedores · calendário"))
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 8)
-	var cal := WorldChampionship.calendar()
+	var cal := world.cal()
 	var first := clampi(world.round - 6, 0, maxi(cal.size() - 10, 0))
 	for i in range(first, mini(first + 10, cal.size())):
 		var rd: Dictionary = cal[i]

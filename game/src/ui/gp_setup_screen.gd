@@ -10,6 +10,7 @@ const CARD := Vector2(232, 340)
 
 var _calendar: Array = []
 var _cat := "F1"
+var _season := Season.DEFAULT  ## 2026 | 2012 (mockup v37); F2/F3 são sempre 2026
 var _page: Dictionary
 var _rows: Dictionary = {}  # id do circuito -> cartão (Button) do carrossel
 var _card_group := ButtonGroup.new()
@@ -23,6 +24,16 @@ func _ready() -> void:
 	_calendar = GameData.load_json(GameData.DATA_DIR + "calendar_2026.json")["rounds"]
 	_cat = GameData.category_of(Session.player_team)
 	Session.category = _cat
+	_season = Session.gp_season if _cat == "F1" and Season.is_ready(Session.gp_season) else Season.DEFAULT
+	TeamEmblems.use_season(_season)
+	if GameData.team_by_id(_cat_teams(), Session.player_team).is_empty():
+		Session.player_team = String(_cat_teams()[0]["id"])
+	if _season != Season.DEFAULT:  # calendário daquele ano primeiro (pistas sem traçado aparecem apagadas)
+		_calendar = []
+		for r: Dictionary in Season.calendar(_season):
+			var e: Dictionary = r.duplicate()
+			e["sprint"] = false
+			_calendar.append(e)
 	if CategoryRules.is_feeder(_cat):  # F2/F3: só as etapas da categoria (decisão de 2026-11-08)
 		var rounds := CategoryRules.rounds(_cat)
 		var list: Array = []
@@ -37,6 +48,17 @@ func _ready() -> void:
 	var have := {}
 	for r: Dictionary in Campaign.calendar():  # só pistas que não existem em 2026 (na F2/F3 as etapas continuam as da categoria)
 		have[String(r["id"])] = true
+	if _season != Season.DEFAULT:  # 2012: as pistas de 2026 que não estavam no calendário entram depois, sem sprint
+		var in_year := {}
+		for r: Dictionary in _calendar:
+			in_year[String(r["id"])] = true
+		for r: Dictionary in Campaign.calendar():
+			if not in_year.has(String(r["id"])):
+				var e: Dictionary = r.duplicate()
+				e["sprint"] = false
+				e["other_year"] = true
+				_calendar.append(e)
+		have.merge(in_year)
 	for sid: String in Season.ids():
 		for r2: Dictionary in Season.calendar(sid):
 			var cid := String(r2["id"])
@@ -62,12 +84,29 @@ func _ready() -> void:
 	head.add_child(back)
 	var titles := VBoxContainer.new()
 	titles.add_theme_constant_override("separation", -4)
-	titles.add_child(UiStyle.g_caption("Temporada 2026" if _cat == "F1" else String(CategoryRules.of(_cat)["name"]) + " · temporada 2026"))
-	titles.add_child(UiStyle.g_label("GRANDE PRÊMIO", 30, UiStyle.SECTION["drivers"], "black"))
+	if _cat == "F1":  # F1: o ano escolhe grid, regras e calendário (mockup v37)
+		titles.add_theme_constant_override("separation", 4)
+		titles.add_child(UiStyle.g_caption("Grande Prêmio"))
+		var years: Array = []
+		for sid: String in Season.ids():
+			if Season.is_ready(sid):
+				years.append([sid, sid])
+		var yseg := ScreenKit.segmented(years, _season, _change_season)
+		yseg.custom_minimum_size = Vector2(170, 0)
+		yseg.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		titles.add_child(yseg)
+	else:
+		titles.add_child(UiStyle.g_caption(String(CategoryRules.of(_cat)["name"]) + " · temporada 2026"))
+		titles.add_child(UiStyle.g_label("GRANDE PRÊMIO", 30, UiStyle.SECTION["drivers"], "black"))
 	head.add_child(titles)
 	ScreenKit.place(head, layer, Control.PRESET_TOP_LEFT, Vector2(40, 18))
 	var cat_seg := ScreenKit.segmented([["F1", "F1"], ["F2", "F2"], ["F3", "F3"]], _cat, _change_category)  # categoria (v23-2)
 	cat_seg.custom_minimum_size = Vector2(240, 0)
+	if _season != Season.DEFAULT:  # 2012 só tem a F1 daquele ano: F2/F3 apagados
+		for b: Button in cat_seg.get_child(0).get_children():
+			if String(b.get_meta("value")) != "F1":
+				b.disabled = true
+				b.modulate.a = 0.3
 	ScreenKit.place(cat_seg, layer, Control.PRESET_TOP_RIGHT, Vector2(-40, 22))
 
 	# calendário em cartões grandes
@@ -138,7 +177,13 @@ func _ready() -> void:
 	row.add_child(right)
 	_refresh_cta()
 
-	_select(Session.circuit_id if _rows.has(Session.circuit_id) else _calendar[0]["id"])
+	var first := ""
+	for r: Dictionary in _calendar:
+		if not bool(r.get("missing", false)):
+			first = String(r["id"])
+			break
+	var keep := _rows.has(Session.circuit_id) and not (_rows[Session.circuit_id] as Button).disabled
+	_select(Session.circuit_id if keep else first)
 	_center_selected.call_deferred()
 	layer.modulate = Color(1, 1, 1, 0)
 	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
@@ -148,7 +193,7 @@ func _ready() -> void:
 func _fill_teams() -> void:
 	for c in _teams.get_children():
 		c.queue_free()
-	for t: Dictionary in GameData.category_teams(_cat):
+	for t: Dictionary in _cat_teams():
 		var id := String(t["id"])
 		var on := id == Session.player_team
 		var b := Button.new()
@@ -184,7 +229,7 @@ func _gap(h: float) -> Control:
 # --- calendário -------------------------------------------------------------------------
 
 func _card(r: Dictionary) -> Button:
-	var circuit := GameData.circuit(r["id"])
+	var circuit := GameData.circuit(r["id"]) if FileAccess.file_exists(GameData.DATA_DIR + "circuits/%s.json" % r["id"]) else {}
 	var b := Button.new()
 	b.toggle_mode = true
 	b.button_group = _card_group
@@ -244,7 +289,8 @@ func _card(r: Dictionary) -> Button:
 	var rain := float(circuit.get("rain_probability", 0.0))
 	ic.add_child(ScreenKit.icon("rain" if rain >= 0.3 else "sun", 20, Color("#9fd2ff") if rain >= 0.3 else Color("#F5C542")))
 	var tyres: Dictionary = GameData.tyres()["compounds"]
-	for k: String in ["soft", "medium", "hard"]:
+	var pair: Array = r.get("compounds", ["soft", "medium", "hard"]) if _season != Season.DEFAULT and not r.has("other_year") else ["soft", "medium", "hard"]
+	for k: String in pair:
 		var tb := TyreBadge.new()
 		tb.custom_minimum_size = Vector2(22, 22)
 		tb.set_compound(String(tyres[k]["letter"]), Color(tyres[k]["color"]))
@@ -268,6 +314,9 @@ func _card(r: Dictionary) -> Button:
 		if pressed:
 			_select(r["id"]))
 	ScreenKit.press_feedback(b)
+	if bool(r.get("missing", false)) or not FileAccess.file_exists(GameData.DATA_DIR + "circuits/%s.json" % r["id"]):
+		b.disabled = true  # pista daquele ano ainda sem traçado (2012: Valência, Coreia, Índia)
+		b.modulate = Color(1, 1, 1, 0.35)
 	_rows[r["id"]] = b
 	return b
 
@@ -308,6 +357,18 @@ func _refresh_laps() -> void:
 		return
 	var laps := int(c.get("laps", 0))
 	_laps.text = "%d voltas na corrida" % maxi(3, roundi(laps * Session.duration_pct))
+
+
+func _cat_teams() -> Array:
+	return Season.teams(_season) if _season != Season.DEFAULT else GameData.category_teams(_cat)
+
+
+## Troca o ano (só F1): grid, cores, logos, fotos e calendário daquela temporada.
+func _change_season(sid: String) -> void:
+	if sid == _season:
+		return
+	Session.gp_season = sid
+	get_tree().change_scene_to_file.call_deferred(Session.GP_SETUP_SCENE)
 
 
 ## Troca de categoria: a equipe passa a ser a primeira da categoria nova e a tela recarrega com o calendário dela.
