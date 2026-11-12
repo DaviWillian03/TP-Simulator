@@ -239,8 +239,12 @@ func _stint_row(did: String, i: int, st: Dictionary, first_lap: int) -> Control:
 	badge.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var locked := i == 0 and weekend.session_id() == "race" and weekend.start_rule.has(did)  # 2012: pneu do Q2
 	tyre_btn.disabled = locked
-	if locked:
+	if locked:  # cadeado sobre o pneu: no celular não há dica de passar o mouse
 		tyre_btn.tooltip_text = "Pneu do Q2"
+		var lock := ScreenKit.icon("lock", 18, UiStyle.G_DIRECTOR)
+		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tyre_btn.add_child(lock)
+		lock.position = Vector2(UiStyle.TOUCH_MIN - 14, -4)
 	tyre_btn.pressed.connect(func() -> void:
 		RaceStrategy.cycle_compound(chosen[did], i, weekend.tyres, stocks[did])
 		edited[did] = true
@@ -251,7 +255,7 @@ func _stint_row(did: String, i: int, st: Dictionary, first_lap: int) -> Control:
 	tv.add_theme_constant_override("separation", -4)
 	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var last := first_lap + int(st["laps"]) - 1
-	tv.add_child(UiStyle.g_label("Largada" if i == 0 else "Parada %d · volta %d" % [i, first_lap - 1], UiStyle.FS_BODY, UiStyle.G_TEXT, "black"))
+	tv.add_child(UiStyle.g_label(("Largada · pneu do Q2" if locked else "Largada") if i == 0 else "Parada %d · volta %d" % [i, first_lap - 1], UiStyle.FS_BODY, UiStyle.G_TEXT, "black"))
 	tv.add_child(UiStyle.g_label("%s %s · voltas %d–%d" % [c["name"], "novo" if bool(st.get("new", true)) else "usado", first_lap, last], UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold"))
 	h.add_child(tv)
 	var single := (chosen[did]["stints"] as Array).size() < 2
