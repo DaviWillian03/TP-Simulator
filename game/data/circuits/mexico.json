@@ -44,7 +44,6 @@
  "rain_probability": 0.1,
  "scenery": {
   "landmarks": [
-   "stadium",
    "stadium_section"
   ],
   "kerbs": [

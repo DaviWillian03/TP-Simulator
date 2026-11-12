@@ -52,7 +52,9 @@
    "#f5c400"
   ],
   "theme": "lake",
-  "landmark": "lake"
+  "landmark": "lake",
+  "city": 0.04,
+  "trees": 0.14
  },
  "elevation": [],
  "_notas": {

@@ -803,3 +803,6 @@ Respostas do usuário:
   onde dois trechos se cruzam em alturas diferentes o terreno segue o de **baixo** (`Track3D.nearest`), o trecho de cima ganha tabuleiro,
   muretas e pilares (marco `bridge`, `scenery.spans.bridge`) e fica sem gramado lateral para não cobrir a pista de baixo. A cobertura dos
   boxes de Silverstone passou a ter duas abas (uma sobe para trás, outra levanta sobre o pit lane) e pilares.
+- **2026-11-12 — Ajustes de cenário depois da validação das 22 pistas.** Montreal virou ilha (água dos dois lados: `scenery.water_sides`
+  e `water_gap`); a água do mar/rio subiu para aparecer acima do terreno distante; Albert Park com menos prédios; Zandvoort com areia
+  mais escura; México sem o estádio oval solto (fica só o trecho com arquibancadas dos dois lados). Suíte completa: 66 arquivos sem falha.

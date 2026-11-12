@@ -20,6 +20,7 @@ var t3: Track3D
 var root := Node3D.new()
 var night := false
 var theme := "park"
+var water_sides: Array = []
 var landmark := ""
 var rng := RandomNumberGenerator.new()
 var water_center := Vector3.INF
@@ -139,32 +140,37 @@ func _water() -> void:
 		_harbor()
 		return
 	# mar/rio/porto: faixa de água no lado mais livre do mapa
-	var sides := {"south": tb.end.z, "north": tb.position.z, "east": tb.end.x, "west": tb.position.x}
-	water_side = ["south", "north", "east", "west"][rng.randi() % 4] if theme != "harbor" else "south"
-	var plane := MeshInstance3D.new()
-	var pm := PlaneMesh.new()
-	var size := Vector2(_box.size.x, _box.size.z)
-	var pos := _box.get_center()
-	match water_side:
-		"south":
-			size.y = _box.end.z - (tb.end.z + 60.0)
-			pos.z = tb.end.z + 60.0 + size.y / 2.0
-		"north":
-			size.y = (tb.position.z - 60.0) - _box.position.z
-			pos.z = _box.position.z + size.y / 2.0
-		"east":
-			size.x = _box.end.x - (tb.end.x + 60.0)
-			pos.x = tb.end.x + 60.0 + size.x / 2.0
-		"west":
-			size.x = (tb.position.x - 60.0) - _box.position.x
-			pos.x = _box.position.x + size.x / 2.0
-	pm.size = size
-	plane.mesh = pm
-	pos.y = tb.position.y - 0.5
-	plane.position = pos
-	plane.material_override = Materials3D.water()
-	root.add_child(plane)
-	var _unused := sides
+	# mar/rio: uma faixa de água em cada lado pedido (`scenery.water_sides`, ex.: os dois lados da ilha de Montreal); sem a lista, um lado sorteado
+	var want: Array = t3.track.scenery.get("water_sides", [])
+	if want.is_empty():
+		want = [["south", "north", "east", "west"][rng.randi() % 4]]
+	water_sides = want
+	water_side = String(want[0])
+	var gap := float(t3.track.scenery.get("water_gap", 60.0))
+	for sd: String in want:
+		var plane := MeshInstance3D.new()
+		var pm := PlaneMesh.new()
+		var size := Vector2(_box.size.x, _box.size.z)
+		var pos := _box.get_center()
+		match sd:
+			"south":
+				size.y = _box.end.z - (tb.end.z + gap)
+				pos.z = tb.end.z + gap + size.y / 2.0
+			"north":
+				size.y = (tb.position.z - gap) - _box.position.z
+				pos.z = _box.position.z + size.y / 2.0
+			"east":
+				size.x = _box.end.x - (tb.end.x + gap)
+				pos.x = tb.end.x + gap + size.x / 2.0
+			"west":
+				size.x = (tb.position.x - gap) - _box.position.x
+				pos.x = _box.position.x + size.x / 2.0
+		pm.size = size
+		plane.mesh = pm
+		pos.y = t3.bounds_3d().get_center().y + 7.0  # acima da ondulação do terreno distante, para a água aparecer
+		plane.position = pos
+		plane.material_override = Materials3D.water()
+		root.add_child(plane)
 
 
 var _harbor_xf := Transform3D()
@@ -195,15 +201,21 @@ func _in_water(p: Vector3) -> bool:
 		var d := Vector2((p.x - water_center.x) / 1.35, (p.z - water_center.z) / 0.8)
 		return d.length() < water_radius + 8.0
 	var tb := t3.bounds_3d()
-	match water_side:
-		"south":
-			return p.z > tb.end.z + 50.0
-		"north":
-			return p.z < tb.position.z - 50.0
-		"east":
-			return p.x > tb.end.x + 50.0
-		"west":
-			return p.x < tb.position.x - 50.0
+	var g := float(t3.track.scenery.get("water_gap", 60.0)) - 10.0
+	for sd: String in water_sides:
+		match sd:
+			"south":
+				if p.z > tb.end.z + g:
+					return true
+			"north":
+				if p.z < tb.position.z - g:
+					return true
+			"east":
+				if p.x > tb.end.x + g:
+					return true
+			"west":
+				if p.x < tb.position.x - g:
+					return true
 	return false
 
 
