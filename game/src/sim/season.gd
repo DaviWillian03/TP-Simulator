@@ -60,6 +60,17 @@ static func real_form(id: String) -> Dictionary:
 	return d if d is Dictionary else {}
 
 
+## Par de compostos secos de uma pista na temporada (calendário daquele ano; pistas de outros anos: "other_tracks").
+## Vazio = a temporada não restringe por pista.
+static func compounds_for(id: String, circuit_id: String) -> Array:
+	for rd: Dictionary in calendar(id):
+		if String(rd["id"]) == circuit_id and rd.has("compounds"):
+			return rd["compounds"]
+	var d: Variant = _file(id, "calendar_file")
+	var other: Dictionary = (d as Dictionary).get("other_tracks", {}) if d is Dictionary else {}
+	return other.get(circuit_id, [])
+
+
 ## Engenheiros de corrida reais da temporada, por piloto ({id: {name, skill}}); vazio = genéricos.
 static func engineers(id: String) -> Dictionary:
 	var d: Variant = _file(id, "staff_file")

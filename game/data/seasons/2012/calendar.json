@@ -262,5 +262,40 @@
     "hard"
    ]
   }
- ]
+ ],
+ "other_tracks": {
+  "_notas": "Pistas de 2026 que não estavam no calendário de 2012: par de compostos no estilo da Pirelli de 2012 (macios em rua/baixo desgaste, duros em desgaste alto). ESTIMATIVA do projeto (2026-11-12).",
+  "baku": [
+   "soft",
+   "medium"
+  ],
+  "lasvegas": [
+   "soft",
+   "medium"
+  ],
+  "madring": [
+   "soft",
+   "medium"
+  ],
+  "mexico": [
+   "soft",
+   "medium"
+  ],
+  "miami": [
+   "soft",
+   "medium"
+  ],
+  "spielberg": [
+   "soft",
+   "medium"
+  ],
+  "lusail": [
+   "medium",
+   "hard"
+  ],
+  "zandvoort": [
+   "medium",
+   "hard"
+  ]
+ }
 }

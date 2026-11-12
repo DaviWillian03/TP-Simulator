@@ -205,3 +205,14 @@ func test_pistas_de_valencia_coreia_e_india_rodam() -> void:
 			sim.step()
 			guard += 1
 		assert_true(sim.over, "corrida termina em %s" % cid)
+
+
+func test_toda_pista_tem_dois_compostos_em_2012() -> void:
+	for f: String in DirAccess.get_files_at("res://data/circuits"):
+		if not f.ends_with(".json") or f.begins_with("LICENSE"):
+			continue
+		var cid := f.get_basename()
+		assert_eq(Season.compounds_for("2012", cid).size(), 2, "%s com o par de 2012" % cid)
+	assert_eq(Season.compounds_for("2012", "interlagos"), ["medium", "hard"], "Interlagos 2012: médio e duro (real)")
+	assert_eq(Season.compounds_for("2012", "lusail"), ["medium", "hard"], "pista de outro ano: par da época")
+	assert_true(Season.compounds_for("2026", "interlagos").is_empty(), "2026 não restringe por pista")

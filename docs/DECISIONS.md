@@ -873,3 +873,6 @@ Respostas do usuário:
   `tools/add_extra_circuits.py` como as outras pistas extras. Valência: porto com prédios em volta e a ponte móvel
   (o trecho que cruza o canal); Coreia: costa; Índia: solo seco. **Mundial 2012 volta a ter os 20 GPs.** Valores de
   desempenho PROVISÓRIOS.
+- **2026-11-12 — 2012: dois compostos em toda pista.** As pistas do calendário de 2012 usam o par real; as pistas de
+  2026 jogadas no Grande Prêmio com o ano 2012 (Baku, Las Vegas, Madri, México, Miami, Áustria: macio/médio; Catar e
+  Holanda: médio/duro) ganham um par no estilo da Pirelli de 2012 (`other_tracks` no calendário; ESTIMATIVA).

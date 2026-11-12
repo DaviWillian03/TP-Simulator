@@ -417,9 +417,9 @@ func _apply_season(opts: Dictionary) -> void:
 	opts["teams"] = Season.teams(sid)
 	opts["drivers"] = Season.drivers(sid)
 	opts["category"] = Season.category(sid)
-	for rd: Dictionary in Season.calendar(sid):
-		if String(rd["id"]) == circuit_id and rd.has("compounds"):
-			opts["dry_pair"] = rd["compounds"]
+	var pair := Season.compounds_for(sid, circuit_id)  # par real do GP; pistas de outros anos: par no estilo da época
+	if pair.size() == 2:
+		opts["dry_pair"] = pair
 
 
 func start_gp() -> void:
