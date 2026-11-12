@@ -70,7 +70,7 @@ func test_dois_compostos_por_pista() -> void:
 func test_mundial_2012_usa_o_calendario_e_as_regras_da_temporada() -> void:
 	var w := WorldChampionship.start("williams", "2012")
 	assert_eq(w.season, 2012)
-	assert_eq(w.cal().size(), 17, "20 GPs de 2012 menos os 3 sem traçado (Valência, Coreia, Índia)")
+	assert_eq(w.cal().size(), 20, "os 20 GPs de 2012 (Valência, Coreia e Índia com traçado do OpenStreetMap)")
 	assert_eq(String(w.next_round()["id"]), "albertpark")
 	var o := w.weekend_options()
 	assert_eq(String(o["category"]), "F1_2012")
@@ -192,3 +192,16 @@ func test_largada_forcada_troca_os_compostos_de_lugar() -> void:
 	assert_eq(int(plan["stints"][0]["laps"]), 4, "o stint vai inteiro, com as voltas dele")
 	assert_eq(String(plan["stints"][1]["compound"]), "hard")
 	assert_eq(int(plan["stints"][1]["laps"]), 9)
+
+
+func test_pistas_de_valencia_coreia_e_india_rodam() -> void:
+	for cid: String in ["valencia", "yeongam", "buddh"]:
+		var c := GameData.circuit(cid)
+		assert_almost_eq(float(c["length_m"]), {"valencia": 5419.0, "yeongam": 5615.0, "buddh": 5125.0}[cid], 1.0, cid)
+		var sim := RaceSim.new(TrackModel.new(c), TyreModel.new(GameData.tyres()), Season.teams("2012"), Season.drivers("2012"),
+			{"duration_pct": 0.1, "seed": 2, "weather": "dry", "incident_rate": 0.0, "category": "F1_2012"})
+		var guard := 0
+		while not sim.over and guard < 200000:
+			sim.step()
+			guard += 1
+		assert_true(sim.over, "corrida termina em %s" % cid)

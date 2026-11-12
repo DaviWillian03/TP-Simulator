@@ -41,4 +41,9 @@ símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `ga
 - `game/assets/audio/ui_*.wav` e `menu_music.wav`: síntese própria (`tools/make_sounds.py`), sem amostras de terceiros.
 - Logo e ícone novos: desenho próprio (`tools/make_logo_v2.py`); texto em contornos da fonte Kanit (OFL). Carros genéricos, sem marcas.
 - **bacinger/f1-circuits** (MIT): traçados extras de 2012 — Sepang (`my-1999`), Bahrein (`bh-2002`) e Hockenheim (`de-1932`), via `tools/add_extra_circuits.py`.
+- **OpenStreetMap** (© colaboradores do OpenStreetMap, **ODbL 1.0**, https://www.openstreetmap.org/copyright): traçados de
+  Valência (relação 280461 "Circuito Urbano de Valencia"), Coreia/Yeongam (via 708763326 "YEONGAM F1 Track") e Índia/Buddh
+  (vias 188020620, 188020619, 169886195, 188020614, 188020617, 188020613), baixados pela API do OSM em 2026-11-12 e
+  convertidos por `tools/osm_extract_track.py` em `tools/osm_tracks/*.geojson` (o banco derivado continua sob ODbL; a
+  atribuição acima e em cada arquivo é obrigatória). Escalados ao comprimento oficial em `game/data/circuits/{valencia,yeongam,buddh}.json`.
 - **flag-icons** 7.2.3 (MIT): bandeiras da Malásia (`my.svg`) e do Bahrein (`bh.svg`) adicionadas em 2026-11-12 (pacote npm).

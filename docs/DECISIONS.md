@@ -867,3 +867,9 @@ Respostas do usuário:
   e a escolha do pneu de largada fica travada. (3) **Engenheiros reais de 2012** em `data/seasons/2012/staff.json`
   (com fonte: Rocquelin, Stella, Bonnington, Rennie, Joyce; parcerias conhecidas: Smedley, Pilbeam, Ross); os demais
   pilotos usam engenheiro genérico.
+- **2026-11-12 — Pistas de Valência, Coreia e Índia.** Traçados do OpenStreetMap (ODbL; o bacinger não tem essas três),
+  extraídos por `tools/osm_extract_track.py` (linha de largada pela "Start Line" do OSM em Yeongam, arquibancada principal
+  em Buddh, nó de largada da relação em Valência; sentido: Valência e Índia horário, Coreia anti-horário) e gerados por
+  `tools/add_extra_circuits.py` como as outras pistas extras. Valência: porto com prédios em volta e a ponte móvel
+  (o trecho que cruza o canal); Coreia: costa; Índia: solo seco. **Mundial 2012 volta a ter os 20 GPs.** Valores de
+  desempenho PROVISÓRIOS.

@@ -1,7 +1,9 @@
-"""Pistas extras das temporadas antigas (2026-11-12): Sepang, Bahrein e Hockenheim (temporada 2012). Mesmo método e acabamento
-das pistas de 2026: traçado do bacinger/f1-circuits (MIT) escalado ao comprimento oficial, zonas de ultrapassagem pelas 3 maiores
+"""Pistas extras das temporadas antigas (2026-11-12): Sepang, Bahrein e Hockenheim (bacinger/f1-circuits, MIT) e Valência,
+Coreia e Índia (sem traçado aberto no bacinger: extraídas do OpenStreetMap, © colaboradores do OSM, ODbL 1.0, por
+tools/osm_extract_track.py em tools/osm_tracks/). Mesmo método e acabamento
+das pistas de 2026: traçado escalado ao comprimento oficial, zonas de ultrapassagem pelas 3 maiores
 retas, boxes pela geometria, perfil, relevo, bioma, zebras e marcos. Valores de desempenho PROVISÓRIOS.
-Uso: python tools/add_extra_circuits.py <pasta do bacinger/f1-circuits>
+Uso: python tools/add_extra_circuits.py <pasta do bacinger/f1-circuits> [id ...]   (sem ids: todas)
 """
 import json
 import math
@@ -31,7 +33,25 @@ TRACKS = [
          scenery={"theme": "forest", "landmarks": ["stadium_section"], "trees": 0.3, "kerbs": ["#d42020", "#f2f2f2"],
                   "spans": {"stadium_section": [0.86, 0.97]}},
          elevation=[[0.0, 0.0], [0.2, 2.0], [0.45, 4.0], [0.7, 1.0], [1.0, 0.0]]),
+    dict(id="valencia", osm="valencia", gp="GP da Europa", name="Valencia Street Circuit", short="Valência", country="Espanha",
+         cc="es", city="Valência", rnd=8, date="2012-06-24", laps=57, base=100.5, pit=20.0, diff=0.8, rain=0.05, wear=0.95,
+         profile=(0.35, 0.50, 0.15), night=False,
+         scenery={"theme": "harbor", "landmarks": ["bridge"], "trees": 0.05, "city": 0.5, "street": True,
+                  "kerbs": ["#d42020", "#f2f2f2"], "spans": {"bridge": [0.468, 0.488]}},
+         elevation=[[0.0, 0.0], [0.47, 0.0], [0.478, 4.0], [0.488, 0.0], [1.0, 0.0]]),
+    dict(id="yeongam", osm="yeongam", gp="GP da Coreia", name="Korea International Circuit", short="Yeongam", country="Coreia do Sul",
+         cc="kr", city="Yeongam", rnd=16, date="2012-10-14", laps=55, base=100.5, pit=20.0, diff=0.4, rain=0.25, wear=1.05,
+         profile=(0.45, 0.35, 0.20), night=False,
+         scenery={"theme": "coast", "landmarks": ["wing_stand"], "trees": 0.06, "city": 0.06, "kerbs": ["#d42020", "#f2f2f2"]},
+         elevation=[[0.0, 0.0], [0.3, 1.0], [0.6, 3.0], [0.85, 1.0], [1.0, 0.0]]),
+    dict(id="buddh", osm="buddh", gp="GP da Índia", name="Buddh International Circuit", short="Buddh", country="Índia",
+         cc="in", city="Greater Noida", rnd=17, date="2012-10-28", laps=60, base=87.0, pit=19.0, diff=0.4, rain=0.02, wear=1.0,
+         profile=(0.40, 0.25, 0.35), night=False,
+         scenery={"theme": "prairie", "landmarks": ["wing_stand"], "trees": 0.05, "ground": "#a39a66", "kerbs": ["#d42020", "#f2f2f2"]},
+         elevation=[[0.0, 0.0], [0.06, 6.0], [0.12, 14.0], [0.3, 8.0], [0.5, 2.0], [0.7, 4.0], [0.9, 1.0], [1.0, 0.0]]),
 ]
+
+TRACKS_DIR = ROOT / "tools" / "osm_tracks"
 
 
 def pit_fracs(pts, length):
@@ -58,8 +78,12 @@ def pit_fracs(pts, length):
 
 def main():
     src = pathlib.Path(sys.argv[1])
+    only = set(sys.argv[2:])
     for t in TRACKS:
-        g = json.loads((src / "circuits" / f"{t['geo']}.geojson").read_text(encoding="utf-8"))
+        if only and t["id"] not in only:
+            continue
+        path = TRACKS_DIR / f"{t['osm']}.geojson" if "osm" in t else src / "circuits" / f"{t['geo']}.geojson"
+        g = json.loads(path.read_text(encoding="utf-8"))
         length = float(g["features"][0]["properties"]["length"])
         pts = project(g["features"][0]["geometry"]["coordinates"])
         s = length / sum(math.dist(pts[i], pts[(i + 1) % len(pts)]) for i in range(len(pts)))
@@ -80,7 +104,8 @@ def main():
             "profile": {"straight": t["profile"][0], "slow": t["profile"][1], "fast": t["profile"][2]},
             "rain_probability": t["rain"], "scenery": sc, "elevation": t["elevation"], "season": 2012,
             "_notas": {
-                "tracado": f"bacinger/f1-circuits {t['geo']}.geojson (MIT), escalado para {int(length)} m",
+                "tracado": (f"OpenStreetMap (© colaboradores do OSM, ODbL 1.0) via tools/osm_tracks/{t['osm']}.geojson, escalado para {int(length)} m"
+                            if "osm" in t else f"bacinger/f1-circuits {t['geo']}.geojson (MIT), escalado para {int(length)} m"),
                 "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability, desgaste e relevo são PROVISÓRIOS",
                 "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
                 "box": "entrada/saída do pit lane calculadas pela geometria; PROVISÓRIO",
