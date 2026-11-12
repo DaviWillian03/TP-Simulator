@@ -99,7 +99,7 @@ static func engineer_plans(tyres: TyreModel, ctx: Dictionary, stock: Dictionary)
 				continue
 			cands.append({"stints": stints, "cost": cost(tyres, stints, ctx)})
 	if cands.is_empty():  # nada cabe: duas paradas com os mais duros, mesmo além da vida (o jogador ajusta)
-		var seq: Array = [dry[1], dry[2], dry[1]] if dry.size() >= 3 else [dry[0], dry[0], dry[0]]
+		var seq: Array = [dry[1], dry[2], dry[1]] if dry.size() >= 3 else ([dry[1], dry[0], dry[1]] if dry.size() == 2 else [dry[0], dry[0], dry[0]])
 		var stints := _split(tyres, seq, ctx)
 		assign_sets(stints, stock)
 		cands.append({"stints": stints, "cost": cost(tyres, stints, ctx)})
@@ -112,7 +112,7 @@ static func engineer_plans(tyres: TyreModel, ctx: Dictionary, stock: Dictionary)
 	for c: Dictionary in cands:  # aposta: larga de macio
 		if picks.size() >= 3:
 			break
-		if c["stints"][0]["compound"] == "soft" and not picks.has(c):
+		if c["stints"][0]["compound"] == dry[0] and not picks.has(c):  # o mais macio do GP (supermacio em 2012)
 			picks.append(c)
 			break
 	for c: Dictionary in cands:

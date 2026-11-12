@@ -289,6 +289,7 @@ func _card(r: Dictionary) -> Button:
 	var rain := float(circuit.get("rain_probability", 0.0))
 	ic.add_child(ScreenKit.icon("rain" if rain >= 0.3 else "sun", 20, Color("#9fd2ff") if rain >= 0.3 else Color("#F5C542")))
 	var tyres: Dictionary = GameData.tyres()["compounds"]
+	var era_colors: Dictionary = CategoryRules.of(Season.category(_season)).get("tyre_colors", {}) if _season != Season.DEFAULT else {}
 	var pair: Array = ["soft", "medium", "hard"]
 	if _season != Season.DEFAULT:  # 2012: só os dois compostos daquele GP (ou o par da época nas pistas de outros anos)
 		var p2 := Season.compounds_for(_season, String(r["id"]))
@@ -297,7 +298,7 @@ func _card(r: Dictionary) -> Button:
 	for k: String in pair:
 		var tb := TyreBadge.new()
 		tb.custom_minimum_size = Vector2(22, 22)
-		tb.set_compound(String(tyres[k]["letter"]), Color(tyres[k]["color"]))
+		tb.set_compound(String(tyres[k]["letter"]), Color(era_colors.get(k, tyres[k]["color"])))
 		ic.add_child(tb)
 	v.add_child(ic)
 	v.position = Vector2(16, CARD.y - 110)

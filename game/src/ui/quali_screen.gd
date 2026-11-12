@@ -306,7 +306,7 @@ const LAPS_INFO := {
 func _set_groups(car: CarState) -> Array:
 	var groups: Array = []
 	var by_key := {}
-	var order := {"soft": 0, "medium": 1, "hard": 2, "inter": 3, "wet": 4}
+	var order := {"supersoft": -1, "soft": 0, "medium": 1, "hard": 2, "inter": 3, "wet": 4}
 	var list: Array = q.alloc.available(car.driver["id"], true)
 	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if a["compound"] != b["compound"]:
@@ -534,7 +534,7 @@ func _alloc_row(car: CarState) -> Control:
 	h.add_theme_constant_override("separation", 14)
 	h.add_child(UiStyle.g_caption("Fim de semana"))
 	var sm := q.alloc.summary(car.driver["id"])
-	for k: String in ["soft", "medium", "hard"]:
+	for k: String in TyreModel.DRY:
 		if not sm.has(k) or not q.tyres.has_compound(k):
 			continue
 		var c: Dictionary = q.tyres.compounds[k]

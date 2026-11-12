@@ -166,8 +166,8 @@ func _tyre_card(r: Rect2) -> Control:
 	if weekend.tyre_alloc == null or mine.is_empty():
 		return p
 	var stock := weekend.tyre_alloc.race_stock(String(mine[0]["id"]))
-	var tyres: Dictionary = GameData.tyres()["compounds"]
-	for k: String in ["soft", "medium", "hard"]:
+	var tyres: Dictionary = weekend.tyres.compounds  # cores da época (2012) já aplicadas
+	for k: String in TyreModel.DRY:
 		if not tyres.has(k) or not weekend.tyres.has_compound(k):
 			continue
 		var n := int(stock[k]["new"])

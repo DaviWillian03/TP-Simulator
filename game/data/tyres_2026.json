@@ -4,8 +4,28 @@
   "min_dry_compounds": 2,
   "exempt_if_wet_compound_used": true
  },
- "_notas": "Valores PROVISÓRIOS; calibrar na pesquisa. wear_per_lap = fração de desgaste por volta numa corrida de 100%. wet_curve = segundos perdidos por volta conforme a umidade da pista (0, 0.2, 0.4, 0.6, 0.8, 1.0). Cruzamentos: slick x intermediário ~0.2; intermediário x chuva ~0.62. wet_optimum = umidade ideal (abaixo dela o pneu de chuva superaquece e gasta mais).",
+ "_notas": "Valores PROVISÓRIOS; calibrar na pesquisa. wear_per_lap = fração de desgaste por volta numa corrida de 100%. wet_curve = segundos perdidos por volta conforme a umidade da pista (0, 0.2, 0.4, 0.6, 0.8, 1.0). Cruzamentos: slick x intermediário ~0.2; intermediário x chuva ~0.62. wet_optimum = umidade ideal (abaixo dela o pneu de chuva superaquece e gasta mais). supersoft (2026-11-12): composto da Pirelli 2012 (Mônaco, Canadá, Singapura, Coreia); \"optional\" = só existe onde a categoria/GP o inclui. Valores PROVISÓRIOS.",
  "compounds": {
+  "supersoft": {
+   "name": "Supermacio",
+   "letter": "SS",
+   "color": "#E8261C",
+   "dry": true,
+   "optional": true,
+   "pace_offset_s": -0.45,
+   "wear_per_lap": 0.052,
+   "deg_coeff": 1.9,
+   "cliff_start": 0.74,
+   "cliff_coeff": 40.0,
+   "wet_curve": [
+    0.0,
+    1.6,
+    5.5,
+    11.0,
+    17.0,
+    24.0
+   ]
+  },
   "soft": {
    "name": "Macio",
    "letter": "S",
@@ -50,7 +70,7 @@
    "color": "#F2F2F2",
    "dry": true,
    "pace_offset_s": 1.0,
-   "wear_per_lap": 0.020,
+   "wear_per_lap": 0.02,
    "deg_coeff": 1.1,
    "cliff_start": 0.78,
    "cliff_coeff": 40.0,

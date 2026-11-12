@@ -3,7 +3,7 @@ extends RefCounted
 ## Peças repetidas nas telas do Grande Prêmio: página com fundo de papel, cabeçalho de revista,
 ## botões de pneu, barra de velocidade e barras de porcentagem. Tudo com as cores do UiStyle.
 
-const COMPOUNDS := ["soft", "medium", "hard", "inter", "wet"]
+const COMPOUNDS := ["supersoft", "soft", "medium", "hard", "inter", "wet"]
 
 
 ## Fundo de papel + coluna principal com margens; devolve a coluna.

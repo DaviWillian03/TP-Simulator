@@ -76,8 +76,8 @@
    "night": false,
    "tyres_real": "SS/S",
    "compounds": [
-    "soft",
-    "medium"
+    "supersoft",
+    "soft"
    ]
   },
   {
@@ -89,8 +89,8 @@
    "night": false,
    "tyres_real": "SS/S",
    "compounds": [
-    "soft",
-    "medium"
+    "supersoft",
+    "soft"
    ]
   },
   {
@@ -180,8 +180,8 @@
    "night": true,
    "tyres_real": "SS/S",
    "compounds": [
-    "soft",
-    "medium"
+    "supersoft",
+    "soft"
    ]
   },
   {
@@ -206,8 +206,8 @@
    "night": false,
    "tyres_real": "SS/S",
    "compounds": [
-    "soft",
-    "medium"
+    "supersoft",
+    "soft"
    ]
   },
   {

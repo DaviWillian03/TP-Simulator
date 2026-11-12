@@ -8,9 +8,9 @@ extends Control
 signal closed
 signal speed_requested(scale: float)
 
-const COMPOUNDS := ["soft", "medium", "hard", "inter", "wet"]
+const COMPOUNDS := ["supersoft", "soft", "medium", "hard", "inter", "wet"]
 const COMPOUND_NOTE := {
-	"soft": "mais rápido, dura menos", "medium": "equilíbrio", "hard": "dura mais, mais lento",
+	"supersoft": "o mais rápido, dura pouco", "soft": "mais rápido, dura menos", "medium": "equilíbrio", "hard": "dura mais, mais lento",
 	"inter": "pista úmida", "wet": "pista encharcada",
 }
 
@@ -72,7 +72,7 @@ func _exit_tree() -> void:
 
 ## Composto sugerido: o primeiro seco diferente do atual com jogo no estoque (chuva: intermediário).
 func _default_compound() -> String:
-	var order := ["medium", "hard", "soft"]
+	var order := ["medium", "hard", "soft", "supersoft"]
 	if sim.weather.wetness > 0.35:
 		order = ["inter", "wet", "medium"]
 	for k: String in order:

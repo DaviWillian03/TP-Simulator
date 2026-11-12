@@ -10,9 +10,10 @@ const NORMAL := {"soft": 8, "medium": 3, "hard": 2}
 const SPRINT := {"soft": 6, "medium": 4, "hard": 2}
 const WET := {"inter": 5, "wet": 2}
 const RETURN_AFTER_PRACTICE := 2
-const DRY := ["soft", "medium", "hard"]
+const DRY := ["supersoft", "soft", "medium", "hard"]
 ## Bloco do treino -> compostos preferidos (o primeiro que houver). Aero e mecânico dividem o mesmo jogo.
-const PRACTICE_COMPOUND := {"aero": ["hard", "medium"], "mech": ["hard", "medium"], "race": ["medium", "hard"], "quali": ["soft"]}
+const PRACTICE_COMPOUND := {"aero": ["hard", "medium", "soft"], "mech": ["hard", "medium", "soft"], "race": ["medium", "hard", "soft"],
+	"quali": ["supersoft", "soft"]}  ## 2012 com supermacio + macio: classificação no supermacio, o resto no macio
 const SHARE_LAPS := 12  ## um jogo do treino serve a outro bloco enquanto tiver menos voltas que isso
 
 var sets: Dictionary = {}  ## id do piloto -> Array[{id, compound, laps, returned, q3}]
@@ -34,7 +35,7 @@ static func make(driver_ids: Array, sprint: bool, cat: String = "F1", dry_pair: 
 	a.return_after = int(r.get("return_after_practice", RETURN_AFTER_PRACTICE))
 	for did: String in driver_ids:
 		var list: Array = []
-		for k: String in ["soft", "medium", "hard", "inter", "wet"]:
+		for k: String in ["supersoft", "soft", "medium", "hard", "inter", "wet"]:
 			for i in int(dry.get(k, wet.get(k, 0))):
 				list.append({"id": list.size(), "compound": k, "laps": 0, "returned": false, "q3": false})
 		if bool(r.get("q3_reserve", false)):
@@ -44,10 +45,15 @@ static func make(driver_ids: Array, sprint: bool, cat: String = "F1", dry_pair: 
 
 
 static func _keep_one_q3(list: Array) -> void:
+	var softest := "soft"  # o jogo guardado para o Q3 é do mais macio do fim de semana (supermacio, se houver)
+	for k: String in DRY:
+		if list.any(func(s: Dictionary) -> bool: return s["compound"] == k):
+			softest = k
+			break
 	var first := true
 	for i in range(list.size() - 1, -1, -1):
 		var s: Dictionary = list[i]
-		if s["compound"] == "soft":
+		if s["compound"] == softest:
 			s["q3"] = first
 			first = false
 
@@ -88,10 +94,19 @@ func returned_count(did: String) -> int:
 func _reserved_for_race(did: String, s: Dictionary) -> bool:
 	if s["q3"]:
 		return true
-	if int(s["laps"]) > 0 or not (s["compound"] in ["medium", "hard"]):
-		return false
+	if int(s["laps"]) > 0 or not (s["compound"] in DRY) or s["compound"] == _softest(did):
+		return false  # protege o último jogo novo de cada composto mais duro (2012 SS+S: o macio é o "duro" do par)
 	var fresh := available(did).filter(func(x: Dictionary) -> bool: return x["compound"] == s["compound"] and int(x["laps"]) == 0)
 	return fresh.size() <= 1
+
+
+## Composto seco mais macio que o piloto recebeu neste fim de semana (macio; supermacio em 2012).
+func _softest(did: String) -> String:
+	for k: String in DRY:
+		for x: Dictionary in sets.get(did, []):
+			if x["compound"] == k:
+				return k
+	return "soft"
 
 
 ## Escolhe o jogo de um bloco do treino: reaproveita um jogo do mesmo composto com poucas voltas (aero e mecânico
@@ -138,7 +153,8 @@ func return_after_practice(did: String) -> void:
 	cands.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a["laps"]) != int(b["laps"]):
 			return int(a["laps"]) > int(b["laps"])
-		return a["compound"] == "soft" and b["compound"] != "soft")  # entre novos, devolve macio (há mais)
+		var soft := _softest(did)
+		return a["compound"] == soft and b["compound"] != soft)  # entre novos, devolve o mais macio (há mais)
 	for i in mini(return_after, cands.size()):
 		cands[i]["returned"] = true
 
@@ -182,7 +198,7 @@ func after_sprint(did: String, stints: Array) -> void:
 ## Estoque da corrida no formato do PitStop: {composto: {new, used}}.
 func race_stock(did: String, include_q3: bool = true) -> Dictionary:
 	var out := {}
-	for k: String in ["soft", "medium", "hard", "inter", "wet"]:
+	for k: String in ["supersoft", "soft", "medium", "hard", "inter", "wet"]:
 		out[k] = {"new": 0, "used": 0}
 	for s: Dictionary in available(did, include_q3):
 		out[s["compound"]]["new" if int(s["laps"]) == 0 else "used"] += 1

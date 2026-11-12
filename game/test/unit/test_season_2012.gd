@@ -216,3 +216,25 @@ func test_toda_pista_tem_dois_compostos_em_2012() -> void:
 	assert_eq(Season.compounds_for("2012", "interlagos"), ["medium", "hard"], "Interlagos 2012: médio e duro (real)")
 	assert_eq(Season.compounds_for("2012", "lusail"), ["medium", "hard"], "pista de outro ano: par da época")
 	assert_true(Season.compounds_for("2026", "interlagos").is_empty(), "2026 não restringe por pista")
+
+
+func test_supermacio_so_onde_a_pirelli_levou_em_2012() -> void:
+	assert_eq(Season.compounds_for("2012", "monaco"), ["supersoft", "soft"], "Mônaco 2012: supermacio + macio")
+	assert_eq(Season.compounds_for("2012", "barcelona"), ["soft", "hard"], "Barcelona 2012: macio + duro")
+	var w := WeekendSim.new("monaco", {"player_team": "ferrari", "duration_pct": 0.25, "seed": 5, "weather": "dry", "incident_rate": 0.0,
+		"teams": Season.teams("2012"), "drivers": Season.drivers("2012"), "category": "F1_2012", "dry_pair": ["supersoft", "soft"]})
+	assert_eq(w.tyres.dry_compounds(), ["supersoft", "soft"] as Array[String])
+	assert_eq(String(w.tyres.compounds["soft"]["color"]).to_lower(), "#f5c400", "macio amarelo em 2012")
+	assert_eq(String(w.tyres.compounds["supersoft"]["color"]).to_lower(), "#e8261c", "supermacio vermelho")
+	while w.session_id() != "race":
+		w.simulate_current()
+	var stock: Dictionary = w.race_tyre_stock(true)["alonso"]
+	assert_gt(int(stock["soft"]["new"]) + int(stock["soft"]["used"]), 0, "o treino guarda macio para a corrida")
+	for plan: Dictionary in w.engineer_strategy()["alonso"]:
+		var used := {}
+		for st: Dictionary in plan["stints"]:
+			used[String(st["compound"])] = true
+		assert_gt(used.size(), 1, "plano com os dois compostos: %s" % plan["desc"])
+	var f1 := TyreModel.new(GameData.tyres())
+	assert_false(f1.has_compound("supersoft"), "2026 não tem supermacio")
+	assert_eq(String(f1.compounds["soft"]["color"]).to_lower(), "#e8261c", "2026: macio continua vermelho")

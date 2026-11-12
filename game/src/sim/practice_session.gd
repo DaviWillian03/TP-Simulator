@@ -163,7 +163,8 @@ func _start_next_block(car: CarState, delay: float) -> void:
 	var full := float(BLOCKS[id]["minutes"]) * 60.0
 	plan["block_end"] = minf(session_s, time_s + delay + full)
 	plan["block_share"] = clampf((plan["block_end"] - time_s - delay) / full, 0.0, 1.0)  # cortado pelo fim do treino
-	car.tyre = "soft" if id == "quali" else "medium"
+	var dry := tyres.dry_compounds()  # classificação no mais macio do GP; o resto no seguinte (2012: par do GP)
+	car.tyre = dry[0] if id == "quali" or dry.size() < 2 else dry[1]
 	car.tyre_wear = 0.0
 	plan["next_lap"] = time_s + delay + practice_lap_time(car, id) * 1.3  # volta de saída
 

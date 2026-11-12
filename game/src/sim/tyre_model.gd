@@ -5,6 +5,8 @@ extends RefCounted
 
 const WORN_OUT_PENALTY_S := 5.0  ## pneu totalmente gasto: perda grande e imediata
 
+const DRY := ["supersoft", "soft", "medium", "hard"]  ## do mais macio ao mais duro
+
 var compounds: Dictionary = {}
 var min_dry_compounds := 2
 var exempt_if_wet_used := true
@@ -17,10 +19,26 @@ func restrict_to(cat: String) -> void:
 	allowed = (r["dry"] as Dictionary).keys() + (r["wet"] as Dictionary).keys()
 	if not bool(r.get("compound_rule", true)):
 		min_dry_compounds = 1
+	apply_colors(cat)
+
+
+## Cores da época (2012: supermacio vermelho, macio amarelo, médio branco, duro prata). Copia os compostos antes de mudar.
+func apply_colors(cat: String) -> void:
+	var colors: Dictionary = CategoryRules.of(cat).get("tyre_colors", {})
+	if colors.is_empty():
+		return
+	compounds = compounds.duplicate(true)
+	for k: String in colors:
+		if compounds.has(k):
+			compounds[k]["color"] = colors[k]
 
 
 func has_compound(id: String) -> bool:
-	return compounds.has(id) and (allowed.is_empty() or allowed.has(id))
+	if not compounds.has(id):
+		return false
+	if bool(compounds[id].get("optional", false)):  # supermacio (2012): só onde o GP o inclui
+		return allowed.has(id)
+	return allowed.is_empty() or allowed.has(id)
 
 
 func _init(data: Dictionary) -> void:
@@ -31,7 +49,7 @@ func _init(data: Dictionary) -> void:
 
 func dry_compounds() -> Array[String]:
 	var out: Array[String] = []
-	for id: String in ["soft", "medium", "hard"]:
+	for id: String in DRY:
 		if has_compound(id):
 			out.append(id)
 	return out

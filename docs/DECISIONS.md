@@ -876,3 +876,9 @@ Respostas do usuário:
 - **2026-11-12 — 2012: dois compostos em toda pista.** As pistas do calendário de 2012 usam o par real; as pistas de
   2026 jogadas no Grande Prêmio com o ano 2012 (Baku, Las Vegas, Madri, México, Miami, Áustria: macio/médio; Catar e
   Holanda: médio/duro) ganham um par no estilo da Pirelli de 2012 (`other_tracks` no calendário; ESTIMATIVA).
+- **2026-11-12 — Supermacio e pneus exatos de 2012.** Composto novo **supermacio (SS)** (`optional`: só existe onde o GP
+  o inclui; 2026 não tem). Cada GP de 2012 usa o par real da Pirelli (`tyres_real` → `compounds`: Mônaco, Canadá,
+  Singapura e Coreia supermacio + macio; Barcelona, Silverstone, Suzuka e Índia macio + duro; Sepang, Spa, Monza, Austin e
+  Interlagos médio + duro; os demais macio + médio). Cores da época nas corridas de 2012 (supermacio vermelho, macio
+  amarelo, médio branco, duro prata). O treino guarda o último jogo novo de cada composto mais duro do par, e a
+  estratégia sempre usa os dois compostos. Na estratégia, a largada travada pela regra do Q2 mostra cadeado.
