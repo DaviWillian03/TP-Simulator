@@ -820,3 +820,12 @@ Respostas do usuário:
   piloto) e **Agressivo** (+10, toque ×1,5); vale até o jogador trocar e vale para atacar e para se defender (`RaceSim.racecraft_of`).
   Não foi criado atributo novo de agressividade. Na tela, Ritmo e Abordagem mostram barrinhas amarelas de intensidade, sem números.
   **A corrida começa sempre em Ritmo normal e Abordagem normal** (o plano dos engenheiros deixou de virar "poupar" automático).
+- **2026-11-12 — A IA usa a mesma gerência de corrida do jogador** (sem nada na tela). **Ritmo:** Trazendo pra casa com o carro
+  machucado ou com folga nas últimas 3 voltas; Potência máxima nas 2 voltas antes da parada (undercut) e na volta de saída com rival
+  perto; Agressivo colada no da frente com pneu bom; Conservador se o pneu não chega à parada planejada; senão Ritmo normal.
+  **Abordagem:** Sem riscos com dano ou protegendo um pódio com rival atrás no fim; Agressivo só brigando por posição nos 30% finais e
+  com ultrapassagem ≥ 80 (aberta demais, os toques quase dobravam); senão Normal. **Ordens de equipe:** com a dupla colada (< 1,2 s), o
+  carro da frente recebe "não defender" se o companheiro é bem mais rápido (> 0,25 s/volta ou pneu bem melhor); nas 5 últimas voltas
+  com a dupla nos pontos, o de trás recebe "não atacar"; separados, briga liberada. O piloto pode recusar (mesma regra do jogador) e a
+  equipe só pede de novo na volta seguinte (`Missions.ai_choose`/`ai_team_orders`). Calibração: média de ~6,7 toques por corrida em 7
+  corridas (antes ~5,5).

@@ -123,20 +123,80 @@ static func attacker_gap(sim: RaceSim, car: CarState) -> float:
 
 # --- IA ----------------------------------------------------------------------------------------------
 
-## A IA escolhe as próprias missões: poupar até a parada planejada; atacar curto quando encosta com pneu bom;
-## ritmo seguro com dano ou pneu no fim e poucas voltas.
+## A IA usa a mesma gerência de corrida do jogador (pedido de 2026-11-12), sem avisar nada na tela:
+## RITMO — Trazendo pra casa com o carro machucado ou com folga no fim; Potência máxima nas voltas antes da parada (undercut)
+## e logo depois dela; Agressivo quando encosta no da frente com pneu bom; Conservador se o pneu não chega à parada; senão normal.
+## ABORDAGEM — Sem riscos com dano ou protegendo um bom resultado sozinho; Agressivo só brigando por posição na reta final
+## (30% finais) e se o piloto é bom de briga (ultrapassagem ≥ 80); senão Normal.
+## ORDENS DE EQUIPE — ver ai_team_orders.
 static func ai_choose(sim: RaceSim, car: CarState) -> void:
 	var next_stop := sim.total_laps
 	for l: int in car.ai_plan:
 		if l > car.laps_done:
 			next_stop = l
 			break
-	car.mission_base = base_mission("save", next_stop) if next_stop < sim.total_laps else base_mission("normal")
-	if car.damage_wing > 0.3:
-		car.mission_base = base_mission("safe")
+	var left := sim.total_laps - car.laps_done
 	var gap_ahead := sim.gap_to_car_ahead_s(car)
-	if car.mission_short.is_empty() and gap_ahead >= 0.0 and gap_ahead < 0.9 and car.tyre_wear < 0.55:
-		car.mission_short = short_mission("attack", car.laps_done, 3)
+	var behind := attacker_gap(sim, car)
+	var close_ahead := gap_ahead >= 0.0 and gap_ahead < 0.9
+	var free_ahead := gap_ahead < 0.0 or gap_ahead > 3.0
+	var free_behind := behind < 0.0 or behind > 3.0
+	var hurt := car.damage_loss_s() > 0.6 or car.power_loss_s > 0.0
+	var kind := "normal"
+	var until := 0
+	if hurt or (left <= 3 and free_ahead and free_behind):
+		kind = "safe"
+	elif next_stop < sim.total_laps and next_stop - car.laps_done <= 2:
+		kind = "push"  # undercut: voltas fortes antes de parar
+	elif car.tyre_laps <= 1 and car.pit_stops > 0 and not free_ahead:
+		kind = "push"  # volta de saída forte para não perder a posição
+	elif close_ahead and car.tyre_wear < 0.55:
+		kind = "attack"
+	elif projected_limit_lap(sim, car, CarState.PaceMode.NORMAL) < next_stop:
+		kind = "save"
+		until = next_stop
+	if String(car.mission_base.get("kind", "")) != kind or int(car.mission_base.get("until", 0)) != until:
+		car.mission_base = base_mission(kind, until)
+	car.mission_short = {}
+	var level := 0
+	var pos := sim.standings().find(car) + 1
+	var final_part := left <= maxi(3, int(sim.total_laps * 0.3))
+	if hurt or (pos <= 3 and free_ahead and not free_behind and left <= 5):
+		level = -1
+	elif close_ahead and final_part and DriverStats.attr(car.driver, "racecraft") >= 80.0:  # só na reta final: senão os toques dobravam
+		level = 1
+	car.approach = level
+	ai_team_orders(sim, car)
+
+
+## Ordens de equipe da IA: com os dois carros colados, o da frente abre para o companheiro bem mais rápido (ou com pneu muito
+## melhor); na reta final com a dupla nos pontos, o de trás segura a posição. Longe um do outro, briga liberada.
+## Usa a mesma regra do jogador (o piloto pode recusar). Só o carro da frente da dupla decide, para não repetir.
+static func ai_team_orders(sim: RaceSim, car: CarState) -> void:
+	var mate := sim.teammate_of(car)
+	if mate == null or mate.is_player or mate.finished or mate.retired or car.retired:
+		return
+	if car.distance < mate.distance:
+		return
+	var gap := (car.distance - mate.distance) / maxf(mate.speed, 1.0)
+	var left := sim.total_laps - car.laps_done
+	var want_front := CarState.TeamOrder.FREE
+	var want_back := CarState.TeamOrder.FREE
+	if gap < 1.2 and not car.in_pit and not mate.in_pit:
+		var faster := sim.ideal_pace(car) - sim.ideal_pace(mate) > 0.25 or car.tyre_wear - mate.tyre_wear > 0.25
+		var in_points := sim.standings().find(mate) < 10
+		if left <= 5 and in_points:
+			want_back = CarState.TeamOrder.NO_ATTACK  # segura a dobradinha / os pontos
+		elif faster and left > 2:
+			want_front = CarState.TeamOrder.NO_DEFEND  # deixa o companheiro mais rápido passar
+	for pair: Array in [[car, want_front], [mate, want_back]]:
+		var c: CarState = pair[0]
+		var want: CarState.TeamOrder = pair[1]
+		if c.team_order == want or c.laps_done < c.ai_order_retry_lap:
+			continue
+		sim.set_team_order(c, want)
+		if c.team_order != want:
+			c.ai_order_retry_lap = c.laps_done + 1  # recusou: espera uma volta antes de pedir de novo
 
 
 # --- textos da tela -----------------------------------------------------------------------------------
