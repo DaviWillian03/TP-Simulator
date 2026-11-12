@@ -93,6 +93,8 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	dry_pair = options.get("dry_pair", [])
 	if dry_pair.size() == 2:  # 2012: só os dois compostos secos que a Pirelli levou para este GP
 		tyres.allowed = dry_pair + (CategoryRules.of(category)["wet"] as Dictionary).keys()
+		if bool(CategoryRules.of(category).get("pair_wear", false)):
+			tyres.scale_pair_wear(dry_pair)
 	if feeder:
 		for t: Dictionary in teams:
 			t["category"] = category

@@ -111,6 +111,17 @@ func tyre_class(compound: String) -> String:
 
 
 ## Fração de desgaste por volta numa corrida de 100% (antes de multiplicadores).
+## 2012: a Pirelli escolhia para cada pista um par que durava o certo ali (Mônaco: supermacio + macio, e ainda assim
+## uma parada). O composto mais duro do par passa a gastar como o duro do jogo, e o mais macio na mesma proporção.
+func scale_pair_wear(pair: Array) -> void:
+	if pair.size() != 2 or not compounds.has("hard") or not compounds.has(pair[1]):
+		return
+	var k := float(compounds["hard"]["wear_per_lap"]) / float(compounds[pair[1]]["wear_per_lap"])
+	compounds = compounds.duplicate(true)
+	for c: String in pair:
+		compounds[c]["wear_per_lap"] = float(compounds[c]["wear_per_lap"]) * k
+
+
 func wear_per_lap(compound: String) -> float:
 	return float(compounds[compound]["wear_per_lap"])
 
