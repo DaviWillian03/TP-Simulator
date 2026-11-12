@@ -46,7 +46,13 @@ var _rain: CPUParticles3D
 var _rank_timer := 0.0
 var _motion := MarkerMotion.new()
 var _cars: Dictionary = {}  # CarState -> CarMarker3D
-var _sc: MeshInstance3D
+var _sc: Node3D
+var _sc_lights: Array[StandardMaterial3D] = []
+var _sc_pit_d := -1.0  ## SC entrando no box: metros andados no pit lane (−1 = na pista)
+var _sc_pit_t := 0.0
+var _sc_blink := 0.0
+const SC_SIZE := 1.6  ## o SC aparece maior que o tamanho real para ser visto de longe
+const SC_PIT_SPEED := 22.0  ## m/s do SC no pit lane (tempo de corrida)
 var _target := Vector3.ZERO
 var _overview_target := Vector3.ZERO
 var _night := false
@@ -177,6 +183,100 @@ func _add_mesh(mesh: Mesh, mat: Material) -> void:
 	_world_root.add_child(mi)
 
 
+## Safety car (2026-11-12): carro esportivo genérico prateado com faixas, para-brisa escuro, rodas e barra de luzes que
+## pisca em amarelo/laranja. Sem marcas. Tamanho real ~2 × 4,6 m (ampliado de longe, como antes).
+func _build_safety_car() -> Node3D:
+	var root := Node3D.new()
+	var body := Materials3D.flat(Color("#dfe3ea"), 0.3)
+	body.emission_enabled = true  # leve brilho: o carro não some no asfalto cinza
+	body.emission = Color("#dfe3ea")
+	body.emission_energy_multiplier = 0.25
+	var dark := Materials3D.flat(Color("#1b1e24"), 0.3)
+	var stripe := Materials3D.flat(Color("#F5C400"), 0.5)
+	stripe.emission_enabled = true
+	stripe.emission = Color("#F5C400")
+	stripe.emission_energy_multiplier = 0.5
+	var tyre := Materials3D.flat(Color("#141414"), 0.9)
+	var parts := [[Vector3(2.0, 0.55, 4.6), Vector3(0, 0.55, 0), body], [Vector3(1.7, 0.45, 2.1), Vector3(0, 1.0, -0.2), body],
+		[Vector3(1.6, 0.36, 0.06), Vector3(0, 1.02, 0.86), dark], [Vector3(1.6, 0.32, 0.06), Vector3(0, 1.02, -1.26), dark],
+		[Vector3(0.7, 0.04, 4.62), Vector3(0, 0.83, 0), stripe], [Vector3(0.5, 0.04, 2.12), Vector3(0, 1.23, -0.2), stripe], [Vector3(2.02, 0.12, 4.0), Vector3(0, 0.45, 0), stripe],
+		[Vector3(2.1, 0.08, 0.5), Vector3(0, 0.95, 2.2), dark]]
+	for pr: Array in parts:
+		var mi := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = pr[0]
+		mi.mesh = bm
+		mi.position = pr[1]
+		mi.material_override = pr[2]
+		root.add_child(mi)
+	for x: float in [-0.95, 0.95]:
+		for z: float in [-1.5, 1.5]:
+			var w := MeshInstance3D.new()
+			var cm := CylinderMesh.new()
+			cm.top_radius = 0.36
+			cm.bottom_radius = 0.36
+			cm.height = 0.3
+			w.mesh = cm
+			w.rotation = Vector3(0, 0, PI / 2.0)
+			w.position = Vector3(x, 0.36, z)
+			w.material_override = tyre
+			root.add_child(w)
+	for k in 2:  # barra de luzes no teto: dois blocos que piscam alternados
+		var lm := Materials3D.flat(Color("#ffb000"), 0.3)
+		lm.emission_enabled = true
+		lm.emission = Color("#ffb000")
+		lm.emission_energy_multiplier = 2.0
+		_sc_lights.append(lm)
+		var li := MeshInstance3D.new()
+		var lb := BoxMesh.new()
+		lb.size = Vector3(0.7, 0.22, 0.36)
+		li.mesh = lb
+		li.position = Vector3(-0.38 + 0.76 * k, 1.32, -0.2)
+		li.material_override = lm
+		root.add_child(li)
+	return root
+
+
+## Posição do safety car: na frente do líder; na última volta, ao chegar à entrada dos boxes, desvia para o pit lane e
+## segue por ele até sumir (mesmo depois da bandeira verde).
+func _update_safety_car(delta: float) -> void:
+	var feed := sim as TrackFeed
+	var out := sim.safety_car_out()
+	if _sc_pit_d >= 0.0:
+		var t := feed.sim_time() if feed != null else _sc_pit_t + delta
+		var d := _sc_pit_d + maxf(0.0, t - _sc_pit_t) * SC_PIT_SPEED
+		var f := fposmod(t3.track.pit_entry_frac + d / t3.track.length_m, 1.0)
+		var pp := t3.pit_progress(f)
+		if pp.x < 0.0 or d > pp.y - 5.0:
+			_sc_pit_d = -1.0
+			_sc.visible = false
+			return
+		_sc.visible = true
+		_place_sc(f, t3.pit_offset(f))
+	elif out:
+		var lead := sim.standings()[0]
+		var f2 := fposmod(sim.render_distance(lead) + 80.0, sim.track.length_m) / sim.track.length_m
+		var ending := feed != null and feed.safety_car_ending()
+		var pp2 := t3.pit_progress(f2)
+		if ending and pp2.x >= 0.0 and pp2.x < 60.0:  # chegou à entrada dos boxes na volta de recolher
+			_sc_pit_d = pp2.x
+			_sc_pit_t = feed.sim_time()
+		_sc.visible = true
+		_place_sc(f2, 0.0)
+	else:
+		_sc.visible = false
+		return
+	_sc_blink += delta
+	var on := int(_sc_blink * 4.0) % 2 == 0
+	for k in _sc_lights.size():
+		_sc_lights[k].emission_energy_multiplier = 3.0 if (k == 0) == on else 0.2
+
+
+func _place_sc(f: float, lateral: float) -> void:
+	var b := t3.basis_at(f)
+	_sc.transform = Transform3D(b.scaled(Vector3.ONE * _car_scale() * SC_SIZE), t3.point_at(f) + b.x * lateral + Vector3.UP * 0.1)
+
+
 ## Cada carro é um marcador plano na cor da equipe com o número do piloto (ver CarMarker3D).
 func _build_cars() -> void:
 	for car in sim.cars:
@@ -184,16 +284,7 @@ func _build_cars() -> void:
 		m.setup(car)
 		_world_root.add_child(m)
 		_cars[car] = m
-	_sc = MeshInstance3D.new()
-	var sc_mesh := BoxMesh.new()
-	sc_mesh.size = Vector3(2.0, 1.4, 4.6)
-	_sc.mesh = sc_mesh
-	var scm := Materials3D.flat(Color("#F5C400"), 0.4)
-	scm.emission_enabled = true
-	scm.emission = Color("#F5C400")
-	scm.emission_energy_multiplier = 0.6
-	_sc.material_override = scm
-	_sc.scale = Vector3.ONE * CAR_SCALE
+	_sc = _build_safety_car()
 	_sc.visible = false
 	_world_root.add_child(_sc)
 
@@ -255,11 +346,7 @@ func _process(delta: float) -> void:
 				pos += basis.x * _motion.lateral(car)
 		mi.set_alert(not wreck and _motion.is_off_track(car))
 		mi.position = pos + Vector3.UP * 3.0
-	_sc.visible = sim.safety_car_out()
-	if _sc.visible:
-		var lead := sim.standings()[0]
-		var f := fposmod(sim.render_distance(lead) + 80.0, sim.track.length_m) / sim.track.length_m
-		_sc.transform = Transform3D(t3.basis_at(f).scaled(Vector3.ONE * _car_scale()), t3.point_at(f) + Vector3.UP * 0.1)
+	_update_safety_car(delta)
 	var w := sim.weather.wetness
 	var r := sim.weather.rain_now()
 	if absf(w - _last_wet) > 0.01 or (r > WeatherModel.RAIN_THRESHOLD) != _rain.emitting:

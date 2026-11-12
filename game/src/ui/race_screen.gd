@@ -30,6 +30,7 @@ var _radio: RadioCard
 var _drawer: DataDrawer
 var _meta: Label
 var _flag_pill: PanelContainer
+var _scale_before_sc := -1.0  ## velocidade antes do SC/VSC (-1 = nenhuma guardada)
 var _flag_label: Label
 var _speed_seg: PanelContainer
 var _pause_btn: Button
@@ -651,6 +652,8 @@ func _refresh_flag() -> void:
 	_flag_pill.add_theme_stylebox_override("panel", UiStyle.g_box(fill, 20, 16, 8))
 	_flag_label.add_theme_color_override("font_color", Color.WHITE if red else UiStyle.G_INK)
 	_flag_label.text = {RaceControl.Flag.SC: "SAFETY CAR", RaceControl.Flag.VSC: "VIRTUAL SC", RaceControl.Flag.RED: "BANDEIRA VERMELHA"}[f]
+	if sim.control.neutralization_ending():  # última volta do SC / fim do VSC (pedido de 2026-11-12)
+		_flag_label.text += " · TERMINANDO"
 
 
 # --- câmera pela torre ----------------------------------------------------------------
@@ -1128,8 +1131,18 @@ func _on_start_result(car: CarState, places: int) -> void:
 	_toasts.push(text, "hot" if car.is_player else "note")
 
 
-func _on_flag_changed(_flag: int, text: String) -> void:
+## Safety car ou VSC na pista: a corrida desacelera para 1× (pedido de 2026-11-12: o único momento em que o jogo
+## desacelera sozinho); com a pista liberada, volta à velocidade de antes.
+func _on_flag_changed(flag: int, text: String) -> void:
 	_toasts.push(text, "hot")
+	if flag == RaceControl.Flag.SC or flag == RaceControl.Flag.VSC:
+		if _scale_before_sc < 0.0 and time_scale > 1.0:
+			_scale_before_sc = time_scale
+			set_time_scale(1.0)
+	elif flag == RaceControl.Flag.GREEN and _scale_before_sc > 0.0:
+		if is_equal_approx(time_scale, 1.0):
+			set_time_scale(_scale_before_sc)
+		_scale_before_sc = -1.0
 
 
 func _on_penalty(car: CarState, kind: String, reason: String) -> void:

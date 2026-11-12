@@ -55,6 +55,15 @@ func is_neutralized() -> bool:
 	return flag == Flag.SC or flag == Flag.VSC
 
 
+## Última volta do safety car (recolhe ao fim desta volta) ou VSC nos últimos segundos: a tela mostra "TERMINANDO".
+func neutralization_ending() -> bool:
+	if flag == Flag.SC:
+		return sc_laps_left <= 1
+	if flag == Flag.VSC:
+		return vsc_time_left <= 20.0
+	return false
+
+
 func status_text() -> String:
 	match flag:
 		Flag.SC:

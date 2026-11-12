@@ -384,3 +384,34 @@ func _count_diagrams(node: Node) -> int:
 	for c in node.get_children():
 		n += _count_diagrams(c)
 	return n
+
+
+func test_safety_car_desacelera_mostra_terminando_e_volta_a_velocidade() -> void:
+	screen.set_time_scale(4.0)
+	screen.sim.control.deploy_sc("teste")
+	assert_eq(screen.time_scale, 1.0, "SC na pista: a corrida desacelera para 1×")
+	screen._refresh_flag()
+	assert_false(screen._flag_label.text.contains("TERMINANDO"))
+	screen.sim.control.sc_laps_left = 1
+	assert_true(screen.sim.control.neutralization_ending(), "última volta do SC")
+	screen._refresh_flag()
+	assert_true(screen._flag_label.text.contains("TERMINANDO"), "selo avisa que o SC recolhe nesta volta")
+	screen.sim.control._go_green("Safety car recolhe")
+	assert_eq(screen.time_scale, 4.0, "pista liberada: volta à velocidade de antes")
+
+
+func test_safety_car_3d_entra_no_pit_lane_na_volta_de_recolher() -> void:
+	var view: TrackView3D = screen._track_view
+	var sim: RaceSim = screen.sim
+	sim.control.deploy_sc("teste")
+	sim.control.sc_laps_left = 1
+	var t3 := view.t3
+	# coloca o líder logo antes da entrada dos boxes: o SC (80 m à frente) cai dentro do pit lane
+	var lead: CarState = sim.standings()[0]
+	lead.distance = t3.track.pit_entry_frac * t3.track.length_m - 70.0
+	view._update_safety_car(0.016)
+	assert_gte(view._sc_pit_d, 0.0, "o SC desviou para o pit lane")
+	assert_true(view._sc.visible)
+	sim.control._go_green("Safety car recolhe")
+	view._update_safety_car(0.016)
+	assert_true(view._sc.visible, "segue visível pelo pit lane depois da bandeira verde")

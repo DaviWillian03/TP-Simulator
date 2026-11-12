@@ -41,5 +41,13 @@ func marker_visible(car: CarState) -> bool:
 	return not car.retired if _race != null else _quali.marker_visible(car)
 
 
+func safety_car_ending() -> bool:
+	return _race != null and _race.control.flag == RaceControl.Flag.SC and _race.control.neutralization_ending()
+
+
+func sim_time() -> float:
+	return _race.time_s if _race != null else 0.0
+
+
 func safety_car_out() -> bool:
 	return _race != null and _race.control.flag == RaceControl.Flag.SC

@@ -806,3 +806,9 @@ Respostas do usuário:
 - **2026-11-12 — Ajustes de cenário depois da validação das 22 pistas.** Montreal virou ilha (água dos dois lados: `scenery.water_sides`
   e `water_gap`); a água do mar/rio subiu para aparecer acima do terreno distante; Albert Park com menos prédios; Zandvoort com areia
   mais escura; México sem o estádio oval solto (fica só o trecho com arquibancadas dos dois lados). Suíte completa: 66 arquivos sem falha.
+- **2026-11-12 — Safety car mais imersivo** (pedido do usuário, no lugar da ideia de "corrida mais profunda"). A corrida **desacelera
+  para 1× só quando entra SC ou VSC** e volta à velocidade anterior com a bandeira verde (se o jogador não mudou nada). Na volta em que o
+  SC recolhe (e nos últimos 20 s do VSC) o selo do topo mostra **"SAFETY CAR · TERMINANDO"** (`RaceControl.neutralization_ending`).
+  O carro do SC deixou de ser uma caixa amarela: carro genérico branco com faixas amarelas, para-brisa escuro, rodas e **barra de luzes
+  que pisca**, 1,6× maior que o real para ser visto de longe. Na volta de recolher ele **entra no pit lane** ao chegar à entrada dos boxes
+  e segue por ele até sumir, mesmo depois da bandeira verde.
