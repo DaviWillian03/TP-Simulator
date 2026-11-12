@@ -22,7 +22,7 @@ func _ready() -> void:
 	if world.season_over():
 		Session.open_world_final.call_deferred()
 		return
-	var team := GameData.team_by_id(GameData.teams(), world.player_team)
+	var team := GameData.team_by_id(world.teams(), world.player_team)
 	var color := Color(team["color"])
 	var page := ScreenKit.garage_page(self, world.player_team)
 	(page["backdrop"] as GarageBackdrop).set_glow(color)
@@ -256,7 +256,7 @@ func _fill_standings() -> void:
 func _standing_row(pos: int, id: String, pts: int) -> Control:
 	var team_id := world.team_of(id) if _tab == "drivers" else id
 	var mine := team_id == world.player_team
-	var team := GameData.team_by_id(GameData.teams(), team_id)
+	var team := GameData.team_by_id(world.teams(), team_id)
 	var accent := UiStyle.team_accent(team)
 	var p := PanelContainer.new()
 	var st := UiStyle.g_box(Color(accent, 0.22) if mine else Color(1, 1, 1, 0.05), 14, 12, 0)

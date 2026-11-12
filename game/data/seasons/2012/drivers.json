@@ -1,0 +1,702 @@
+{
+ "season": 2012,
+ "_notas": "Grid titular de 2012, sem substitutos. career = carreira até o FIM DE 2011 (aproximada). attrs/potential: ESTIMATIVA do projeto (fama e resultados da época); rating = média ponderada dos atributos.",
+ "drivers": [
+  {
+   "id": "vettel",
+   "name": "Sebastian Vettel",
+   "code": "VET",
+   "number": 1,
+   "nationality": "Alemanha",
+   "team": "redbull",
+   "rating": 90,
+   "birth": "1987-07-03",
+   "titles": 2,
+   "attrs": {
+    "pace": 93,
+    "quali": 96,
+    "consistency": 88,
+    "racecraft": 85,
+    "wet": 88,
+    "tyres": 87
+   },
+   "potential": 95,
+   "career": {
+    "starts": 81,
+    "wins": 21,
+    "podiums": 36,
+    "poles": 30,
+    "fastest_laps": 9
+   },
+   "height_cm": 175,
+   "weight_kg": 62
+  },
+  {
+   "id": "webber",
+   "name": "Mark Webber",
+   "code": "WEB",
+   "number": 2,
+   "nationality": "Austrália",
+   "team": "redbull",
+   "rating": 85,
+   "birth": "1976-08-27",
+   "titles": 0,
+   "attrs": {
+    "pace": 87,
+    "quali": 89,
+    "consistency": 84,
+    "racecraft": 82,
+    "wet": 82,
+    "tyres": 83
+   },
+   "potential": 87,
+   "career": {
+    "starts": 176,
+    "wins": 7,
+    "podiums": 27,
+    "poles": 9,
+    "fastest_laps": 12
+   },
+   "height_cm": 184,
+   "weight_kg": 75
+  },
+  {
+   "id": "button",
+   "name": "Jenson Button",
+   "code": "BUT",
+   "number": 3,
+   "nationality": "Reino Unido",
+   "team": "mclaren",
+   "rating": 88,
+   "birth": "1980-01-19",
+   "titles": 1,
+   "attrs": {
+    "pace": 88,
+    "quali": 86,
+    "consistency": 90,
+    "racecraft": 86,
+    "wet": 92,
+    "tyres": 93
+   },
+   "potential": 88,
+   "career": {
+    "starts": 208,
+    "wins": 12,
+    "podiums": 43,
+    "poles": 7,
+    "fastest_laps": 6
+   },
+   "height_cm": 182,
+   "weight_kg": 72
+  },
+  {
+   "id": "hamilton",
+   "name": "Lewis Hamilton",
+   "code": "HAM",
+   "number": 4,
+   "nationality": "Reino Unido",
+   "team": "mclaren",
+   "rating": 92,
+   "birth": "1985-01-07",
+   "titles": 1,
+   "attrs": {
+    "pace": 95,
+    "quali": 96,
+    "consistency": 85,
+    "racecraft": 93,
+    "wet": 92,
+    "tyres": 84
+   },
+   "potential": 96,
+   "career": {
+    "starts": 90,
+    "wins": 17,
+    "podiums": 43,
+    "poles": 19,
+    "fastest_laps": 11
+   },
+   "height_cm": 174,
+   "weight_kg": 66
+  },
+  {
+   "id": "alonso",
+   "name": "Fernando Alonso",
+   "code": "ALO",
+   "number": 5,
+   "nationality": "Espanha",
+   "team": "ferrari",
+   "rating": 93,
+   "birth": "1981-07-29",
+   "titles": 2,
+   "attrs": {
+    "pace": 95,
+    "quali": 91,
+    "consistency": 94,
+    "racecraft": 95,
+    "wet": 91,
+    "tyres": 90
+   },
+   "potential": 95,
+   "career": {
+    "starts": 177,
+    "wins": 27,
+    "podiums": 72,
+    "poles": 20,
+    "fastest_laps": 19
+   },
+   "height_cm": 171,
+   "weight_kg": 68
+  },
+  {
+   "id": "massa",
+   "name": "Felipe Massa",
+   "code": "MAS",
+   "number": 6,
+   "nationality": "Brasil",
+   "team": "ferrari",
+   "rating": 82,
+   "birth": "1981-04-25",
+   "titles": 0,
+   "attrs": {
+    "pace": 84,
+    "quali": 84,
+    "consistency": 81,
+    "racecraft": 80,
+    "wet": 77,
+    "tyres": 80
+   },
+   "potential": 84,
+   "career": {
+    "starts": 152,
+    "wins": 11,
+    "podiums": 33,
+    "poles": 15,
+    "fastest_laps": 14
+   },
+   "height_cm": 166,
+   "weight_kg": 59
+  },
+  {
+   "id": "schumacher",
+   "name": "Michael Schumacher",
+   "code": "MSC",
+   "number": 7,
+   "nationality": "Alemanha",
+   "team": "mercedes",
+   "rating": 85,
+   "birth": "1969-01-03",
+   "titles": 7,
+   "attrs": {
+    "pace": 86,
+    "quali": 86,
+    "consistency": 82,
+    "racecraft": 85,
+    "wet": 90,
+    "tyres": 84
+   },
+   "potential": 86,
+   "career": {
+    "starts": 287,
+    "wins": 91,
+    "podiums": 154,
+    "poles": 68,
+    "fastest_laps": 76
+   },
+   "height_cm": 174,
+   "weight_kg": 74
+  },
+  {
+   "id": "rosberg",
+   "name": "Nico Rosberg",
+   "code": "ROS",
+   "number": 8,
+   "nationality": "Alemanha",
+   "team": "mercedes",
+   "rating": 86,
+   "birth": "1985-06-27",
+   "titles": 0,
+   "attrs": {
+    "pace": 88,
+    "quali": 90,
+    "consistency": 85,
+    "racecraft": 83,
+    "wet": 84,
+    "tyres": 82
+   },
+   "potential": 91,
+   "career": {
+    "starts": 108,
+    "wins": 0,
+    "podiums": 5,
+    "poles": 0,
+    "fastest_laps": 2
+   },
+   "height_cm": 178,
+   "weight_kg": 71
+  },
+  {
+   "id": "raikkonen",
+   "name": "Kimi Räikkönen",
+   "code": "RAI",
+   "number": 9,
+   "nationality": "Finlândia",
+   "team": "lotus",
+   "rating": 89,
+   "birth": "1979-10-17",
+   "titles": 1,
+   "attrs": {
+    "pace": 91,
+    "quali": 85,
+    "consistency": 92,
+    "racecraft": 88,
+    "wet": 86,
+    "tyres": 91
+   },
+   "potential": 91,
+   "career": {
+    "starts": 156,
+    "wins": 18,
+    "podiums": 62,
+    "poles": 16,
+    "fastest_laps": 35
+   },
+   "height_cm": 175,
+   "weight_kg": 70
+  },
+  {
+   "id": "grosjean",
+   "name": "Romain Grosjean",
+   "code": "GRO",
+   "number": 10,
+   "nationality": "França",
+   "team": "lotus",
+   "rating": 82,
+   "birth": "1986-04-17",
+   "titles": 0,
+   "attrs": {
+    "pace": 88,
+    "quali": 89,
+    "consistency": 74,
+    "racecraft": 76,
+    "wet": 78,
+    "tyres": 82
+   },
+   "potential": 89,
+   "career": {
+    "starts": 7,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 180,
+   "weight_kg": 71
+  },
+  {
+   "id": "diresta",
+   "name": "Paul di Resta",
+   "code": "DIR",
+   "number": 11,
+   "nationality": "Reino Unido",
+   "team": "forceindia",
+   "rating": 82,
+   "birth": "1986-04-16",
+   "titles": 0,
+   "attrs": {
+    "pace": 83,
+    "quali": 82,
+    "consistency": 85,
+    "racecraft": 79,
+    "wet": 80,
+    "tyres": 84
+   },
+   "potential": 85,
+   "career": {
+    "starts": 19,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 178,
+   "weight_kg": 70
+  },
+  {
+   "id": "hulkenberg",
+   "name": "Nico Hülkenberg",
+   "code": "HUL",
+   "number": 12,
+   "nationality": "Alemanha",
+   "team": "forceindia",
+   "rating": 85,
+   "birth": "1987-08-19",
+   "titles": 0,
+   "attrs": {
+    "pace": 86,
+    "quali": 87,
+    "consistency": 84,
+    "racecraft": 82,
+    "wet": 86,
+    "tyres": 83
+   },
+   "potential": 89,
+   "career": {
+    "starts": 19,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 1,
+    "fastest_laps": 0
+   },
+   "height_cm": 184,
+   "weight_kg": 74
+  },
+  {
+   "id": "kobayashi",
+   "name": "Kamui Kobayashi",
+   "code": "KOB",
+   "number": 14,
+   "nationality": "Japão",
+   "team": "sauber",
+   "rating": 82,
+   "birth": "1986-09-13",
+   "titles": 0,
+   "attrs": {
+    "pace": 82,
+    "quali": 81,
+    "consistency": 78,
+    "racecraft": 88,
+    "wet": 78,
+    "tyres": 85
+   },
+   "potential": 84,
+   "career": {
+    "starts": 49,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 170,
+   "weight_kg": 64
+  },
+  {
+   "id": "perez",
+   "name": "Sergio Pérez",
+   "code": "PER",
+   "number": 15,
+   "nationality": "México",
+   "team": "sauber",
+   "rating": 82,
+   "birth": "1990-01-26",
+   "titles": 0,
+   "attrs": {
+    "pace": 84,
+    "quali": 79,
+    "consistency": 80,
+    "racecraft": 83,
+    "wet": 78,
+    "tyres": 90
+   },
+   "potential": 88,
+   "career": {
+    "starts": 17,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 173,
+   "weight_kg": 63
+  },
+  {
+   "id": "ricciardo",
+   "name": "Daniel Ricciardo",
+   "code": "RIC",
+   "number": 16,
+   "nationality": "Austrália",
+   "team": "tororosso",
+   "rating": 81,
+   "birth": "1989-07-01",
+   "titles": 0,
+   "attrs": {
+    "pace": 82,
+    "quali": 85,
+    "consistency": 79,
+    "racecraft": 82,
+    "wet": 78,
+    "tyres": 79
+   },
+   "potential": 91,
+   "career": {
+    "starts": 11,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 180,
+   "weight_kg": 71
+  },
+  {
+   "id": "vergne",
+   "name": "Jean-Éric Vergne",
+   "code": "VER",
+   "number": 17,
+   "nationality": "França",
+   "team": "tororosso",
+   "rating": 80,
+   "birth": "1990-04-25",
+   "titles": 0,
+   "attrs": {
+    "pace": 80,
+    "quali": 77,
+    "consistency": 80,
+    "racecraft": 80,
+    "wet": 80,
+    "tyres": 81
+   },
+   "potential": 85,
+   "career": {
+    "starts": 0,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 175,
+   "weight_kg": 63
+  },
+  {
+   "id": "maldonado",
+   "name": "Pastor Maldonado",
+   "code": "MAL",
+   "number": 18,
+   "nationality": "Venezuela",
+   "team": "williams",
+   "rating": 79,
+   "birth": "1985-03-09",
+   "titles": 0,
+   "attrs": {
+    "pace": 85,
+    "quali": 87,
+    "consistency": 70,
+    "racecraft": 74,
+    "wet": 74,
+    "tyres": 79
+   },
+   "potential": 85,
+   "career": {
+    "starts": 19,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 173,
+   "weight_kg": 68
+  },
+  {
+   "id": "senna",
+   "name": "Bruno Senna",
+   "code": "SEN",
+   "number": 19,
+   "nationality": "Brasil",
+   "team": "williams",
+   "rating": 79,
+   "birth": "1983-10-15",
+   "titles": 0,
+   "attrs": {
+    "pace": 80,
+    "quali": 77,
+    "consistency": 80,
+    "racecraft": 79,
+    "wet": 80,
+    "tyres": 81
+   },
+   "potential": 81,
+   "career": {
+    "starts": 26,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 182,
+   "weight_kg": 72
+  },
+  {
+   "id": "kovalainen",
+   "name": "Heikki Kovalainen",
+   "code": "KOV",
+   "number": 20,
+   "nationality": "Finlândia",
+   "team": "caterham",
+   "rating": 82,
+   "birth": "1981-10-19",
+   "titles": 0,
+   "attrs": {
+    "pace": 83,
+    "quali": 84,
+    "consistency": 83,
+    "racecraft": 80,
+    "wet": 81,
+    "tyres": 80
+   },
+   "potential": 83,
+   "career": {
+    "starts": 89,
+    "wins": 1,
+    "podiums": 4,
+    "poles": 1,
+    "fastest_laps": 2
+   },
+   "height_cm": 172,
+   "weight_kg": 63
+  },
+  {
+   "id": "petrov",
+   "name": "Vitaly Petrov",
+   "code": "PET",
+   "number": 21,
+   "nationality": "Rússia",
+   "team": "caterham",
+   "rating": 79,
+   "birth": "1984-09-08",
+   "titles": 0,
+   "attrs": {
+    "pace": 80,
+    "quali": 78,
+    "consistency": 79,
+    "racecraft": 81,
+    "wet": 77,
+    "tyres": 79
+   },
+   "potential": 81,
+   "career": {
+    "starts": 38,
+    "wins": 0,
+    "podiums": 1,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 185,
+   "weight_kg": 75
+  },
+  {
+   "id": "delarosa",
+   "name": "Pedro de la Rosa",
+   "code": "DLR",
+   "number": 22,
+   "nationality": "Espanha",
+   "team": "hrt",
+   "rating": 78,
+   "birth": "1971-02-24",
+   "titles": 0,
+   "attrs": {
+    "pace": 77,
+    "quali": 76,
+    "consistency": 84,
+    "racecraft": 76,
+    "wet": 78,
+    "tyres": 80
+   },
+   "potential": 77,
+   "career": {
+    "starts": 86,
+    "wins": 0,
+    "podiums": 1,
+    "poles": 0,
+    "fastest_laps": 1
+   },
+   "height_cm": 177,
+   "weight_kg": 70
+  },
+  {
+   "id": "karthikeyan",
+   "name": "Narain Karthikeyan",
+   "code": "KAR",
+   "number": 23,
+   "nationality": "Índia",
+   "team": "hrt",
+   "rating": 73,
+   "birth": "1977-01-14",
+   "titles": 0,
+   "attrs": {
+    "pace": 73,
+    "quali": 72,
+    "consistency": 74,
+    "racecraft": 72,
+    "wet": 74,
+    "tyres": 74
+   },
+   "potential": 73,
+   "career": {
+    "starts": 27,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 176,
+   "weight_kg": 73
+  },
+  {
+   "id": "glock",
+   "name": "Timo Glock",
+   "code": "GLO",
+   "number": 24,
+   "nationality": "Alemanha",
+   "team": "marussia",
+   "rating": 81,
+   "birth": "1982-03-18",
+   "titles": 0,
+   "attrs": {
+    "pace": 81,
+    "quali": 80,
+    "consistency": 84,
+    "racecraft": 79,
+    "wet": 80,
+    "tyres": 80
+   },
+   "potential": 81,
+   "career": {
+    "starts": 72,
+    "wins": 0,
+    "podiums": 3,
+    "poles": 0,
+    "fastest_laps": 1
+   },
+   "height_cm": 168,
+   "weight_kg": 66
+  },
+  {
+   "id": "pic",
+   "name": "Charles Pic",
+   "code": "PIC",
+   "number": 25,
+   "nationality": "França",
+   "team": "marussia",
+   "rating": 76,
+   "birth": "1990-02-15",
+   "titles": 0,
+   "attrs": {
+    "pace": 76,
+    "quali": 76,
+    "consistency": 78,
+    "racecraft": 75,
+    "wet": 75,
+    "tyres": 77
+   },
+   "potential": 80,
+   "career": {
+    "starts": 0,
+    "wins": 0,
+    "podiums": 0,
+    "poles": 0,
+    "fastest_laps": 0
+   },
+   "height_cm": 180,
+   "weight_kg": 68
+  }
+ ]
+}

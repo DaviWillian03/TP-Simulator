@@ -13,3 +13,10 @@ Alternativa sem reexportar: copiar as imagens para `user://import/emblems/` no a
 
 **Lendas do Histórico:** `game/local/legends/<id>.png` (ids em `game/data/legends.json`: `schumacher`, `fangio`, `prost`...),
 quadrado com o rosto. Fotos do Wikimedia Commons com licença livre; autor e licença de cada uma em `legends/FONTES.md`.
+
+**Temporadas extras (ex.: 2012):** fotos em `game/local/drivers/2012/<id>_face.png` e logos da época em
+`game/local/emblems/2012/<id>.png`. Instale a partir do pacote extraído com
+`python3 tools/prepare_season_media.py <pasta> 2012` (recorta o rosto e deixa o logo quadrado). Ids das equipes de 2012:
+`redbull`, `ferrari`, `mclaren`, `lotus`, `mercedes`, `sauber`, `forceindia`, `williams`, `tororosso`, `caterham`,
+`marussia`, `hrt`. Numa temporada extra o jogo NÃO usa as fotos de 2026 (o Hamilton de 2012 tem a foto de 2012; sem foto
+da época, aparecem as iniciais).

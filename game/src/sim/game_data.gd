@@ -62,4 +62,8 @@ static func category_drivers(cat: String) -> Array:
 
 ## Equipe de qualquer categoria pelo id.
 static func any_team(team_id: String) -> Dictionary:
+	if Season.active != Season.DEFAULT and category_of(team_id) == "F1":  # temporada extra (2012): cores daquele ano
+		var t := team_by_id(Season.teams(Season.active), team_id)
+		if not t.is_empty():
+			return t
 	return team_by_id(category_teams(category_of(team_id)), team_id)

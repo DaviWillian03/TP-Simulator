@@ -848,3 +848,12 @@ Respostas do usuário:
   pista só aparece no calendário da sua temporada; **no Grande Prêmio** as pistas extras somam-se às gerais e valem para qualquer
   temporada e categoria (2026, 2012, F2, F3). Valência, Coreia e Índia **não têm traçado aberto** no repositório usado e o OpenStreetMap
   não respondeu daqui: continuam pendentes (`missing` no calendário de 2012). Valores de desempenho PROVISÓRIOS.
+- **2026-11-12 — Equipes e pilotos de 2012.** Pacote `data/seasons/2012/` com 12 equipes e 24 pilotos titulares (sem
+  substitutos; a foto do d'Ambrosio fica guardada), gerado por `tools/make_season_2012.py`. **Cores da época** (pedido do
+  usuário: imersão): McLaren prateada e vermelha, Red Bull azul-marinho, Lotus preta e dourada, Mercedes prata e verde-água,
+  Sauber branca, Force India laranja e verde, Williams branca e azul, Toro Rosso azul e vermelha, Caterham verde e amarela,
+  Marussia preta e vermelha, HRT branca e vermelha; o carro desenhado e o emblema original usam essas cores (campo `era`).
+  Força dos carros pelos pontos finais de construtores de 2012 com equilíbrio 0.48 (2026: 0.40) e desvio por pista pelo
+  pódio real de cada GP. Atributos dos pilotos, carreira até 2011 e largada: ESTIMATIVA. Fora da campanha, temporada extra
+  usa engenheiros genéricos (não mistura os de 2026). **Fotos e logos oficiais de 2012** enviados pelo usuário ficam só em
+  `game/local/drivers/2012/` e `game/local/emblems/2012/` (ignoradas pelo git; `tools/prepare_season_media.py`).

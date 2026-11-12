@@ -7,6 +7,9 @@ extends RefCounted
 const DEFAULT := "2026"
 
 static var _cache: Dictionary = {}
+## Temporada em jogo fora da campanha (Grande Prêmio/Mundial). TeamEmblems.use_season ajusta; GameData.any_team e o
+## pessoal do treino consultam para não misturar 2012 com 2026 (cores, engenheiros).
+static var active := DEFAULT
 
 
 static func ids() -> Array:

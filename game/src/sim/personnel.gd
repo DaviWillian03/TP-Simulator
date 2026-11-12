@@ -95,8 +95,8 @@ static func team_staff(team_id: String) -> Dictionary:
 ## Quem acerta o carro no treino (decisão de 2026-11-08): {id do piloto: {director, engineer, engineer_name}} — o diretor de
 ## engenharia de pista da equipe e o engenheiro de corrida do carro (1º piloto = carro 1). camp = null: dados de 2026.
 static func practice_skills_for(camp: Campaign, team_id: String, driver_ids: Array) -> Dictionary:
-	if (camp == null or camp.personnel == null) and GameData.category_of(team_id) != "F1":
-		return feeder_skills(team_id, driver_ids)
+	if (camp == null or camp.personnel == null) and (GameData.category_of(team_id) != "F1" or Season.active != Season.DEFAULT):
+		return feeder_skills(team_id, driver_ids)  # F2/F3 e temporadas extras: engenheiros genéricos (sem misturar épocas)
 	var out := {}
 	var st := {}
 	if camp == null or camp.personnel == null:

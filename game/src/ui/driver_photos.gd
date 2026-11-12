@@ -9,17 +9,26 @@ const AVATAR_PX := 160
 
 static var use_local := true  ## false nos testes: independe das fotos de quem roda
 static var _cache: Dictionary = {}
+## Temporada em jogo (TeamEmblems.use_season ajusta): numa temporada extra a foto vem de local/drivers/<temporada>/ —
+## o Hamilton de 2012 não usa a foto de 2026; sem foto da época, ficam as iniciais.
+static var season := "2026"
+
+
+static func face_path(driver_id: String) -> String:
+	if season != Season.DEFAULT:
+		return LOCAL_DIR + season + "/" + driver_id + "_face.png"
+	return LOCAL_DIR + driver_id + "_face.png"
 
 
 static func has_photo(driver_id: String) -> bool:
-	return use_local and ResourceLoader.exists(LOCAL_DIR + driver_id + "_face.png")
+	return use_local and ResourceLoader.exists(face_path(driver_id))
 
 
 ## Círculo com o rosto sobre a cor da equipe (textura pronta, em cache), ou null sem foto.
 static func avatar_texture(driver_id: String, team_color: Color) -> Texture2D:
 	if not has_photo(driver_id):
 		return null
-	return circle_texture(LOCAL_DIR + driver_id + "_face.png", team_color)
+	return circle_texture(face_path(driver_id), team_color)
 
 
 ## Qualquer foto local recortada em círculo sobre uma cor (lendas do Histórico usam também).
@@ -53,7 +62,7 @@ static func circle_texture(path: String, team_color: Color) -> Texture2D:
 static func portrait_texture(driver_id: String) -> Texture2D:
 	if not has_photo(driver_id):
 		return null
-	return load(LOCAL_DIR + driver_id + "_face.png") as Texture2D
+	return load(face_path(driver_id)) as Texture2D
 
 
 ## Avatar redondo do piloto: foto se houver; senão iniciais sobre a cor da equipe.

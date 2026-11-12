@@ -238,6 +238,7 @@ func test_nao_brigar_impede_disputa_entre_companheiros() -> void:
 	var sim := _sim({"duration_pct": 0.5})
 	for c in sim.cars:
 		c.team_order = CarState.TeamOrder.NO_ATTACK
+		c.ai_order_retry_lap = 9999  # a regra é o que se testa aqui: a IA não troca a ordem
 	var same_team := [0]
 	sim.overtake.connect(func(a: CarState, d: CarState, _z: String) -> void:
 		if a.team["id"] == d.team["id"]:

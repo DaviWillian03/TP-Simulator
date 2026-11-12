@@ -18,14 +18,15 @@ const SHAPES := {
 static var _cache: Dictionary = {}
 
 
-## Textura do carro da equipe: arquivo pronto para as equipes reais; gerada para a criada.
+## Textura do carro da equipe: arquivo pronto para as equipes reais de 2026; gerada para a criada e para as de
+## outras temporadas (campo "era", ex.: 2012), que têm outras cores.
 static func car_texture(team: Dictionary) -> Texture2D:
 	if team.has("livery_paint") and not (team["livery_paint"] as Dictionary).is_empty():  # campanha: pintura do estúdio
 		var t := Livery.car_texture(team["livery_paint"])
 		if t != null:
 			return t
 	var id: String = team.get("id", "")
-	if not team.get("custom", false) and ResourceLoader.exists("res://assets/cars/%s.svg" % id):
+	if not team.get("custom", false) and not team.has("era") and ResourceLoader.exists("res://assets/cars/%s.svg" % id):
 		return load("res://assets/cars/%s.svg" % id)
 	var key := "car:%s:%s:%s" % [id, team.get("color", ""), team.get("color2", "")]
 	if not _cache.has(key):

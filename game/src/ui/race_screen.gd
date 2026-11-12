@@ -243,7 +243,11 @@ func _build_top_bar() -> void:
 	bar.add_child(menu)
 
 	# nome do GP com a bandeira do país ao fundo (o contador de voltas fica só na torre)
-	var cat_tag := "" if sim.category == "F1" else sim.category + (" · SPRINT · " if sim.sprint else " · PRINCIPAL · ")
+	var cat_tag := ""
+	if CategoryRules.is_feeder(sim.category):
+		cat_tag = sim.category + (" · SPRINT · " if sim.sprint else " · PRINCIPAL · ")
+	elif sim.category != "F1":  # temporada extra: "F1 2012 · "
+		cat_tag = "F1 %s · " % sim.category.get_slice("_", 1)
 	var head := ScreenKit.flag_title((cat_tag if cat_tag != "" else ("SPRINT · " if sim.sprint else "")) + sim.track.grand_prix.to_upper(), 20, sim.track.country_code)
 	_meta = head["sub"]
 	bar.add_child(head["box"])

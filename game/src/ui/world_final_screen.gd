@@ -14,7 +14,7 @@ func _ready() -> void:
 	if world == null:
 		Session.go_to_title.call_deferred()
 		return
-	var team := GameData.team_by_id(GameData.teams(), world.player_team)
+	var team := GameData.team_by_id(world.teams(), world.player_team)
 	var page := ScreenKit.garage_page(self, world.player_team)
 	(page["backdrop"] as GarageBackdrop).set_glow(Color("#F5C542"))
 	var layer: Control = page["layer"]
@@ -66,7 +66,7 @@ func _champ_card(r: Rect2, caption: String, id: String, pts: int, driver: bool) 
 	h.add_theme_constant_override("separation", 16)
 	c.add_child(h)
 	var team_id := world.team_of(id) if driver else id
-	var team := GameData.team_by_id(GameData.teams(), team_id)
+	var team := GameData.team_by_id(world.teams(), team_id)
 	if driver:
 		var d := {}
 		for dd: Dictionary in world.drivers():
@@ -108,7 +108,7 @@ func _table(r: Rect2, drivers: bool) -> Control:
 		var team_id := world.team_of(id) if drivers else id
 		var mine := team_id == world.player_team
 		var p := PanelContainer.new()
-		var accent := UiStyle.team_accent(GameData.team_by_id(GameData.teams(), team_id))
+		var accent := UiStyle.team_accent(GameData.team_by_id(world.teams(), team_id))
 		var st := UiStyle.g_box(Color(accent, 0.2) if mine else Color(1, 1, 1, 0.05), 10, 10, 0)
 		p.add_theme_stylebox_override("panel", st)
 		p.custom_minimum_size = Vector2(0, 28)
@@ -118,7 +118,7 @@ func _table(r: Rect2, drivers: bool) -> Control:
 		pl.custom_minimum_size = Vector2(22, 0)
 		h.add_child(pl)
 		h.add_child(TeamEmblems.make_rect(team_id, 20))
-		var label := String(GameData.team_by_id(GameData.teams(), id).get("name", id))
+		var label := String(GameData.team_by_id(world.teams(), id).get("name", id))
 		if drivers:
 			for d: Dictionary in world.drivers():
 				if d["id"] == id:

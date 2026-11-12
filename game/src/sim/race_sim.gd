@@ -524,7 +524,7 @@ func step() -> void:
 		for car in cars:  # missões (2026-11-09): o piloto dosa ritmo e bateria; a IA escolhe as próprias missões
 			if car.finished or car.retired or car.manual_modes:
 				continue
-			if not car.is_player:
+			if not car.is_player and time_s >= StartModel.PHASE_S:  # na largada todos saem no ritmo normal; a IA decide depois
 				Missions.ai_choose(self, car)
 			Missions.drive(self, car)
 

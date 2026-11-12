@@ -15,6 +15,8 @@ const BUILTIN_DIR := "res://assets/emblems/"
 static var use_local := true  ## false nos testes: ignora game/local/emblems (depende de quem roda)
 static var _cache: Dictionary = {}
 static var _custom: Dictionary = {}  ## emblemas gerados (equipe criada na campanha)
+static var season := "2026"  ## temporada em jogo: 2012 tem outras cores e equipes (Lotus, HRT…), ver use_season
+static var _season_ids: Array = []  ## ids registrados por use_season (saem ao voltar para 2026)
 
 
 ## Registra o emblema da equipe criada (forma + cores escolhidas na criação).
@@ -72,6 +74,37 @@ static func _framed_series(team_id: String, tex: Texture2D) -> Texture2D:
 	return tex
 
 
+## Emblemas da temporada extra (2012…): logo pessoal em res://local/emblems/<temporada>/<id>.png (fora do git)
+## ou emblema ORIGINAL gerado com as cores daquele ano. Na temporada padrão, volta aos emblemas de sempre.
+static func use_season(sid: String) -> void:
+	DriverPhotos.season = sid
+	Season.active = sid
+	if sid == season:
+		return
+	for id: String in _season_ids:
+		_custom.erase(id)
+		_cache.erase(id)
+	_season_ids.clear()
+	season = sid
+	if sid == Season.DEFAULT:
+		return
+	for t: Dictionary in Season.teams(sid):
+		var id := String(t["id"])
+		var tex: Texture2D = _load_imported(id)
+		if tex == null and use_local:
+			for ext: String in ["png", "svg", "webp", "jpg"]:
+				var p := LOCAL_DIR + sid + "/" + id + "." + ext
+				if ResourceLoader.exists(p):
+					tex = _framed_with(_frame_color(t), load(p), true)
+					break
+		if tex == null:
+			var e: Dictionary = t.get("emblem", {})
+			tex = CarArt.emblem_texture(String(e.get("shape", "hex")), String(t["color"]), String(t["color2"]), String(e.get("text", "")))
+		_cache.erase(id)
+		_custom[id] = tex
+		_season_ids.append(id)
+
+
 static func _load_imported(team_id: String) -> Texture2D:
 	for ext: String in ["png", "jpg", "jpeg", "webp"]:
 		var path := IMPORT_DIR + team_id + "." + ext
@@ -86,6 +119,10 @@ static func _load_imported(team_id: String) -> Texture2D:
 static func clear_cache() -> void:
 	_cache.clear()
 	_custom.clear()
+	_season_ids.clear()
+	season = Season.DEFAULT
+	Season.active = Season.DEFAULT
+	DriverPhotos.season = Season.DEFAULT
 
 
 ## TextureRect pronto para usar numa linha da interface.
@@ -111,7 +148,7 @@ const FRAME_PAD_WIDE := 0.08
 ## largas. Compomos cada uma sobre um quadrado arredondado na cor da equipe (ou da cor de
 ## destaque, se a principal for clara — ou a `emblem_bg` do JSON, se existir), como na transmissão. Imagens coloridas ficam como estão.
 static func _framed(team_id: String, tex: Texture2D) -> Texture2D:
-	return _framed_with(_frame_color(GameData.team_by_id(GameData.teams(), team_id)), tex, true)
+	return _framed_with(_frame_color(GameData.any_team(team_id)), tex, true)
 
 
 static func _framed_with(bg: Color, tex: Texture2D, only_white: bool = false) -> Texture2D:

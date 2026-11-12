@@ -78,3 +78,58 @@ func test_mundial_2012_usa_o_calendario_e_as_regras_da_temporada() -> void:
 	var back := WorldChampionship.from_dict(w.to_dict())
 	assert_eq(back.season_id, "2012", "o save guarda a temporada")
 	assert_eq(WorldChampionship.start("williams").season_id, "2026", "o padrão continua 2026")
+
+
+func test_grid_2012_equipes_pilotos_e_forma_real() -> void:
+	var teams := Season.teams("2012")
+	var drivers := Season.drivers("2012")
+	assert_eq(teams.size(), 12, "12 equipes de 2012")
+	assert_eq(drivers.size(), 24, "grid titular: 24 pilotos")
+	var ids := {}
+	for t: Dictionary in teams:
+		ids[String(t["id"])] = 0
+	for d: Dictionary in drivers:
+		assert_true(ids.has(String(d["team"])), "%s numa equipe de 2012" % d["id"])
+		ids[String(d["team"])] = int(ids[String(d["team"])]) + 1
+	for id: String in ids:
+		assert_eq(int(ids[id]), 2, "%s com dois pilotos" % id)
+	assert_true(ids.has("lotus") and ids.has("hrt") and not ids.has("audi"))
+	assert_eq(String(GameData.team_by_id(teams, "mclaren")["color"]).to_lower(), "#a8afb8", "McLaren prateada em 2012, não laranja")
+	var rf := Season.real_form("2012")
+	assert_eq((rf["base"] as Dictionary).size(), 12)
+	assert_gt(float(rf["base"]["redbull"]), float(rf["base"]["hrt"]), "campeã à frente da última")
+	for rd: Dictionary in Season.calendar("2012"):
+		assert_true((rf["rounds"] as Dictionary).has(String(rd["id"])), "forma real em %s" % rd["id"])
+
+
+func test_mundial_2012_passa_o_grid_da_epoca_ao_fim_de_semana() -> void:
+	var w := WorldChampionship.start("lotus", "2012")
+	var o := w.weekend_options()
+	assert_eq((o["teams"] as Array).size(), 12)
+	var names := (o["drivers"] as Array).map(func(d: Dictionary) -> String: return String(d["id"]))
+	assert_has(names, "raikkonen")
+	assert_does_not_have(names, "norris")
+
+
+func test_corrida_2012_roda_com_o_grid_da_epoca() -> void:
+	var sim := RaceSim.new(TrackModel.new(GameData.circuit("sepang")), TyreModel.new(GameData.tyres()), Season.teams("2012"), Season.drivers("2012"),
+		{"duration_pct": 0.1, "seed": 7, "weather": "dry", "incident_rate": 0.0, "category": "F1_2012"})
+	assert_eq(sim.cars.size(), 24)
+	var guard := 0
+	while not sim.over and guard < 200000:
+		sim.step()
+		guard += 1
+	assert_true(sim.over, "a corrida termina")
+
+
+func test_emblemas_e_fotos_seguem_a_temporada() -> void:
+	TeamEmblems.use_local = false
+	TeamEmblems.use_season("2012")
+	assert_eq(DriverPhotos.season, "2012")
+	assert_not_null(TeamEmblems.get_texture("hrt"), "equipe só de 2012 tem emblema gerado")
+	var mc12 := TeamEmblems.get_texture("mclaren")
+	TeamEmblems.use_season("2026")
+	assert_ne(TeamEmblems.get_texture("mclaren"), mc12, "de volta a 2026, emblema de 2026")
+	assert_eq(DriverPhotos.season, "2026")
+	assert_true(CarArt.car_texture(GameData.team_by_id(Season.teams("2012"), "mclaren")) != CarArt.car_texture(GameData.team_by_id(GameData.teams(), "mclaren")), "carro com as cores de 2012")
+	TeamEmblems.use_local = true

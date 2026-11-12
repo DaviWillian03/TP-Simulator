@@ -23,7 +23,7 @@ func _ready() -> void:
 	_tab = Session.world_result_tab
 	if _tab == "result" and world.history.is_empty():
 		_tab = "stats"
-	var team := GameData.team_by_id(GameData.teams(), world.player_team)
+	var team := GameData.team_by_id(world.teams(), world.player_team)
 	var page := ScreenKit.garage_page(self, world.player_team)
 	(page["backdrop"] as GarageBackdrop).set_glow(Color(team["color"]))
 	var layer: Control = page["layer"]
@@ -115,7 +115,7 @@ func _driver(id: String) -> Dictionary:
 
 
 func _team_color(team_id: String) -> Color:
-	return Color(GameData.team_by_id(GameData.teams(), team_id).get("color", "#888888"))
+	return Color(GameData.team_by_id(world.teams(), team_id).get("color", "#888888"))
 
 
 func _avatar(id: String, size: int, ring_color := Color(0, 0, 0, 0)) -> Control:
@@ -152,7 +152,7 @@ func _chip(text: String, icon_name: String, fill: Color, fg: Color) -> PanelCont
 
 func _row(parent: Control, y: float, w: float, h: float, pos_text: String, id: String, team_id: String, right_text: String, sub := "", arrow := "", arrow_col := UiStyle.G_TEXT_3) -> void:
 	var mine := team_id == world.player_team
-	var accent := UiStyle.team_accent(GameData.team_by_id(GameData.teams(), team_id))
+	var accent := UiStyle.team_accent(GameData.team_by_id(world.teams(), team_id))
 	var p := Panel.new()
 	p.position = Vector2(0, y)
 	p.size = Vector2(w, h)
@@ -182,7 +182,7 @@ func _row(parent: Control, y: float, w: float, h: float, pos_text: String, id: S
 	var nm := VBoxContainer.new()
 	nm.add_theme_constant_override("separation", -2)
 	nm.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var label := String(_driver(id).get("name", "")) if is_driver else String(GameData.team_by_id(GameData.teams(), id).get("name", id))
+	var label := String(_driver(id).get("name", "")) if is_driver else String(GameData.team_by_id(world.teams(), id).get("name", id))
 	nm.add_child(UiStyle.g_label(label, 15 if h >= 40 else 14, UiStyle.G_TEXT, "black"))
 	if sub != "":
 		nm.add_child(UiStyle.g_label(sub, 12, UiStyle.G_TEXT_3, "bold"))

@@ -16,7 +16,7 @@ func _ready() -> void:
 	if world == null:
 		Session.go_to_title.call_deferred()
 		return
-	var team := GameData.team_by_id(GameData.teams(), world.player_team)
+	var team := GameData.team_by_id(world.teams(), world.player_team)
 	var page := ScreenKit.garage_page(self, world.player_team)
 	(page["backdrop"] as GarageBackdrop).set_glow(Color(team["color"]))
 	var layer: Control = page["layer"]

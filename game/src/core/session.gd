@@ -303,6 +303,7 @@ func _ready() -> void:
 	elif args.has("weekend") or args.has("practice") or args.has("quali") or args.has("play") or args.has("grid") or args.has("live"):
 		var opts := {"player_team": player_team, "duration_pct": duration_pct, "seed": int(args.get("seed", "1")),
 			"weather": args.get("weather", "realistic"), "category": category}
+		_apply_season(opts)
 		opts.merge(sim_overrides.duplicate(), false)
 		weekend = WeekendSim.new(circuit_id, opts)
 		for i in int(args.get("skip", "0")):
@@ -343,6 +344,7 @@ func restart_race() -> void:
 
 
 func go_to_title() -> void:
+	TeamEmblems.use_season(Season.DEFAULT)  # fora do GP/Mundial: sempre 2026
 	weekend = null
 	get_tree().change_scene_to_file(TITLE_SCENE)
 
@@ -398,23 +400,32 @@ func resume_weekend(kind: String) -> bool:
 	if w == null:
 		return false
 	weekend = w
+	TeamEmblems.use_season(String(w.teams[0].get("era", Season.DEFAULT)) if not w.teams.is_empty() else Season.DEFAULT)
 	circuit_id = String(w.circuit.get("id", circuit_id))
 	player_team = w.player_team
 	go_to_weekend()
 	return true
 
 
+## Temporada extra (2012…) no Grande Prêmio: grid, pilotos, regras e pneus daquele ano; logos e fotos da época.
+func _apply_season(opts: Dictionary) -> void:
+	var sid := gp_season if category == "F1" else Season.DEFAULT
+	TeamEmblems.use_season(sid)
+	if sid == Season.DEFAULT:
+		return
+	opts["teams"] = Season.teams(sid)
+	opts["drivers"] = Season.drivers(sid)
+	opts["category"] = Season.category(sid)
+	for rd: Dictionary in Season.calendar(sid):
+		if String(rd["id"]) == circuit_id and rd.has("compounds"):
+			opts["dry_pair"] = rd["compounds"]
+
+
 func start_gp() -> void:
 	SaveSlots.delete_weekend("gp")  # começar outro GP descarta o fim de semana salvo
 	var opts := {"player_team": player_team, "duration_pct": duration_pct, "weather": gp_weather,
 		"format": gp_format, "seed": randi(), "category": category}
-	if gp_season != Season.DEFAULT and category == "F1":  # temporada extra (2012…): grid, pilotos e regras daquele ano
-		opts["teams"] = Season.teams(gp_season)
-		opts["drivers"] = Season.drivers(gp_season)
-		opts["category"] = Season.category(gp_season)
-		for rd: Dictionary in Season.calendar(gp_season):
-			if String(rd["id"]) == circuit_id and rd.has("compounds"):
-				opts["dry_pair"] = rd["compounds"]
+	_apply_season(opts)
 	opts.merge(sim_overrides.duplicate(), false)
 	weekend = WeekendSim.new(circuit_id, opts)
 	go_to_weekend()
@@ -423,6 +434,7 @@ func start_gp() -> void:
 # --- Campanha ---------------------------------------------------------------------------
 
 func open_campaign() -> void:
+	TeamEmblems.use_season(Season.DEFAULT)  # fora do GP/Mundial: sempre 2026
 	get_tree().change_scene_to_file(CAMPAIGN_ENTRY_SCENE)
 
 
@@ -432,6 +444,7 @@ func open_team_creator() -> void:
 
 ## Começa (ou retoma) uma campanha: registra a arte da equipe criada, salva e abre a sede.
 func start_campaign(c: Campaign) -> void:
+	TeamEmblems.use_season(Season.DEFAULT)
 	campaign = c
 	player_team = c.player_team
 	if c.mode == "created":
@@ -550,6 +563,7 @@ func open_world() -> void:
 		open_team_select("world")
 		return
 	world = saved
+	TeamEmblems.use_season(saved.season_id)
 	player_team = saved.player_team
 	if resume_weekend("world"):
 		return
@@ -558,6 +572,7 @@ func open_world() -> void:
 
 func start_world(team_id: String) -> void:
 	world = WorldChampionship.start(team_id)
+	TeamEmblems.use_season(world.season_id)
 	player_team = team_id
 	world.save()
 	open_world_hub()

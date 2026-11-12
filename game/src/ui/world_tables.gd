@@ -159,7 +159,7 @@ func _ids_of(id: String) -> Array:
 
 
 func _is_team(id: String) -> bool:
-	return not GameData.team_by_id(GameData.teams(), id).is_empty()
+	return not GameData.team_by_id(world.teams(), id).is_empty()
 
 
 func _sum(src: Dictionary, ids: Array) -> int:
@@ -181,7 +181,7 @@ func _table_list() -> Control:
 func _identity(id: String, size: int) -> Array:
 	## [ícone/foto, nome, subtítulo (Control), id da equipe]
 	var team_id := world.team_of(id) if _is_driver(id) else id
-	var team := GameData.team_by_id(GameData.teams(), team_id)
+	var team := GameData.team_by_id(world.teams(), team_id)
 	var face: Control
 	var name_text := ""
 	var sub := HBoxContainer.new()
@@ -210,7 +210,7 @@ func _is_driver(id: String) -> bool:
 
 func _row_panel(team_id: String, height: float) -> PanelContainer:
 	var mine := team_id == world.player_team
-	var accent := UiStyle.team_accent(GameData.team_by_id(GameData.teams(), team_id))
+	var accent := UiStyle.team_accent(GameData.team_by_id(world.teams(), team_id))
 	var p := PanelContainer.new()
 	var st := UiStyle.g_box(Color(accent, 0.22) if mine else Color(1, 1, 1, 0.05), 14, 12, 0)
 	if mine:
@@ -347,7 +347,7 @@ func _mate_row(x: int, y: int, col: Color, icon_name: String, label: String) -> 
 
 
 func _mate_card(team_id: String, duel: Dictionary) -> Control:
-	var team := GameData.team_by_id(GameData.teams(), team_id)
+	var team := GameData.team_by_id(world.teams(), team_id)
 	var accent := UiStyle.team_accent(team)
 	var p := _row_panel(team_id, 124)
 	(p.get_theme_stylebox("panel") as StyleBoxFlat).content_margin_right = 16

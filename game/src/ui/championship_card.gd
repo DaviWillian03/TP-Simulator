@@ -93,10 +93,10 @@ func show_standings(kind: String, rows: Array, before: Array, drivers: Dictionar
 			var d: Dictionary = drivers.get(id, {})
 			h.add_child(DriverPhotos.make_avatar(d, Color(team_colors.get(d.get("team", ""), Color.GRAY)), 32))
 			name = String(d.get("name", id))
-			sub = String(GameData.team_by_id(GameData.teams(), String(d.get("team", ""))).get("name", ""))
+			sub = String(GameData.team_by_id(_teams(), String(d.get("team", ""))).get("name", ""))
 		else:
 			h.add_child(TeamEmblems.make_rect(id, 30))
-			name = String(GameData.team_by_id(GameData.teams(), id).get("name", id))
+			name = String(GameData.team_by_id(_teams(), id).get("name", id))
 		var nv := VBoxContainer.new()
 		nv.add_theme_constant_override("separation", -3)
 		nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -179,3 +179,8 @@ func _pop(life: float = LIFETIME_S) -> void:
 	_tween.tween_interval(life)
 	_tween.tween_property(self, "modulate:a", 0.0, 0.4)
 	_tween.tween_callback(func() -> void: visible = false)
+
+
+## Equipes da temporada em jogo (2012 tem outro grid); fora de um fim de semana, as de 2026.
+func _teams() -> Array:
+	return Session.weekend.teams if Session.weekend != null and not Session.weekend.teams.is_empty() else GameData.teams()
