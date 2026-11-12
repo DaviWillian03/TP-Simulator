@@ -1,0 +1,37 @@
+{
+ "_notas": "Engenheiros de corrida de 2012 (pesquisa de 2026-11-12). Com fonte: Rocquelin (Vettel), Stella (Alonso), Bonnington (Schumacher), Rennie (Räikkönen; dividia o carro com Mark Slade), Joyce (Hülkenberg). Parcerias bem conhecidas da época, sem fonte lida nesta pesquisa: Smedley (Massa), Pilbeam (Webber), Ross (Rosberg). Notas (skill) = ESTIMATIVA. Quem não está aqui usa engenheiro genérico.",
+ "engineers": {
+  "vettel": {
+   "name": "Guillaume Rocquelin",
+   "skill": 84
+  },
+  "alonso": {
+   "name": "Andrea Stella",
+   "skill": 84
+  },
+  "schumacher": {
+   "name": "Peter Bonnington",
+   "skill": 80
+  },
+  "raikkonen": {
+   "name": "Simon Rennie",
+   "skill": 79
+  },
+  "hulkenberg": {
+   "name": "Bradley Joyce",
+   "skill": 75
+  },
+  "massa": {
+   "name": "Rob Smedley",
+   "skill": 80
+  },
+  "webber": {
+   "name": "Ciaron Pilbeam",
+   "skill": 78
+  },
+  "rosberg": {
+   "name": "Tony Ross",
+   "skill": 77
+  }
+ }
+}

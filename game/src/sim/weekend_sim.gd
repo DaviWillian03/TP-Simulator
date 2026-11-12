@@ -67,6 +67,7 @@ var rng := RandomNumberGenerator.new()
 var retired: Dictionary = {}  ## "race"/"sprint" -> [ids] que abandonaram ou foram desclassificados
 var fastest_laps: Dictionary = {}  ## "race"/"sprint" -> {id, time} da melhor volta da corrida
 var quali_times: Dictionary = {}  ## "race"/"sprint" -> {id do piloto: {time, part}} (melhor volta na classificação; grid)
+var start_rule: Dictionary = {}  ## 2012: id do piloto -> pneu obrigatório de largada (melhor volta do Q2, só quem foi ao Q3)
 var dry_pair: Array = []  ## 2012: par de compostos secos do GP (Season calendar "compounds")
 var category := "F1"  ## "F1", "F2" ou "F3" (CategoryRules; decisões de 2026-11-08)
 var strategy: Dictionary = {}  ## id do piloto -> plano da corrida atual (RaceStrategy; passo antes da largada, v22-2)
@@ -285,7 +286,38 @@ func engineer_strategy() -> Dictionary:
 	for d: Dictionary in drivers:
 		if d["team"] == player_team:
 			out[d["id"]] = RaceStrategy.engineer_plans(tyres, ctx, stocks[d["id"]])
+			if session_id() == "race" and start_rule.has(d["id"]):  # 2012: largada obrigatória com o pneu do Q2
+				var kept: Array = []
+				var seen := {}
+				for plan: Dictionary in out[d["id"]]:
+					_force_start(plan, String(start_rule[d["id"]]))
+					RaceStrategy.assign_sets(plan["stints"], stocks[d["id"]])
+					var st0: Dictionary = (stocks[d["id"]] as Dictionary).get(start_rule[d["id"]], {})
+					if int(st0.get("used", 0)) > 0:
+						plan["stints"][0]["new"] = false  # larga com o jogo usado na melhor volta do Q2
+					var key := str(plan["stints"])
+					if seen.has(key):
+						continue  # dois planos que viraram o mesmo depois da troca
+					seen[key] = true
+					var desc := String(plan["desc"])
+					var tag := desc.get_slice(" · ", 1) if desc.contains(" · ") else ""
+					kept.append(RaceStrategy.make(plan["stints"], tyres, tag))
+				out[d["id"]] = kept
 	return out
+
+
+## Largada obrigatória (pneu do Q2): o stint com esse composto vai para o início, com as voltas dele ("duro 9 → macio 4"
+## vira "macio 4 → duro 9"), e o plano continua com dois compostos secos e dentro da vida de cada pneu. Se o plano não
+## tinha esse composto, só o 1º stint troca de pneu.
+static func _force_start(plan: Dictionary, forced: String) -> void:
+	var stints: Array = plan["stints"]
+	if String(stints[0]["compound"]) == forced:
+		return
+	for i in range(1, stints.size()):
+		if String(stints[i]["compound"]) == forced:
+			stints.insert(0, stints.pop_at(i))
+			return
+	stints[0]["compound"] = forced
 
 
 func make_race(extra: Dictionary = {}) -> RaceSim:
@@ -300,6 +332,10 @@ func make_race(extra: Dictionary = {}) -> RaceSim:
 			plans[did] = p
 		opts["start_tyres"] = starts
 		opts["player_plans"] = plans
+	if id == "race" and not start_rule.is_empty():  # 2012: o top 10 larga com o pneu da melhor volta do Q2 (vale para todos)
+		var forced: Dictionary = opts.get("start_tyres", {})
+		forced.merge(start_rule, true)
+		opts["start_tyres"] = forced
 	opts["duration_pct"] = duration_pct
 	opts["sprint"] = id == "sprint"
 	opts["category"] = category
@@ -347,6 +383,11 @@ func finish_quali(q: QualiSim) -> void:
 		if t < INF:
 			times[car.driver["id"]] = {"time": t, "part": String(q.segments[part]["name"])}
 	quali_times["sprint" if session_id() == "sprint_quali" else "race"] = times
+	if session_id() == "quali" and bool(CategoryRules.of(category).get("q2_tyre_rule", false)):
+		start_rule = {}
+		for car in q.cars:
+			if q.eliminated_in[car] < 0 and q.q2_tyre.has(car) and tyres.is_dry(String(q.q2_tyre[car])):
+				start_rule[car.driver["id"]] = String(q.q2_tyre[car])
 	grids["sprint" if session_id() == "sprint_quali" else "race"] = q.grid_ids()
 	var rev := int(CategoryRules.of(category).get("reverse_top", 0))
 	if rev > 0 and CategoryRules.is_feeder(category):  # F2/F3: a sprint larga com os N primeiros invertidos
@@ -436,7 +477,7 @@ func to_save() -> Dictionary:
 		setups_d[id] = {"aero": s.aero, "mech": s.mech, "balance": s.balance, "race_prep": s.race_prep, "quali_prep": s.quali_prep}
 	return {"circuit": _init_circuit, "options": _init_options, "state": {
 		"current": current, "results": results, "summaries": summaries, "grids": grids, "points": points, "forecast": Array(forecast),
-		"retired": retired, "fastest_laps": fastest_laps, "quali_times": quali_times, "strategy": strategy, "programs": programs,
+		"retired": retired, "fastest_laps": fastest_laps, "quali_times": quali_times, "start_rule": start_rule, "strategy": strategy, "programs": programs,
 		"show_practice_report": show_practice_report, "last_practice": last_practice, "setups": setups_d,
 		"tyre_sets": tyre_alloc.sets, "tyre_feeder": tyre_alloc.feeder, "tyre_return_after": tyre_alloc.return_after,
 		"rng_state": rng.state}}
@@ -454,6 +495,7 @@ static func from_save(d: Dictionary) -> WeekendSim:
 	w.retired = st["retired"]
 	w.fastest_laps = st["fastest_laps"]
 	w.quali_times = st["quali_times"]
+	w.start_rule = st.get("start_rule", {})
 	w.strategy = st["strategy"]
 	w.programs = st["programs"]
 	w.show_practice_report = bool(st["show_practice_report"])

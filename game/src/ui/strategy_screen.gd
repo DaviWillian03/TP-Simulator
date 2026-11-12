@@ -133,10 +133,18 @@ func _build_col(d: Dictionary) -> void:
 	col.add_child(UiStyle.g_caption("Estoque para a %s" % ("sprint" if bool(ctx.get("is_sprint", ctx["sprint"])) else "corrida")))
 	col.add_child(_stock_row(did))
 	var warn := RaceStrategy.warning(plan, weekend.tyres, ctx, stocks[did])
+	var ok_text := "Plano dentro da regra e do estoque"
+	if weekend.session_id() == "race" and weekend.start_rule.has(did):  # 2012: largar com o jogo usado do Q2 é a regra
+		ok_text = "Larga com o pneu do Q2"
+		var rest_new := true
+		for k in range(1, (plan["stints"] as Array).size()):
+			rest_new = rest_new and bool(plan["stints"][k].get("new", true))
+		if warn.begins_with("Algum stint usa jogo usado") and rest_new:
+			warn = ""
 	var w := HBoxContainer.new()
 	w.add_theme_constant_override("separation", 6)
 	w.add_child(ScreenKit.icon("check" if warn == "" else "lock", 16, UiStyle.G_UP if warn == "" else UiStyle.G_DIRECTOR))
-	var wl := UiStyle.g_label(warn if warn != "" else "Plano dentro da regra e do estoque", UiStyle.FS_SMALL, UiStyle.G_UP if warn == "" else UiStyle.G_DIRECTOR, "bold")
+	var wl := UiStyle.g_label(warn if warn != "" else ok_text, UiStyle.FS_SMALL, UiStyle.G_UP if warn == "" else UiStyle.G_DIRECTOR, "bold")
 	wl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	wl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	w.add_child(wl)
@@ -229,6 +237,10 @@ func _stint_row(did: String, i: int, st: Dictionary, first_lap: int) -> Control:
 	badge.set_compound(c["letter"], Color(c["color"]))
 	tyre_btn.add_child(badge)
 	badge.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var locked := i == 0 and weekend.session_id() == "race" and weekend.start_rule.has(did)  # 2012: pneu do Q2
+	tyre_btn.disabled = locked
+	if locked:
+		tyre_btn.tooltip_text = "Pneu do Q2"
 	tyre_btn.pressed.connect(func() -> void:
 		RaceStrategy.cycle_compound(chosen[did], i, weekend.tyres, stocks[did])
 		edited[did] = true

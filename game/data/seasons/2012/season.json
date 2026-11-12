@@ -8,5 +8,6 @@
  "drivers_file": "res://data/seasons/2012/drivers.json",
  "calendar_file": "res://data/seasons/2012/calendar.json",
  "real_form_file": "res://data/seasons/2012/real_form.json",
- "_notas": "Pronta para o Grande Prêmio e o Mundial (2026-11-12). Valência, Coreia e Índia ainda sem traçado: o Mundial pula essas 3 etapas (17 GPs)."
+ "_notas": "Pronta para o Grande Prêmio e o Mundial (2026-11-12). Valência, Coreia e Índia ainda sem traçado: o Mundial pula essas 3 etapas (17 GPs).",
+ "staff_file": "res://data/seasons/2012/staff.json"
 }

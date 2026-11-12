@@ -861,3 +861,9 @@ Respostas do usuário:
   (só na F1; em 2012, F2/F3 ficam apagados): o calendário de 2012 vem primeiro (pistas sem traçado aparecem apagadas) e
   depois as pistas de 2026; cada cartão mostra os dois compostos daquele GP. Na escolha de equipe do Mundial fica no canto
   superior direito. **Mundial 2012 pula Valência, Coreia e Índia** até existirem os traçados (17 GPs; escolha do usuário).
+- **2026-11-12 — Grande Prêmio 2012 completo.** (1) Telas mostram só os dois compostos secos daquele GP (box, painel do
+  fim de semana, classificação). (2) **Regra do pneu do Q2** (`q2_tyre_rule` na F1_2012): quem vai ao Q3 larga com o
+  composto da melhor volta do Q2, no jogo usado; o plano dos engenheiros traz esse stint para o início (com as voltas dele)
+  e a escolha do pneu de largada fica travada. (3) **Engenheiros reais de 2012** em `data/seasons/2012/staff.json`
+  (com fonte: Rocquelin, Stella, Bonnington, Rennie, Joyce; parcerias conhecidas: Smedley, Pilbeam, Ross); os demais
+  pilotos usam engenheiro genérico.

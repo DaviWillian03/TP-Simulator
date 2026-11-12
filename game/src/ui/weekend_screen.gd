@@ -168,7 +168,7 @@ func _tyre_card(r: Rect2) -> Control:
 	var stock := weekend.tyre_alloc.race_stock(String(mine[0]["id"]))
 	var tyres: Dictionary = GameData.tyres()["compounds"]
 	for k: String in ["soft", "medium", "hard"]:
-		if not tyres.has(k):
+		if not tyres.has(k) or not weekend.tyres.has_compound(k):
 			continue
 		var n := int(stock[k]["new"])
 		var u := int(stock[k]["used"])

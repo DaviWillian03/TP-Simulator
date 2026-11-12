@@ -85,6 +85,7 @@ var alloc: TyreAllocation  ## jogos de pneus do fim de semana (regra real; v22)
 var q3_open := false  ## o macio guardado para o Q3 só sai na última parte da classificação principal
 var player_mode: Dictionary = {}  ## CarState -> atitude escolhida pelo jogador na saída ("safe"/"limit")
 var run_tyre: Dictionary = {}  ## CarState -> {compound, new, set}
+var q2_tyre: Dictionary = {}  ## CarState -> composto da melhor volta no Q2 (regra de 2012: o top 10 larga com ele)
 var eliminated_in: Dictionary = {}  ## CarState -> parte em que caiu (-1 = segue)
 var crashed: Dictionary = {}  ## CarState -> true se bateu (fora do resto da classificação)
 var ai_plan: Dictionary = {}  ## CarState -> Array[float] instantes de saída planejados
@@ -548,6 +549,8 @@ func _finish_flying_lap(car: CarState) -> void:
 	if valid and t < best[car][segment]:
 		best[car][segment] = t
 		best_set_at[car][segment] = total_time
+		if segment == 1 and run_tyre.has(car):
+			q2_tyre[car] = String(run_tyre[car]["compound"])
 	if valid and t < car.best_lap_time:
 		car.best_lap_time = t
 	lap_completed.emit(car, t, valid)

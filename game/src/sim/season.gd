@@ -60,6 +60,12 @@ static func real_form(id: String) -> Dictionary:
 	return d if d is Dictionary else {}
 
 
+## Engenheiros de corrida reais da temporada, por piloto ({id: {name, skill}}); vazio = genéricos.
+static func engineers(id: String) -> Dictionary:
+	var d: Variant = _file(id, "staff_file")
+	return (d as Dictionary).get("engineers", {}) if d is Dictionary else {}
+
+
 ## Limites de motor e câmbio da temporada (regras da categoria; padrão = os de 2026).
 static func parts_limits(id: String) -> Dictionary:
 	return CategoryRules.of(category(id)).get("parts_limits", CarParts.LIMITS)

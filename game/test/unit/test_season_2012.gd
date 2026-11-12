@@ -133,3 +133,62 @@ func test_emblemas_e_fotos_seguem_a_temporada() -> void:
 	assert_eq(DriverPhotos.season, "2026")
 	assert_true(CarArt.car_texture(GameData.team_by_id(Season.teams("2012"), "mclaren")) != CarArt.car_texture(GameData.team_by_id(GameData.teams(), "mclaren")), "carro com as cores de 2012")
 	TeamEmblems.use_local = true
+
+
+func _weekend_2012(cid: String = "suzuka") -> WeekendSim:
+	return WeekendSim.new(cid, {"player_team": "lotus", "duration_pct": 0.25, "seed": 3, "weather": "dry", "incident_rate": 0.0,
+		"teams": Season.teams("2012"), "drivers": Season.drivers("2012"), "category": "F1_2012", "dry_pair": ["soft", "hard"]})
+
+
+func test_top10_larga_com_o_pneu_do_q2() -> void:
+	var w := _weekend_2012()
+	while w.session_id() != "race":
+		w.simulate_current()
+	assert_eq(w.start_rule.size(), 10, "os 10 que foram ao Q3")
+	var grid: Array = w.grids["race"]
+	for did: String in w.start_rule:
+		assert_lt(grid.find(did), 10, "%s está no top 10" % did)
+	var sim := w.make_race()
+	for car in sim.cars:
+		var did := String(car.driver["id"])
+		if w.start_rule.has(did):
+			assert_eq(car.tyre, String(w.start_rule[did]), "%s larga com o pneu do Q2" % did)
+	var plans := w.engineer_strategy()
+	for did: String in plans:
+		if w.start_rule.has(did):
+			for plan: Dictionary in plans[did]:
+				assert_eq(String(plan["stints"][0]["compound"]), String(w.start_rule[did]), "plano do engenheiro respeita a regra")
+				var used := {}
+				for st: Dictionary in plan["stints"]:
+					used[String(st["compound"])] = true
+				assert_gt(used.size(), 1, "continua com dois compostos secos")
+	var back := WeekendSim.from_save(w.to_save())
+	assert_eq(back.start_rule, w.start_rule, "o autosave guarda a regra")
+
+
+func test_regra_do_q2_nao_vale_em_2026() -> void:
+	var w := WeekendSim.new("suzuka", {"player_team": "williams", "duration_pct": 0.25, "seed": 3, "weather": "dry", "incident_rate": 0.0})
+	while w.session_id() != "race":
+		w.simulate_current()
+	assert_true(w.start_rule.is_empty())
+
+
+func test_engenheiros_reais_de_2012() -> void:
+	Season.active = "2012"
+	var sk := Personnel.practice_skills_for(null, "ferrari", ["alonso", "massa"])
+	assert_eq(String(sk["alonso"]["engineer_name"]), "Andrea Stella")
+	assert_eq(String(sk["massa"]["engineer_name"]), "Rob Smedley")
+	var hrt := Personnel.practice_skills_for(null, "hrt", ["delarosa"])
+	assert_ne(String(hrt["delarosa"]["engineer_name"]), "", "sem fonte: engenheiro genérico")
+	Season.active = Season.DEFAULT
+	var now := Personnel.practice_skills_for(null, "ferrari", ["leclerc", "hamilton"])
+	assert_ne(String(now["hamilton"]["engineer_name"]), "Andrea Stella", "2026 continua com o pessoal de 2026")
+
+
+func test_largada_forcada_troca_os_compostos_de_lugar() -> void:
+	var plan := {"stints": [{"compound": "hard", "laps": 9}, {"compound": "soft", "laps": 4}]}
+	WeekendSim._force_start(plan, "soft")
+	assert_eq(String(plan["stints"][0]["compound"]), "soft")
+	assert_eq(int(plan["stints"][0]["laps"]), 4, "o stint vai inteiro, com as voltas dele")
+	assert_eq(String(plan["stints"][1]["compound"]), "hard")
+	assert_eq(int(plan["stints"][1]["laps"]), 9)

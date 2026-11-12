@@ -108,8 +108,9 @@
    "return_after_practice": 2,
    "q3_reserve": true,
    "restrict_tyres": true,
-   "_notas": "2012 (escolhas do usuário em 2026-11-12): KERS por volta (carga cheia a cada volta, ~6,7 s de uso, o piloto decide quando), DRS a menos de 1 s, dois compostos secos por pista (par real de cada GP; 5 jogos do mais macio + 6 do mais duro), motor/câmbio iguais a 2026, sem regra dos 107%. PROVISÓRIO.",
-   "kers": true
+   "_notas": "2012 (escolhas do usuário em 2026-11-12): KERS por volta (carga cheia a cada volta, ~6,7 s de uso, o piloto decide quando), DRS a menos de 1 s, dois compostos secos por pista (par real de cada GP; 5 jogos do mais macio + 6 do mais duro), motor/câmbio iguais a 2026, sem regra dos 107%. PROVISÓRIO. Quem chega ao Q3 larga com o pneu da melhor volta do Q2 (q2_tyre_rule).",
+   "kers": true,
+   "q2_tyre_rule": true
   }
  }
 }

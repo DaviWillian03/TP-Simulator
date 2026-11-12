@@ -294,7 +294,8 @@ func _build_sets() -> void:
 	_col_mid.add_child(UiStyle.g_caption("Pneus para a parada"))
 	var wet_now: bool = sim.weather.wetness > 0.35
 	for k: String in COMPOUNDS:
-		_col_mid.add_child(_set_row(k, wet_now))
+		if sim.tyres.has_compound(k):  # 2012: só os dois secos daquele GP
+			_col_mid.add_child(_set_row(k, wet_now))
 	var which := HBoxContainer.new()
 	which.add_theme_constant_override("separation", 6)
 	for o: Array in [[false, "Jogo novo"], [true, "Jogo usado"]]:

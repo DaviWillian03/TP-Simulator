@@ -535,7 +535,7 @@ func _alloc_row(car: CarState) -> Control:
 	h.add_child(UiStyle.g_caption("Fim de semana"))
 	var sm := q.alloc.summary(car.driver["id"])
 	for k: String in ["soft", "medium", "hard"]:
-		if not sm.has(k):
+		if not sm.has(k) or not q.tyres.has_compound(k):
 			continue
 		var c: Dictionary = q.tyres.compounds[k]
 		var it := HBoxContainer.new()
