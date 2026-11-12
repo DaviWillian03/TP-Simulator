@@ -22,10 +22,13 @@ var feeder := false  ## F2/F3: poucos jogos, sem devolução por treino e sem ma
 var return_after := RETURN_AFTER_PRACTICE
 
 
-static func make(driver_ids: Array, sprint: bool, cat: String = "F1") -> TyreAllocation:
+## dry_pair (2012): os dois compostos secos do GP [mais macio, mais duro] — 5 jogos do macio e 6 do duro.
+static func make(driver_ids: Array, sprint: bool, cat: String = "F1", dry_pair: Array = []) -> TyreAllocation:
 	var a := TyreAllocation.new()
 	var r := CategoryRules.of(cat)
 	var dry: Dictionary = r["dry_sprint"] if sprint and r.has("dry_sprint") else r["dry"]
+	if dry_pair.size() == 2:
+		dry = {String(dry_pair[0]): 5, String(dry_pair[1]): 6}
 	var wet: Dictionary = r["wet"]
 	a.feeder = CategoryRules.is_feeder(cat)
 	a.return_after = int(r.get("return_after_practice", RETURN_AFTER_PRACTICE))

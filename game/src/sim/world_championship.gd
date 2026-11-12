@@ -10,6 +10,7 @@ const FORM_WITH_DATA := 0.3  ## variação aleatória do fim de semana quando j�
 const FORM_NO_DATA := 0.8  ## pista ainda sem resultado real: só a nota base + variação normal
 
 var season := 2026
+var season_id := Season.DEFAULT  ## pacote de temporada (data/seasons/<id>): 2026 ou temporada extra (2012…)
 var player_team := ""
 var round := 0  ## próxima rodada do calendário (0 = primeira)
 var seed_base := 1
@@ -27,34 +28,42 @@ var champions_log: Array = []  ## o Mundial tem uma temporada só por enquanto (
 var _real: Dictionary = {}
 
 
-static func start(team_id: String) -> WorldChampionship:
+static func start(team_id: String, sid: String = Season.DEFAULT) -> WorldChampionship:
 	var w := WorldChampionship.new()
+	w.season_id = sid
+	w.season = Season.year(sid)
 	w.player_team = team_id
 	w.seed_base = randi() % 1_000_000 + 1
-	w.parts.setup(GameData.teams(), w.seed_base)
+	w.parts.limits = Season.parts_limits(sid).duplicate()
+	w.parts.setup(w.teams(), w.seed_base)
 	return w
 
 
 # --- calendário e tabelas ------------------------------------------------------------------
 
+## Calendário da temporada 2026 (uso estático antigo); o da temporada deste Mundial é `cal()`.
 static func calendar() -> Array:
 	return Campaign.calendar()
 
 
+func cal() -> Array:
+	return Season.calendar(season_id)
+
+
 func season_over() -> bool:
-	return round >= calendar().size()
+	return round >= cal().size()
 
 
 func next_round() -> Dictionary:
-	return {} if season_over() else calendar()[round]
+	return {} if season_over() else cal()[round]
 
 
 func drivers() -> Array:
-	return GameData.drivers()
+	return Season.drivers(season_id)
 
 
 func teams() -> Array:
-	return GameData.teams()
+	return Season.teams(season_id)
 
 
 func is_feeder() -> bool:
@@ -63,7 +72,7 @@ func is_feeder() -> bool:
 
 ## Etapas que ainda restam depois da corrida atual (contrato igual ao da campanha: o campeonato ao vivo da corrida usa).
 func remaining_after_current() -> Dictionary:
-	var cal := calendar()
+	var cal := cal()
 	var races := 0
 	var sprints := 0
 	for i in range(round + 1, cal.size()):
@@ -124,7 +133,7 @@ func driver_standings() -> Array:
 
 func team_standings() -> Array:
 	var rows: Array = []
-	for t: Dictionary in GameData.teams():
+	for t: Dictionary in teams():
 		rows.append([t["id"], int(team_points.get(t["id"], 0))])
 	rows.sort_custom(func(a: Array, b: Array) -> bool:
 		return a[1] > b[1] if a[1] != b[1] else String(a[0]) < String(b[0]))
@@ -151,7 +160,7 @@ func team_position(id: String) -> int:
 
 func real_form() -> Dictionary:
 	if _real.is_empty():
-		_real = GameData.load_json(GameData.DATA_DIR + "real_form_2026.json")
+		_real = Season.real_form(season_id)
 	return _real
 
 
@@ -166,7 +175,7 @@ func teams_for_gp(circuit_id: String) -> Array:
 	var base: Dictionary = rf.get("base", {})
 	var offs: Dictionary = (rf.get("rounds", {}) as Dictionary).get(circuit_id, {})
 	var out: Array = []
-	for t: Dictionary in GameData.teams():
+	for t: Dictionary in teams():
 		var c := t.duplicate()
 		var id := String(t["id"])
 		c["car_rating"] = float(base.get(id, t["car_rating"])) + float(offs.get(id, 0.0))
@@ -181,7 +190,7 @@ func teams_for_gp(circuit_id: String) -> Array:
 
 func grid_penalties() -> Dictionary:
 	var out := {}
-	for t: Dictionary in GameData.teams():
+	for t: Dictionary in teams():
 		var ids := driver_ids_of(String(t["id"]))
 		for i in mini(ids.size(), 2):
 			var pen := parts.penalty_for(String(t["id"]), i)
@@ -194,9 +203,11 @@ func weekend_options(extra: Dictionary = {}) -> Dictionary:
 	var rd := next_round()
 	var cid := String(rd.get("id", ""))
 	var o := {"player_team": player_team, "seed": seed_base * 100 + round + 1, "campaign": true, "world": true,
-		"teams": teams_for_gp(cid), "form": FORM_WITH_DATA if has_real_data(cid) else FORM_NO_DATA}
+		"teams": teams_for_gp(cid), "drivers": drivers(), "category": Season.category(season_id), "form": FORM_WITH_DATA if has_real_data(cid) else FORM_NO_DATA}
 	if not rd.is_empty():
 		o["sprint"] = bool(rd.get("sprint", false))
+		if rd.has("compounds"):
+			o["dry_pair"] = rd["compounds"]
 		o["grid_penalties"] = grid_penalties()
 		if round >= calendar().size() / 2:  # quem briga pelo título arrisca menos na classificação
 			var champ := {}
@@ -258,7 +269,7 @@ func record_weekend(w: WeekendSim) -> void:
 		var what: Array = (pen["parts"] as Array).map(func(x: Dictionary) -> String: return "%dº %s" % [int(x["n"]), "motor" if x["part"] == "pu" else "câmbio"])
 		news.append({"round": round + 1, "text": "%s largou %s por usar o %s (limite: 4)." % [did, "do fundo do grid" if bool(pen["back"]) else "%d posições atrás" % int(pen["places"]), ", ".join(what)]})
 	_rebuild_log()
-	parts.after_race(GameData.teams())
+	parts.after_race(teams())
 	round += 1
 
 
@@ -330,7 +341,7 @@ func champions() -> Dictionary:
 # --- save -------------------------------------------------------------------------------------
 
 func to_dict() -> Dictionary:
-	return {"save_version": SaveSlots.VERSION, "season": season, "player_team": player_team, "round": round, "seed_base": seed_base,
+	return {"save_version": SaveSlots.VERSION, "season": season, "season_id": season_id, "player_team": player_team, "round": round, "seed_base": seed_base,
 		"driver_points": driver_points, "team_points": team_points, "wins": wins, "poles": poles, "podiums": podiums,
 		"dnfs": dnfs, "history": history, "news": news, "parts": parts.to_dict()}
 
@@ -338,6 +349,8 @@ func to_dict() -> Dictionary:
 static func from_dict(d: Dictionary) -> WorldChampionship:
 	var w := WorldChampionship.new()
 	w.season = int(d.get("season", 2026))
+	w.season_id = String(d.get("season_id", Season.DEFAULT))
+	w.parts.limits = Season.parts_limits(w.season_id).duplicate()
 	w.player_team = String(d.get("player_team", ""))
 	w.round = int(d.get("round", 0))
 	w.seed_base = int(d.get("seed_base", 1))
@@ -352,7 +365,7 @@ static func from_dict(d: Dictionary) -> WorldChampionship:
 	w.news = d.get("news", [])
 	w.parts.from_dict(d.get("parts", {}))
 	if w.parts.state.is_empty():
-		w.parts.setup(GameData.teams(), w.seed_base)
+		w.parts.setup(w.teams(), w.seed_base)
 	return w
 
 

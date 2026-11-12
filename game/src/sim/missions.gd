@@ -105,6 +105,8 @@ static func drive(sim: RaceSim, car: CarState) -> void:
 		energy = CarState.EnergyMode.BALANCED
 	car.pace_mode = pace
 	car.energy_mode = energy
+	# 2012 (KERS por volta): o Ritmo diz como o piloto gasta a carga (escolha do usuário em 2026-11-12)
+	car.kers_plan = {"safe": "defend", "save": "defend", "normal": "exits", "attack": "attack", "push": "max"}.get(String(m.get("kind", "normal")), "exits")
 
 
 ## Segundos do carro de trás mais próximo na mesma faixa (-1 = ninguém perto).

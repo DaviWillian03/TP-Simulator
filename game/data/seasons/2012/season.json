@@ -1,0 +1,12 @@
+{
+ "id": "2012",
+ "year": 2012,
+ "name": "Temporada 2012",
+ "category": "F1_2012",
+ "ready": false,
+ "teams_file": "res://data/seasons/2012/teams.json",
+ "drivers_file": "res://data/seasons/2012/drivers.json",
+ "calendar_file": "res://data/seasons/2012/calendar.json",
+ "real_form_file": "res://data/seasons/2012/real_form.json",
+ "_notas": "ready=false até existirem equipes, pilotos, forma real e as 6 pistas que faltam (próximas etapas)."
+}

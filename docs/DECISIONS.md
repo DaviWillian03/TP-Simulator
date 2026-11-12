@@ -829,3 +829,15 @@ Respostas do usuário:
   com a dupla nos pontos, o de trás recebe "não atacar"; separados, briga liberada. O piloto pode recusar (mesma regra do jogador) e a
   equipe só pede de novo na volta seguinte (`Missions.ai_choose`/`ai_team_orders`). Calibração: média de ~6,7 toques por corrida em 7
   corridas (antes ~5,5).
+- **2026-11-12 — Temporada extra 2012: base (pacote de temporada + regulamento).** Cada temporada é uma pasta `data/seasons/<id>/`
+  (`season.json` com equipes, pilotos, calendário, forma real e categoria de regras; classe `Season`). O Mundial guarda `season_id` no
+  save e passa equipes, pilotos e regras ao fim de semana (nada de chave global); o **Grande Prêmio** também aceita a temporada
+  (`Session.gp_season`); a **Campanha não mudou** (pedido do usuário). Regras `F1_2012` (escolhas do usuário): **KERS por volta** — carga
+  cheia a cada volta (~6,7 s de uso, +4,5% de velocidade ≈ 0,3 s/volta, +0,12 s na briga para quem está com ele ligado), o piloto decide
+  quando gastar conforme o Ritmo (Trazendo pra casa/Conservador guardam para defender; Normal usa antes das zonas de ultrapassagem;
+  Agressivo gasta atrás do rival; Potência máxima gasta tudo); no cartão, barra amarela que esvazia a cada uso + bloco **DRS** que fica
+  verde com a asa aberta, no lugar da bateria de 2026. Sem a bateria/modo de ultrapassagem de 2026. **DRS** a menos de 1 s. **Dois
+  compostos por pista** (par real da Pirelli em cada GP, convertido para os compostos do jogo; 5 jogos do mais macio + 6 do mais duro).
+  Motor/câmbio iguais a 2026. **Sem** regra dos 107%. Calendário real de 20 GPs com 6 pistas ainda inexistentes (Sepang, Bahrein,
+  Valência, Hockenheim, Coreia, Índia). Ainda faltam: equipes, pilotos e forma real de 2012, as pistas, a escolha da temporada na tela
+  (mockup) e as fotos (vão para `game/local/`, fora do git). Dev: `--season=2012`.

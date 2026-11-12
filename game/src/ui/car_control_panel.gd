@@ -31,6 +31,7 @@ var _drs_sub: Label
 var _life_bar: StandingsPanel.LifeBar
 var _life_label: Label
 var _battery: BatteryIcon
+var _kers: KersDrsBar  ## 2012: barra do KERS (esvazia a cada uso) + DRS (verde com a asa aberta), no lugar da bateria
 var _gauge: GaugeIcon
 var _logo: TextureRect
 var _style: StyleBoxFlat
@@ -122,7 +123,12 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_base_box = _mission_box(false)
 	v.add_child(_base_box["root"])
 	# ritmo e bateria (o piloto decide) viram ícones na linha da missão de base: uma linha a menos no cartão
-	for ic: Control in [_gauge, _battery]:
+	if sim.kers:
+		_kers = KersDrsBar.new()
+		_kers.custom_minimum_size = Vector2(80, 22)
+		_kers.tooltip_text = "KERS da volta (o piloto decide) · DRS"
+		auto_row.add_child(_kers)
+	for ic: Control in [_gauge, _battery] + ([_kers] if _kers != null else []):
 		auto_row.remove_child(ic)
 		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		(_base_box["head"] as HBoxContainer).add_child(ic)
@@ -331,6 +337,8 @@ func refresh(race_position: int) -> void:
 	_life_label.text = "%d%%" % roundi(life * 100.0)
 	_battery.level = car.battery
 	_battery.mode = car.energy_mode
+	if _kers != null:
+		_kers.set_state(car.kers, car.kers_on, sim.drs_open(car))
 	_gauge.mode = car.pace_mode
 	if _last_pos != 0 and race_position != _last_pos:  # mudou de posição: o número pulsa (verde ganhou, vermelho perdeu)
 		var gained := race_position < _last_pos
@@ -431,6 +439,42 @@ class GaugeIcon:
 
 ## Bateria com a carga desenhada dentro (verde → amarelo → vermelho), raio quando está gastando e seta
 ## para cima quando está recarregando. O nível anima suavemente.
+## 2012: barra do KERS que esvazia a cada uso (acende enquanto o piloto usa) e o bloco DRS, verde com a asa aberta.
+class KersDrsBar:
+	extends Control
+	var _level := 1.0
+	var _on := false
+	var _drs := false
+
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_PASS
+
+	func set_state(level: float, on: bool, drs: bool) -> void:
+		if is_equal_approx(level, _level) and on == _on and drs == _drs:
+			return
+		_level = clampf(level, 0.0, 1.0)
+		_on = on
+		_drs = drs
+		queue_redraw()
+
+	func _draw() -> void:
+		var h := size.y
+		var bar := Rect2(0, h * 0.3, size.x - 40.0, h * 0.4)
+		draw_rect(bar, Color(1, 1, 1, 0.12))
+		var fill := Rect2(bar.position, Vector2(bar.size.x * _level, bar.size.y))
+		draw_rect(fill, UiStyle.G_DIRECTOR.lightened(0.25) if _on else UiStyle.G_DIRECTOR)
+		var chip := Rect2(size.x - 36.0, 0, 36.0, h)
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = UiStyle.G_UP if _drs else Color(1, 1, 1, 0.10)
+		sb.set_corner_radius_all(6)
+		draw_style_box(sb, chip)
+		var font := UiStyle.G_BLACK
+		var fs := UiStyle.fs(11)
+		var tw := font.get_string_size("DRS", HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(font, Vector2(chip.position.x + (chip.size.x - tw) / 2.0, h * 0.5 + fs * 0.36), "DRS", HORIZONTAL_ALIGNMENT_LEFT, -1, fs,
+			UiStyle.G_INK if _drs else UiStyle.G_TEXT_2)
+
+
 class BatteryIcon:
 	extends Control
 	var level := 0.8:

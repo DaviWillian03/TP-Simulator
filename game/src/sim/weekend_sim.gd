@@ -67,6 +67,7 @@ var rng := RandomNumberGenerator.new()
 var retired: Dictionary = {}  ## "race"/"sprint" -> [ids] que abandonaram ou foram desclassificados
 var fastest_laps: Dictionary = {}  ## "race"/"sprint" -> {id, time} da melhor volta da corrida
 var quali_times: Dictionary = {}  ## "race"/"sprint" -> {id do piloto: {time, part}} (melhor volta na classificação; grid)
+var dry_pair: Array = []  ## 2012: par de compostos secos do GP (Season calendar "compounds")
 var category := "F1"  ## "F1", "F2" ou "F3" (CategoryRules; decisões de 2026-11-08)
 var strategy: Dictionary = {}  ## id do piloto -> plano da corrida atual (RaceStrategy; passo antes da largada, v22-2)
 var show_practice_report := false  ## a tela do fim de semana abre a folha de resultado do treino (uma vez)
@@ -86,8 +87,12 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	var grid: Dictionary = CategoryRules.feeder_grid(category) if feeder and not options.has("teams") else {}
 	teams = options.get("teams", grid.get("teams", GameData.teams()))  # campanha: grid com a equipe criada
 	drivers = options.get("drivers", grid.get("drivers", GameData.drivers()))
-	if feeder:
+	if feeder or bool(CategoryRules.of(category).get("restrict_tyres", false)):
 		tyres.restrict_to(category)
+	dry_pair = options.get("dry_pair", [])
+	if dry_pair.size() == 2:  # 2012: só os dois compostos secos que a Pirelli levou para este GP
+		tyres.allowed = dry_pair + (CategoryRules.of(category)["wet"] as Dictionary).keys()
+	if feeder:
 		for t: Dictionary in teams:
 			t["category"] = category
 	player_team = options.get("player_team", "")
@@ -128,7 +133,7 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 		sessions.assign(FEEDER_FORMAT)
 	else:
 		sessions.assign(SPRINT_FORMAT if sprint_weekend else NORMAL)
-	tyre_alloc = TyreAllocation.make(drivers.map(func(x: Dictionary) -> String: return x["id"]), sprint_weekend, category)
+	tyre_alloc = TyreAllocation.make(drivers.map(func(x: Dictionary) -> String: return x["id"]), sprint_weekend, category, dry_pair)
 	for d: Dictionary in drivers:
 		setups[d["id"]] = CarSetup.random_start(rng)
 		points[d["id"]] = 0

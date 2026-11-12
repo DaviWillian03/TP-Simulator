@@ -100,6 +100,8 @@ var options_seed := 1  ## semente da corrida (planos de estratégia da IA usam u
 var tech: Dictionary = TechRules.DEFAULT.duplicate()
 var tech_lap_s := 0.0
 var energy_k := 1.0
+var kers := false  ## 2012: KERS por volta (CategoryRules "kers")
+var overtake_mode := true  ## modo de ultrapassagem da regra 2026 (2012: KERS sem esse modo)
 var overtake_k := 1.0
 var dirty_k := 1.0
 var wear_k := 1.0
@@ -138,11 +140,13 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	options_seed = int(options.get("seed", 1))
 	start_tyres = options.get("start_tyres", {})
 	_apply_tech(options.get("tech", {}))
-	if CategoryRules.is_feeder(category):
-		var cr := CategoryRules.of(category)
-		if not bool(cr["hybrid"]):
-			energy_k = 0.0  # sem bateria: Carregar/Usar não fazem diferença e não há modo de ultrapassagem
-		drs = bool(cr["drs"])
+	var cr := CategoryRules.of(category)  # F2/F3 e temporadas extras (F1_2012: KERS fraco + DRS)
+	if not bool(cr.get("hybrid", true)):
+		energy_k = 0.0  # sem bateria: Carregar/Usar não fazem diferença e não há modo de ultrapassagem
+	energy_k *= float(cr.get("energy_scale", 1.0))
+	overtake_mode = bool(cr.get("overtake_mode", true))
+	kers = bool(cr.get("kers", false))
+	drs = bool(cr.get("drs", false))
 	var rain_p := float(options.get("rain_probability", track.rain_probability))
 	weather = WeatherModel.new(rain_p, total_laps * track.base_lap_time_s * 1.05, rng, options)
 	control = RaceControl.new(self, float(options.get("incident_rate", 1.0)))
@@ -543,6 +547,8 @@ func step() -> void:
 			car.speed = control.flag_speed(car, track.length_m / _lap_time(car, true))
 			if _start_active and control.flag == RaceControl.Flag.GREEN:
 				car.speed *= StartModel.speed_mult(car.start_gain, time_s)
+			if kers:
+				_kers_step(car)
 
 	if control.flag == RaceControl.Flag.GREEN:
 		_resolve_overtakes(order)
@@ -658,6 +664,50 @@ func _resolve_overtakes(order: Array[CarState]) -> void:
 				break
 
 
+# --- KERS (2012) -----------------------------------------------------------------------
+
+const KERS_SECONDS := 6.7  ## carga cheia dura ~6,7 s de uso por volta
+const KERS_SPEED := 0.045  ## +4,5% de velocidade usando: ~0,3 s por volta se gastar tudo
+const KERS_PASS_S := 0.12  ## vantagem na briga para quem está com o KERS ligado na freada
+const KERS_WINDOW_M := 450.0  ## "antes da freada": trecho de reta antes de uma zona de ultrapassagem
+
+
+## O piloto decide quando gastar a carga da volta, conforme o plano que o Ritmo dá (Missions.drive).
+func _kers_step(car: CarState) -> void:
+	car.kers_on = false
+	if car.kers <= 0.0 or control.flag != RaceControl.Flag.GREEN or car.laps_done < 1:
+		return
+	var near_zone := _before_zone(car)
+	var gap_ahead := car.gap_ahead_s
+	var close_ahead := gap_ahead >= 0.0 and gap_ahead < 1.0
+	var behind := Missions.attacker_gap(self, car)
+	var close_behind := behind >= 0.0 and behind < 0.8
+	var use := false
+	match car.kers_plan:
+		"max":
+			use = true  # gasta tudo logo na volta
+		"attack":
+			use = near_zone and (close_ahead or car.kers > 0.5)
+		"defend":
+			use = near_zone and close_behind
+		_:
+			use = near_zone
+	if use:
+		car.kers_on = true
+		car.kers = maxf(0.0, car.kers - DT / KERS_SECONDS)
+		car.speed *= 1.0 + KERS_SPEED
+
+
+func _before_zone(car: CarState) -> bool:
+	var pos := fposmod(car.distance, track.length_m)
+	for zone: Dictionary in track.overtaking_zones:
+		var at := float(zone["braking_frac"]) * track.length_m
+		var d := fposmod(at - pos, track.length_m)
+		if d < KERS_WINDOW_M:
+			return true
+	return false
+
+
 ## Na largada os carros não se bloqueiam (cada um está na sua fila e passa de lado): a posição vem só da distância
 ## percorrida. Isto avisa a tela de cada cruzamento, para ela animar o carro que passou.
 func _emit_start_passes(before: Array[CarState]) -> void:
@@ -695,7 +745,9 @@ func _try_overtake(att: CarState, def: CarState, zone: Dictionary) -> bool:
 	# vez por volta — antes era usado em toda tentativa e a bateria ficava sempre vazia
 	if drs and att.laps_done >= DRS_FROM_LAP and control.flag == RaceControl.Flag.GREEN:
 		advantage += DRS_BONUS_S
-	if energy_k > 0.0 and att.battery > 0.1 and att.boost_lap != att.laps_done and advantage < required_base \
+	if kers:
+		advantage += KERS_PASS_S * (float(att.kers_on) - float(def.kers_on))
+	if overtake_mode and energy_k > 0.0 and att.battery > 0.1 and att.boost_lap != att.laps_done and advantage < required_base \
 			and advantage + OVERTAKE_MODE_BONUS_S * energy_k > required_base - 2.0 * OVERTAKE_SCALE:
 		advantage += OVERTAKE_MODE_BONUS_S * energy_k
 		att.battery = maxf(0.0, att.battery - OVERTAKE_MODE_COST)
@@ -877,6 +929,7 @@ func _check_player_plan(car: CarState) -> void:
 
 func _complete_lap(car: CarState, lap_number: int, cross_time: float) -> void:
 	car.laps_done = lap_number
+	car.kers = 1.0  # 2012: o KERS volta cheio a cada volta (o que sobrou se perde)
 	if car.pit_defer_laps >= 0 and lap_number >= car.pit_defer_laps:
 		car.pit_defer_laps = -1
 		car.pit_requested = true  # fim do adiamento: o box volta a valer

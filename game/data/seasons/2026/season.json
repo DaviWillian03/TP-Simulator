@@ -1,0 +1,12 @@
+{
+ "id": "2026",
+ "year": 2026,
+ "name": "Temporada 2026",
+ "category": "F1",
+ "ready": true,
+ "teams_file": "res://data/teams_2026.json",
+ "drivers_file": "res://data/drivers_2026.json",
+ "calendar_file": "res://data/calendar_2026.json",
+ "real_form_file": "res://data/real_form_2026.json",
+ "_notas": "Pacote da temporada atual (aponta para os arquivos que já existiam)."
+}

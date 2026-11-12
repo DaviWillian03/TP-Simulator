@@ -80,6 +80,36 @@
    "return_after_practice": 0,
    "q3_reserve": false,
    "form_scale": 0.25
+  },
+  "F1_2012": {
+   "name": "Fórmula 1 (2012)",
+   "pace": 1.0,
+   "car_k": 1.0,
+   "driver_k": 1.0,
+   "hybrid": false,
+   "drs": true,
+   "practice_min": 60,
+   "quali": "knockout",
+   "reverse_top": 0,
+   "compound_rule": true,
+   "sprint_compound_rule": false,
+   "dry": {
+    "soft": 5,
+    "medium": 6
+   },
+   "dry_sprint": {
+    "soft": 5,
+    "medium": 6
+   },
+   "wet": {
+    "inter": 5,
+    "wet": 2
+   },
+   "return_after_practice": 2,
+   "q3_reserve": true,
+   "restrict_tyres": true,
+   "_notas": "2012 (escolhas do usuário em 2026-11-12): KERS por volta (carga cheia a cada volta, ~6,7 s de uso, o piloto decide quando), DRS a menos de 1 s, dois compostos secos por pista (par real de cada GP; 5 jogos do mais macio + 6 do mais duro), motor/câmbio iguais a 2026, sem regra dos 107%. PROVISÓRIO.",
+   "kers": true
   }
  }
 }

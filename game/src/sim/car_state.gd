@@ -35,6 +35,9 @@ var tyre_wear := 0.0  ## 0 = novo, 1 = totalmente gasto
 var tyre_laps := 0
 var compounds_used: Array[String] = []
 var battery := 0.8  ## carga da bateria (0..1)
+var kers := 1.0  ## 2012: carga do KERS nesta volta (0..1; enche na linha de chegada)
+var kers_on := false  ## 2012: usando o KERS agora
+var kers_plan := "exits"  ## 2012: como o piloto gasta o KERS — defend | exits | attack | max (vem do Ritmo)
 var boost_lap := -1  ## última volta em que usou o modo de ultrapassagem (no máximo uma vez por volta)
 
 # ordens (definidas pelo jogador nos carros dele; pela IA nos demais)

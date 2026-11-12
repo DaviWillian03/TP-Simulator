@@ -104,6 +104,9 @@ func _ready() -> void:
 	dev_flags = not args.is_empty()
 	player_team = args.get("team", player_team)
 	category = String(args.get("category", GameData.category_of(player_team)))  # --category=F2 (com --team=f2_...)
+	if args.has("season"):  # (capturas) --season=2012: Grande Prêmio/corrida com as regras da temporada extra
+		gp_season = String(args["season"])
+		sim_overrides["category"] = Season.category(gp_season)
 	duration_pct = float(args.get("pct", duration_pct))
 	debug_advance_s = float(args.get("advance", "0"))
 	debug_pause = args.has("pause")
@@ -405,6 +408,13 @@ func start_gp() -> void:
 	SaveSlots.delete_weekend("gp")  # começar outro GP descarta o fim de semana salvo
 	var opts := {"player_team": player_team, "duration_pct": duration_pct, "weather": gp_weather,
 		"format": gp_format, "seed": randi(), "category": category}
+	if gp_season != Season.DEFAULT and category == "F1":  # temporada extra (2012…): grid, pilotos e regras daquele ano
+		opts["teams"] = Season.teams(gp_season)
+		opts["drivers"] = Season.drivers(gp_season)
+		opts["category"] = Season.category(gp_season)
+		for rd: Dictionary in Season.calendar(gp_season):
+			if String(rd["id"]) == circuit_id and rd.has("compounds"):
+				opts["dry_pair"] = rd["compounds"]
 	opts.merge(sim_overrides.duplicate(), false)
 	weekend = WeekendSim.new(circuit_id, opts)
 	go_to_weekend()
@@ -559,6 +569,7 @@ func open_world_hub() -> void:
 
 var dev_flags := false  ## alguma opção de desenvolvimento/captura foi passada (pula a abertura)
 var slots_mode := "campaign"  ## o que um slot vazio começa: "campaign" | "world"
+var gp_season := Season.DEFAULT  ## temporada do Grande Prêmio avulso (2026 ou extra, ex.: 2012); a Campanha não usa
 var world_table_mode := "drivers"  ## aba aberta na tela do campeonato: drivers | teams | stats
 var world_table_stat := ""  ## estatística aberta (wins | poles | podiums | dnfs) ou vazio
 var world_result_tab := "result"  ## aba aberta ao entrar no resultado do Mundial: result | champ | stats
