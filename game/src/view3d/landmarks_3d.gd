@@ -470,7 +470,7 @@ func _tunnel(f0: float, f1: float) -> void:
 func _champions_wall(f0: float, f1: float) -> void:
 	var white := _mat(Color("#f4f5f7"), 0.5)
 	var band := _mat(Color("#1f4fa0"), 0.5)
-	var sd := _outer(fposmod(f0 - 0.01, 1.0))
+	var sd := _outer(fposmod(f0 - 0.005, 1.0))  # lado de fora da última perna da chicane
 	_along(f0, f1, 10.0, func(_f: float, p: Vector3, b: Basis, len_m: float) -> void:
 		var c := p + b.x * sd * (Track3D.WIDTH / 2.0 + 1.6)
 		_box(Vector3(1.2, 4.2, len_m + 0.5), Transform3D(b, c + Vector3.UP * 2.1), white)
