@@ -32,6 +32,20 @@ func _ready() -> void:
 				r["stage"] = list.size() + 1
 				list.append(r)
 		_calendar = list
+	# pistas das temporadas extras (2012: Sepang, Bahrein, Hockenheim…) entram no Grande Prêmio para qualquer temporada ou
+	# categoria (pedido de 2026-11-12); no Mundial cada uma fica só no calendário da sua temporada
+	var have := {}
+	for r: Dictionary in Campaign.calendar():  # só pistas que não existem em 2026 (na F2/F3 as etapas continuam as da categoria)
+		have[String(r["id"])] = true
+	for sid: String in Season.ids():
+		for r2: Dictionary in Season.calendar(sid):
+			var cid := String(r2["id"])
+			if have.has(cid) or bool(r2.get("missing", false)) or not FileAccess.file_exists(GameData.DATA_DIR + "circuits/%s.json" % cid):
+				continue
+			have[cid] = true
+			var extra: Dictionary = r2.duplicate()
+			extra["sprint"] = false
+			_calendar.append(extra)
 	_page = ScreenKit.garage_page(self, Session.player_team)
 	var bd: GarageBackdrop = _page["backdrop"]
 	bd.floor_ratio = 1.0

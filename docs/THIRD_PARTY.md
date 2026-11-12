@@ -40,3 +40,5 @@ símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `ga
 ## Sons de menu e logo
 - `game/assets/audio/ui_*.wav` e `menu_music.wav`: síntese própria (`tools/make_sounds.py`), sem amostras de terceiros.
 - Logo e ícone novos: desenho próprio (`tools/make_logo_v2.py`); texto em contornos da fonte Kanit (OFL). Carros genéricos, sem marcas.
+- **bacinger/f1-circuits** (MIT): traçados extras de 2012 — Sepang (`my-1999`), Bahrein (`bh-2002`) e Hockenheim (`de-1932`), via `tools/add_extra_circuits.py`.
+- **flag-icons** 7.2.3 (MIT): bandeiras da Malásia (`my.svg`) e do Bahrein (`bh.svg`) adicionadas em 2026-11-12 (pacote npm).

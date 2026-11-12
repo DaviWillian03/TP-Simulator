@@ -22,7 +22,6 @@
    "date": "2012-03-25",
    "sprint": false,
    "night": false,
-   "missing": true,
    "tyres_real": "M/H",
    "compounds": [
     "medium",
@@ -49,7 +48,6 @@
    "date": "2012-04-22",
    "sprint": false,
    "night": false,
-   "missing": true,
    "tyres_real": "S/M",
    "compounds": [
     "soft",
@@ -129,7 +127,6 @@
    "date": "2012-07-22",
    "sprint": false,
    "night": false,
-   "missing": true,
    "tyres_real": "S/M",
    "compounds": [
     "soft",

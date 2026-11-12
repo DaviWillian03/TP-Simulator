@@ -841,3 +841,10 @@ Respostas do usuário:
   Motor/câmbio iguais a 2026. **Sem** regra dos 107%. Calendário real de 20 GPs com 6 pistas ainda inexistentes (Sepang, Bahrein,
   Valência, Hockenheim, Coreia, Índia). Ainda faltam: equipes, pilotos e forma real de 2012, as pistas, a escolha da temporada na tela
   (mockup) e as fotos (vão para `game/local/`, fora do git). Dev: `--season=2012`.
+- **2026-11-12 — Pistas de 2012: Sepang, Bahrein e Hockenheim** (mesmo acabamento das melhores de 2026, a pedido do usuário):
+  traçado aberto (bacinger/f1-circuits, MIT) no comprimento oficial, zonas de ultrapassagem pelas 3 maiores retas, boxes pela
+  geometria, perfil, relevo leve, bioma do lugar (Sepang: mata; Bahrein: deserto com palmeiras; Hockenheim: floresta com as
+  arquibancadas do Motodrom), zebras, bandeiras (flag-icons, MIT) e arte do cartão (`tools/add_extra_circuits.py`). **No Mundial** cada
+  pista só aparece no calendário da sua temporada; **no Grande Prêmio** as pistas extras somam-se às gerais e valem para qualquer
+  temporada e categoria (2026, 2012, F2, F3). Valência, Coreia e Índia **não têm traçado aberto** no repositório usado e o OpenStreetMap
+  não respondeu daqui: continuam pendentes (`missing` no calendário de 2012). Valores de desempenho PROVISÓRIOS.

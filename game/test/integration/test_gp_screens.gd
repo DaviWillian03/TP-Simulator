@@ -27,7 +27,8 @@ func _weekend_at(session: String) -> WeekendSim:
 
 func test_configuracao_mostra_o_calendario_e_troca_o_circuito() -> void:
 	var screen: Control = await _open("res://src/ui/gp_setup_screen.tscn")
-	assert_eq(screen._rows.size(), 22, "22 GPs no calendário")
+	assert_eq(screen._rows.size(), 25, "22 GPs de 2026 + 3 pistas extras de 2012 (Sepang, Bahrein, Hockenheim)")
+	assert_true(screen._rows.has("sepang") and screen._rows.has("bahrain") and screen._rows.has("hockenheim"))
 	(screen._rows["monaco"] as Button).button_pressed = true
 	assert_eq(Session.circuit_id, "monaco")
 	assert_true((screen._rows["monaco"] as Button).button_pressed, "o cartão escolhido fica marcado")
@@ -274,7 +275,7 @@ func test_gp_da_f2_mostra_so_as_etapas_da_categoria() -> void:
 	var before_team := Session.player_team
 	Session.player_team = "f2_camposracing"
 	var screen: Control = await _open("res://src/ui/gp_setup_screen.tscn")
-	assert_eq(screen._calendar.size(), 14)
+	assert_eq(screen._calendar.size(), 17, "14 etapas da categoria + 3 pistas extras (valem para qualquer categoria)")
 	assert_eq(Session.category, "F2")
 	Session.player_team = before_team
 	Session.category = "F1"
