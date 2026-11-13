@@ -19,7 +19,6 @@ var _slab: Panel
 var _giant: Label
 var _name: Label
 var _car: CarHero
-var _car3d: Control  ## carro 3D girando no pedestal (nova direção dos menus, 2026-11-13); o CarHero 2D fica oculto
 var _info: VBoxContainer
 var _drivers: VBoxContainer
 var _goal: PanelContainer
@@ -83,7 +82,6 @@ func _ready() -> void:
 	_car.position = Vector2(300, 318)
 	_car.custom_minimum_size = Vector2(680, 200)
 	_car.size = Vector2(680, 200)
-	_car.visible = false
 
 	_info = VBoxContainer.new()
 	_info.add_theme_constant_override("separation", 4)
@@ -187,13 +185,6 @@ func _apply() -> void:
 	var drivers: Array = _season_drivers().filter(func(d: Dictionary) -> bool: return d["team"] == _team)
 	var c2 := Color(t.get("color2", "#ffffff"))
 	_car.set_team(_team, int(drivers[0]["number"]) if not drivers.is_empty() else 0, c2 if c2.get_luminance() > 0.35 else Color.WHITE, t)
-	if _car3d != null:
-		_car3d.queue_free()
-	_car3d = CarShowcase3D.turntable(t, Vector2i(1360, 640))
-	_car3d.position = Vector2(300, 250)
-	_car3d.size = Vector2(680, 320)
-	_layer.add_child(_car3d)
-	_layer.move_child(_car3d, _car.get_index())  # atrás dos painéis de vidro
 	_fill_info(t)
 	_fill_drivers(drivers, col)
 	if _goal != null:

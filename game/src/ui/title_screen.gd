@@ -1,6 +1,6 @@
 extends Control
 ## Tela inicial como painel (mockup design/mockups/v39-tela-inicial.html, aprovado em 2026-11-13): fundo vivo com a arte
-## 3D da próxima pista (MenuBackdrop), carro 3D girando no pedestal na pintura da equipe (CarShowcase3D), cartão da
+## 3D da próxima pista (MenuBackdrop), carro ilustrado da equipe (CarHero; o 3D saiu em 2026-11-14), cartão da
 ## próxima corrida com contagem, posição no campeonato, os modos de jogo em lista e a faixa de notícias. Entrada animada:
 ## faixa diagonal na cor da equipe, carro e título deslizando, cartões em sequência e números contando.
 ## Tudo num palco 1280×720 no centro (vale para telas mais largas que 16:9).
@@ -102,10 +102,14 @@ func _team_block() -> void:
 	v.add_child(UiStyle.g_label(name, 54 if name.length() <= 12 else 40, UiStyle.G_TEXT, "black"))
 	_stage.add_child(v)
 	_anim.append(v)
-	var car := CarShowcase3D.turntable(_team, Vector2i(1080, 560))
-	car.position = Vector2(10, 196)
-	car.size = Vector2(620, 320)
+	var car := CarHero.new()  # carro ilustrado (caricato), como antes: o 3D saiu a pedido do usuário (2026-11-14)
 	_stage.add_child(car)
+	car.position = Vector2(20, 250)
+	car.custom_minimum_size = Vector2(620, 200)
+	car.size = Vector2(620, 200)
+	var drivers: Array = GameData.drivers().filter(func(d: Dictionary) -> bool: return String(d["team"]) == String(_team.get("id", "")))
+	var c2 := Color(String(_team.get("color2", "#ffffff")))
+	car.set_team(String(_team.get("id", "")), int(drivers[0]["number"]) if not drivers.is_empty() else 0, c2 if c2.get_luminance() > 0.35 else Color.WHITE, _team)
 	_anim.append(car)
 
 

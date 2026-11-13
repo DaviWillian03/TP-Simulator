@@ -921,3 +921,6 @@ Respostas do usuário:
   girando (`CarShowcase3D`) no lugar do desenho 2D. Toda troca de tela passa por `Session._go()`: duas faixas diagonais
   (cor da equipe + escuro) cobrem a tela, a cena troca por baixo e elas saem (`ScreenTransition`); desligada em execuções
   de desenvolvimento (capturas). 3D: neblina de horizonte leve e, à noite, prédios com janelas acesas e brilho suave.
+- **2026-11-14 — Carro 3D dos menus saiu.** O usuário não gostou dos carros 3D grandes: a tela inicial e a escolha de
+  equipe voltam ao carro ilustrado caricato (`CarHero`). O layout novo da tela inicial (painel, fundo vivo, notícias,
+  transições) fica.
