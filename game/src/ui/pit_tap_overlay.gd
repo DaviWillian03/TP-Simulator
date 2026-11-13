@@ -71,19 +71,6 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_marker.size = Vector2(6, 54)
 	_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_gauge.add_child(_marker)
-	var legend := HBoxContainer.new()
-	var l1 := UiStyle.g_label("cinza %s s" % _secs(PitStop.TAP_MISS_S), 12, UiStyle.G_INK_2)
-	var l2 := UiStyle.g_label("escuro %s s · claro até %s s" % [_secs(PitStop.TAP_PERFECT_S), _secs(PitStop.TAP_GOOD_BEST_S)], 12, UiStyle.G_PIT_GOOD, "black")
-	var l3 := UiStyle.g_label("sem toque %s s" % _secs(PitStop.TAP_NONE_S), 12, UiStyle.G_INK_2)
-	l1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	l2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l3.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	l3.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	legend.add_child(l1)
-	legend.add_child(l2)
-	legend.add_child(l3)
-	v.add_child(legend)
 
 	_result = UiStyle.g_label("", 20, UiStyle.G_INK, "black")
 	_result.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
