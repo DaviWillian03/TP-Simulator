@@ -76,6 +76,7 @@ const SPRINT_POINTS := [8, 7, 6, 5, 4, 3, 2, 1]
 var track: TrackModel
 var tyres: TyreModel
 var weather: WeatherModel
+var forecasts: Dictionary = {}  ## id da equipe -> TeamForecast (cada equipe vê o clima do seu jeito; a IA decide por ela)
 var control: RaceControl
 var radio: RadioSystem
 var cars: Array[CarState] = []
@@ -149,6 +150,11 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	drs = bool(cr.get("drs", false))
 	var rain_p := float(options.get("rain_probability", track.rain_probability))
 	weather = WeatherModel.new(rain_p, total_laps * track.base_lap_time_s * 1.05, rng, options)
+	for t: Dictionary in teams:
+		var tid := String(t["id"])
+		var ids: Array = drivers.filter(func(x: Dictionary) -> bool: return String(x["team"]) == tid).map(func(x: Dictionary) -> String: return String(x["id"]))
+		forecasts[tid] = TeamForecast.new(weather, TeamForecast.skill_for(t, ids), hash("%s|%d" % [tid, int(options.get("seed", 1))]),
+			total_laps * track.base_lap_time_s * 1.05)
 	control = RaceControl.new(self, float(options.get("incident_rate", 1.0)))
 	radio = RadioSystem.new(self)
 	radio.enabled = bool(options.get("radio", true))
@@ -600,6 +606,11 @@ static func points_for(position: int, is_sprint: bool) -> int:
 
 
 ## Regra dos 2 compostos secos (só na corrida principal, com pista seca).
+## Previsão da equipe do carro (a do jogador aparece na folha de clima; a IA decide por ela).
+func forecast_of(team_id: String) -> TeamForecast:
+	return forecasts.get(team_id, null)
+
+
 func compound_rule_ok(car: CarState) -> bool:
 	return sprint or not bool(CategoryRules.of(category).get("compound_rule", true)) or tyres.rule_satisfied(car.compounds_used)
 

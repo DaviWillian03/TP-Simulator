@@ -143,8 +143,11 @@ static func decide_pit(sim: RaceSim, car: CarState) -> void:
 ## Se o tipo de pneu (slick/intermediário/chuva) está errado para a pista e trocar compensa,
 ## retorna o composto a colocar; senão "". Cada piloto reage com um pouco de atraso/variação.
 static func weather_compound(sim: RaceSim, car: CarState, remaining: int) -> String:
-	var w := sim.weather.wetness
-	var trend := 0.06 if sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD else -0.04
+	var w := sim.weather.wetness  # a pista agora (o piloto sente)
+	# o que vem pela frente: a previsão DA EQUIPE (pode errar, como a do jogador); sem previsão, o clima real
+	var fc := sim.forecast_of(String(car.team["id"]))
+	var coming := fc.expected_rain(sim.time_s, sim.track.base_lap_time_s) if fc != null else sim.weather.rain_now()
+	var trend := 0.06 if coming > WeatherModel.RAIN_THRESHOLD else -0.04
 	var judgement := (car.ai_pit_wear - 0.71) * 0.6  # mesmo sorteio do piloto: uns arriscam mais
 	var target := sim.tyres.best_for_wetness(clampf(w + trend + judgement, 0.0, 1.0))
 	if sim.tyres.tyre_class(target) == sim.tyres.tyre_class(car.tyre):
