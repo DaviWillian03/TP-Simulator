@@ -343,7 +343,7 @@ func champions() -> Dictionary:
 # --- save -------------------------------------------------------------------------------------
 
 func to_dict() -> Dictionary:
-	return {"save_version": SaveSlots.VERSION, "season": season, "season_id": season_id, "player_team": player_team, "round": round, "seed_base": seed_base,
+	return {"save_version": SaveSlots.VERSION, "season": season, "season_id": season_id, "player_team": player_team, "round": round, "calendar_n": calendar().size(), "seed_base": seed_base,
 		"driver_points": driver_points, "team_points": team_points, "wins": wins, "poles": poles, "podiums": podiums,
 		"dnfs": dnfs, "history": history, "news": news, "parts": parts.to_dict()}
 
@@ -354,7 +354,7 @@ static func from_dict(d: Dictionary) -> WorldChampionship:
 	w.season_id = String(d.get("season_id", Season.DEFAULT))
 	w.parts.limits = Season.parts_limits(w.season_id).duplicate()
 	w.player_team = String(d.get("player_team", ""))
-	w.round = int(d.get("round", 0))
+	w.round = Campaign.migrate_round(d) if w.season_id == Season.DEFAULT else int(d.get("round", 0))  # Malásia em 2026
 	w.seed_base = int(d.get("seed_base", 1))
 	for k: String in ["driver_points", "team_points", "wins", "poles", "podiums", "dnfs"]:
 		var src: Dictionary = d.get(k, {})

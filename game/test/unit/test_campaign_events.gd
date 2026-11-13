@@ -120,7 +120,7 @@ func test_corrida_cancelada_e_pulada_no_calendario() -> void:
 		if camp.round == wanted:
 			break
 	assert_ne(camp.round, wanted, "a rodada cancelada foi pulada")
-	assert_false(camp.season_over() and camp.round < 22)
+	assert_false(camp.season_over() and camp.round < Campaign.calendar().size())
 
 
 func test_incendio_atrasa_projetos_e_custa_dinheiro() -> void:
@@ -209,7 +209,7 @@ func test_virada_com_eventos_frequentes_mantem_o_grid_valido() -> void:
 			w.simulate_current()
 			camp.record_weekend(w)
 		camp.advance_days(120)
-		camp.round = 22
+		camp.round = Campaign.calendar().size()
 		camp.regs.open_vote(camp)
 		camp.start_next_season()
 		var seen := {}

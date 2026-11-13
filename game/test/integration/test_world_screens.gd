@@ -45,7 +45,7 @@ func test_painel_avisa_a_punicao_de_grid_do_motor() -> void:
 
 
 func test_fim_de_temporada_mostra_campeoes() -> void:
-	Session.world.round = 22
+	Session.world.round = Campaign.calendar().size()
 	Session.world.driver_points["antonelli"] = 300
 	Session.world.team_points["mercedes"] = 500
 	var fin: WorldFinal = await _open("res://src/ui/world_final_screen.tscn")
@@ -70,7 +70,7 @@ func test_escolha_de_equipe_do_mundial_nao_mostra_f2_f3() -> void:
 
 func test_corrida_do_mundial_tem_campeonato_ao_vivo_e_animacao_de_titulo() -> void:
 	var w := Session.world
-	w.round = 21  # última etapa: Abu Dhabi
+	w.round = Campaign.calendar().size() - 1  # última etapa: Abu Dhabi
 	w.driver_points["antonelli"] = 500  # título de pilotos já matematicamente decidido
 	w.team_points["mercedes"] = 900
 	var wk := WeekendSim.new(w.next_round()["id"], w.weekend_options({"weather": "dry", "incident_rate": 0.0, "duration_pct": 0.1}))

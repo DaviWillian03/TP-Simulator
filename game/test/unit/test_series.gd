@@ -74,7 +74,7 @@ func test_sua_equipe_rebaixada_recebe_propostas() -> void:
 	for t: Dictionary in camp.teams():
 		if t["id"] != "williams":
 			camp.team_points[t["id"]] = 100
-	camp.round = 22
+	camp.round = Campaign.calendar().size()
 	camp.trust = 80.0
 	camp.goal_shift = 20
 	var rep := camp.close_season()

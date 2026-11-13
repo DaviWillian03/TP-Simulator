@@ -225,27 +225,28 @@
    "id": "cal_20",
    "kind": "tech",
    "set": {
-    "races": 20
+    "races": 21
    },
    "reset": false,
    "favors": "low",
-   "title": "CALENDÁRIO · 20 CORRIDAS",
+   "title": "CALENDÁRIO · 21 CORRIDAS",
    "desc": "Duas etapas saem do calendário: menos custo de viagem e menos pontos em disputa."
   },
   {
    "id": "cal_22",
    "kind": "tech",
    "set": {
-    "races": 22
+    "races": 23
    },
    "reset": false,
    "favors": "top",
-   "title": "CALENDÁRIO · VOLTAM AS 22 CORRIDAS",
-   "desc": "O calendário volta a ter 22 etapas."
+   "title": "CALENDÁRIO · VOLTAM AS 23 CORRIDAS",
+   "desc": "O calendário volta a ter 23 etapas."
   }
  ],
  "calendar_drop_priority": [
   "madring",
   "lusail"
- ]
+ ],
+ "_notas_calendario": "ids cal_20/cal_22 mantidos por compatibilidade de save; desde 2026-11-14 (GP da Malásia) valem 21 e 23 corridas."
 }

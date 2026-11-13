@@ -85,6 +85,10 @@ def straights(pts, total):
     return sorted(runs, key=lambda r: r[1] - r[0], reverse=True)
 
 
+NOTE = ("23 GPs: Bahrein e Arábia Saudita cancelados (confirmado por busca em 2026-11-01); o GP da Malásia (Sepang) entra na "
+        "data do Bahrein por escolha do usuário (2026-11-14). Datas aproximadas.")
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     calendar = []
@@ -122,9 +126,14 @@ def main():
             data.update({"pit_entry_frac": 0.905, "pit_exit_frac": 0.065})
         (OUT / f"{cid}.json").write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
         calendar.append({"round": rnd, "id": cid, "grand_prix": gp, "date": date, "sprint": sprint, "night": night})
+    # GP da Malásia (pedido do usuário, 2026-11-14): Sepang (traçado de tools/add_extra_circuits.py) na data do Bahrein
+    calendar.append({"round": 0, "id": "sepang", "grand_prix": "GP da Malásia", "date": "2026-04-12", "sprint": False, "night": False})
+    calendar.sort(key=lambda r: r["date"])
+    for i, r in enumerate(calendar):
+        r["round"] = i + 1
     (ROOT / "game/data/calendar_2026.json").write_text(json.dumps({
         "season": 2026,
-        "_notas": "22 GPs: Bahrein e Arábia Saudita cancelados (confirmado por busca em 2026-11-01). Datas aproximadas.",
+        "_notas": NOTE,
         "rounds": calendar}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"{len(calendar)} circuitos")
 

@@ -5,7 +5,7 @@ extends RefCounted
 ## (não só na nota dos carros). Mudanças de motor, aerodinâmica e chassi são "anos de virada" (Campaign.regulation_reset).
 ## Valores PROVISÓRIOS.
 
-const DEFAULT := {"engine": "v6h", "aero": "active", "chassis": "std", "refuel": false, "races": 22}
+const DEFAULT := {"engine": "v6h", "aero": "active", "chassis": "std", "refuel": false, "races": 23}
 
 ## lap: s/volta para todos; energy_k: peso dos modos de energia e da bateria; pitch: som do motor
 const ENGINE := {

@@ -934,3 +934,11 @@ Respostas do usuário:
   25% de chance de atraso de 0,3–1,0 s). Mini-jogo: verde escuro −0,4 s, verde claro de 0 a −0,15 s, cinza +1,0 s e deixar
   passar sem tocar +1,6 s. IA erra paradas: ~14% pequeno atraso (+0,5–1,4 s), ~5% parada lenta (+2–4,5 s), ~1% roda presa
   (+5–10 s); paradas lentas/roda presa aparecem como aviso na corrida.
+- **2026-11-14 — Mapa real em todas as pistas:** as 11 que faltavam (Suzuka, Silverstone, Montreal, Zandvoort, Spielberg,
+  México, Las Vegas, Lusail, Yas Marina, Bahrein, Hockenheim) ganharam o uso do solo do OpenStreetMap (ODbL), prédios em
+  3D, árvores pela máscara e escapes no estilo real (`data/runoff.json`). Pistas de tema "desert" (Bahrein, Catar) usam
+  areia como fundo em vez do mosaico de lavouras. Arte dos cartões regenerada.
+- **2026-11-14 — GP da Malásia em 2026:** Sepang entra como 4ª etapa (12/04, data do Bahrein cancelado), com o nome
+  "GP da Malásia". Calendário com 23 etapas; rodadas da F2/F3 deslocadas; a regra de nº de corridas do Conselho vale
+  21/23 (ids `cal_20`/`cal_22` mantidos). Saves antigos (sem `calendar_n`) são migrados: quem já passou do Japão segue
+  para a mesma próxima corrida (`Campaign.migrate_round`).

@@ -59,5 +59,54 @@
   "colors": [
    "#2a6fd6"
   ]
+ },
+ "suzuka": {
+  "style": "gravel"
+ },
+ "silverstone": {
+  "style": "asphalt",
+  "colors": [
+   "#3a8f4f"
+  ]
+ },
+ "montreal": {
+  "style": "asphalt",
+  "colors": [
+   "#c8102e"
+  ]
+ },
+ "zandvoort": {
+  "style": "gravel"
+ },
+ "spielberg": {
+  "style": "painted",
+  "colors": [
+   "#2b4fa8",
+   "#c8102e"
+  ]
+ },
+ "mexico": {
+  "style": "asphalt",
+  "colors": [
+   "#2f9e5a"
+  ]
+ },
+ "lusail": {
+  "style": "gravel"
+ },
+ "yasmarina": {
+  "style": "asphalt",
+  "colors": [
+   "#2f6fbf"
+  ]
+ },
+ "bahrain": {
+  "style": "asphalt",
+  "colors": [
+   "#3a8f4f"
+  ]
+ },
+ "hockenheim": {
+  "style": "gravel"
  }
 }

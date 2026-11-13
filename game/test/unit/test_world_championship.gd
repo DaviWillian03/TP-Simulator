@@ -39,7 +39,7 @@ func test_pista_com_resultado_real_muda_a_forca_da_equipe() -> void:
 
 func test_temporada_tem_22_gps_e_pilotos_reais() -> void:
 	var w := _w()
-	assert_eq(WorldChampionship.calendar().size(), 22)
+	assert_eq(WorldChampionship.calendar().size(), 23, "22 GPs reais + GP da Malásia")
 	assert_eq(w.drivers().size(), 22)
 	assert_eq(w.next_round()["id"], "albertpark")
 
@@ -99,3 +99,16 @@ func test_save_e_carga_preservam_tudo() -> void:
 	assert_eq(r.player_team, "williams")
 	assert_eq(r.parts.state.size(), w.parts.state.size())
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://_wc_test.json"))
+
+
+func test_gp_da_malasia_e_a_4a_etapa_de_2026() -> void:
+	var cal := Campaign.calendar()
+	assert_eq(String(cal[3]["id"]), "sepang")
+	assert_eq(String(cal[3]["grand_prix"]), "GP da Malásia")
+	assert_eq(String(cal[4]["id"]), "miami")
+
+
+func test_save_antigo_continua_na_mesma_corrida_depois_da_malasia() -> void:
+	assert_eq(Campaign.migrate_round({"round": 2}), 2, "antes da Malásia: ela entra no caminho")
+	assert_eq(Campaign.migrate_round({"round": 3}), 4, "a próxima era Miami: continua Miami")
+	assert_eq(Campaign.migrate_round({"round": 10, "calendar_n": 23}), 10, "save novo não muda")

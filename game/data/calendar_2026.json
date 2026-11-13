@@ -1,6 +1,6 @@
 {
  "season": 2026,
- "_notas": "22 GPs: Bahrein e Arábia Saudita cancelados (confirmado por busca em 2026-11-01). Datas aproximadas.",
+ "_notas": "23 GPs: Bahrein e Arábia Saudita cancelados (confirmado por busca em 2026-11-01); o GP da Malásia (Sepang) entra na data do Bahrein por escolha do usuário (2026-11-14). Datas aproximadas.",
  "rounds": [
   {
    "round": 1,
@@ -28,6 +28,14 @@
   },
   {
    "round": 4,
+   "id": "sepang",
+   "grand_prix": "GP da Malásia",
+   "date": "2026-04-12",
+   "sprint": false,
+   "night": false
+  },
+  {
+   "round": 5,
    "id": "miami",
    "grand_prix": "GP de Miami",
    "date": "2026-05-03",
@@ -35,7 +43,7 @@
    "night": false
   },
   {
-   "round": 5,
+   "round": 6,
    "id": "montreal",
    "grand_prix": "GP do Canadá",
    "date": "2026-05-24",
@@ -43,7 +51,7 @@
    "night": false
   },
   {
-   "round": 6,
+   "round": 7,
    "id": "monaco",
    "grand_prix": "GP de Mônaco",
    "date": "2026-06-07",
@@ -51,7 +59,7 @@
    "night": false
   },
   {
-   "round": 7,
+   "round": 8,
    "id": "barcelona",
    "grand_prix": "GP da Espanha",
    "date": "2026-06-14",
@@ -59,7 +67,7 @@
    "night": false
   },
   {
-   "round": 8,
+   "round": 9,
    "id": "spielberg",
    "grand_prix": "GP da Áustria",
    "date": "2026-06-28",
@@ -67,7 +75,7 @@
    "night": false
   },
   {
-   "round": 9,
+   "round": 10,
    "id": "silverstone",
    "grand_prix": "GP da Grã-Bretanha",
    "date": "2026-07-05",
@@ -75,7 +83,7 @@
    "night": false
   },
   {
-   "round": 10,
+   "round": 11,
    "id": "spa",
    "grand_prix": "GP da Bélgica",
    "date": "2026-07-19",
@@ -83,7 +91,7 @@
    "night": false
   },
   {
-   "round": 11,
+   "round": 12,
    "id": "hungaroring",
    "grand_prix": "GP da Hungria",
    "date": "2026-07-26",
@@ -91,7 +99,7 @@
    "night": false
   },
   {
-   "round": 12,
+   "round": 13,
    "id": "zandvoort",
    "grand_prix": "GP da Holanda",
    "date": "2026-08-23",
@@ -99,7 +107,7 @@
    "night": false
   },
   {
-   "round": 13,
+   "round": 14,
    "id": "monza",
    "grand_prix": "GP da Itália",
    "date": "2026-09-06",
@@ -107,7 +115,7 @@
    "night": false
   },
   {
-   "round": 14,
+   "round": 15,
    "id": "madring",
    "grand_prix": "GP de Madri",
    "date": "2026-09-13",
@@ -115,7 +123,7 @@
    "night": false
   },
   {
-   "round": 15,
+   "round": 16,
    "id": "baku",
    "grand_prix": "GP do Azerbaijão",
    "date": "2026-09-26",
@@ -123,7 +131,7 @@
    "night": false
   },
   {
-   "round": 16,
+   "round": 17,
    "id": "singapore",
    "grand_prix": "GP de Singapura",
    "date": "2026-10-11",
@@ -131,7 +139,7 @@
    "night": true
   },
   {
-   "round": 17,
+   "round": 18,
    "id": "austin",
    "grand_prix": "GP dos Estados Unidos",
    "date": "2026-10-25",
@@ -139,7 +147,7 @@
    "night": false
   },
   {
-   "round": 18,
+   "round": 19,
    "id": "mexico",
    "grand_prix": "GP da Cidade do México",
    "date": "2026-11-01",
@@ -147,7 +155,7 @@
    "night": false
   },
   {
-   "round": 19,
+   "round": 20,
    "id": "interlagos",
    "grand_prix": "GP de São Paulo",
    "date": "2026-11-08",
@@ -155,7 +163,7 @@
    "night": false
   },
   {
-   "round": 20,
+   "round": 21,
    "id": "lasvegas",
    "grand_prix": "GP de Las Vegas",
    "date": "2026-11-21",
@@ -163,7 +171,7 @@
    "night": true
   },
   {
-   "round": 21,
+   "round": 22,
    "id": "lusail",
    "grand_prix": "GP do Catar",
    "date": "2026-11-29",
@@ -171,7 +179,7 @@
    "night": true
   },
   {
-   "round": 22,
+   "round": 23,
    "id": "yasmarina",
    "grand_prix": "GP de Abu Dhabi",
    "date": "2026-12-06",

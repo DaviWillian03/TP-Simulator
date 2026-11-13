@@ -40,7 +40,7 @@ func test_regulamento_inicial_tem_seis_sprints_e_pontos_padrao() -> void:
 
 func test_votacao_so_abre_no_fim_da_temporada() -> void:
 	assert_false(camp.regs.vote_open(camp))
-	camp.round = 22
+	camp.round = Campaign.calendar().size()
 	assert_true(camp.regs.vote_open(camp))
 
 
@@ -131,7 +131,7 @@ func test_pontos_do_conselho_entram_no_resultado_da_corrida() -> void:
 
 
 func test_propostas_se_aplicam_na_virada_e_viram_noticia() -> void:
-	camp.round = 22
+	camp.round = Campaign.calendar().size()
 	camp.regs.open_vote(camp)
 	for p: Dictionary in camp.regs.proposals:
 		camp.regs.cast(p["id"], "y")
@@ -143,7 +143,7 @@ func test_propostas_se_aplicam_na_virada_e_viram_noticia() -> void:
 
 
 func test_salvar_e_carregar_guarda_regras_e_votacao() -> void:
-	camp.round = 22
+	camp.round = Campaign.calendar().size()
 	camp.regs.open_vote(camp)
 	camp.regs.cast(camp.regs.proposals[0]["id"], "y")
 	var copy := Campaign.from_dict(JSON.parse_string(JSON.stringify(camp.to_dict())))

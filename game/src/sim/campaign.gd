@@ -1200,7 +1200,7 @@ func to_dict() -> Dictionary:
 	return {"version": 1, "save_version": SaveSlots.VERSION, "mode": mode, "season": season, "player_team": player_team, "origin": origin.get("id", ""),
 		"identity": identity, "engine": engine, "objective": objective, "detail": detail, "ai_difficulty": ai_difficulty,
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
-		"board_patience": board_patience, "drivers": driver_ids, "round": round, "driver_points": driver_points,
+		"board_patience": board_patience, "drivers": driver_ids, "round": round, "calendar_n": calendar().size(), "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
 		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict(),
 		"series": series.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (series[k] as Series).to_dict(); return acc, {}),
@@ -1228,7 +1228,7 @@ static func from_dict(d: Dictionary) -> Campaign:
 	c.morale = int(d.get("morale", 3))
 	c.board_patience = int(d.get("board_patience", 3))
 	c.driver_ids.assign(d.get("drivers", []))
-	c.round = int(d.get("round", 0))
+	c.round = migrate_round(d)
 	c.driver_points = d.get("driver_points", {})
 	c.team_points = d.get("team_points", {})
 	c.history = d.get("history", [])
@@ -1253,6 +1253,8 @@ static func from_dict(d: Dictionary) -> Campaign:
 		c.sponsors = Sponsorship.from_dict(d["sponsors"])
 	if d.has("regs"):
 		c.regs = Regulations.from_dict(d["regs"])
+		if not d.has("calendar_n"):  # save de antes da Malásia: a regra de nº de corridas ganha a etapa nova
+			c.regs.tech["races"] = int(c.regs.tech.get("races", 22)) + 1
 	if d.has("events"):
 		c.events = CampaignEvents.from_dict(d["events"])
 		for tid: String in c.events.principals:  # chefes trocados por evento
@@ -1320,6 +1322,18 @@ func save(path: String = "") -> bool:
 		return false
 	f.store_string(JSON.stringify(to_dict(), " "))
 	return true
+
+
+## GP da Malásia entrou como 4ª etapa de 2026 (2026-11-14). Save antigo (sem "calendar_n", calendário de 22): quem já
+## passou da 3ª etapa avança um índice, para a próxima corrida continuar a mesma; antes disso, a Malásia entra no caminho.
+const MALAYSIA_INDEX := 3
+
+
+static func migrate_round(d: Dictionary) -> int:
+	var r := int(d.get("round", 0))
+	if not d.has("calendar_n") and r >= MALAYSIA_INDEX:
+		r += 1
+	return r
 
 
 static func load_saved(path: String = "") -> Campaign:

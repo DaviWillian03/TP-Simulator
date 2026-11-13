@@ -53,7 +53,7 @@ func test_fim_da_temporada_credita_o_bonus_da_meta_no_caixa() -> void:
 	c.sponsors.contracts[d["zone"]]["goal_pos"] = 11  # meta folgada: qualquer posição cumpre
 	var before := c.budget_musd
 	var bonus: float = float(c.sponsors.contracts[d["zone"]]["goal_bonus"])
-	c.round = 22
+	c.round = Campaign.calendar().size()
 	c.close_season()
 	assert_gte(c.budget_musd - before, bonus, "bônus entra no caixa (além do prêmio)")
 

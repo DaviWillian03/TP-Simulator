@@ -80,8 +80,8 @@ func test_regulation_reset_brings_the_grid_closer() -> void:
 
 func test_twenty_race_calendar_skips_dropped_rounds() -> void:
 	var camp := Campaign.new_real("williams")
-	camp.regs.tech["races"] = 20
-	assert_eq(camp.regs.race_count(), 20)
+	camp.regs.tech["races"] = 21
+	assert_eq(camp.regs.race_count(), 21)
 	var dropped: Array = camp.regs.dropped_ids()
 	assert_eq(dropped.size(), 2)
 	for i in Campaign.calendar().size():

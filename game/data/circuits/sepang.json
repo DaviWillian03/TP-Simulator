@@ -98,7 +98,7 @@
   "provisorio": "base_lap_time_s, pit_lane_loss_s, overtaking_difficulty, rain_probability, desgaste e relevo são PROVISÓRIOS",
   "zonas": "pontos de freada ao fim das 3 maiores retas, calculados pela geometria",
   "box": "entrada/saída do pit lane calculadas pela geometria; PROVISÓRIO",
-  "temporada": "pista extra (temporada 2012); no Grande Prêmio fica disponível para qualquer temporada/categoria"
+  "temporada": "pista de 2012 que também entra em 2026 como GP da Malásia (na data do Bahrein cancelado, escolha do usuário em 2026-11-14)"
  },
  "points": [
   [

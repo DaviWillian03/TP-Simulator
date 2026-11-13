@@ -18,7 +18,7 @@ func test_propostas_vem_da_metade_de_baixo_do_grid() -> void:
 
 
 func test_aceitar_troca_de_equipe_e_mantem_o_mundo() -> void:
-	camp.round = 22
+	camp.round = Campaign.calendar().size()
 	camp.trust = 0.0
 	var report := camp.close_season()
 	assert_eq(report["verdict"], "fired")

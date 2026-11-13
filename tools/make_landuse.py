@@ -54,6 +54,8 @@ C = {
     "roof": [(201, 194, 181), (169, 163, 154), (176, 122, 100), (190, 184, 172), (150, 152, 156), (205, 200, 190)],
     "shadow": (60, 64, 56), "pitch": (96, 150, 70),
 }
+# deserto (Bahrein, Catar): onde o OSM não tem dado o chão é areia e terra batida, não lavoura (2026-11-14)
+DESERT = [(214, 192, 146), (204, 182, 136), (222, 202, 158), (196, 172, 126), (210, 186, 140)]
 ROAD_W = {"motorway": 16, "trunk": 14, "primary": 11, "secondary": 9, "tertiary": 8, "unclassified": 6, "residential": 6,
           "living_street": 5, "service": 4, "track": 2.2, "path": 1.0, "footway": 1.0, "cycleway": 1.5}
 
@@ -234,9 +236,10 @@ def build(cid):
         if k and wid not in used_in_rel:
             polys[k].append(ring_px(refs))
 
-    img = Image.new("RGB", (tw, th), C["base"])
+    desert = data.get("scenery", {}).get("theme") == "desert"
+    img = Image.new("RGB", (tw, th), DESERT[0] if desert else C["base"])
     d = ImageDraw.Draw(img)
-    _patchwork(d, tw, th, sc, rnd)  # fundo: lavouras em mosaico (onde o OSM não tem dado, parece campo de verdade)
+    _patchwork(d, tw, th, sc, rnd, DESERT if desert else None)  # fundo: lavouras em mosaico (onde o OSM não tem dado, parece campo de verdade)
     mask = Image.new("RGB", (tw, th), (0, 0, 0))
     md = ImageDraw.Draw(mask)
     for k in ORDER:
@@ -353,7 +356,7 @@ def _sea(img, d, md, ways, ring_px, tw, th):
     md.bitmap((0, 0), sea_img, fill=(0, 0, 255))
 
 
-def _patchwork(d, tw, th, sc, rnd):
+def _patchwork(d, tw, th, sc, rnd, palette=None):
     """Mosaico de lavouras retangulares levemente giradas (talhões de 120-320 m), em tons de campo, sob o mapa real."""
     import math as _m
     ang = rnd.uniform(0, _m.pi)
@@ -366,7 +369,7 @@ def _patchwork(d, tw, th, sc, rnd):
         u = -diag
         while u < diag:
             wid = rnd.uniform(120, 320) * sc
-            col = rnd.choice(C["farm"] + [C["base"], C["grass"], C["grass"]])
+            col = rnd.choice(palette or (C["farm"] + [C["base"], C["grass"], C["grass"]]))
             col = tuple(max(0, min(255, c + rnd.randint(-6, 6))) for c in col)
             corners = [(u, v), (u + wid, v), (u + wid, v + hgt), (u, v + hgt)]
             d.polygon([(cx + a * ca - b * sa, cy + a * sa + b * ca) for a, b in corners], fill=col)

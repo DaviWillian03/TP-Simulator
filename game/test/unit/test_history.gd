@@ -25,11 +25,12 @@ func test_corridas_da_campanha_somam_e_o_campeao_entra_no_historico() -> void:
 	var starts0 := int(c.career_of(_driver(c, "norris"))["starts"])
 	while not c.season_over():
 		c._auto_f1_round()
-	assert_eq(int(c.career_of(_driver(c, "norris"))["starts"]), starts0 + 22, "22 GPs (sem sprint)")
+	var gps := Campaign.calendar().size()
+	assert_eq(int(c.career_of(_driver(c, "norris"))["starts"]), starts0 + gps, "um GP por etapa (sem sprint)")
 	var wins := 0
 	for id: String in c.season_log:
 		wins += int(c.season_log[id]["wins"])
-	assert_eq(wins, 22, "uma vitória por GP")
+	assert_eq(wins, gps, "uma vitória por GP")
 	c.feeder_close_season()
 	assert_eq(c.champions.size(), 1)
 	var ch: Dictionary = c.champions[0]
@@ -41,7 +42,7 @@ func test_corridas_da_campanha_somam_e_o_campeao_entra_no_historico() -> void:
 	assert_true(c.save(PATH))
 	var l := Campaign.load_saved(PATH)
 	assert_eq(l.champions.size(), 1)
-	assert_eq(int(l.career_of(_driver(l, "norris"))["starts"]), starts0 + 22)
+	assert_eq(int(l.career_of(_driver(l, "norris"))["starts"]), starts0 + gps)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH))
 
 

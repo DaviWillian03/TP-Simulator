@@ -172,7 +172,7 @@ func test_demissao_quando_a_confianca_acaba() -> void:
 
 func test_fim_de_temporada_cumprida_sobe_a_meta_e_vira_o_ano() -> void:
 	var c := Campaign.new_real("mclaren")
-	c.round = 22
+	c.round = Campaign.calendar().size()
 	c.team_points = {"mclaren": 400, "mercedes": 300}
 	c.driver_points = {"norris": 200}
 	var goal := c.season_goal()
@@ -191,7 +191,7 @@ func test_fim_de_temporada_falhada_tira_confianca_conforme_a_paciencia() -> void
 	var impaciente := Campaign.new_created(SPEC.merged({"origin": "investor"}, true))
 	var paciente := Campaign.new_created(SPEC.merged({"origin": "garage"}, true))
 	for c: Campaign in [impaciente, paciente]:
-		c.round = 22
+		c.round = Campaign.calendar().size()
 		c.team_points = {}  # 12º, longe da meta
 	var t_imp := impaciente.trust
 	var t_pac := paciente.trust

@@ -81,7 +81,7 @@ func test_conselho_fora_da_janela_so_mostra_as_regras() -> void:
 
 
 func test_conselho_no_fim_da_temporada_abre_votacao_e_registra_voto() -> void:
-	camp.round = 22
+	camp.round = Campaign.calendar().size()
 	var screen: Control = await _open("res://src/ui/campaign_council_screen.tscn")
 	assert_eq(camp.regs.proposals.size(), 4, "3 esportivas + 1 técnica")
 	var pid: String = camp.regs.proposals[0]["id"]

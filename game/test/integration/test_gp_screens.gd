@@ -220,7 +220,7 @@ func test_sede_avanca_o_tempo_e_leva_ao_fim_de_semana() -> void:
 
 func test_relatorio_fecha_a_temporada_uma_unica_vez() -> void:
 	var c := Campaign.new_real("mclaren")
-	c.round = 22
+	c.round = Campaign.calendar().size()
 	Session.campaign = c
 	var screen: Control = await _open("res://src/ui/campaign_report_screen.tscn")
 	assert_eq(c.seasons.size(), 1)
@@ -275,7 +275,7 @@ func test_gp_da_f2_mostra_so_as_etapas_da_categoria() -> void:
 	var before_team := Session.player_team
 	Session.player_team = "f2_camposracing"
 	var screen: Control = await _open("res://src/ui/gp_setup_screen.tscn")
-	assert_eq(screen._calendar.size(), 20, "14 etapas da categoria + 6 pistas extras (valem para qualquer categoria)")
+	assert_eq(screen._calendar.size(), 19, "14 etapas da categoria + 5 pistas extras (valem para qualquer categoria; Sepang agora é etapa da F1 2026)")
 	assert_eq(Session.category, "F2")
 	Session.player_team = before_team
 	Session.category = "F1"
