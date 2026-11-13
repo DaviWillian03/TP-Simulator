@@ -55,7 +55,7 @@ das escolhas técnicas.
   Tela inicial = painel (`title_screen`: `MenuBackdrop` + carro ilustrado `CarHero`, mockup v39); GP, fim de semana e Início da campanha usam `ScreenKit.live_backdrop` + `glass_box` + `stagger_in` (v40). Telas de acabamento: `settings_screen`, `slots_screen`, `splash_screen` (main scene), `HelpSheet` + `Tips` (`data/help.json`); sons de menu em `src/audio/ui_sound.gd`.
   Dev: `--settings`, `--slots[=world]`, `--ui=help`. Logo: `tools/make_logo_v2.py --install`. Dados reais: `tools/enrich_team_info.py`, `tools/add_real_round.py`.
 - `test/unit`, `test/integration` — GUT. `tools/race_report.gd` — relatório de corridas simuladas. `tools/balance_report.gd` —
-  calibra carro × piloto × resto (meta 55/25/20; `--incidents=0 --weather=dry`). `CarForm` = forma da equipe em cada GP.
+  calibra carro × piloto × resto (meta 55/25/20; `--incidents=0 --weather=dry`). `CarForm` = forma da equipe em cada GP (só F2/F3). F1: `RaceMeta` (sorteio interno e secreto: meta de paradas 20/35/45% e forma do carro por faixa 45/35/20%, plano às cegas; `tools/meta_report.gd` e `tools/meta_check.gd` calibram) e `GameData.F1_SPREAD` (+10%).
 - Notas: pilotos F1 em `tools/enrich_drivers.py` (PROFILE), base/agentes livres em `tools/rescale_feeder_ratings.py`, carros em `tools/enrich_teams.py`.
 - Raiz: `tools/make_logo.py` (logo), `tools/make_emblems.py` (emblemas), `tools/make_car_art.py`
   (carro ilustrado por equipe), `tools/make_icons.py` (ícones), `tools/geojson_to_track.py`.
