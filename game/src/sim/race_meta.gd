@@ -107,14 +107,42 @@ static func _pick(share: Array, roll: float) -> Variant:
 ## mais rápida nesta duração. Sem efeitos do regulamento (wear_k entra por cima, na corrida).
 ## 1 parada fica perto da fronteira com 2 (o pneu ainda gasta de verdade); 2 e 3, no meio da faixa.
 static func wear_factor(stops: int, track: TrackModel, tyres: TyreModel, duration_pct: float) -> float:
+	var key := "f|%s|%.2f|%s|%.1f|%d" % [track.id, duration_pct, ",".join(PackedStringArray(tyres.dry_compounds())), track.pit_lane_loss_s, stops]
+	if _wear_cache.has(key):
+		return float(_wear_cache[key])
 	var b := boundaries(track, tyres, duration_pct)
-	match stops:
-		1:
-			return b[0] * 0.8
-		2:
-			return sqrt(b[0] * b[1])
-		_:
-			return sqrt(b[1] * b[2])
+	var lo: float = b[0] * 0.5 if stops <= 1 else b[mini(stops, 3) - 2]
+	var hi: float = b[mini(stops, 3) - 1]
+	# dentro da faixa em que o plano mais rápido tem `stops` paradas, prefere onde a IA (que decide pela vida do pneu)
+	# também chega a `stops`: assim o meta é o que a pista mostra de verdade
+	var total := maxi(3, roundi(track.laps * duration_pct))
+	var div := pow(duration_pct, RaceSim.WEAR_SHORT_RACE_EXP)
+	var ok: Array = []
+	for i in 17:
+		var f := lo * pow(hi / lo, (i + 0.5) / 17.0)
+		if ai_stops(tyres, total, f / div) == stops:
+			ok.append(f)
+	var out: float
+	if ok.is_empty():
+		out = hi * 0.8 if stops <= 1 else sqrt(lo * hi)
+	elif stops <= 1:
+		out = float(ok[roundi((ok.size() - 1) * 0.8)])  # 1 parada: perto do limite (o pneu ainda gasta de verdade)
+	else:
+		out = float(ok[ok.size() / 2])
+	_wear_cache[key] = out
+	return out
+
+
+## Paradas que a IA planeja pela vida do pneu (StrategyAI._plan_from, sem a aposta): largada de médio, depois o duro.
+static func ai_stops(tyres: TyreModel, total: int, mult: float) -> int:
+	var dry := tyres.dry_compounds()
+	var start: String = "medium" if dry.has("medium") else String(dry[0])
+	var life_now := tyres.expected_life_laps(start, mult) * 0.9
+	var life_hard := tyres.expected_life_laps(String(dry[dry.size() - 1]), mult)
+	var n := 1
+	while life_now + life_hard * n < total and n < 6:
+		n += 1
+	return n
 
 
 ## Fatores em que o plano mais rápido passa de 1→2, 2→3 e 3→4 paradas (cache por pista, duração e compostos).
