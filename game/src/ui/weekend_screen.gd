@@ -24,6 +24,8 @@ var _program_holder: VBoxContainer
 
 func _ready() -> void:
 	Tips.show_once.call_deferred(self, "weekend")
+	if Session.debug_ui == "forecast":  # (captura) --ui=forecast abre a previsão do fim de semana
+		_open_forecast.call_deferred()
 	weekend = Session.weekend
 	if weekend == null:
 		Session.go_to_title.call_deferred()
@@ -126,8 +128,9 @@ func _hero(r: Rect2, team: Dictionary) -> Control:
 	var days := HBoxContainer.new()
 	days.add_theme_constant_override("separation", 8)
 	var today := -1 if weekend.is_over() else weekend.day_of(weekend.session_id())
+	var tf := weekend.team_forecast(weekend.player_team)  # previsão da SUA equipe (pode errar), v38
 	for d in 3:
-		var pr: float = weekend.forecast[d]
+		var pr: float = float(tf[d]["chance"])
 		var box := PanelContainer.new()
 		var st := UiStyle.g_box(Color(0.04, 0.05, 0.07, 0.8), 14, 10, 6)
 		if d == today:
@@ -136,15 +139,28 @@ func _hero(r: Rect2, team: Dictionary) -> Control:
 		box.add_theme_stylebox_override("panel", st)
 		var v := VBoxContainer.new()
 		v.add_theme_constant_override("separation", 0)
-		var ic := ScreenKit.icon("sun" if pr < 0.2 else ("mixed" if pr < 0.5 else "rain"), 24, Color("#F5C542") if pr < 0.2 else Color("#9fd2ff"))
+		var ic := ScreenKit.icon(_sky_icon(pr), 24, UiStyle.G_SUN if pr < 0.2 else UiStyle.G_RAIN_LIGHT)
 		ic.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		v.add_child(ic)
 		var dl := UiStyle.g_label("%s · %d%%" % [String(WeekendSim.DAYS[d]).substr(0, 3).to_lower(), roundi(pr * 100)], 13, UiStyle.G_TEXT, "black")
 		dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		v.add_child(dl)
+		v.add_child(_conf_dots(float(tf[d]["confidence"]), 10))
 		box.add_child(v)
 		days.add_child(box)
-	ScreenKit.place(days, p, Control.PRESET_BOTTOM_RIGHT, Vector2(-18, -16))
+	var days_btn := Button.new()  # toque nos dias: folha da previsão do fim de semana
+	days_btn.flat = true
+	days_btn.focus_mode = Control.FOCUS_NONE
+	days_btn.tooltip_text = "Previsão do fim de semana"
+	for st2: String in ["normal", "hover", "pressed", "hover_pressed"]:
+		days_btn.add_theme_stylebox_override(st2, StyleBoxEmpty.new())
+	days_btn.add_child(days)
+	days.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for c in days.get_children():
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	days_btn.pressed.connect(_open_forecast)
+	days.resized.connect(func() -> void: days_btn.custom_minimum_size = days.size)
+	ScreenKit.place(days_btn, p, Control.PRESET_BOTTOM_RIGHT, Vector2(-18, -16))
 	return p
 
 
@@ -349,7 +365,7 @@ func _practice_tiles() -> Control:
 	h.add_theme_constant_override("separation", 10)
 	var sk := _skills_of(_my_drivers()[0]["id"]) if not _my_drivers().is_empty() else {}
 	var dname := String(sk.get("director_name", ""))
-	var p: float = weekend.forecast[weekend.day_of(weekend.session_id())]
+	var p: float = float(weekend.team_forecast(weekend.player_team)[weekend.day_of(weekend.session_id())]["chance"])
 	for t: Array in [["shield", str(roundi(float(sk.get("director", 0)))), "Diretor de engenharia de pista" + (" · " + dname if dname != "" else "")],
 			["rain", "%d%%" % roundi(p * 100), "chance de chuva · %s" % String(WeekendSim.DAYS[weekend.day_of(weekend.session_id())]).to_lower()]]:
 		var tile := PanelContainer.new()
@@ -393,23 +409,76 @@ func _session_title(id: String) -> String:
 	return weekend.session_name(id)
 
 
-func _forecast_row() -> Control:
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 10)
-	for day in 3:
-		var p: float = weekend.forecast[day]
-		var card := ScreenKit.g_card(UiStyle.G_SURFACE, 16, 16, 12)
+## Folha "Previsão do fim de semana" (mockup v38-2): recado da engenharia e um cartão por dia, tudo pela SUA equipe.
+func _open_forecast() -> void:
+	var team := GameData.team_by_id(weekend.teams, weekend.player_team)
+	var sh := ScreenKit.sheet("Previsão do fim de semana", 1000, UiStyle.team_accent(team))
+	var body: VBoxContainer = sh["body"]
+	var tf := weekend.team_forecast(weekend.player_team)
+	var today := 2 if weekend.is_over() else weekend.day_of(weekend.session_id())
+	var quote := ScreenKit.g_card(Color(1, 1, 1, 0.05), 18, 16, 12)
+	var qh := HBoxContainer.new()
+	qh.add_theme_constant_override("separation", UiStyle.SP_M)
+	qh.add_child(ScreenKit.icon("headset", 30, UiStyle.team_accent(team)))
+	var qv := VBoxContainer.new()
+	qv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sk := _skills_of(_my_drivers()[0]["id"]) if not _my_drivers().is_empty() else {}
+	var dname := String(sk.get("director_name", ""))
+	qv.add_child(UiStyle.g_caption("Engenharia de pista" + (" · " + dname if dname != "" else "")))
+	var race := float(tf[2]["chance"])
+	var msg := "\"Domingo deve ser seco. Seguimos de olho.\"" if race < 0.25 else ("\"Domingo pode ter chuva; a confiança cresce a cada dia.\"" if race < 0.55 else "\"Domingo tem cara de chuva. Vamos preparar o carro para os dois cenários.\"")
+	var q := UiStyle.g_label(msg, 20, UiStyle.G_TEXT, "black")
+	q.set_meta("keep_case", true)
+	q.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	qv.add_child(q)
+	qh.add_child(qv)
+	quote.add_child(qh)
+	body.add_child(quote)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", UiStyle.SP_M)
+	var names := ["TL1 · TL2", "TL3 · classificação", "corrida"]
+	for d in 3:
+		var pr := float(tf[d]["chance"])
+		var card := ScreenKit.g_card(Color(1, 1, 1, 0.05), 18, 14, 14)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", UiStyle.SP_M)
-		row.add_child(ScreenKit.icon("sun" if p < 0.2 else ("mixed" if p < 0.5 else "rain"), 30, Color("#dfe3ea")))
 		var v := VBoxContainer.new()
-		v.add_theme_constant_override("separation", -2)
-		v.add_child(UiStyle.g_caption(WeekendSim.DAYS[day]))
-		v.add_child(UiStyle.g_label("%d%% chuva" % roundi(p * 100), 21, UiStyle.G_TEXT, "black"))
-		row.add_child(v)
-		card.add_child(row)
-		h.add_child(card)
+		v.add_theme_constant_override("separation", 6)
+		v.alignment = BoxContainer.ALIGNMENT_CENTER
+		for item: Control in [UiStyle.g_caption(WeekendSim.DAYS[d] + (" · hoje" if d == today else "")),
+				UiStyle.g_label(names[d], 12, UiStyle.G_TEXT_3, "bold"), ScreenKit.icon(_sky_icon(pr), 60, UiStyle.G_SUN if pr < 0.2 else UiStyle.G_RAIN_LIGHT),
+				UiStyle.g_label("%d%%" % roundi(pr * 100), 30, UiStyle.G_TEXT, "black"),
+				UiStyle.g_label(_sky_text(pr), 14, UiStyle.G_TEXT, "black"), _conf_dots(float(tf[d]["confidence"]), 22)]:
+			item.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			if item is Label:
+				(item as Label).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			v.add_child(item)
+		card.add_child(v)
+		row.add_child(card)
+	body.add_child(row)
+	add_child(sh["root"])
+
+
+static func _sky_icon(p: float) -> String:
+	return "sun" if p < 0.2 else ("cloud" if p < 0.35 else ("drizzle" if p < 0.55 else "rain"))
+
+
+static func _sky_text(p: float) -> String:
+	return "seco" if p < 0.2 else ("nublado" if p < 0.35 else ("pancadas" if p < 0.55 else "chuva provável"))
+
+
+## Confiança da previsão em 5 tracinhos amarelos.
+static func _conf_dots(conf: float, w: float) -> Control:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 3)
+	h.alignment = BoxContainer.ALIGNMENT_CENTER
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var filled := clampi(roundi(conf * 5.0), 1, 5)
+	for k in 5:
+		var seg := ColorRect.new()
+		seg.custom_minimum_size = Vector2(w, 5)
+		seg.color = UiStyle.G_DIRECTOR if k < filled else Color(1, 1, 1, 0.14)
+		seg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		h.add_child(seg)
 	return h
 
 

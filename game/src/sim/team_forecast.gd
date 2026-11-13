@@ -130,3 +130,34 @@ func expected_rain(now: float, lap_time: float, laps: float = 1.5) -> float:
 	for i in 4:
 		sum += perceived_at(now + lap_time * laps * (i + 1) / 4.0, now, lap_time)
 	return sum / 4.0
+
+
+## Umidade da pista que a equipe espera ao fim de cada uma das próximas `laps` voltas (mesma física do WeatherModel,
+## com a chuva que ela prevê). Base do aviso "intermediário passa a valer a partir da volta ~N".
+func wetness_ahead(now: float, lap_time: float, laps: int = 12) -> Array[float]:
+	var out: Array[float] = []
+	var w := weather.wetness
+	var dt := lap_time / 6.0
+	for k in laps:
+		for i in 6:
+			var t := now + k * lap_time + (i + 0.5) * dt
+			var r := perceived_at(t, now, lap_time)
+			if r > WeatherModel.RAIN_THRESHOLD:
+				w += dt * r * WeatherModel.WET_RATE
+			else:
+				w -= dt * WeatherModel.DRY_RATE * (0.8 + 0.4 * weather.rubber)
+			w = clampf(w, 0.0, 1.0)
+		out.append(w)
+	return out
+
+
+## Primeira volta (deslocamento a partir de agora) em que outro tipo de pneu passa a valer, pela previsão:
+## {"lap": n, "compound": c} ou {} se nada muda no horizonte.
+func tyre_switch(now: float, lap_time: float, tyres: TyreModel, current_tyre: String, laps: int = 12) -> Dictionary:
+	var cls := tyres.tyre_class(current_tyre)
+	var ahead := wetness_ahead(now, lap_time, laps)
+	for k in ahead.size():
+		var best := tyres.best_for_wetness(ahead[k])
+		if tyres.tyre_class(best) != cls:
+			return {"lap": k + 1, "compound": best}
+	return {}

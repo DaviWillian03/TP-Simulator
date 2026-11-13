@@ -289,7 +289,7 @@ func _build_top_bar() -> void:
 	_weather_btn.add_theme_font_size_override("font_size", UiStyle.fs(13))
 	for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
 		_weather_btn.add_theme_stylebox_override(st, _glass_pill())
-	_weather_btn.pressed.connect(func() -> void: _drawer.open_tab(3))
+	_weather_btn.pressed.connect(func() -> void: WeatherSheet.open(sim, _my_team_id(), _layer))  # folha de clima (v38)
 	ScreenKit.press_feedback(_weather_btn)
 	bar.add_child(_weather_btn)
 
@@ -370,6 +370,8 @@ func _connect_sim_signals() -> void:
 		cel.setup.call_deferred(demo)
 		if Session.debug_ui != "champ":
 			cel._show_poster.call_deferred()
+	if Session.debug_ui == "weather":  # (captura) --ui=weather abre a folha de clima
+		WeatherSheet.open(sim, _my_team_id(), _layer)
 	if Session.debug_ui == "plan":  # (captura) --ui=plan mostra o aviso da estratégia
 		for c in sim.cars:
 			if c.is_player:
@@ -438,8 +440,9 @@ func _refresh_ui() -> void:
 	_update_plan_banners()
 	var rain := sim.weather.rain_label()
 	_meta.text = sim.track.short_name
-	_weather_btn.text = " " + RadarWidget.chip_text(sim)
-	_weather_btn.icon = load("res://assets/icons/%s.svg" % ("rain" if sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD else ("mixed" if rain != "sem chuva" else "sun")))
+	_weather_btn.text = " " + WeatherSheet.chip_text(sim, _my_team_id())
+	var chip_icon := "rain" if sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD else ("drizzle" if WeatherSheet.chip_text(sim, _my_team_id()).contains("chuva na v") else "sun")
+	_weather_btn.icon = load("res://assets/icons/%s.svg" % chip_icon)
 	_refresh_flag()
 	_check_championship()
 	# com o cartão do campeonato na tela, os avisos da corrida descem para não ficar por baixo dele

@@ -1,7 +1,8 @@
 class_name DataDrawer
 extends PanelContainer
 ## Menu DADOS: informações completas da corrida, abertas por cima do mapa sem pausar.
-## Abas: Todos (todos os pilotos), Meus pilotos (detalhes), Voltas (tempos recentes) e Clima (radar de chuva).
+## Abas: Todos (todos os pilotos), Meus pilotos (detalhes) e Voltas (tempos recentes). O clima tem folha própria
+## (WeatherSheet, aberta pelo selo do clima na barra do topo).
 ## Tabelas no estilo Garagem (TimingTable "garage"), linhas do jogador na cor da equipe.
 
 signal closed
@@ -25,7 +26,7 @@ func setup(p_sim: RaceSim) -> void:
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 14)
 	head.add_child(UiStyle.g_label("DADOS DA CORRIDA", 22, UiStyle.G_TEXT, "black"))
-	var tabs := ScreenKit.segmented([[0, "Todos"], [1, "Meus pilotos"], [2, "Voltas"], [3, "Clima"]], 0, _select)
+	var tabs := ScreenKit.segmented([[0, "Todos"], [1, "Meus pilotos"], [2, "Voltas"]], 0, _select)  # clima: folha própria (v38)
 	_tabs = tabs
 	head.add_child(tabs)
 	head.add_child(UiStyle.hspacer())

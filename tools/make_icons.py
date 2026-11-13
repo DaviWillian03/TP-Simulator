@@ -17,6 +17,10 @@ ICONS = {
     "bell": '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
     "smile": '<circle cx="12" cy="12" r="9"/><path d="M8 14c1 1.5 2.4 2.2 4 2.2s3-.7 4-2.2M9 9h.01M15 9h.01"/>',
     "play": '<path d="M7 4l13 8-13 8z"/>',
+    # clima (folha de clima, 2026-11-13): nuvem, garoa e temporal
+    "cloud": '<path d="M7 17a4 4 0 1 1 1-7.9A5 5 0 0 1 17.5 11 3.5 3.5 0 0 1 17 18H7"/>',
+    "drizzle": '<path d="M7 15a4 4 0 1 1 1-7.9A5 5 0 0 1 17.5 9 3.5 3.5 0 0 1 17 16H7"/><path d="M9 19v.5M13 19v.5M17 19v.5"/>',
+    "storm": '<path d="M7 14a4 4 0 1 1 1-7.9A5 5 0 0 1 17.5 8 3.5 3.5 0 0 1 17 15H7"/><path d="M13 15l-2 3.5h3L12 22"/><path d="M8 18l-1 2M18 18l-1 2"/>',
     "wind": '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/>',
     "sim": '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
     "pen": '<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>',

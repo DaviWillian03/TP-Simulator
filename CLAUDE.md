@@ -17,7 +17,7 @@ das escolhas técnicas.
 - `data/` — JSON orientado a dados (equipes, pilotos, pneus, circuitos). Valores de desempenho
   marcados PROVISÓRIO até a pesquisa de atributos.
 - `src/sim/` — simulação **sem dependência de tela**: RaceSim (orquestra), TrackModel, TyreModel,
-  WeatherModel (clima/radar), RaceControl (incidentes, bandeiras, punições), StartModel (largada: fator sorteado + habilidade em `data/start_skill.json`), RadioSystem (rádio),
+  WeatherModel (clima real), TeamForecast (previsão de cada equipe: erra pelo pessoal, nunca 100%; a IA decide por ela; folha `WeatherSheet` aberta pelo selo do clima, dev `--ui=weather`; fim de semana `WeekendSim.team_forecast`, dev `--ui=forecast`), RaceControl (incidentes, bandeiras, punições), StartModel (largada: fator sorteado + habilidade em `data/start_skill.json`), RadioSystem (rádio),
   StrategyAI (IA), Missions (missões do stint: o piloto dosa ritmo e bateria; a IA usa as mesmas); fim de semana: WeekendSim (sessões, previsão, grids, pontos), CarSetup (acerto),
   PracticeSession (programas de blocos), TyreAllocation (jogos de pneus reais do fim de semana), RaceStrategy (planos dos
   engenheiros; na corrida só avisam), QualiSim (Q1/Q2/Q3; cortes pelo nº de carros);
@@ -49,7 +49,7 @@ das escolhas técnicas.
 - `src/audio/race_audio.gd` — som da corrida (sons originais de `tools/make_sounds.py` em `assets/audio/`).
   Na pista 3D cada carro é um disco plano na cor da equipe com o número do piloto (`CarMarker3D`; do jogador: maior, com anel);
   zoom só por pinça. A pista mostra corrida ou classificação via `TrackFeed` (adaptador). Corrida e classificação usam a pista em
-  tela cheia com painéis de vidro (`UiStyle.G_GLASS`, `ScreenKit.top_shade`/`glass_*`); radar de chuva fica em Dados > Clima.
+  tela cheia com painéis de vidro (`UiStyle.G_GLASS`, `ScreenKit.top_shade`/`glass_*`); clima fica na `WeatherSheet` (selo do topo).
 - `src/core/session.gd` — autoload `Session` (escolhas do menu + opções de desenvolvimento).
   Também em `src/core/`: `Settings` (opções do jogador, `user://settings.json`) e `SaveSlots` (3 slots, `save_version`, migração do save antigo). **Autosave do fim de semana**: `WeekendSim.to_save()/from_save()` + `SaveSlots.save_weekend/load_weekend` (após cada sessão via sinal `session_done`; a corrida em andamento não é salva); dev `--worldrace`, `--worldresume`, `--ui=pitback`.
   Telas de acabamento: `settings_screen`, `slots_screen`, `splash_screen` (main scene), `HelpSheet` + `Tips` (`data/help.json`); sons de menu em `src/audio/ui_sound.gd`.

@@ -157,6 +157,27 @@ func _make_forecast() -> void:
 				forecast.append(snappedf(clampf(p, 0.0, 0.95), 0.05))
 
 
+## Previsão do fim de semana VISTA PELA EQUIPE (2026-11-13): para cada dia, {chance, confidence}. A chance real fica
+## em `forecast` (é ela que sorteia a chuva); a equipe erra conforme o pessoal e a distância (dias à frente).
+## Nunca é exata: confiança no máximo 92%.
+func team_forecast(team_id: String) -> Array:
+	var team := GameData.team_by_id(teams, team_id)
+	var ids: Array = drivers.filter(func(d: Dictionary) -> bool: return String(d["team"]) == team_id).map(func(d: Dictionary) -> String: return String(d["id"]))
+	var skill := TeamForecast.skill_for(team, ids) if not team.is_empty() else 62.0
+	var s := clampf((skill - 50.0) / 40.0, 0.0, 1.0)
+	var today := day_of(session_id()) if not is_over() else 2
+	var rng := RandomNumberGenerator.new()
+	var out: Array = []
+	for day in forecast.size():
+		rng.seed = hash("%s|%d|%d|%d" % [team_id, int(_init_options.get("seed", 0)), day, today])  # muda a cada dia
+		var ahead := maxi(day - today, 0)
+		var sigma := lerpf(0.32, 0.12, s) * (0.45 + 0.35 * ahead)
+		var est := clampf(float(forecast[day]) + rng.randfn(0.0, 1.0) * sigma, 0.02, 0.95)
+		var conf := clampf(lerpf(0.45, 0.85, s) - 0.13 * ahead, 0.2, TeamForecast.CONF_MAX)
+		out.append({"chance": snappedf(est, 0.05), "confidence": conf})
+	return out
+
+
 # --- sessão atual -----------------------------------------------------------------------
 
 func session_id() -> String:

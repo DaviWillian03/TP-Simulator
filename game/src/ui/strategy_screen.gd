@@ -41,7 +41,7 @@ func _ready() -> void:
 	head.add_child(back)
 	var titles := VBoxContainer.new()
 	titles.add_theme_constant_override("separation", -2)
-	var rain := int(roundf(weekend.forecast[2] * 100)) if weekend.forecast.size() > 2 else 0
+	var rain := int(roundf(float(weekend.team_forecast(weekend.player_team)[2]["chance"]) * 100)) if weekend.forecast.size() > 2 else 0  # previsão da equipe
 	titles.add_child(UiStyle.g_caption("Antes da largada · %d voltas · %d%% chuva" % [int(ctx["total_laps"]), rain]))
 	titles.add_child(UiStyle.g_label("ESTRATÉGIA DA %s" % ("SPRINT" if bool(ctx.get("is_sprint", ctx["sprint"])) else "CORRIDA"), 30, UiStyle.G_TEXT, "black"))
 	head.add_child(titles)

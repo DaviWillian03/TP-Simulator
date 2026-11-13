@@ -266,6 +266,10 @@ const G_ASPHALT_BOTTOM := Color("#0b0d11")  ## ... e embaixo
 const G_KERB_RED := Color("#c8102e")  ## zebra
 const G_KERB_WHITE := Color("#e9e9e9")
 const G_PODIUM_SHADE := Color(0.02, 0.025, 0.035)  ## véu escuro sobre a bandeira do pódio
+const G_RAIN := Color("#5fb0ff")  ## clima: barras de chance de chuva
+const G_RAIN_LIGHT := Color("#cfe6ff")  ## clima: ícones e números
+const G_SUN := Color("#F5C542")  ## clima: sol
+const G_WET_SCALE := [Color("#c9b27a"), Color("#7fa7d6"), Color("#2f6fd6"), Color("#163e8c")]  ## seca → encharcada
 const G_OFF := Color(1, 1, 1, 0.04)
 const G_FRAME := Color(0.039, 0.047, 0.063, 0.82)  ## barra do topo e barra de ícones da campanha (v26)
 ## Cor de destaque de cada seção da campanha (v26): o ícone e o título da seção usam a mesma cor.
