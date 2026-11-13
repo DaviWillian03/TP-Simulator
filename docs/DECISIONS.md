@@ -902,3 +902,9 @@ Respostas do usuário:
   original, a partir de dados abertos (OSM, ODbL). O vídeo de referência não pôde ser aberto (YouTube bloqueado na nuvem).
 - **2026-11-13 — Mapa real em mais 6 pistas (sorteio):** Buddh, Albert Park, Barcelona, Miami, Coreia e Monza (além de Spa,
   Interlagos, Sepang e Hungaroring). Áreas sem dado no OSM viram mosaico de lavouras; contornos incompletos são descartados.
+- **2026-11-13 — Escapes e mais pistas com mapa real.** A faixa de grama listrada saiu: nas pistas com mapa real, 12 m de
+  grama natural e escapes no estilo de cada circuito (`data/runoff.json`: brita, asfalto com faixa pintada ou asfalto
+  todo pintado — Interlagos verde/azul, Miami turquesa, Austin azul/vermelho), mais largos nas curvas fechadas. Mar pela
+  linha costeira do OSM (Mônaco, Baku, Valência). Mapa real em 17 pistas: Spa, Interlagos, Sepang, Hungaroring, Buddh,
+  Albert Park, Barcelona, Miami, Coreia, Monza, Valência, Austin, Xangai, Singapura, Baku, Madri e Mônaco. As demais
+  ficam para depois; próxima etapa: menus e animações.

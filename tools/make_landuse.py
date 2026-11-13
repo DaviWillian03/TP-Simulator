@@ -256,6 +256,8 @@ def build(cid):
             elif k == "water":
                 md.polygon(poly, fill=(0, 0, 255))
 
+    _sea(img, d, md, ways, ring_px, tw, th)  # mar: no OSM só existe a linha da costa (terra à esquerda, mar à direita)
+
     # ruas e ferrovias (linhas por largura real)
     for wid, (refs, tags) in ways.items():
         hw = tags.get("highway")
@@ -302,7 +304,8 @@ def build(cid):
 
     # faixa da pista limpa (grama): o asfalto e as áreas de escape são a malha 3D do jogo
     track_px = [px(x, y) for x, y in pts] + [px(*pts[0])]
-    d.line(track_px, fill=C["grass"], width=int(46 * sc), joint="curve")
+    street = bool(data.get("scenery", {}).get("street", False))  # rua: a faixa é asfalto/calçada, não grama
+    d.line(track_px, fill=(150, 146, 138) if street else C["grass"], width=int((30 if street else 46) * sc), joint="curve")
     md.line(track_px, fill=(0, 0, 0), width=int(80 * sc), joint="curve")
 
     img = _texture(img, rnd)
@@ -318,6 +321,36 @@ def build(cid):
                   "box = [x0, z0, x1, z1] da textura em metros do jogo; buildings = [altura, planta [[x, z]...], cor do telhado].",
         "box": [round(v, 1) for v in box], "buildings": buildings}, separators=(",", ":")), encoding="utf-8")
     print(f"{cid}: {len(files)} pedaços, {sum(len(v) for v in polys.values())} áreas, {len(buildings)} prédios, textura {tw}x{th}")
+
+
+def _sea(img, d, md, ways, ring_px, tw, th):
+    """Pinta o mar a partir das linhas de costa (natural=coastline): sementes logo à direita de cada trecho, preenchimento
+    limitado pelas próprias linhas. Se o preenchimento "vazar" (costa incompleta na área), o mar é descartado."""
+    lines = [ring_px(refs) for refs, tags in ways.values() if tags.get("natural") == "coastline"]
+    lines = [l for l in lines if len(l) > 1]
+    if not lines:
+        return
+    bar = Image.new("L", (tw, th), 0)
+    bd = ImageDraw.Draw(bar)
+    for l in lines:
+        bd.line(l, fill=255, width=3)
+    for l in lines:
+        for i in range(0, len(l) - 1, max(1, len(l) // 6)):
+            (x0, y0), (x1, y1) = l[i], l[i + 1]
+            dx, dy = x1 - x0, y1 - y0
+            n = math.hypot(dx, dy)
+            if n < 1:
+                continue
+            sx, sy = int((x0 + x1) / 2 - dy / n * 6), int((y0 + y1) / 2 + dx / n * 6)  # à direita do sentido da via
+            if 0 <= sx < tw and 0 <= sy < th and bar.getpixel((sx, sy)) == 0:
+                ImageDraw.floodfill(bar, (sx, sy), 128)
+    a = np.asarray(bar)
+    sea = a == 128
+    if sea.mean() > 0.8 or sea.mean() < 0.002:  # vazou (ou nada): não arrisca pintar terra de azul
+        return
+    sea_img = Image.fromarray((sea * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(3))
+    img.paste(C["water"], mask=sea_img)
+    md.bitmap((0, 0), sea_img, fill=(0, 0, 255))
 
 
 def _patchwork(d, tw, th, sc, rnd):
