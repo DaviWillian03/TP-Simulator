@@ -887,3 +887,11 @@ Respostas do usuário:
   tremulando em tela cheia (`WavingFlag`, shader de onda), véu escuro em degradê, holofotes sobre cada degrau na cor da
   equipe e base do palco. Grid: asfalto com as marcações das posições em perspectiva e zebras (`GridAsphalt`), bandeira
   do país tremulando no alto se fundindo no asfalto, brilho na cor da equipe atrás de cada cartão e bandeira no título.
+- **2026-11-13 — Clima: nova tela e previsão por equipe (respostas do usuário; mockup v38 a aprovar).**
+  Folha grande aberta pelo selo do clima na barra do topo (sai a aba Clima do DADOS; corrida segue atrás). Conteúdo:
+  linha do tempo das próximas voltas (chance + intensidade), opinião do engenheiro da sua equipe e pista/pneu agora
+  (estado da pista, pneu mais rápido, momento previsto da troca). Incerteza: faixa de voltas + confiança, que estreita
+  conforme a chuva se aproxima. Precisão: **só o pessoal atual** (diretor de engenharia de pista + engenheiros de corrida);
+  nenhuma equipe acerta 100%; erro **entre moderado e alto**. **A IA decide pela própria previsão** (mesmo nível de
+  informação do jogador). Fora da campanha: pessoal real de 2026 (2012: engenheiros com fonte + nota pela força da
+  equipe). O painel do fim de semana também passa a mostrar a previsão da equipe, com faixa e confiança.
