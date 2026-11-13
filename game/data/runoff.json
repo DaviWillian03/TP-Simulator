@@ -1,0 +1,63 @@
+{
+ "_notas": "Estilo das áreas de escape de cada circuito (2026-11-13), pelas fotos aéreas reais: gravel = brita bege após uma faixa de asfalto; asphalt = asfalto com faixa pintada (cor 0) junto à zebra; painted = asfalto pintado (cor 0) com faixa (cor 1) junto à zebra. Sem entrada: estilo clássico do jogo.",
+ "spa": {
+  "style": "asphalt",
+  "colors": [
+   "#2f6fbf"
+  ]
+ },
+ "interlagos": {
+  "style": "painted",
+  "colors": [
+   "#2f9e5a",
+   "#2a6fd6"
+  ]
+ },
+ "sepang": {
+  "style": "gravel"
+ },
+ "hungaroring": {
+  "style": "gravel"
+ },
+ "buddh": {
+  "style": "asphalt",
+  "colors": [
+   "#c8102e"
+  ]
+ },
+ "albertpark": {
+  "style": "gravel"
+ },
+ "barcelona": {
+  "style": "gravel"
+ },
+ "miami": {
+  "style": "painted",
+  "colors": [
+   "#2aa3a3",
+   "#2a6fd6"
+  ]
+ },
+ "yeongam": {
+  "style": "asphalt",
+  "colors": [
+   "#2a6fd6"
+  ]
+ },
+ "monza": {
+  "style": "gravel"
+ },
+ "austin": {
+  "style": "painted",
+  "colors": [
+   "#2a5fb8",
+   "#c8102e"
+  ]
+ },
+ "shanghai": {
+  "style": "asphalt",
+  "colors": [
+   "#2a6fd6"
+  ]
+ }
+}

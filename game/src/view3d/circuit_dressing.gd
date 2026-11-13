@@ -20,6 +20,9 @@ var asphalt: StandardMaterial3D
 var w := Track3D.WIDTH / 2.0
 var side := -1.0  ## lado do pit lane
 var street := false  ## circuito de rua: calçada e muros colados na pista, sem brita
+var real_map := false  ## pista com o mapa real (OSM): grama natural estreita, escapes no estilo do circuito (2026-11-13)
+var vw := VERGE_W  ## largura do gramado de cada lado
+var runoff: Dictionary = {}  ## estilo dos escapes (data/runoff.json)
 var _vc: StandardMaterial3D
 var _cache: Dictionary = {}
 
@@ -32,6 +35,11 @@ func build(p_t3: Track3D, p_root: Node3D, p_asphalt: StandardMaterial3D, p_teams
 	night = p_night
 	side = t3.track.pit_side
 	street = bool(t3.track.scenery.get("street", false))
+	real_map = FileAccess.file_exists("res://data/scenery/%s.json" % String(t3.track.id))
+	var all_runoff: Dictionary = GameData.load_json(GameData.DATA_DIR + "runoff.json") if FileAccess.file_exists(GameData.DATA_DIR + "runoff.json") else {}
+	runoff = all_runoff.get(String(t3.track.id), {})
+	if real_map:
+		vw = 12.0
 	_vc = Materials3D.vertex_color(0.7)
 	_vc.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_verges()
@@ -69,7 +77,7 @@ func _box(size: Vector3, xf: Transform3D, mat: Material) -> MeshInstance3D:
 
 ## Altura do gramado aparado a x metros do eixo (desce linearmente até o terreno).
 func _verge_lift(x: float) -> float:
-	return -VERGE_DROP * clampf((absf(x) - w) / VERGE_W, 0.0, 1.0)
+	return -VERGE_DROP * clampf((absf(x) - w) / vw, 0.0, 1.0)
 
 
 func _pit_side_zone(i: int) -> bool:
@@ -92,7 +100,7 @@ func _verges() -> void:
 	if street:
 		_sidewalks()
 		return
-	var stripes := Materials3D.mowed_grass()
+	var stripes := Materials3D.mowed_grass() if not real_map else Materials3D.ground(Color("#6f8f4a"))  # mapa real: grama natural
 	stripes.cull_mode = BaseMaterial3D.CULL_DISABLED
 	if night:
 		stripes.albedo_color = Color(0.5, 0.55, 0.68)
@@ -100,9 +108,9 @@ func _verges() -> void:
 		# trecho sobre ponte (scenery.spans.bridge): sem gramado ao lado, para não cobrir a pista que passa por baixo
 		var normal := func(i: int) -> bool: return not (s == side and _pit_side_zone(i)) and not _on_bridge(i)
 		if s > 0:
-			_mesh(t3.band(w, w + VERGE_W, 0.0, -VERGE_DROP, 12.0, normal), stripes)
+			_mesh(t3.band(w, w + vw, 0.0, -VERGE_DROP, 12.0, normal), stripes)
 		else:
-			_mesh(t3.band(-w - VERGE_W, -w, -VERGE_DROP, 0.0, 12.0, normal), stripes)
+			_mesh(t3.band(-w - vw, -w, -VERGE_DROP, 0.0, 12.0, normal), stripes)
 	# lado do pit lane: plano até a borda de fora do pit lane; no trecho do paddock, plano até o fim dele; depois desce
 	var lane_out := w + Track3D.PIT_GAP + Track3D.PIT_LANE_W + 3.0
 	var pad_out := lane_out + PADDOCK_DEPTH
@@ -149,6 +157,9 @@ func _sidewalks() -> void:
 func _runoff() -> void:
 	if street:
 		return
+	if not runoff.is_empty():
+		_styled_runoff()
+		return
 	var tarmac := Materials3D.ground(Color("#56606e"))
 	tarmac.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var gravel := Materials3D.ground(Color("#c2a46a"))
@@ -165,6 +176,50 @@ func _runoff() -> void:
 		else:
 			_mesh(t3.band(-a1, -a0, _verge_lift(a1) + 0.05, _verge_lift(a0) + 0.05, 8.0, mask), tarmac)
 			_mesh(t3.band(-a2, -a1, _verge_lift(a2) + 0.05, _verge_lift(a1) + 0.05, 8.0, mask), gravel)
+
+
+## Largura do escape (a partir da zebra): mais largo nas curvas fechadas (freada forte).
+func _runoff_w(sharp: bool) -> float:
+	return 38.0 if sharp else 24.0
+
+
+func _sharp(i: int) -> bool:
+	for k in range(-5, 6):
+		if t3.curvature[(i + k + t3.n) % t3.n] > 0.22:
+			return true
+	return false
+
+
+## Escapes no estilo real do circuito (data/runoff.json): brita, asfalto com faixa pintada ou asfalto todo pintado.
+func _styled_runoff() -> void:
+	var style := String(runoff.get("style", "gravel"))
+	var cols: Array = runoff.get("colors", [])
+	var tarmac := Materials3D.ground(Color("#5a6270"))
+	var gravel := Materials3D.ground(Color("#cdb27a"))
+	var fill: StandardMaterial3D = gravel if style == "gravel" else (tarmac if style == "asphalt" else Materials3D.ground(Color(String(cols[0]))))
+	var strip: StandardMaterial3D = tarmac
+	if style == "asphalt" and cols.size() > 0:
+		strip = Materials3D.ground(Color(String(cols[0])))
+	elif style == "painted" and cols.size() > 1:
+		strip = Materials3D.ground(Color(String(cols[1])))
+	for m: StandardMaterial3D in [fill, strip]:
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		if night:
+			m.albedo_color = Color(0.5, 0.55, 0.68)
+	var k := Track3D.KERB_W
+	var strip_w := 3.0
+	for s: float in [-1.0, 1.0]:
+		for sharp: bool in [false, true]:
+			var mask := func(i: int) -> bool: return t3.outside_side(i) == s and not (s == side and _pit_side_zone(i)) and _sharp(i) == sharp
+			var a0 := w + k
+			var a1 := a0 + strip_w
+			var a2 := a0 + _runoff_w(sharp)
+			if s > 0:
+				_mesh(t3.band(a0, a1, _verge_lift(a0) + 0.06, _verge_lift(a1) + 0.06, 8.0, mask), strip)
+				_mesh(t3.band(a1, a2, _verge_lift(a1) + 0.05, _verge_lift(a2) + 0.05, 8.0, mask), fill)
+			else:
+				_mesh(t3.band(-a1, -a0, _verge_lift(a1) + 0.06, _verge_lift(a0) + 0.06, 8.0, mask), strip)
+				_mesh(t3.band(-a2, -a1, _verge_lift(a2) + 0.05, _verge_lift(a1) + 0.05, 8.0, mask), fill)
 
 
 ## Barreira de pneus (vermelho/branco) atrás da brita; no resto da volta, muro baixo com placas coloridas.
@@ -187,10 +242,10 @@ func _barriers() -> void:
 	for s: float in [-1.0, 1.0]:
 		var tyres := func(i: int) -> bool: return t3.outside_side(i) == s and not (s == side and _pit_side_zone(i))
 		var boards := func(i: int) -> bool: return t3.outside_side(i) != s and not (s == side and _pit_side_zone(i))
-		var off := s * (w + k + 23.0)
+		var off := s * (w + k + (_runoff_w(false) + 1.0 if not runoff.is_empty() else 23.0))
 		var mi := _mesh(t3.wall(off, 1.3, tyres, Color("#d42020"), Color("#f2f2f2")), _vc)
 		mi.position.y = _verge_lift(off)
-		var off2 := s * (w + 14.0)
+		var off2 := s * (w + (vw if real_map else 14.0))
 		var mb := _mesh(t3.wall_palette(off2, 1.25, boards, AD_COLORS, 5), _vc)
 		mb.position.y = _verge_lift(off2)
 
