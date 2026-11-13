@@ -908,3 +908,7 @@ Respostas do usuário:
   linha costeira do OSM (Mônaco, Baku, Valência). Mapa real em 17 pistas: Spa, Interlagos, Sepang, Hungaroring, Buddh,
   Albert Park, Barcelona, Miami, Coreia, Monza, Valência, Austin, Xangai, Singapura, Baku, Madri e Mônaco. As demais
   ficam para depois; próxima etapa: menus e animações.
+- **2026-11-13 — Nova direção dos menus (escolhas do usuário):** fundo 3D vivo (voo lento e desfocado sobre a próxima
+  pista com o mapa real), animações e transições (faixa diagonal na cor da equipe, cartões em sequência, toque que afunda,
+  números contando, vibração leve), carro 3D girando na pintura da equipe e a tela inicial como painel (próxima corrida
+  com contagem, posição no campeonato, faixa de notícias). Começa pela tela inicial (mockup v39).

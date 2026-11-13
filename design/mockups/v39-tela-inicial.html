@@ -1,0 +1,63 @@
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>V39 · Tela inicial</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#07080b;font-family:Kanit,system-ui,sans-serif;color:#fff;text-transform:uppercase;padding:24px;display:flex;flex-direction:column;gap:28px;align-items:center}
+.cap{color:#8f98a7;font-weight:800;letter-spacing:2px;font-size:13px;align-self:flex-start;margin-left:calc(50% - 640px)}
+.f{width:1280px;height:720px;position:relative;overflow:hidden;border-radius:6px;background:#0b0d12}
+.bg{position:absolute;inset:-30px;background:url(../../game/assets/tracks/interlagos.jpg) center/cover;filter:blur(7px) saturate(1.15) brightness(.55);transform:scale(1.08)}
+.shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,8,11,.92) 0%,rgba(7,8,11,.55) 45%,rgba(7,8,11,.15) 70%,rgba(7,8,11,.55) 100%),linear-gradient(0deg,rgba(7,8,11,.85),rgba(7,8,11,0) 40%)}
+.stripe{position:absolute;top:-40px;bottom:-40px;width:120px;background:#1868DB;transform:skewX(-18deg);opacity:.85}
+.logo{position:absolute;left:36px;top:26px;font-size:30px;font-weight:900;font-style:italic;letter-spacing:1px}
+.logo small{display:block;font-size:11px;letter-spacing:3px;color:#c3c9d3;font-style:normal}
+.top{position:absolute;right:30px;top:28px;display:flex;gap:10px}
+.ic{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;font-weight:900}
+.team{position:absolute;left:36px;top:108px}
+.team .h{color:#8f98a7;font-weight:900;letter-spacing:3px;font-size:12px}
+.team b{display:block;font-size:46px;font-weight:900;line-height:1}
+.car{position:absolute;left:40px;top:205px;width:560px;height:250px}
+.car img{width:100%;position:relative;z-index:2}
+.turn{position:absolute;left:60px;right:60px;bottom:-6px;height:70px;border-radius:50%;background:radial-gradient(ellipse at center,#1868DB66 0%,rgba(0,0,0,0) 70%);border:2px solid rgba(255,255,255,.12)}
+.spin{position:absolute;left:250px;bottom:-30px;font-size:12px;color:#8f98a7;font-weight:800;letter-spacing:2px}
+.glass{background:rgba(12,15,22,.72);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);border-radius:20px}
+.next{position:absolute;right:30px;top:90px;width:470px;height:250px;overflow:hidden}
+.next .art{position:absolute;inset:0;background:url(../../game/assets/tracks/interlagos.jpg) center/cover;transform:scale(1.15)}
+.next .fade{position:absolute;inset:0;background:linear-gradient(0deg,rgba(7,8,11,.95),rgba(7,8,11,.1) 65%)}
+.next .in{position:absolute;left:20px;right:20px;bottom:16px}
+.k{color:#c3c9d3;font-weight:900;letter-spacing:2.5px;font-size:12px}
+.gp{font-size:32px;font-weight:900;line-height:1.05}
+.cd{display:flex;gap:10px;margin-top:10px}
+.cd span{background:rgba(255,255,255,.1);border-radius:10px;padding:6px 10px;font-weight:900;font-size:22px;min-width:62px;text-align:center}
+.cd span small{display:block;font-size:10px;color:#8f98a7;letter-spacing:2px}
+.go{position:absolute;right:20px;bottom:18px;height:52px;padding:0 22px;border-radius:12px;background:#e10600;display:flex;align-items:center;font-weight:900;font-size:18px;clip-path:polygon(0 0,92% 0,100% 25%,100% 100%,0 100%)}
+.champ{position:absolute;right:270px;top:356px;width:230px;height:150px;padding:16px}
+.ring{width:86px;height:86px;border-radius:50%;background:conic-gradient(#1868DB 0 62%,rgba(255,255,255,.1) 62% 100%);display:grid;place-items:center;float:left;margin-right:12px}
+.ring i{width:66px;height:66px;border-radius:50%;background:#0f131b;display:grid;place-items:center;font-style:normal;font-size:28px;font-weight:900}
+.modes{position:absolute;right:30px;top:356px;width:224px;display:flex;flex-direction:column;gap:8px}
+.mode{height:46px;border-radius:12px;display:flex;align-items:center;gap:10px;padding:0 14px;font-weight:900;font-size:15px}
+.ticker{position:absolute;left:0;right:0;bottom:0;height:46px;background:rgba(7,8,11,.88);border-top:2px solid #1868DB;display:flex;align-items:center;gap:26px;padding:0 20px;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden}
+.ticker b{background:#e10600;padding:3px 10px;border-radius:6px;font-size:12px;letter-spacing:2px}
+.dot{color:#1868DB}
+.note{position:absolute;background:#ffd24a;color:#111;font-weight:900;font-size:11px;border-radius:8px;padding:4px 8px;letter-spacing:.5px;text-transform:none;max-width:210px}
+.seq{display:flex;gap:16px}
+.mini{width:404px;height:227px;position:relative;overflow:hidden;border-radius:8px;background:#0b0d12}
+.mini .lbl{position:absolute;left:10px;bottom:8px;font-size:12px;font-weight:900;letter-spacing:1.5px;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:6px}
+</style><body><div class="cap">1 · Tela inicial como painel (fundo 3D vivo, carro 3D, próxima corrida, campeonato, notícias, modos)</div><div class="f"><div class="bg"></div><div class="shade"></div>
+<div class="logo">F1 GUIDELINES<small>temporada 2026</small></div>
+<div class="top"><span class="ic">?</span><span class="ic">⚙</span></div>
+<div class="team"><span class="h">Sua equipe · campanha</span><b>WILLIAMS</b></div>
+<div class="car"><div class="turn"></div><img src="../../game/assets/cars/williams.svg"><span class="spin">⟲ carro 3D girando</span></div>
+<div class="next glass"><div class="art"></div><div class="fade"></div><div class="in">
+ <div class="k">Próxima corrida · rodada 20</div><div class="gp">GP DE SÃO PAULO</div>
+ <div class="cd"><span>03<small>dias</small></span><span>14<small>h</small></span><span>☁ 35%<small>chuva</small></span></div></div>
+ <div class="go">CONTINUAR ›</div></div>
+<div class="champ glass"><div class="ring"><i>5º</i></div><div class="k" style="margin-top:6px">Campeonato</div>
+ <div style="font-size:26px;font-weight:900">142 PTS</div><div style="font-size:12px;color:#7fe0b1;font-weight:900">▲ 2 posições</div></div>
+<div class="modes">
+ <div class="mode glass" style="background:#e10600">🏆 CAMPANHA</div>
+ <div class="mode glass">▶ GRANDE PRÊMIO</div>
+ <div class="mode glass">🌐 MUNDIAL F1</div>
+ <div class="mode glass">👑 HISTÓRIA</div></div>
+<div class="ticker"><b>NOTÍCIAS</b><span>Sainz renova até 2028 <span class="dot">●</span></span><span>Albon: "o carro novo chega em Interlagos" <span class="dot">●</span></span><span>Chuva prevista para o domingo em São Paulo <span class="dot">●</span></span><span>Williams sobe para 5º no campeonato</span></div>
+<span class="note" style="left:470px;top:150px">fundo: voo lento e desfocado sobre a próxima pista (mapa real)</span>
+<span class="note" style="left:40px;top:470px">carro 3D na pintura da equipe girando no pedestal</span>
+<span class="note" style="right:520px;top:520px">números contam até o valor ao abrir</span>
+</div><div class="cap">2 · Animação de entrada (0,0 s → 0,9 s)</div><div class="seq"><div class="mini"><div class="bg" style="inset:-10px"></div><div class="shade"></div><div class="stripe" style="left:150px"></div><div class="stripe" style="left:290px;opacity:.5;width:50px"></div><span class="lbl">1 · faixa na cor da equipe varre a tela</span></div><div class="mini"><div class="bg" style="inset:-10px"></div><div class="shade"></div><img src="../../game/assets/cars/williams.svg" style="position:absolute;left:30px;top:70px;width:240px;opacity:.9"><div style="position:absolute;left:24px;top:24px;font-size:24px;font-weight:900">WILLIAMS</div><span class="lbl">2 · carro gira e entra; título desliza</span></div><div class="mini"><div class="bg" style="inset:-10px"></div><div class="shade"></div><div class="glass" style="position:absolute;right:16px;top:20px;width:170px;height:90px"></div><div class="glass" style="position:absolute;right:16px;top:120px;width:170px;height:40px;opacity:.6"></div><div class="glass" style="position:absolute;right:16px;top:168px;width:170px;height:40px;opacity:.3"></div><span class="lbl">3 · cartões entram um a um</span></div></div></body></html>
