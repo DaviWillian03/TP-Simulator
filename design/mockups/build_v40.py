@@ -1,0 +1,93 @@
+"""V40 · Linguagem nova da tela inicial (v39) nas outras telas (2026-11-14): fundo vivo com a arte da pista desfocada
+(MenuBackdrop), painéis de vidro, carro ilustrado (CarHero), cartões entrando em sequência e transição de faixas.
+Quadros: 1 configuração do Grande Prêmio, 2 painel do fim de semana, 3 Início da campanha.
+Uso: python design/mockups/build_v40.py"""
+import pathlib
+
+HERE = pathlib.Path(__file__).parent
+TC = "#1868DB"
+ART = "../../game/assets/tracks/{}.jpg"
+CAR = "../../game/assets/cars/williams.svg"
+
+CSS = """
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#07080b;font-family:Kanit,system-ui,sans-serif;color:#fff;text-transform:uppercase;padding:24px;display:flex;flex-direction:column;gap:28px;align-items:center}
+.cap{color:#8f98a7;font-weight:800;letter-spacing:2px;font-size:13px;align-self:flex-start;margin-left:calc(50% - 640px)}
+.f{width:1280px;height:720px;position:relative;overflow:hidden;border-radius:6px;background:#0b0d12}
+.bg{position:absolute;inset:-30px;background-size:cover;background-position:center;filter:blur(7px) saturate(1.1) brightness(.55);transform:scale(1.08)}
+.shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,8,11,.85),rgba(7,8,11,.35) 50%,rgba(7,8,11,.6)),linear-gradient(0deg,rgba(7,8,11,.8),rgba(7,8,11,0) 45%)}
+.glass{position:absolute;background:rgba(12,15,22,.72);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:16px}
+.k{color:#c3c9d3;font-weight:900;letter-spacing:2.5px;font-size:12px}
+.t{font-size:30px;font-weight:900;line-height:1.05}
+.card{position:absolute;width:210px;height:300px;border-radius:18px;background-size:cover;background-position:center;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(7,8,11,.95),rgba(7,8,11,0) 55%)}
+.card span{position:absolute;left:14px;bottom:14px;z-index:2;font-weight:900;font-size:19px}
+.card.sel{outline:4px solid #fff;transform:scale(1.06)}
+.chip{display:inline-block;background:rgba(255,255,255,.12);border-radius:8px;padding:4px 10px;font-weight:900;font-size:13px;margin-right:6px}
+.go{position:absolute;height:56px;padding:0 26px;border-radius:12px;background:#e10600;display:flex;align-items:center;font-weight:900;font-size:20px;clip-path:polygon(0 0,93% 0,100% 25%,100% 100%,0 100%)}
+.seg{display:inline-flex;background:rgba(255,255,255,.08);border-radius:22px;padding:4px}
+.seg i{font-style:normal;padding:8px 16px;border-radius:18px;font-weight:900;font-size:14px;color:#a2a9b5}.seg i.on{background:#fff;color:#111}
+.em{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:12px;font-weight:900;font-size:13px;margin:0 6px 6px 0}
+.ses{display:flex;gap:8px}.ses div{flex:1;height:56px;border-radius:14px;background:rgba(255,255,255,.07);display:flex;align-items:center;gap:8px;padding:0 10px;font-weight:900;font-size:14px}
+.ses div b{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#2f6fd6}
+.ses div.on{background:#fff;color:#111}
+.tile{position:absolute;border-radius:18px;background:rgba(12,15,22,.72);border:1px solid rgba(255,255,255,.08);padding:14px;font-weight:900}
+.tile small{display:block;color:#8f98a7;font-size:11px;letter-spacing:2px}
+.note{position:absolute;background:#ffd24a;color:#111;font-weight:900;font-size:11px;border-radius:8px;padding:4px 8px;text-transform:none;max-width:230px}
+"""
+
+
+def gp():
+    cards = ""
+    for i, (tid, name) in enumerate([("mexico", "Cidade do México"), ("interlagos", "São Paulo"), ("lasvegas", "Las Vegas"), ("lusail", "Catar"), ("yasmarina", "Abu Dhabi")]):
+        cards += f'<div class="card{" sel" if tid == "interlagos" else ""}" style="left:{40 + i * 240}px;top:96px;background-image:url({ART.format(tid)})"><span>{name}</span></div>'
+    teams = "".join(f'<span class="em" style="background:{c}">{t}</span>' for t, c in [("MC", "#ff8000"), ("M", "#00a19b"), ("F", "#dc0000"), ("RB", "#1e41ff"), ("W", "#1868DB"), ("RB", "#2b4562")])
+    return f"""<div class="f"><div class="bg" style="background-image:url({ART.format('interlagos')})"></div><div class="shade"></div>
+<div style="position:absolute;left:40px;top:24px"><div class="k">Grande Prêmio</div><span class="seg"><i class="on">2026</i><i>2012</i></span></div>
+<div style="position:absolute;right:40px;top:28px" class="seg"><i class="on">F1</i><i>F2</i><i>F3</i></div>
+{cards}
+<div class="glass" style="left:40px;right:40px;bottom:24px;height:200px"><div style="display:flex;gap:40px">
+<div><div class="k">Equipe</div><div style="margin-top:8px;width:310px">{teams}</div></div>
+<div><div class="k">Duração</div><span class="seg" style="margin-top:8px"><i class="on">25%</i><i>50%</i><i>100%</i></span><div class="k" style="margin-top:16px">Clima</div><span class="seg" style="margin-top:8px"><i class="on">Realista</i><i>Seco</i><i>Chuva</i></span></div></div>
+<div class="go" style="right:16px;bottom:16px">COMEÇAR FIM DE SEMANA ›</div></div>
+<span class="note" style="left:530px;top:72px">fundo = pista escolhida, desfocada; troca com fade ao escolher outro cartão</span>
+</div>"""
+
+
+def weekend():
+    return f"""<div class="f"><div class="bg" style="background-image:url({ART.format('spa')})"></div><div class="shade"></div>
+<div style="position:absolute;left:40px;top:28px"><div class="k">Fim de semana · Williams</div><div class="t" style="font-size:44px">🇧🇪 BÉLGICA</div></div>
+<div style="position:absolute;right:40px;top:30px"><span class="chip">SEX ☀ 10%</span><span class="chip">SÁB ☁ 45%</span><span class="chip">DOM 🌧 70%</span></div>
+<div style="position:absolute;left:40px;right:40px;top:120px" class="ses"><div class="on"><b>T1</b>TL1 · agora</div><div><b>T2</b>TL2</div><div><b>T3</b>TL3</div><div><b style="background:#7b4fd6">Q</b>Classificação</div><div><b style="background:#e10600">R</b>Corrida</div></div>
+<div class="glass" style="left:40px;top:196px;width:700px;height:420px"><div class="k">Próxima sessão</div><div class="t" style="font-size:50px;margin-top:6px">TREINO LIVRE 1</div>
+<img src="{CAR}" style="width:520px;margin-top:40px"></div>
+<div class="glass" style="left:760px;top:196px;width:480px;height:300px"><div class="k">Acerto · Albon</div><div style="margin-top:20px;font-weight:900;line-height:2.2">AERODINÂMICA ▬▬▬▭▭ 49%<br>MECÂNICO ▬▬▬▭▭ 45%<br>EQUILÍBRIO ▬▬▭▭▭ 40%</div></div>
+<div class="go" style="left:40px;bottom:24px">SIMULAR TREINO LIVRE 1 ›</div>
+<span class="note" style="left:430px;top:220px">carro ilustrado da equipe (CarHero), entra deslizando</span>
+</div>"""
+
+
+def campaign():
+    return f"""<div class="f"><div class="bg" style="background-image:url({ART.format('monza')})"></div><div class="shade"></div>
+<div style="position:absolute;left:0;right:0;top:0;height:64px;background:rgba(7,8,11,.7);display:flex;align-items:center;gap:16px;padding:0 24px;font-weight:900"><span style="color:{TC}">◆ WILLIAMS</span><span class="chip">RD 14/22</span><span class="chip">5º</span><span class="chip">US$ 142 mi</span><span style="margin-left:auto" class="chip">12 SET · 2026</span></div>
+<div class="tile" style="left:24px;top:84px;width:560px;height:300px;background:url({ART.format('monza')}) center/cover"><div style="position:absolute;inset:0;border-radius:18px;background:linear-gradient(0deg,rgba(7,8,11,.95),rgba(7,8,11,0) 60%)"></div><div style="position:absolute;left:18px;bottom:16px"><small>Próxima corrida · em 3 dias</small><div class="t">GP DA ITÁLIA</div></div></div>
+<div class="tile" style="left:600px;top:84px;width:300px;height:144px"><small>Campeonato</small><div class="t" style="font-size:40px">5º · 142</div></div>
+<div class="tile" style="left:916px;top:84px;width:340px;height:144px"><small>Fábrica</small>Asa dianteira B · 62%</div>
+<div class="tile" style="left:600px;top:240px;width:300px;height:144px"><small>Pilotos</small>Albon · Sainz</div>
+<div class="tile" style="left:916px;top:240px;width:340px;height:144px"><small>Finanças</small>Patrocínio 84% da meta</div>
+<div style="position:absolute;left:24px;right:24px;bottom:0;height:88px;background:rgba(7,8,11,.82);border-top:2px solid {TC};display:flex;justify-content:space-around;align-items:center;font-weight:900;font-size:13px"><span>🏠 INÍCIO</span><span>📅 AGENDA</span><span>👥 EQUIPE</span><span>🏭 SEDE</span><span>💰 FINANÇAS</span><span>🏆 TABELA</span></div>
+<span class="note" style="left:240px;top:400px">mesmos blocos de hoje, agora em vidro sobre a pista da próxima corrida; entram um a um</span>
+</div>"""
+
+
+def main():
+    html = (f'<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>V40 · Linguagem nova</title><style>{CSS}</style><body>'
+            f'<div class="cap">1 · Configuração do Grande Prêmio</div>{gp()}'
+            f'<div class="cap">2 · Painel do fim de semana</div>{weekend()}'
+            f'<div class="cap">3 · Início da campanha</div>{campaign()}</body></html>')
+    (HERE / "v40-linguagem-nova.html").write_text(html, encoding="utf-8")
+    print("ok")
+
+
+if __name__ == "__main__":
+    main()
