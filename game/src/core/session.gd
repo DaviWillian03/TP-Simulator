@@ -136,20 +136,20 @@ func _ready() -> void:
 		var cv := String(args["cutout"]).split_floats(",")
 		SafeArea.debug = Vector4(cv[0], 0, 0, 0) if cv.size() == 1 else Vector4(cv[0], cv[1], cv[2], cv[3])
 	if debug_ui == "gallery":
-		get_tree().change_scene_to_file.call_deferred("res://src/ui/dev/ui_gallery.tscn")
+		_go.call_deferred("res://src/ui/dev/ui_gallery.tscn")
 	if args.has("incidents"):
 		sim_overrides["incident_rate"] = float(args["incidents"])
 	_screenshot_path = args.get("screenshot", "")
 	_screenshot_frames = int(args.get("frames", "30"))
 	if args.has("race"):
 		race_seed = int(args.get("seed", "1"))
-		get_tree().change_scene_to_file.call_deferred(RACE_SCENE)
+		_go.call_deferred(RACE_SCENE)
 	elif args.has("teamselect"):  # (capturas) --teamselect=campaign|gp
 		open_team_select.call_deferred(String(args["teamselect"]) if String(args["teamselect"]) != "" else "gp")
 	elif args.has("campaign"):
-		get_tree().change_scene_to_file.call_deferred(CAMPAIGN_ENTRY_SCENE)
+		_go.call_deferred(CAMPAIGN_ENTRY_SCENE)
 	elif args.has("creator"):
-		get_tree().change_scene_to_file.call_deferred(TEAM_CREATOR_SCENE)
+		_go.call_deferred(TEAM_CREATOR_SCENE)
 	elif args.has("history"):  # (capturas) Histórico da campanha salva; --demo-history cria campeões de exemplo
 		var ch := Campaign.load_saved()
 		if ch != null:
@@ -300,7 +300,7 @@ func _ready() -> void:
 		if c != null:
 			start_campaign.call_deferred(c)
 	elif args.has("gp"):
-		get_tree().change_scene_to_file.call_deferred(GP_SETUP_SCENE)
+		_go.call_deferred(GP_SETUP_SCENE)
 	elif args.has("weekend") or args.has("practice") or args.has("quali") or args.has("play") or args.has("grid") or args.has("live"):
 		var opts := {"player_team": player_team, "duration_pct": duration_pct, "seed": int(args.get("seed", "1")),
 			"weather": args.get("weather", "realistic"), "category": category}
@@ -310,7 +310,7 @@ func _ready() -> void:
 		for i in int(args.get("skip", "0")):
 			weekend.simulate_current()
 		if args.has("grid"):  # (captura) --grid abre a animação do grid da corrida atual
-			get_tree().change_scene_to_file.call_deferred(GRID_SCENE)
+			_go.call_deferred(GRID_SCENE)
 		elif args.has("live") and weekend.is_race(weekend.session_id()):  # (captura) --live: corrida direto, plano dos engenheiros
 			var plans := weekend.engineer_strategy()
 			for did: String in plans:
@@ -319,7 +319,7 @@ func _ready() -> void:
 		elif args.has("practice") or args.has("quali") or args.has("play"):
 			play_session.call_deferred()
 		else:
-			get_tree().change_scene_to_file.call_deferred(WEEKEND_SCENE)
+			_go.call_deferred(WEEKEND_SCENE)
 
 
 func _process(_delta: float) -> void:
@@ -337,24 +337,35 @@ func start_race() -> void:
 	debug_pause = false
 	debug_pit = false
 	debug_tap = false
-	get_tree().change_scene_to_file(RACE_SCENE)
+	_go(RACE_SCENE)
 
 
 func restart_race() -> void:
 	start_race()
 
 
+## Troca de tela com a transição de faixas na cor da equipe (2026-11-13). Em execuções de desenvolvimento (capturas,
+## opções na linha de comando) a troca é imediata, para as capturas não pegarem a faixa no meio.
+func _go(path: String) -> void:
+	if dev_flags or not is_inside_tree():
+		get_tree().change_scene_to_file(path)
+		return
+	var team := GameData.any_team(player_team)
+	var col := UiStyle.team_accent(team) if not team.is_empty() else UiStyle.RED
+	ScreenTransition.play(self, col, func() -> void: get_tree().change_scene_to_file(path))
+
+
 func go_to_title() -> void:
 	TeamEmblems.use_season(Season.DEFAULT)  # fora do GP/Mundial: sempre 2026
 	weekend = null
-	get_tree().change_scene_to_file(TITLE_SCENE)
+	_go(TITLE_SCENE)
 
 
 # --- Escolha de equipe (dentro de cada modo) ----------------------------------------------
 
 func open_team_select(mode: String) -> void:
 	team_select_mode = mode
-	get_tree().change_scene_to_file(TEAM_SELECT_SCENE)
+	_go(TEAM_SELECT_SCENE)
 
 
 # --- Grande Prêmio ----------------------------------------------------------------------
@@ -362,7 +373,7 @@ func open_team_select(mode: String) -> void:
 func open_gp_setup() -> void:
 	if weekend != null and weekend.is_over():  # GP avulso terminado: o save do fim de semana não serve mais
 		SaveSlots.delete_weekend("gp")
-	get_tree().change_scene_to_file(GP_SETUP_SCENE)
+	_go(GP_SETUP_SCENE)
 
 
 ## Cria o fim de semana com as escolhas da configuração e abre o painel.
@@ -436,11 +447,11 @@ func start_gp() -> void:
 
 func open_campaign() -> void:
 	TeamEmblems.use_season(Season.DEFAULT)  # fora do GP/Mundial: sempre 2026
-	get_tree().change_scene_to_file(CAMPAIGN_ENTRY_SCENE)
+	_go(CAMPAIGN_ENTRY_SCENE)
 
 
 func open_team_creator() -> void:
-	get_tree().change_scene_to_file(TEAM_CREATOR_SCENE)
+	_go(TEAM_CREATOR_SCENE)
 
 
 ## Começa (ou retoma) uma campanha: registra a arte da equipe criada, salva e abre a sede.
@@ -454,71 +465,71 @@ func start_campaign(c: Campaign) -> void:
 	c.save()
 	if resume_weekend("campaign"):  # parou no meio de um fim de semana: volta de onde parou
 		return
-	get_tree().change_scene_to_file(CAMPAIGN_FEEDER_HUB_SCENE if c.is_feeder() else CAMPAIGN_HUB_SCENE)
+	_go(CAMPAIGN_FEEDER_HUB_SCENE if c.is_feeder() else CAMPAIGN_HUB_SCENE)
 
 
 func open_campaign_hub() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_FEEDER_HUB_SCENE if campaign != null and campaign.is_feeder() else CAMPAIGN_HUB_SCENE)
+	_go(CAMPAIGN_FEEDER_HUB_SCENE if campaign != null and campaign.is_feeder() else CAMPAIGN_HUB_SCENE)
 
 
 func open_campaign_history() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_HISTORY_SCENE)
+	_go(CAMPAIGN_HISTORY_SCENE)
 
 
 func open_campaign_standings() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_STANDINGS_SCENE)
+	_go(CAMPAIGN_STANDINGS_SCENE)
 
 
 func open_campaign_sponsors() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_SPONSORS_SCENE)
+	_go(CAMPAIGN_SPONSORS_SCENE)
 
 
 func open_campaign_council() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_COUNCIL_SCENE)
+	_go(CAMPAIGN_COUNCIL_SCENE)
 
 
 func open_campaign_finance() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_FINANCE_SCENE)
+	_go(CAMPAIGN_FINANCE_SCENE)
 
 
 func open_campaign_staff() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_STAFF_SCENE)
+	_go(CAMPAIGN_STAFF_SCENE)
 
 
 func open_campaign_car() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_CAR_SCENE)
+	_go(CAMPAIGN_CAR_SCENE)
 
 
 func open_campaign_studio() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_STUDIO_SCENE)
+	_go(CAMPAIGN_STUDIO_SCENE)
 
 
 func open_campaign_rd() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_RD_SCENE)
+	_go(CAMPAIGN_RD_SCENE)
 
 
 ## Equipe (carro grande + pilotos, v26-7).
 func open_campaign_team() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_TEAM_SCENE)
+	_go(CAMPAIGN_TEAM_SCENE)
 
 
 ## Sede 3D com instalações (v26-5).
 func open_campaign_hq() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_HQ_SCENE)
+	_go(CAMPAIGN_HQ_SCENE)
 
 
 ## Agenda em cartões (v26-6).
 func open_campaign_calendar() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_CALENDAR_SCENE)
+	_go(CAMPAIGN_CALENDAR_SCENE)
 
 
 func open_campaign_factory() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_FACTORY_SCENE)
+	_go(CAMPAIGN_FACTORY_SCENE)
 
 
 ## Fim da temporada: a sede leva ao relatório da diretoria.
 func open_campaign_report() -> void:
-	get_tree().change_scene_to_file(CAMPAIGN_REPORT_SCENE)
+	_go(CAMPAIGN_REPORT_SCENE)
 
 
 ## Novo ano (ou fim da campanha, se demitido/falido): grava e volta para a sede ou para a entrada.
@@ -580,7 +591,7 @@ func start_world(team_id: String) -> void:
 
 
 func open_world_hub() -> void:
-	get_tree().change_scene_to_file(WORLD_FINAL_SCENE if world != null and world.season_over() else WORLD_HUB_SCENE)
+	_go(WORLD_FINAL_SCENE if world != null and world.season_over() else WORLD_HUB_SCENE)
 
 
 var dev_flags := false  ## alguma opção de desenvolvimento/captura foi passada (pula a abertura)
@@ -593,30 +604,30 @@ var world_result_tab := "result"  ## aba aberta ao entrar no resultado do Mundia
 
 
 func open_settings() -> void:
-	get_tree().change_scene_to_file(SETTINGS_SCENE)
+	_go(SETTINGS_SCENE)
 
 
 ## Escolha de slot. mode vazio = só gerenciar (um slot vazio começa o último modo pedido).
 func open_slots(mode: String) -> void:
 	if mode != "":
 		slots_mode = mode
-	get_tree().change_scene_to_file(SLOTS_SCENE)
+	_go(SLOTS_SCENE)
 
 
 func open_world_table(mode: String = "drivers", stat_key: String = "") -> void:
 	world_table_mode = mode
 	world_table_stat = stat_key
-	get_tree().change_scene_to_file(WORLD_TABLE_SCENE)
+	_go(WORLD_TABLE_SCENE)
 
 
 func open_world_result(tab: String = "") -> void:
 	if tab != "":
 		world_result_tab = tab
-	get_tree().change_scene_to_file(WORLD_RESULT_SCENE)
+	_go(WORLD_RESULT_SCENE)
 
 
 func open_world_final() -> void:
-	get_tree().change_scene_to_file(WORLD_FINAL_SCENE)
+	_go(WORLD_FINAL_SCENE)
 
 
 ## Joga o próximo GP do campeonato com as notas reais da pista.
@@ -668,7 +679,7 @@ func go_to_weekend() -> void:
 	if weekend.race_only and weekend.session_id() == "race":
 		play_session()  # "só a corrida": direto para a largada
 		return
-	get_tree().change_scene_to_file(WEEKEND_SCENE)
+	_go(WEEKEND_SCENE)
 
 
 ## Abre a tela da sessão atual do fim de semana (treino, classificação ou corrida).
@@ -677,12 +688,12 @@ func play_session() -> void:
 	if weekend.is_practice(id):  # treino é sempre simulado (decisão de 2026-11-08): resultado no painel do fim de semana
 		weekend.simulate_current()
 		weekend.show_practice_report = true
-		get_tree().change_scene_to_file(WEEKEND_SCENE)
+		_go(WEEKEND_SCENE)
 	elif weekend.is_quali(id):
-		get_tree().change_scene_to_file(QUALI_SCENE)
+		_go(QUALI_SCENE)
 	elif weekend.is_race(id):
 		# passo antes da largada: estratégia dos dois pilotos (todos os modos; decisão de 2026-11-08)
-		get_tree().change_scene_to_file(STRATEGY_SCENE if weekend.strategy.is_empty() and _has_player_cars() else GRID_SCENE)
+		_go(STRATEGY_SCENE if weekend.strategy.is_empty() and _has_player_cars() else GRID_SCENE)
 
 
 func _has_player_cars() -> bool:
@@ -694,7 +705,7 @@ func _has_player_cars() -> bool:
 
 ## Estratégia confirmada: segue para o grid de largada e a corrida.
 func start_race_after_strategy() -> void:
-	get_tree().change_scene_to_file(GRID_SCENE)
+	_go(GRID_SCENE)
 
 
 var pending_race: RaceSim = null  ## corrida já montada pelo grid de largada (a tela da corrida usa a mesma)
@@ -703,4 +714,4 @@ var pending_race: RaceSim = null  ## corrida já montada pelo grid de largada (a
 ## Fim da animação do grid (ou PULAR): a corrida começa com a simulação já montada.
 func start_race_from_grid(sim: RaceSim) -> void:
 	pending_race = sim
-	get_tree().change_scene_to_file(RACE_SCENE)
+	_go(RACE_SCENE)

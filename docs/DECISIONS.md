@@ -917,3 +917,7 @@ Respostas do usuário:
   pedestal (`CarShowcase3D`, modelo original em código), cartão da próxima corrida com contagem (campanha salva ou
   calendário real pela data de hoje), campeonato, modos em lista, faixa de notícias rolando, entrada com faixas diagonais
   na cor da equipe, cartões em sequência, números contando, e vibração leve ao toque em todos os botões.
+- **2026-11-13 — Menus: carro 3D na escolha de equipe e transição entre telas.** A escolha de equipe usa o carro 3D
+  girando (`CarShowcase3D`) no lugar do desenho 2D. Toda troca de tela passa por `Session._go()`: duas faixas diagonais
+  (cor da equipe + escuro) cobrem a tela, a cena troca por baixo e elas saem (`ScreenTransition`); desligada em execuções
+  de desenvolvimento (capturas). 3D: neblina de horizonte leve e, à noite, prédios com janelas acesas e brilho suave.
