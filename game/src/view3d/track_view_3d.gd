@@ -375,7 +375,11 @@ func _apply_lighting(wetness: float, rain: float) -> void:
 		_sun.light_color = Color("#fff1d6")
 		_env.ambient_light_energy = lerpf(0.24, 0.5, overcast)
 	_env.fog_light_color = _sky_mat.sky_horizon_color
-	_env.fog_density = lerpf(0.00004, 0.0006, overcast)
+	# neblina de horizonte (2026-11-13): dá profundidade — o fundo azula de dia; à noite, véu azul-escuro
+	_env.fog_density = lerpf(0.00007, 0.0006, overcast) if not _night else 0.00018
+	_env.glow_enabled = _night  # brilho suave das luzes e das janelas nas corridas noturnas
+	_env.glow_intensity = 0.6
+	_env.glow_bloom = 0.08
 	_rain.emitting = rain > WeatherModel.RAIN_THRESHOLD
 	_rain.amount = int(lerpf(600, 2000, clampf(rain, 0.0, 1.0)))
 	if _asphalt != null:

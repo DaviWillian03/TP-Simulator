@@ -382,6 +382,10 @@ func _real_buildings() -> void:
 	mi.mesh = st.commit()
 	var mat := Materials3D.vertex_color(0.9)
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	if night:  # janelas acesas: brilho quente fraco nos prédios da cidade
+		mat.emission_enabled = true
+		mat.emission = Color("#ffc983")
+		mat.emission_energy_multiplier = 0.32
 	mi.material_override = mat
 	root.add_child(mi)
 
