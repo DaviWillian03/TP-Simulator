@@ -261,7 +261,10 @@ static func place(node: Control, parent: Control, preset: Control.LayoutPreset, 
 ## Retorno imediato ao toque: o controle encolhe 3% enquanto está pressionado.
 static func press_feedback(b: BaseButton) -> void:
 	b.resized.connect(func() -> void: b.pivot_offset = b.size / 2.0)
-	b.button_down.connect(func() -> void: b.create_tween().tween_property(b, "scale", Vector2(0.97, 0.97), 0.06))
+	b.button_down.connect(func() -> void:
+		b.create_tween().tween_property(b, "scale", Vector2(0.97, 0.97), 0.06)
+		if OS.has_feature("mobile"):  # vibração leve ao toque (2026-11-13, nova direção dos menus)
+			Input.vibrate_handheld(12, 0.4))
 	b.button_up.connect(func() -> void: b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.1))
 
 

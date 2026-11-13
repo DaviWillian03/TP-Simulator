@@ -912,3 +912,8 @@ Respostas do usuário:
   pista com o mapa real), animações e transições (faixa diagonal na cor da equipe, cartões em sequência, toque que afunda,
   números contando, vibração leve), carro 3D girando na pintura da equipe e a tela inicial como painel (próxima corrida
   com contagem, posição no campeonato, faixa de notícias). Começa pela tela inicial (mockup v39).
+- **2026-11-13 — Tela inicial nova (mockup v39 aprovado):** painel num palco centralizado com fundo vivo (`MenuBackdrop`: arte
+  3D da próxima pista, desfocada, em voo lento — imagem, não cena 3D, para poupar o celular), carro 3D girando no
+  pedestal (`CarShowcase3D`, modelo original em código), cartão da próxima corrida com contagem (campanha salva ou
+  calendário real pela data de hoje), campeonato, modos em lista, faixa de notícias rolando, entrada com faixas diagonais
+  na cor da equipe, cartões em sequência, números contando, e vibração leve ao toque em todos os botões.
