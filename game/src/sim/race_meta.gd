@@ -111,24 +111,37 @@ static func wear_factor(stops: int, track: TrackModel, tyres: TyreModel, duratio
 	if _wear_cache.has(key):
 		return float(_wear_cache[key])
 	var b := boundaries(track, tyres, duration_pct)
-	var lo: float = b[0] * 0.5 if stops <= 1 else b[mini(stops, 3) - 2]
-	var hi: float = b[mini(stops, 3) - 1]
-	# dentro da faixa em que o plano mais rápido tem `stops` paradas, prefere onde a IA (que decide pela vida do pneu)
-	# também chega a `stops`: assim o meta é o que a pista mostra de verdade
+	# varre o desgaste e guarda os pontos em que o plano mais rápido E a IA (que decide pela vida do pneu) chegam a
+	# `stops`: o meta é o que a pista mostra de verdade. A curva do plano mais rápido não é sempre crescente.
 	var total := maxi(3, roundi(track.laps * duration_pct))
 	var div := pow(duration_pct, RaceSim.WEAR_SHORT_RACE_EXP)
-	var ok: Array = []
-	for i in 17:
-		var f := lo * pow(hi / lo, (i + 0.5) / 17.0)
-		if ai_stops(tyres, total, f / div) == stops:
-			ok.append(f)
+	var pace_k := RaceSim.tyre_pace_k_for(duration_pct)
+	var lo: float = float(b[0]) * 0.4
+	var hi: float = float(b[2]) * 1.8
+	var runs: Array = []  # trechos contínuos de pontos que servem
+	var cur: Array = []
+	var n := 48
+	for i in n:
+		var f := lo * pow(hi / lo, (i + 0.5) / n)
+		var mult := f / div
+		var good := ai_stops(tyres, total, mult) == stops and best_stops(tyres, RaceStrategy.context(total, mult, track.pit_lane_loss_s, false, pace_k)) == stops
+		if good:
+			cur.append(f)
+		elif not cur.is_empty():
+			runs.append(cur)
+			cur = []
+	if not cur.is_empty():
+		runs.append(cur)
 	var out: float
-	if ok.is_empty():
-		out = hi * 0.8 if stops <= 1 else sqrt(lo * hi)
-	elif stops <= 1:
-		out = float(ok[roundi((ok.size() - 1) * 0.8)])  # 1 parada: perto do limite (o pneu ainda gasta de verdade)
+	if runs.is_empty():  # nada concorda: o meio da faixa do plano mais rápido
+		out = float(b[0]) * 0.8 if stops <= 1 else sqrt(float(b[mini(stops, 3) - 2]) * float(b[mini(stops, 3) - 1]))
 	else:
-		out = float(ok[ok.size() / 2])
+		var best: Array = runs[0]
+		for r: Array in runs:
+			if r.size() > best.size():
+				best = r
+		# 1 parada: perto do limite de cima (o pneu ainda gasta de verdade); 2 e 3: o meio do trecho
+		out = float(best[roundi((best.size() - 1) * 0.75)]) if stops <= 1 else float(best[best.size() / 2])
 	_wear_cache[key] = out
 	return out
 
