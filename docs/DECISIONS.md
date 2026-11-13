@@ -895,3 +895,8 @@ Respostas do usuário:
   nenhuma equipe acerta 100%; erro **entre moderado e alto**. **A IA decide pela própria previsão** (mesmo nível de
   informação do jogador). Fora da campanha: pessoal real de 2026 (2012: engenheiros com fonte + nota pela força da
   equipe). O painel do fim de semana também passa a mostrar a previsão da equipe, com faixa e confiança.
+- **2026-11-13 — Visual 3D: ordem de trabalho.** (1) uso do solo real do OpenStreetMap por pista (florestas, campos,
+  estacionamentos, água e prédios como textura de chão + prédios com altura + árvores só onde há floresta), protótipo em
+  Spa, Interlagos, Sepang e Hungaroring; (2) acabamento da pista (asfalto, linhas, zebras por circuito, áreas de escape);
+  (3) luz, neblina e pistas noturnas. Menus e animações depois do 3D, com mockup. Nada copiado de outros jogos: tudo
+  original, a partir de dados abertos (OSM, ODbL). O vídeo de referência não pôde ser aberto (YouTube bloqueado na nuvem).

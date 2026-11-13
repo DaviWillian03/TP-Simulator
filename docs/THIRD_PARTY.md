@@ -47,3 +47,8 @@ símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `ga
   convertidos por `tools/osm_extract_track.py` em `tools/osm_tracks/*.geojson` (o banco derivado continua sob ODbL; a
   atribuição acima e em cada arquivo é obrigatória). Escalados ao comprimento oficial em `game/data/circuits/{valencia,yeongam,buddh}.json`.
 - **flag-icons** 7.2.3 (MIT): bandeiras da Malásia (`my.svg`) e do Bahrein (`bh.svg`) adicionadas em 2026-11-12 (pacote npm).
+
+- **OpenStreetMap — uso do solo em volta das pistas** (© colaboradores do OpenStreetMap, **ODbL 1.0**): florestas, campos,
+  áreas urbanas, estacionamentos, água, ruas e plantas/alturas de prédios, baixados pela API do OSM (2026-11-13) por
+  `tools/make_landuse.py` e convertidos em `game/assets/ground/<id>.jpg`, `<id>_mask.png` e `game/data/scenery/<id>.json`
+  (banco derivado sob ODbL; atribuição obrigatória). Cores, texturas e modelagem 3D são originais do projeto.

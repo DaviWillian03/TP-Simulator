@@ -31,3 +31,4 @@ Thumbs.db
 /game/local/*
 !/game/local/LEIA-ME.md
 __pycache__/
+/tools/.osm_cache/

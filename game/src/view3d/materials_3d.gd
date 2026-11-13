@@ -83,6 +83,16 @@ static func ground(color: Color) -> StandardMaterial3D:
 	return _world(m, 30.0)
 
 
+## Chão com o mapa real da pista (textura gerada por tools/make_landuse.py; UV pela posição na caixa do mapa).
+static func land(tex: Texture2D) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = tex
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	m.roughness = 1.0
+	m.metallic_specular = 0.1
+	return m
+
+
 static func asphalt() -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = _noise_tex(5, 0.4, _ramp([Color("#1f2125"), Color("#2b2d32"), Color("#26282c"), Color("#34363b")]), 128)

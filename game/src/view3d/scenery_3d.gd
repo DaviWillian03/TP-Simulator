@@ -31,6 +31,40 @@ var clear_zones: Array[Vector4] = []  ## marcos (Landmarks3D): x, z e raio sem �
 var _paddock := PackedVector3Array()  ## pontos do paddock/arquibancadas (sem árvores nem prédios por perto)
 
 
+## Uso do solo REAL (tools/make_landuse.py, OpenStreetMap/ODbL): textura do chão, máscara (floresta/cidade/água) e
+## plantas dos prédios. Vazio = pista ainda sem dados reais (usa o cenário sorteado de antes).
+var land: Dictionary = {}
+var _land_box := Rect2()
+var _mask: Image
+
+
+func _load_land() -> void:
+	var id := String(t3.track.id)
+	var data_path := "res://data/scenery/%s.json" % id
+	var tex_path := "res://assets/ground/%s.jpg" % id
+	if not FileAccess.file_exists(data_path) or not ResourceLoader.exists(tex_path):
+		return
+	land = GameData.load_json(data_path)
+	var b: Array = land["box"]
+	_land_box = Rect2(float(b[0]), float(b[1]), float(b[2]) - float(b[0]), float(b[3]) - float(b[1]))
+	var mask_tex: Texture2D = load("res://assets/ground/%s_mask.png" % id) if ResourceLoader.exists("res://assets/ground/%s_mask.png" % id) else null
+	if mask_tex != null:
+		_mask = mask_tex.get_image()
+		_mask.decompress()
+
+
+## Máscara do mapa real no ponto: x = floresta, y = cidade, z = água (0..1). Sem dados: Vector3.ZERO.
+func land_at(p: Vector3) -> Vector3:
+	if _mask == null:
+		return Vector3.ZERO
+	var u := (p.x - _land_box.position.x) / _land_box.size.x
+	var v := (p.z - _land_box.position.y) / _land_box.size.y
+	if u < 0.0 or v < 0.0 or u >= 1.0 or v >= 1.0:
+		return Vector3.ZERO
+	var c := _mask.get_pixel(int(u * _mask.get_width()), int(v * _mask.get_height()))
+	return Vector3(c.r, c.g, c.b)
+
+
 func build(p_t3: Track3D, p_night: bool) -> Node3D:
 	t3 = p_t3
 	night = p_night
@@ -42,7 +76,9 @@ func build(p_t3: Track3D, p_night: bool) -> Node3D:
 	for i in range(0, t3.n, 3):
 		if t3.in_pit_zone(i):
 			_paddock.append(t3.center[i] + t3.right[i] * t3.track.pit_side * 55.0)
-	_water()  # antes do terreno: o terreno afunda onde há água (porto)
+	_load_land()
+	if land.is_empty():
+		_water()  # antes do terreno: o terreno afunda onde há água (porto); com mapa real, a água vem na textura
 	_terrain()
 	var marks := Landmarks3D.new(self)
 	var keys := Landmarks3D.keys_of(t3.track)
@@ -84,6 +120,9 @@ func _terrain() -> void:
 				nrm = -nrm
 			for k in [0, 1, 2, 0, 2, 3]:
 				st.set_normal(nrm)
+				if not land.is_empty():  # textura do mapa real: UV pela posição na caixa do mapa
+					var q: Vector3 = quad[k]
+					st.set_uv(Vector2((q.x - _land_box.position.x) / _land_box.size.x, (q.z - _land_box.position.y) / _land_box.size.y))
 				st.add_vertex(quad[k])
 	var mesh := MeshInstance3D.new()
 	mesh.mesh = st.commit()
@@ -91,6 +130,8 @@ func _terrain() -> void:
 	var mat := Materials3D.grass() if not GROUND.has(theme) else Materials3D.ground(GROUND[theme])
 	if sc.has("ground"):
 		mat = Materials3D.ground(Color(String(sc["ground"])))
+	if not land.is_empty():
+		mat = Materials3D.land(load("res://assets/ground/%s.jpg" % String(t3.track.id)))
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	if night:
 		mat.albedo_color = Color(0.45, 0.48, 0.6)
@@ -241,20 +282,29 @@ func _trees_and_buildings() -> void:
 			if near.x < TRACK_CLEAR_M or _in_water(p) or _near_paddock(p):
 				continue
 			var cluster := sin(p.x / 140.0 + 1.3) * cos(p.z / 110.0) + rng.randf_range(-0.35, 0.35)
+			if not land.is_empty():  # mapa real: árvores só na floresta (densidade pela máscara), nada na cidade/água
+				var lm := land_at(p)
+				if lm.y > 0.4 or lm.z > 0.4 or lm.x < 0.25:
+					continue
+				cluster = 2.0 if rng.randf() < lm.x * 0.95 else -2.0
+				if cluster < 0.0:
+					continue
 			var y := ground_height(p)
 			# prédios só do lado de fora do traçado (o miolo da pista fica livre; pistas de rua são a exceção: a cidade está em volta e dentro)
-			if city_density > 0.0 and near.x > 60.0 and cluster < -0.1 and rng.randf() < city_density and (street or not t3.inside(p)):
+			if land.is_empty() and city_density > 0.0 and near.x > 60.0 and cluster < -0.1 and rng.randf() < city_density and (street or not t3.inside(p)):
 				var hgt := rng.randf_range(12.0, 38.0) * (1.6 if theme in ["strip", "bay", "city"] else 1.0)
 				var w := rng.randf_range(14.0, 26.0)
 				var b := Basis().scaled(Vector3(w, hgt, rng.randf_range(14.0, 26.0))).rotated(Vector3.UP, rng.randf() * 0.4)
 				builds.append(Transform3D(b, Vector3(p.x, y + hgt / 2.0, p.z)))
-			elif tree_density > 0.0 and cluster > 0.6 - tree_density * 1.6:
+			elif (tree_density > 0.0 or not land.is_empty()) and cluster > 0.6 - tree_density * 1.6:
 				for k in 3:
 					var q := p + Vector3(rng.randf_range(-11, 11), 0, rng.randf_range(-11, 11))
 					var s := rng.randf_range(0.8, 1.5)
 					var xf := Transform3D(Basis().scaled(Vector3(s, s * rng.randf_range(0.9, 1.3), s)).rotated(Vector3.UP, rng.randf() * TAU), Vector3(q.x, ground_height(q), q.z))
-					if rng.randf() < 0.55:
+					if rng.randf() < (0.75 if not land.is_empty() else 0.55):  # mapa real: mais coníferas, verde mais fechado
 						var g := Color("#24481d").lerp(Color("#336526"), rng.randf())
+						if not land.is_empty():
+							g = Color("#1d3a19").lerp(Color("#2c5424"), rng.randf())
 						trees.append(xf)
 						tree_cols.append(g.darkened(0.5) if night else g)
 					else:
@@ -276,6 +326,64 @@ func _trees_and_buildings() -> void:
 		var mat := Materials3D.facade(Color("#ffffff") if theme != "strip" else Color("#9fb0d0"), night)
 		mat.vertex_color_use_as_albedo = true  # cor por prédio (MultiMesh) multiplica a fachada
 		root.add_child(_multimesh(box, builds, cols, mat))
+	if not land.is_empty():
+		_real_buildings()
+
+
+## Prédios do mapa real: cada planta vira um bloco com a altura dela (paredes + telhado), tudo numa malha só (uma
+## chamada de desenho: leve no celular). Prédios sobre a pista ou o pit lane são ignorados (o jogo tem os seus).
+func _real_buildings() -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var count := 0
+	for b: Array in land.get("buildings", []):
+		var h := float(b[0])
+		var foot := PackedVector2Array()
+		for q: Array in b[1]:
+			foot.append(Vector2(float(q[0]), float(q[1])))
+		if foot.size() < 3:
+			continue
+		var c := Vector2.ZERO
+		for q in foot:
+			c += q
+		c /= foot.size()
+		var cp := Vector3(c.x, 0, c.y)
+		if t3.field_at(cp, true).x < TRACK_CLEAR_M + 4.0 or _near_paddock(cp):
+			continue
+		var y0 := ground_height(cp) - 0.5
+		var roof := Color(String(b[2])) if b.size() > 2 else Color("#c9c2b5")
+		var wall := roof.lightened(0.18)
+		if night:
+			roof = roof.darkened(0.55)
+			wall = wall.darkened(0.45)
+		for i in foot.size():  # paredes
+			var a2 := foot[i]
+			var b2 := foot[(i + 1) % foot.size()]
+			var a0 := Vector3(a2.x, y0, a2.y)
+			var b0 := Vector3(b2.x, y0, b2.y)
+			var a1 := a0 + Vector3(0, h, 0)
+			var b1 := b0 + Vector3(0, h, 0)
+			var n := (b0 - a0).cross(Vector3.UP).normalized()
+			var shade := wall.darkened(0.12 + 0.12 * (0.5 + 0.5 * n.x))  # um lado mais escuro: dá volume
+			for v in [a0, b0, b1, a0, b1, a1]:
+				st.set_color(shade)
+				st.set_normal(n)
+				st.add_vertex(v)
+		var tri := Geometry2D.triangulate_polygon(foot)
+		for k in tri.size():  # telhado
+			var q2 := foot[tri[k]]
+			st.set_color(roof)
+			st.set_normal(Vector3.UP)
+			st.add_vertex(Vector3(q2.x, y0 + h, q2.y))
+		count += 1
+	if count == 0:
+		return
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	var mat := Materials3D.vertex_color(0.9)
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mi.material_override = mat
+	root.add_child(mi)
 
 
 func _near_paddock(p: Vector3) -> bool:
