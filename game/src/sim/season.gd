@@ -42,7 +42,7 @@ static func _file(id: String, key: String) -> Variant:
 
 static func teams(id: String) -> Array:
 	var d: Variant = _file(id, "teams_file")
-	return (d as Dictionary).get("teams", []) if d is Dictionary else GameData.teams()
+	return GameData.f1_spread((d as Dictionary).get("teams", [])) if d is Dictionary else GameData.teams()  # F1 +10% de diferença
 
 
 static func drivers(id: String) -> Array:

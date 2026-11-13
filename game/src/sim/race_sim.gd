@@ -106,6 +106,8 @@ var overtake_mode := true  ## modo de ultrapassagem da regra 2026 (2012: KERS se
 var overtake_k := 1.0
 var dirty_k := 1.0
 var wear_k := 1.0
+var wear_factor := -1.0  ## desgaste da pista nesta corrida (meta sorteado, RaceMeta); -1 = o da pista
+var wear_nominal := -1.0  ## o que as equipes supõem antes de ver o pneu na pista (plano às cegas); -1 = o real
 var refuel := false
 var engine_pitch := 1.0
 var fuel_window_laps := 999
@@ -141,6 +143,8 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	options_seed = int(options.get("seed", 1))
 	start_tyres = options.get("start_tyres", {})
 	_apply_tech(options.get("tech", {}))
+	wear_factor = float(options.get("wear_factor", -1.0))
+	wear_nominal = float(options.get("wear_nominal", -1.0))
 	var cr := CategoryRules.of(category)  # F2/F3 e temporadas extras (F1_2012: KERS fraco + DRS)
 	if not bool(cr.get("hybrid", true)):
 		energy_k = 0.0  # sem bateria: Carregar/Usar não fazem diferença e não há modo de ultrapassagem
@@ -270,7 +274,19 @@ static func tyre_pace_k_for(pct: float) -> float:
 func wear_multiplier() -> float:
 	# corridas mais curtas desgastam mais (senão ninguém pararia), mas não na proporção cheia:
 	# com o expoente 1 uma corrida de 25% pedia 3 paradas em 18 voltas (balanceado: ver DECISIONS)
-	return track.tyre_wear_factor / pow(duration_pct, WEAR_SHORT_RACE_EXP) * wear_k
+	return (wear_factor if wear_factor > 0.0 else track.tyre_wear_factor) / pow(duration_pct, WEAR_SHORT_RACE_EXP) * wear_k
+
+
+## Desgaste com que a equipe planeja: o "médio" até ter visto o pneu na pista (car.wear_learned), depois o real.
+func plan_wear_multiplier(car: CarState) -> float:
+	if wear_nominal <= 0.0 or car.wear_learned:
+		return wear_multiplier()
+	return wear_nominal / pow(duration_pct, WEAR_SHORT_RACE_EXP) * wear_k
+
+
+## Voltas de pneu seco para a equipe entender o desgaste real.
+func learn_laps() -> int:
+	return clampi(roundi(total_laps * 0.08), 2, 5)
 
 
 func frac_of(car: CarState) -> float:
@@ -837,7 +853,8 @@ func _after_move(car: CarState, prev: float, now: float) -> void:
 	# volta completa (cruzou a linha em k * comprimento, k >= 1)
 	var lap_before := floori(prev / track.length_m)
 	var lap_after := floori(now / track.length_m)
-	if now > 0.0 and lap_after > lap_before and lap_after >= 1:
+	# lap_after > laps_done: um carro empurrado para trás (sobreposição) que recruza a linha não conta a volta de novo
+	if now > 0.0 and lap_after > lap_before and lap_after >= 1 and lap_after > car.laps_done:
 		# instante exato em que cruzou a linha, interpolado dentro do passo
 		var line_d := lap_after * track.length_m
 		var cross_time := time_s - DT + DT * (line_d - prev) / moved

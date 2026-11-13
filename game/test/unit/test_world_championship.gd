@@ -24,17 +24,27 @@ func test_notas_vem_da_temporada_real_e_o_grid_e_equilibrado() -> void:
 	assert_gt(spread, 3.0, "mas ainda há favoritos")
 
 
-func test_pista_com_resultado_real_muda_a_forca_da_equipe() -> void:
+func test_forca_na_pista_nao_vem_mais_do_resultado_real() -> void:
 	var w := _w()
 	var a := {}
-	for t: Dictionary in w.teams_for_gp("hungaroring"):  # McLaren venceu na Hungria
+	for t: Dictionary in w.teams_for_gp("hungaroring"):  # McLaren venceu na Hungria: não pesa mais (sorteio interno)
 		a[t["id"]] = float(t["car_rating"])
-	var b := {}
-	for t: Dictionary in w.teams_for_gp("lasvegas"):  # corrida ainda sem dado real: só a base
-		b[t["id"]] = float(t["car_rating"])
-	assert_gt(a["mclaren"], b["mclaren"], "McLaren vai melhor na Hungria que a base")
-	assert_true(w.has_real_data("hungaroring"))
-	assert_false(w.has_real_data("lasvegas"))
+	for t: Dictionary in w.teams_for_gp("lasvegas"):
+		assert_almost_eq(float(t["car_rating"]), float(a[t["id"]]), 0.0001, "%s: mesma nota base em toda pista" % t["id"])
+
+
+func test_sorteio_da_temporada_reparte_paradas_e_forma() -> void:
+	var w := _w()
+	var d := w.meta_draw()
+	var count := {1: 0, 2: 0, 3: 0}
+	for cid: String in d["stops"]:
+		count[int(d["stops"][cid])] += 1
+	var n := w.cal().size()
+	assert_eq(count[3], roundi(n * 0.20), "20% três paradas")
+	assert_eq(count[2], roundi(n * 0.35), "35% duas paradas")
+	assert_eq(count[1], n - count[3] - count[2], "45% uma parada")
+	var o := w.weekend_options()
+	assert_true((o["meta"] as Dictionary).has("stops"), "o fim de semana recebe o sorteio da etapa")
 
 
 func test_temporada_tem_22_gps_e_pilotos_reais() -> void:

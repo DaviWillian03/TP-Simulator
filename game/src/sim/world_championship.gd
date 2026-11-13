@@ -1,13 +1,12 @@
 class_name WorldChampionship
 extends RefCounted
 ## Modo "Campeonato Mundial F1" (decisões de 2026-11-10): temporada completa de 2026 (22 GPs), pontos, tabelas e
-## estatísticas, SEM desenvolvimento de carro. A força de cada carro em cada pista vem da temporada real
-## (`data/real_form_2026.json`, gerado por tools/make_real_form.py, já com o grid ~40% mais equilibrado). Motor e câmbio
+## estatísticas, SEM desenvolvimento de carro. A nota de cada carro é a base da temporada real
+## (`data/real_form_2026.json`, de tools/make_real_form.py) com a F1 10% mais desequilibrada; a forma em cada pista e o
+## meta de paradas saem do sorteio interno (RaceMeta, 2026-11-14), sem o resultado real. Motor e câmbio
 ## têm limite por temporada com punição de grid (WorldParts). Pilotos e contratos são os reais de 2026.
 
 const SAVE_PATH := "user://world_championship.json"  ## (legado: antes dos slots; hoje o save fica em SaveSlots.world_path())
-const FORM_WITH_DATA := 0.3  ## variação aleatória do fim de semana quando já há resultado real da pista
-const FORM_NO_DATA := 0.8  ## pista ainda sem resultado real: só a nota base + variação normal
 
 var season := 2026
 var season_id := Season.DEFAULT  ## pacote de temporada (data/seasons/<id>): 2026 ou temporada extra (2012…)
@@ -26,6 +25,7 @@ var parts := WorldParts.new()
 var season_log: Dictionary = {}  ## id do piloto -> {wins, podiums, poles} (mesmo formato da campanha: a corrida lê daqui)
 var champions_log: Array = []  ## o Mundial tem uma temporada só por enquanto (sem histórico de campeões anteriores)
 var _real: Dictionary = {}
+var _meta: Dictionary = {}  ## sorteio interno da temporada (RaceMeta), refeito a partir de seed_base
 
 
 static func start(team_id: String, sid: String = Season.DEFAULT) -> WorldChampionship:
@@ -173,14 +173,12 @@ func has_real_data(circuit_id: String) -> bool:
 ## Cópia das equipes para o GP: nota = base real equilibrada + desvio real da pista; carros levam o fator de
 ## quebra pelo desgaste do motor/câmbio.
 func teams_for_gp(circuit_id: String) -> Array:
-	var rf := real_form()
-	var base: Dictionary = rf.get("base", {})
-	var offs: Dictionary = (rf.get("rounds", {}) as Dictionary).get(circuit_id, {})
+	var base := GameData.f1_spread_map(real_form().get("base", {}))  # sem o desvio real de cada pista (2026-11-14)
 	var out: Array = []
 	for t: Dictionary in teams():
 		var c := t.duplicate()
 		var id := String(t["id"])
-		c["car_rating"] = float(base.get(id, t["car_rating"])) + float(offs.get(id, 0.0))
+		c["car_rating"] = float(base.get(id, t["car_rating"]))
 		var fail := {}
 		var ids := driver_ids_of(id)
 		for i in mini(ids.size(), 2):
@@ -201,11 +199,24 @@ func grid_penalties() -> Dictionary:
 	return out
 
 
+## Sorteio interno da temporada (meta de paradas e forma de cada carro em cada etapa).
+func meta_draw() -> Dictionary:
+	if _meta.is_empty():
+		var ids: Array = cal().map(func(r: Dictionary) -> String: return String(r["id"]))
+		var tids: Array = teams().map(func(t: Dictionary) -> String: return String(t["id"]))
+		_meta = RaceMeta.season_draw(ids, tids, seed_base)
+	return _meta
+
+
+func meta_draw_round(circuit_id: String) -> Dictionary:
+	return RaceMeta.round_of(meta_draw(), circuit_id)
+
+
 func weekend_options(extra: Dictionary = {}) -> Dictionary:
 	var rd := next_round()
 	var cid := String(rd.get("id", ""))
 	var o := {"player_team": player_team, "seed": seed_base * 100 + round + 1, "campaign": true, "world": true,
-		"teams": teams_for_gp(cid), "drivers": drivers(), "category": Season.category(season_id), "form": FORM_WITH_DATA if has_real_data(cid) else FORM_NO_DATA}
+		"teams": teams_for_gp(cid), "drivers": drivers(), "category": Season.category(season_id), "meta": meta_draw_round(cid)}
 	if not rd.is_empty():
 		o["sprint"] = bool(rd.get("sprint", false))
 		if rd.has("compounds"):

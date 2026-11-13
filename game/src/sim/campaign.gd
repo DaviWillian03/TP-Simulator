@@ -25,6 +25,9 @@ var morale := 3
 var board_patience := 3
 var driver_ids: Array[String] = []  ## pilotos da equipe criada (da base F2/F3)
 var round := 0  ## próxima rodada do calendário (0 = primeira)
+var meta_salt := 0  ## sorteio interno (RaceMeta): sal desta campanha; cada temporada sorteia de novo a partir dele
+var _meta: Dictionary = {}  ## sorteio da temporada `_meta_season` (refeito do sal, não vai para o save)
+var _meta_season := -1
 var day := 0  ## dia atual da temporada (dias desde 1970-01-01)
 var trust := 60.0  ## confiança da diretoria (0-100)
 var state := "active"  ## "active", "fired" ou "bankrupt"
@@ -181,7 +184,7 @@ func catch_up() -> void:
 func _auto_f1_round(skip_cat: String = "") -> void:
 	var cid := String(next_round()["id"])
 	var track := TrackModel.new(GameData.circuit(cid))
-	var gp_teams := CarForm.apply(teams_for_gp(cid), cid, season * 100 + round, 1.0, CarParts.profile_of(GameData.circuit(cid)))
+	var gp_teams := RaceMeta.apply_car(teams_for_gp(cid), RaceMeta.round_of(meta_draw(), cid).get("car", {}), 1.0, CarParts.profile_of(GameData.circuit(cid)))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("autof1|%d|%d" % [season, round])
 	var points := {}
@@ -1200,7 +1203,7 @@ func to_dict() -> Dictionary:
 	return {"version": 1, "save_version": SaveSlots.VERSION, "mode": mode, "season": season, "player_team": player_team, "origin": origin.get("id", ""),
 		"identity": identity, "engine": engine, "objective": objective, "detail": detail, "ai_difficulty": ai_difficulty,
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
-		"board_patience": board_patience, "drivers": driver_ids, "round": round, "calendar_n": calendar().size(), "driver_points": driver_points,
+		"board_patience": board_patience, "drivers": driver_ids, "round": round, "calendar_n": calendar().size(), "meta_salt": meta_salt, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
 		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict(),
 		"series": series.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (series[k] as Series).to_dict(); return acc, {}),
@@ -1215,6 +1218,7 @@ static func from_dict(d: Dictionary) -> Campaign:
 	var c := Campaign.new()
 	c.mode = d.get("mode", "real")
 	c.season = int(d.get("season", 2026))
+	c.meta_salt = int(d.get("meta_salt", randi() % 1_000_000 + 1))  # save antigo: sorteia um sal na carga
 	c.player_team = d.get("player_team", "")
 	c.origin = origin_by_id(d.get("origin", ""))
 	c.identity = d.get("identity", {})
@@ -1360,12 +1364,25 @@ func next_round() -> Dictionary:
 
 
 ## Opções do fim de semana da próxima rodada (grid da campanha).
+## Sorteio interno da temporada atual (meta de paradas e forma de cada carro em cada etapa; refeito a cada ano).
+func meta_draw() -> Dictionary:
+	if _meta_season != season or _meta.is_empty():
+		if meta_salt == 0:
+			meta_salt = randi() % 1_000_000 + 1
+		var ids: Array = calendar().map(func(r: Dictionary) -> String: return String(r["id"]))
+		var tids: Array = _teams.map(func(t: Dictionary) -> String: return String(t["id"]))
+		_meta = RaceMeta.season_draw(ids, tids, meta_salt * 1000 + season)
+		_meta_season = season
+	return _meta
+
+
 func weekend_options(extra: Dictionary = {}) -> Dictionary:
 	var o := {"player_team": player_team, "drivers": _drivers, "seed": season * 100 + round + 1, "campaign": true,
 		"points_race": regs.points_race, "points_sprint": regs.points_sprint, "min_dry_compounds": regs.min_dry_compounds,
 		"tech": regs.tech_options(), "teams": teams_for_gp(String(next_round().get("id", "")) if not season_over() else "")}
 	if not season_over():
 		o["sprint"] = regs.is_sprint(next_round()["id"])
+		o["meta"] = RaceMeta.round_of(meta_draw(), String(next_round()["id"]))
 		o["grid_penalties"] = grid_penalties()
 	# posição de cada piloto no campeonato, a partir da metade da temporada: quem briga pelo título arrisca
 	# menos na classificação (QualiSim.choose_lap_mode)

@@ -69,6 +69,8 @@ var fastest_laps: Dictionary = {}  ## "race"/"sprint" -> {id, time} da melhor vo
 var quali_times: Dictionary = {}  ## "race"/"sprint" -> {id do piloto: {time, part}} (melhor volta na classificação; grid)
 var start_rule: Dictionary = {}  ## 2012: id do piloto -> pneu obrigatório de largada (melhor volta do Q2, só quem foi ao Q3)
 var dry_pair: Array = []  ## 2012: par de compostos secos do GP (Season calendar "compounds")
+## Sorteio interno da etapa (RaceMeta, só F1; nunca mostrado): {"stops": meta de paradas da corrida, "car": {equipe: pontos}}
+var meta: Dictionary = {}
 var category := "F1"  ## "F1", "F2" ou "F3" (CategoryRules; decisões de 2026-11-08)
 var strategy: Dictionary = {}  ## id do piloto -> plano da corrida atual (RaceStrategy; passo antes da largada, v22-2)
 var show_practice_report := false  ## a tela do fim de semana abre a folha de resultado do treino (uma vez)
@@ -104,7 +106,14 @@ func _init(circuit_id: String, options: Dictionary = {}) -> void:
 	# forma do fim de semana: cada equipe chega um pouco acima/abaixo da nota do carro (CarForm); "form": 0 desliga
 	# F2/F3: chassi igual — a forma da equipe no GP pesa bem menos (senão engoliria a diferença pequena entre os carros)
 	var form_scale := float(options.get("form", 1.0)) * float(CategoryRules.of(category).get("form_scale", 1.0))
-	teams = CarForm.apply(teams, circuit_id, seed_value, form_scale, {} if feeder else CarParts.profile_of(circuit))
+	if feeder:
+		teams = CarForm.apply(teams, circuit_id, seed_value, form_scale, {})
+	else:  # F1: forma do carro e meta de paradas sorteados (RaceMeta); campanha/Mundial mandam o sorteio da temporada
+		meta = options.get("meta", {})
+		if not meta.has("stops"):
+			meta = RaceMeta.single_draw(teams.map(func(t: Dictionary) -> String: return String(t["id"])), seed_value)
+		_init_options["meta"] = meta  # o save do fim de semana guarda o sorteio
+		teams = RaceMeta.apply_car(teams, meta.get("car", {}), form_scale, CarParts.profile_of(circuit))
 	for t: Dictionary in teams:  # fora da campanha: diretor de pista e engenheiros de corrida de 2026 acertam o carro
 		if not t.has("practice_skills"):
 			var ids: Array = drivers.filter(func(d: Dictionary) -> bool: return d["team"] == t["id"]).map(func(d: Dictionary) -> String: return d["id"])
@@ -294,7 +303,8 @@ func race_context() -> Dictionary:
 	var total := maxi(3, roundi(track.laps * duration_pct / (RaceSim.SPRINT_DISTANCE if is_sprint else 1.0)))
 	if CategoryRules.is_feeder(category):
 		total = maxi(3, roundi(CategoryRules.race_laps(category, track, is_sprint) * duration_pct))
-	var wear := track.tyre_wear_factor / pow(duration_pct, RaceSim.WEAR_SHORT_RACE_EXP) * float(TechRules.knobs(tech)["wear_k"])
+	var base := plan_wear_factor() if id == "race" else track.tyre_wear_factor  # corrida: os engenheiros planejam às cegas
+	var wear := base / pow(duration_pct, RaceSim.WEAR_SHORT_RACE_EXP) * float(TechRules.knobs(tech)["wear_k"])
 	var no_rule := is_sprint or not bool(CategoryRules.of(category).get("compound_rule", true))
 	var ctx := RaceStrategy.context(total, wear, track.pit_lane_loss_s, no_rule, RaceSim.tyre_pace_k_for(duration_pct))
 	ctx["is_sprint"] = is_sprint
@@ -343,6 +353,20 @@ static func _force_start(plan: Dictionary, forced: String) -> void:
 	stints[0]["compound"] = forced
 
 
+## Desgaste da corrida principal pelo meta sorteado (F1); sem sorteio, o da pista.
+func race_wear_factor() -> float:
+	if not meta.has("stops"):
+		return track.tyre_wear_factor
+	return RaceMeta.wear_factor(int(meta["stops"]), track, tyres, duration_pct)
+
+
+## O que os engenheiros (e a IA, antes de ver o pneu na pista) supõem: o desgaste "médio", de 2 paradas.
+func plan_wear_factor() -> float:
+	if not meta.has("stops"):
+		return track.tyre_wear_factor
+	return RaceMeta.wear_factor(RaceMeta.NOMINAL_STOPS, track, tyres, duration_pct)
+
+
 func make_race(extra: Dictionary = {}) -> RaceSim:
 	var id := session_id()
 	var opts := session_options(id)
@@ -369,6 +393,9 @@ func make_race(extra: Dictionary = {}) -> RaceSim:
 	opts["tech"] = tech
 	if grids.has(id):
 		opts["grid"] = grids[id]
+	if id == "race" and meta.has("stops"):  # meta de paradas sorteado; a IA começa planejando às cegas
+		opts["wear_factor"] = race_wear_factor()
+		opts["wear_nominal"] = plan_wear_factor()
 	if id == "race" and not grid_penalties.is_empty():  # motor/câmbio além do limite (só a corrida principal)
 		opts["grid_penalties"] = grid_penalties
 	opts.merge(extra, true)

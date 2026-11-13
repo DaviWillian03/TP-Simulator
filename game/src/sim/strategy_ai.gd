@@ -45,7 +45,7 @@ static func _plan_from(sim: RaceSim, car: CarState, rng: RandomNumberGenerator, 
 	var remaining := total - from_lap
 	if remaining <= LATE_LAPS or not sim.tyres.is_dry(car.tyre):
 		return
-	var mult := sim.wear_multiplier()
+	var mult := sim.plan_wear_multiplier(car)  # às cegas até ver o pneu na pista (RaceMeta)
 	var life_now := sim.tyre_laps_left(car) if from_lap > 0 else sim.tyres.expected_life_laps(car.tyre, mult)
 	var hard: String = sim.tyres.dry_compounds()[sim.tyres.dry_compounds().size() - 1]
 	var life_hard := sim.tyres.expected_life_laps(hard, mult)
@@ -90,6 +90,12 @@ static func decide_pit(sim: RaceSim, car: CarState) -> void:
 		var rr := RandomNumberGenerator.new()
 		rr.seed = hash("replan|%d|%d|%d" % [car.index, car.laps_done, car.pit_stops])
 		_plan_from(sim, car, rr, car.laps_done)
+	# a equipe viu o pneu na pista por algumas voltas: entende o desgaste real e refaz o plano (meta sorteado)
+	if not car.wear_learned and sim.wear_nominal > 0.0 and sim.tyres.is_dry(car.tyre) and car.tyre_laps >= sim.learn_laps():
+		car.wear_learned = true
+		var rl := RandomNumberGenerator.new()
+		rl.seed = hash("learn|%d|%d" % [car.index, car.laps_done])
+		_plan_from(sim, car, rl, car.laps_done)
 	# 1) clima: o tipo de pneu certo vale mais que tudo
 	var weather_choice := weather_compound(sim, car, remaining)
 	if weather_choice != "":

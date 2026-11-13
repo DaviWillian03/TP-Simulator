@@ -20,7 +20,38 @@ static func load_json(path: String) -> Variant:
 
 
 static func teams() -> Array:
-	return load_json(DATA_DIR + "teams_2026.json")["teams"]
+	return f1_spread(load_json(DATA_DIR + "teams_2026.json")["teams"])
+
+
+## F1 10% mais desequilibrada (pedido de 2026-11-14, 2026 e 2012; F2/F3 não): a distância de cada carro até a média
+## das notas cresce 10%. A ordem continua a da vida real.
+const F1_SPREAD := 1.10
+
+
+static func f1_spread(teams: Array) -> Array:
+	if teams.is_empty():
+		return teams
+	var mean := 0.0
+	for t: Dictionary in teams:
+		mean += float(t["car_rating"])
+	mean /= teams.size()
+	for t: Dictionary in teams:
+		t["car_rating"] = snappedf(mean + (float(t["car_rating"]) - mean) * F1_SPREAD, 0.01)
+	return teams
+
+
+## O mesmo para um dicionário equipe -> nota (base do Mundial).
+static func f1_spread_map(ratings: Dictionary) -> Dictionary:
+	if ratings.is_empty():
+		return ratings
+	var mean := 0.0
+	for k: String in ratings:
+		mean += float(ratings[k])
+	mean /= ratings.size()
+	var out := {}
+	for k: String in ratings:
+		out[k] = mean + (float(ratings[k]) - mean) * F1_SPREAD
+	return out
 
 
 static func drivers() -> Array:

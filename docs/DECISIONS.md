@@ -942,3 +942,17 @@ Respostas do usuário:
   "GP da Malásia". Calendário com 23 etapas; rodadas da F2/F3 deslocadas; a regra de nº de corridas do Conselho vale
   21/23 (ids `cal_20`/`cal_22` mantidos). Saves antigos (sem `calendar_n`) são migrados: quem já passou do Japão segue
   para a mesma próxima corrida (`Campaign.migrate_round`).
+- **2026-11-14 — Sorteio interno de pneus e carros (F1; `RaceMeta`, nunca mostrado na tela):**
+  - Meta de paradas da corrida principal: na temporada (campanha e Mundial) exatamente 20% das etapas 3 paradas, 35% 2 e
+    45% 1, embaralhadas entre as pistas e refeitas a cada temporada (campanha) ou a cada Mundial iniciado; no Grande
+    Prêmio avulso, sorteio com essas chances a cada GP. O desgaste da corrida é calibrado para que o plano mais rápido
+    tenha esse número de paradas em qualquer duração. A sprint e os treinos usam o desgaste normal da pista.
+  - Plano às cegas (escolha do usuário): engenheiros do jogador e IA planejam com o desgaste "médio" (de 2 paradas); a IA
+    entende o desgaste real depois de algumas voltas de pneu seco e refaz o plano; o jogador vê o pneu na corrida.
+  - Forma dos carros: só sorte em volta da nota (sem resultado real nem afinidade com a pista): 45% das etapas variação
+    baixa (~±0,7 ponto), 35% média (±1,5–3), 20% grande (±3,5–6); na temporada cada equipe tem exatamente essa proporção.
+    Na campanha continuam valendo as características do carro (P&D) × perfil da pista e a confiabilidade.
+  - F1 10% mais desequilibrada nas duas temporadas (2026 e 2012): distância de cada nota até a média ×1,1
+    (`GameData.F1_SPREAD`). F2/F3 sem mudança (seguem com `CarForm` e as regras de pneu da categoria).
+  - Saves: campanha guarda `meta_salt` (save antigo ganha um ao carregar); Mundial refaz o sorteio de `seed_base`;
+    o fim de semana salvo guarda o sorteio da etapa.
