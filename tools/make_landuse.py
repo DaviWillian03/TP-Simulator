@@ -224,7 +224,7 @@ def build(cid):
             continue
         outers = [w for w, role in members if role != "inner"]
         for ring in rings_of(outers, ways):
-            if len(ring) > 3:
+            if len(ring) > 3 and ring[0] == ring[-1]:  # só contornos fechados (pedaço incompleto viraria um "lago" falso)
                 polys[k].append(ring_px(ring))
         used_in_rel.update(w for w, _ in members)
     for wid, (refs, tags) in ways.items():
@@ -236,6 +236,7 @@ def build(cid):
 
     img = Image.new("RGB", (tw, th), C["base"])
     d = ImageDraw.Draw(img)
+    _patchwork(d, tw, th, sc, rnd)  # fundo: lavouras em mosaico (onde o OSM não tem dado, parece campo de verdade)
     mask = Image.new("RGB", (tw, th), (0, 0, 0))
     md = ImageDraw.Draw(mask)
     for k in ORDER:
@@ -317,6 +318,27 @@ def build(cid):
                   "box = [x0, z0, x1, z1] da textura em metros do jogo; buildings = [altura, planta [[x, z]...], cor do telhado].",
         "box": [round(v, 1) for v in box], "buildings": buildings}, separators=(",", ":")), encoding="utf-8")
     print(f"{cid}: {len(files)} pedaços, {sum(len(v) for v in polys.values())} áreas, {len(buildings)} prédios, textura {tw}x{th}")
+
+
+def _patchwork(d, tw, th, sc, rnd):
+    """Mosaico de lavouras retangulares levemente giradas (talhões de 120-320 m), em tons de campo, sob o mapa real."""
+    import math as _m
+    ang = rnd.uniform(0, _m.pi)
+    ca, sa = _m.cos(ang), _m.sin(ang)
+    diag = int(_m.hypot(tw, th))
+    cx, cy = tw / 2, th / 2
+    v = -diag
+    while v < diag:
+        hgt = rnd.uniform(120, 320) * sc
+        u = -diag
+        while u < diag:
+            wid = rnd.uniform(120, 320) * sc
+            col = rnd.choice(C["farm"] + [C["base"], C["grass"], C["grass"]])
+            col = tuple(max(0, min(255, c + rnd.randint(-6, 6))) for c in col)
+            corners = [(u, v), (u + wid, v), (u + wid, v + hgt), (u, v + hgt)]
+            d.polygon([(cx + a * ca - b * sa, cy + a * sa + b * ca) for a, b in corners], fill=col)
+            u += wid
+        v += hgt
 
 
 def _height(tags, area, rnd):

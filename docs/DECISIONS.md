@@ -900,3 +900,5 @@ Respostas do usuário:
   Spa, Interlagos, Sepang e Hungaroring; (2) acabamento da pista (asfalto, linhas, zebras por circuito, áreas de escape);
   (3) luz, neblina e pistas noturnas. Menus e animações depois do 3D, com mockup. Nada copiado de outros jogos: tudo
   original, a partir de dados abertos (OSM, ODbL). O vídeo de referência não pôde ser aberto (YouTube bloqueado na nuvem).
+- **2026-11-13 — Mapa real em mais 6 pistas (sorteio):** Buddh, Albert Park, Barcelona, Miami, Coreia e Monza (além de Spa,
+  Interlagos, Sepang e Hungaroring). Áreas sem dado no OSM viram mosaico de lavouras; contornos incompletos são descartados.
