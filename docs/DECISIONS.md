@@ -929,3 +929,8 @@ Respostas do usuário:
   do GP / da próxima corrida; no GP a arte troca com fade ao escolher outro cartão), painéis de vidro (`ScreenKit.glass_box`)
   e entrada em sequência (`ScreenKit.stagger_in`). No fim de semana o cartão "Próxima sessão" vira vidro com o carro
   ilustrado da equipe (`CarHero`) no lugar do traçado. Blocos, botões e conteúdo ficam onde estavam.
+- **2026-11-14 — Box mais realista (pedido do usuário):** no double stack o carro de trás também ganha o mini-jogo (fica
+  na fila e abre logo depois do primeiro) e perde mais tempo na fila (folga de 1,2 s para a equipe preparar o 2º jogo +
+  25% de chance de atraso de 0,3–1,0 s). Mini-jogo: verde escuro −0,4 s, verde claro de 0 a −0,15 s, cinza +1,0 s e deixar
+  passar sem tocar +1,6 s. IA erra paradas: ~14% pequeno atraso (+0,5–1,4 s), ~5% parada lenta (+2–4,5 s), ~1% roda presa
+  (+5–10 s); paradas lentas/roda presa aparecem como aviso na corrida.

@@ -1,8 +1,8 @@
 class_name PitTapOverlay
 extends Control
-## Mini-jogo do box (mockup v8-2): com o carro parado, um marcador vai e volta numa barra; tocar
-## com o marcador no verde solta o carro mais cedo (perfeito −0,3 s), tocar longe custa +0,6 s.
-## Vale uma vez por parada. Sem toque (ou se o jogador não olhar), a parada segue neutra.
+## Mini-jogo do box (mockup v8-2): com o carro parado, um marcador vai e volta numa barra. Verde escuro −0,4 s,
+## verde claro até −0,15 s, cinza +1,0 s e deixar passar sem tocar +1,6 s (ajuste de 2026-11-14).
+## Vale uma vez por parada. No double stack, o carro de trás ganha o seu mini-jogo logo depois do primeiro.
 ## Só aparece para carros do jogador; a IA e as simulações em lote não passam por aqui.
 
 signal finished
@@ -10,6 +10,7 @@ signal finished
 const SWEEP_S := 1.15  ## uma ida do marcador (0→1) em tempo real
 const PERFECT_ZONE := 0.08  ## meia-largura do verde forte (fração da barra)
 const GOOD_ZONE := 0.16  ## meia-largura do verde claro
+const NO_TAP_AT_S := 0.35  ## sem toque até faltar isso da parada: conta como "deixou passar"
 
 var sim: RaceSim
 var car: CarState
@@ -71,9 +72,9 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_gauge.add_child(_marker)
 	var legend := HBoxContainer.new()
-	var l1 := UiStyle.g_label("+0,6 s", 12, UiStyle.G_INK_2)
-	var l2 := UiStyle.g_label("−0,3 s (perfeito)", 12, Color("#2a6b3f"), "black")
-	var l3 := UiStyle.g_label("+0,6 s", 12, UiStyle.G_INK_2)
+	var l1 := UiStyle.g_label("cinza %s s" % _secs(PitStop.TAP_MISS_S), 12, UiStyle.G_INK_2)
+	var l2 := UiStyle.g_label("escuro %s s · claro até %s s" % [_secs(PitStop.TAP_PERFECT_S), _secs(PitStop.TAP_GOOD_BEST_S)], 12, UiStyle.G_PIT_GOOD, "black")
+	var l3 := UiStyle.g_label("sem toque %s s" % _secs(PitStop.TAP_NONE_S), 12, UiStyle.G_INK_2)
 	l1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -94,6 +95,10 @@ func setup(p_sim: RaceSim, p_car: CarState) -> void:
 	_btn.pressed.connect(_tap)
 	v.add_child(_btn)
 	_update_hint()
+
+
+static func _secs(v: float) -> String:
+	return ("+" if v > 0.0 else "−") + ("%.2f" % absf(v)).rstrip("0").rstrip(".").replace(".", ",")
 
 
 func _update_hint() -> void:
@@ -123,20 +128,32 @@ func _tap() -> void:
 	var acc := accuracy_at(marker_pos())
 	var delta := sim.pit_tap(car, acc)
 	_btn.disabled = true
-	if delta < -0.05:
-		_result.text = "PERFEITO · %s s" % ("%.1f" % delta).replace(".", ",")
-		_result.add_theme_color_override("font_color", Color("#2a6b3f"))
-	elif delta > 0.05:
-		_result.text = "FORA DO VERDE · +%s s" % ("%.1f" % delta).replace(".", ",")
+	if acc >= 1.0:
+		_result.text = "PERFEITO · %s s" % _secs(delta)
+		_result.add_theme_color_override("font_color", UiStyle.G_PIT_GOOD)
+	elif acc <= 0.0:
+		_result.text = "ÁREA CINZA · %s s" % _secs(delta)
 		_result.add_theme_color_override("font_color", UiStyle.RED)
 	else:
-		_result.text = "BOM · %s s" % ("%.1f" % delta).replace(".", ",")
+		_result.text = "BOM · %s s" % _secs(delta)
+
+
+## Deixou o marcador passar: a parada acaba sem toque e custa mais que o cinza.
+func _missed() -> void:
+	_tapped = true
+	_btn.disabled = true
+	var delta := sim.pit_no_tap(car)
+	if delta > 0.0:
+		_result.text = "DEIXOU PASSAR · %s s" % _secs(delta)
+		_result.add_theme_color_override("font_color", UiStyle.RED)
 
 
 func _process(delta: float) -> void:
 	_t += delta
 	var w := _gauge.size.x
 	_marker.position = Vector2(w * _tapped_pos() - 3.0, -4.0)
+	if not _tapped and car.in_pit and car.box_hold_s > 0.0 and car.box_hold_s <= NO_TAP_AT_S and not car.box_tapped:
+		_missed()
 	# o carro saiu do box (ou a parada acabou): fecha logo depois de mostrar o resultado
 	if not car.in_pit or car.box_hold_s <= 0.0:
 		if _end_in < 0.0:

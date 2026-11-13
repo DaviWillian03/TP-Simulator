@@ -423,6 +423,16 @@ func pit_tap(car: CarState, accuracy: float) -> float:
 	return d
 
 
+## Mini-jogo aberto e o jogador deixou o marcador passar: custa mais que tocar no cinza. Vale uma vez por parada.
+func pit_no_tap(car: CarState) -> float:
+	if not car.in_pit or car.box_hold_s <= 0.0 or car.box_tapped:
+		return 0.0
+	car.box_tapped = true
+	car.box_hold_s += PitStop.TAP_NONE_S
+	car.pit_stationary_s += PitStop.TAP_NONE_S
+	return PitStop.TAP_NONE_S
+
+
 func cancel_pit(car: CarState) -> void:
 	if not car.in_pit and not car.drive_through:
 		car.pit_requested = false
@@ -858,8 +868,14 @@ func _enter_pit(car: CarState) -> void:
 			plan["serve_penalty"] = true
 		car.plan = plan
 		stationary = float(PitStop.estimate(car, plan)["total"]) + absf(rng.randfn(0.0, 0.3))
-		if rng.randf() < 0.05:
-			stationary += rng.randf_range(2.0, 5.0)  # parada lenta
+		if car.is_player:
+			if rng.randf() < 0.05:
+				stationary += rng.randf_range(2.0, 5.0)  # parada lenta
+		else:  # IA: erros de pit mais variados (pedido de 2026-11-14: "parece que acertam todos")
+			var err := PitStop.ai_error(rng)
+			stationary += float(err["extra"])
+			if String(err["kind"]) in ["slow", "stuck"]:
+				car.pit_error_text = ("%s: roda presa no box (+%.1f s)" if err["kind"] == "stuck" else "%s: parada lenta (+%.1f s)") % [car.display_name(), float(err["extra"])]
 		if refuel:
 			stationary += TechRules.REFUEL_S
 	car.pit_stationary_s = stationary
@@ -879,9 +895,14 @@ func _begin_service(car: CarState) -> void:
 	var team_id: String = car.team["id"]
 	var wait := maxf(0.0, float(team_box_free_at.get(team_id, 0.0)) - time_s)
 	car.box_wait_s = wait
+	if wait > 0.0 and rng.randf() < PitStop.STACK_FUMBLE_CHANCE:  # double stack: equipe apressada no carro de trás
+		car.pit_stationary_s += rng.randf_range(0.3, 1.0)
 	car.box_hold_s = wait + car.pit_stationary_s
 	team_box_free_at[team_id] = time_s + car.box_hold_s + PitStop.QUEUE_GAP_S
 	car.speed = 0.0
+	if car.pit_error_text != "":
+		incident.emit(car, "pit_slow", car.pit_error_text)
+		car.pit_error_text = ""
 	pit_box_stop.emit(car, car.box_hold_s)
 
 

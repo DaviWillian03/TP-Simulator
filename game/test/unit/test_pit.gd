@@ -243,3 +243,60 @@ func test_toque_abre_investigacao_e_so_depois_sai_a_punicao() -> void:
 			found = true
 			break
 	assert_true(found, "com muitos incidentes alguém é investigado")
+
+
+func test_minijogo_verde_escuro_ganha_mais_que_o_claro_e_cinza_pune() -> void:
+	assert_almost_eq(PitStop.tap_delta(1.0), PitStop.TAP_PERFECT_S, 0.001)
+	var light := PitStop.tap_delta(0.9)
+	assert_lt(PitStop.tap_delta(1.0), light - 0.2, "verde escuro ganha bem mais que o claro colado nele")
+	assert_lt(light, 0.0, "verde claro ainda ganha")
+	assert_gt(PitStop.tap_delta(0.0), 0.9, "cinza custa ~1 s")
+	assert_gt(PitStop.TAP_NONE_S, PitStop.TAP_MISS_S, "deixar passar custa mais que o cinza")
+
+
+func test_deixar_passar_o_minijogo_custa_mais_e_vale_uma_vez() -> void:
+	var sim := _sim()
+	var car := _mine(sim)[0]
+	sim.advance(20.0)
+	sim.set_pit_plan(car, PitStop.make_plan("hard"))
+	assert_true(_until_stopped(sim, car))
+	var before := car.box_hold_s
+	assert_almost_eq(sim.pit_no_tap(car), PitStop.TAP_NONE_S, 0.001)
+	assert_almost_eq(car.box_hold_s, before + PitStop.TAP_NONE_S, 0.001)
+	assert_almost_eq(sim.pit_tap(car, 1.0), 0.0, 0.001, "depois de passar, não dá mais para tocar")
+
+
+func test_ia_erra_paradas_as_vezes() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var small := 0
+	var slow := 0
+	var n := 4000
+	for i in n:
+		var e := PitStop.ai_error(rng)
+		match String(e["kind"]):
+			"small":
+				small += 1
+				assert_between(float(e["extra"]), 0.5, 1.4)
+			"slow", "stuck":
+				slow += 1
+				assert_gt(float(e["extra"]), 1.99)
+	assert_between(float(small) / n, 0.10, 0.18, "pequenos atrasos ~14%")
+	assert_between(float(slow) / n, 0.04, 0.08, "paradas lentas ~6%")
+
+
+func test_double_stack_o_carro_de_tras_perde_tempo_na_fila() -> void:
+	var sim := _sim()
+	var cars := _mine(sim)
+	sim.advance(20.0)
+	for c in cars:
+		sim.set_pit_plan(c, PitStop.make_plan("hard"))
+	# os dois param na mesma volta: o de trás chega com o box ocupado
+	var t := 0.0
+	while t < 400.0 and not (cars[0].in_pit and cars[1].in_pit and cars[0].box_hold_s > 0.0 and cars[1].box_hold_s > 0.0):
+		sim.step()
+		t += RaceSim.DT
+	var back := cars[0] if cars[0].box_wait_s > cars[1].box_wait_s else cars[1]
+	var front := cars[1] if back == cars[0] else cars[0]
+	assert_gt(back.box_wait_s, 0.0, "o carro de trás espera o box")
+	assert_gt(back.box_hold_s, front.box_hold_s + PitStop.QUEUE_GAP_S - 0.01, "fica parado pelo menos o tempo do primeiro + a folga")

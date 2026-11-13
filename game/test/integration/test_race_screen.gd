@@ -429,3 +429,23 @@ func test_safety_car_3d_entra_no_pit_lane_na_volta_de_recolher() -> void:
 	sim.control._go_green("Safety car recolhe")
 	view._update_safety_car(0.016)
 	assert_true(view._sc.visible, "segue visível pelo pit lane depois da bandeira verde")
+
+
+func test_double_stack_o_carro_de_tras_tambem_ganha_o_minijogo() -> void:
+	var a: CarState = screen._car_panels[0].car
+	var b: CarState = screen._car_panels[1].car
+	for c: CarState in [a, b]:  # os dois parados no box, o de trás na fila
+		c.in_pit = true
+		c.box_tapped = false
+	a.box_hold_s = 2.4
+	b.box_hold_s = 4.0
+	screen.set_time_scale(4.0)
+	screen._on_pit_box_stop(a, a.box_hold_s)
+	screen._on_pit_box_stop(b, b.box_hold_s)
+	assert_eq(screen._tap.car, a, "primeiro o carro da frente")
+	screen._tap.finished.emit()
+	assert_not_null(screen._tap, "depois, o mini-jogo do carro de trás")
+	assert_eq(screen._tap.car, b)
+	assert_eq(screen.time_scale, 1.0)
+	screen._tap.finished.emit()
+	assert_eq(screen.time_scale, 4.0, "volta à velocidade de antes das paradas")

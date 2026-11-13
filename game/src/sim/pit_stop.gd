@@ -4,9 +4,19 @@ extends RefCounted
 ## Valores PROVISÓRIOS (balancear depois). Sem dependência de tela.
 
 const BASE_S := 2.4  ## troca dos 4 pneus
-const TAP_PERFECT_S := -0.3  ## mini-jogo: toque perfeito
-const TAP_MISS_S := 0.6  ## mini-jogo: toque longe do verde (ou sem toque com a tela aberta)
-const QUEUE_GAP_S := 0.5  ## folga de segurança entre dois carros da equipe no box
+## Mini-jogo (ajuste de 2026-11-14: verde escuro ganha bem mais que o claro; cinza e "deixar passar" punem mais)
+const TAP_PERFECT_S := -0.4  ## toque no verde escuro
+const TAP_GOOD_BEST_S := -0.15  ## verde claro, colado no escuro (na borda de fora do verde claro: 0)
+const TAP_MISS_S := 1.0  ## toque na área cinza
+const TAP_NONE_S := 1.6  ## deixou o marcador passar sem tocar (mini-jogo aberto)
+const QUEUE_GAP_S := 1.2  ## double stack: a equipe prepara o 2º jogo e reposiciona os macacos antes do carro de trás
+const STACK_FUMBLE_CHANCE := 0.25  ## double stack: chance de a equipe, apressada, atrasar o carro de trás
+## Erros de pit da IA (o jogador tem o mini-jogo): [chance acumulada, atraso mín., atraso máx., tipo]
+const AI_PIT_ERRORS := [
+	[0.012, 5.0, 10.0, "stuck"],  # porca/roda presa
+	[0.06, 2.0, 4.5, "slow"],  # parada lenta
+	[0.20, 0.5, 1.4, "small"],  # pequeno atraso
+]
 const USED_SET_WEAR := 0.15  ## jogo usado já rodou na classificação
 
 ## Estoque padrão por piloto (corrida rápida); no GP desce da classificação (WeekendSim).
@@ -63,5 +73,19 @@ static func sets_left(car: CarState, compound: String) -> int:
 
 
 ## Toque do mini-jogo: accuracy 1 = no centro do verde, 0 = longe. Devolve o ajuste em segundos.
+## Verde escuro (1) = TAP_PERFECT_S; verde claro (0..1) = de 0 a TAP_GOOD_BEST_S; cinza (0) = TAP_MISS_S.
 static func tap_delta(accuracy: float) -> float:
-	return lerpf(TAP_MISS_S, TAP_PERFECT_S, clampf(accuracy, 0.0, 1.0))
+	if accuracy >= 1.0:
+		return TAP_PERFECT_S
+	if accuracy <= 0.0:
+		return TAP_MISS_S
+	return lerpf(0.0, TAP_GOOD_BEST_S, accuracy)
+
+
+## Sorteia um erro de pit da IA: {"extra": segundos, "kind": "" | small | slow | stuck}.
+static func ai_error(rng: RandomNumberGenerator) -> Dictionary:
+	var r := rng.randf()
+	for e: Array in AI_PIT_ERRORS:
+		if r < float(e[0]):
+			return {"extra": rng.randf_range(float(e[1]), float(e[2])), "kind": String(e[3])}
+	return {"extra": 0.0, "kind": ""}

@@ -51,6 +51,7 @@ var in_pit := false
 var pit_speed := 0.0
 var pit_service_done := false
 var pit_stationary_s := 2.4
+var pit_error_text := ""  ## erro de pit da IA a anunciar quando o carro para no box
 var pit_stops := 0
 var ai_pit_wear := 0.7  ## desgaste em que a IA decide parar (varia por carro)
 var ai_plan: Array[int] = []  ## voltas planejadas das próximas paradas (IA; refeito depois de cada parada fora do plano)

@@ -39,6 +39,7 @@ var _results_shown := false
 var _pit: PitScreen = null
 var _tap: PitTapOverlay = null
 var _scale_before_stop := 0.0  ## velocidade antes de a parada forçar 1×
+var _tap_queue: Array[CarState] = []  ## double stack: carros do jogador esperando o mini-jogo
 var _champ: ChampionshipLive = null  ## campeonato ao vivo (só na campanha)
 var _champ_card: ChampionshipCard
 var _champ_lap := -1  ## volta do líder na última checagem
@@ -1031,9 +1032,17 @@ func _on_pit_closed() -> void:
 
 ## O carro do jogador parou no box: abre o mini-jogo de toque (a corrida fica em 1×).
 func _on_pit_box_stop(car: CarState, hold_s: float) -> void:
-	if not car.is_player or _tap != null or hold_s <= 0.0:
+	if not car.is_player or hold_s <= 0.0:
 		return
-	_scale_before_stop = time_scale
+	if _tap != null:  # double stack: o carro de trás espera o mini-jogo do primeiro e ganha o seu logo depois
+		_tap_queue.append(car)
+		return
+	_open_tap(car)
+
+
+func _open_tap(car: CarState, chained := false) -> void:
+	if not chained:  # no 2º carro do double stack a velocidade de antes já está guardada
+		_scale_before_stop = time_scale
 	_tap = PitTapOverlay.new()
 	_tap.setup(sim, car)
 	_tap.finished.connect(_on_tap_finished)
@@ -1043,6 +1052,11 @@ func _on_pit_box_stop(car: CarState, hold_s: float) -> void:
 
 func _on_tap_finished() -> void:
 	_tap = null
+	while not _tap_queue.is_empty():
+		var nxt: CarState = _tap_queue.pop_front()
+		if nxt.in_pit and nxt.box_hold_s > PitTapOverlay.NO_TAP_AT_S + 0.3 and not nxt.box_tapped:
+			_open_tap(nxt, true)
+			return
 	set_time_scale(_scale_before_stop if _scale_before_stop > 0.0 else time_scale)
 	_sync_speed()
 
@@ -1121,7 +1135,7 @@ func _on_fastest_lap(car: CarState, lap_time: float) -> void:
 
 
 func _on_incident(car: CarState, kind: String, text: String) -> void:
-	var important := car.is_player or kind in ["crash", "failure", "blowout", "issue", "contact", "investigation", "cleared"] or sim.standings().find(car) < 5
+	var important := car.is_player or kind in ["crash", "failure", "blowout", "issue", "contact", "investigation", "cleared", "pit_slow"] or sim.standings().find(car) < 5
 	if important:
 		_toasts.push(text, "hot" if car.is_player or kind in ["crash", "blowout"] else "note")
 
