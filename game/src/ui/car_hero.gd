@@ -48,6 +48,9 @@ func set_team(team_id: String, number: int, number_color: Color = Color.WHITE, t
 	var tex: Texture2D = CarArt.car_texture(team if not team.is_empty() else {"id": team_id})
 	_car.texture = tex
 	_refl.texture = tex
+	if _number == null:  # chamado antes de entrar na árvore: o número entra no _ready
+		ready.connect(set_team.bind(team_id, number, number_color, team), CONNECT_ONE_SHOT)
+		return
 	_number.text = str(number)
 	_number.add_theme_color_override("font_color", number_color)
 

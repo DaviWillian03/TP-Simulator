@@ -924,3 +924,8 @@ Respostas do usuário:
 - **2026-11-14 — Carro 3D dos menus saiu.** O usuário não gostou dos carros 3D grandes: a tela inicial e a escolha de
   equipe voltam ao carro ilustrado caricato (`CarHero`). O layout novo da tela inicial (painel, fundo vivo, notícias,
   transições) fica.
+- **2026-11-14 — Linguagem nova nas outras telas (mockup v40 aprovado, "as três"):** configuração do Grande Prêmio, painel do
+  fim de semana e Início da campanha ganham o fundo vivo (`ScreenKit.live_backdrop` → `MenuBackdrop` da pista escolhida /
+  do GP / da próxima corrida; no GP a arte troca com fade ao escolher outro cartão), painéis de vidro (`ScreenKit.glass_box`)
+  e entrada em sequência (`ScreenKit.stagger_in`). No fim de semana o cartão "Próxima sessão" vira vidro com o carro
+  ilustrado da equipe (`CarHero`) no lugar do traçado. Blocos, botões e conteúdo ficam onde estavam.

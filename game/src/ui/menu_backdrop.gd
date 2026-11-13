@@ -56,6 +56,24 @@ func _layout() -> void:
 	_art.position = -(size * 0.125)
 
 
+## Troca a pista com fade (configuração do Grande Prêmio, v40): a arte antiga fica embaixo e a nova aparece por cima.
+func set_circuit(circuit_id: String) -> void:
+	var tex := CampaignHub.track_art(circuit_id)
+	if tex == _art.texture:
+		return
+	var old := TextureRect.new()
+	for p: String in ["texture", "expand_mode", "stretch_mode", "texture_filter", "material", "size", "pivot_offset", "position", "scale"]:
+		old.set(p, _art.get(p))
+	old.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(old)
+	move_child(old, 0)
+	_art.texture = tex
+	_art.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(_art, "modulate:a", 1.0, 0.35)
+	tw.tween_callback(old.queue_free)
+
+
 func _ready() -> void:
 	_layout()
 	var tw := create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)

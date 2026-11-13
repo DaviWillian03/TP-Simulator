@@ -155,6 +155,47 @@ static func garage_page(screen: Control, team_id: String) -> Dictionary:
 	return {"backdrop": backdrop, "layer": layer}
 
 
+## Fundo vivo (mockup v40): a arte da pista desfocada (MenuBackdrop) entra no lugar da garagem, atrás da camada.
+## O GarageBackdrop fica escondido (as telas ainda chamam set_glow nele).
+static func live_backdrop(page: Dictionary, circuit_id: String) -> MenuBackdrop:
+	var layer: Control = page["layer"]
+	var screen := layer.get_parent() as Control
+	var mb := MenuBackdrop.make(circuit_id)
+	screen.add_child(mb)
+	screen.move_child(mb, layer.get_index())
+	mb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	(page["backdrop"] as Control).visible = false
+	return mb
+
+
+## Painel de vidro dos menus (v39/v40): escuro translúcido com fio claro na borda.
+static func glass_box(radius: int = 22, mx: int = 0, my: int = 0) -> StyleBoxFlat:
+	var st := UiStyle.g_box(UiStyle.G_GLASS, radius, mx, my)
+	st.set_border_width_all(1)
+	st.border_color = Color(1, 1, 1, 0.08)
+	return st
+
+
+## Entrada em sequência (v39/v40): cada bloco aparece e desliza 40 px para o lugar, um depois do outro.
+## Roda depois do primeiro layout (as posições finais já valem).
+static func stagger_in(nodes: Array, start: float = 0.08, step: float = 0.06) -> void:
+	for n: Control in nodes:
+		n.modulate.a = 0.0
+	_stagger_run.call_deferred(nodes, start, step)
+
+
+static func _stagger_run(nodes: Array, start: float, step: float) -> void:
+	for i in nodes.size():
+		var c: Control = nodes[i]
+		if not is_instance_valid(c) or not c.is_inside_tree():
+			continue
+		var final_x := c.position.x
+		c.position.x = final_x + (40.0 if c.global_position.x > 640.0 else -40.0)
+		var tw := c.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(c, "modulate:a", 1.0, 0.32).set_delay(start + i * step)
+		tw.tween_property(c, "position:x", final_x, 0.42).set_delay(start + i * step)
+
+
 ## Posiciona um elemento por âncora e deslocamento (referência 1280×720).
 ## Degradê escuro no topo de uma tela com pista/cenário claro atrás: a barra de topo continua legível.
 static func top_shade(layer: Control, height: float = 96.0) -> void:

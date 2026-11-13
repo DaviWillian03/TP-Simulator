@@ -18,6 +18,7 @@ var _scroll: ScrollContainer
 var _laps: Label
 var _teams: GridContainer
 var _go: CutButton
+var _live: MenuBackdrop  ## fundo vivo: a pista escolhida, desfocada (v40)
 
 
 func _ready() -> void:
@@ -75,6 +76,7 @@ func _ready() -> void:
 	bd.cone_x = -1.0
 	bd.set_glow(UiStyle.team_color(Session.player_team), 0.22)
 	var layer: Control = _page["layer"]
+	_live = ScreenKit.live_backdrop(_page, Session.circuit_id if Session.circuit_id != "" else "interlagos")
 
 	# cabeçalho
 	var head := HBoxContainer.new()
@@ -129,7 +131,7 @@ func _ready() -> void:
 
 	# painel: equipe · categoria e duração · clima e formato · LARGAR
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#171a21"), 22, 22, 16))
+	panel.add_theme_stylebox_override("panel", ScreenKit.glass_box(22, 22, 16))
 	ScreenKit.place(panel, layer, Control.PRESET_BOTTOM_LEFT, Vector2(40, -18), Vector2(1200, 0))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 30)
@@ -185,8 +187,7 @@ func _ready() -> void:
 	var keep := _rows.has(Session.circuit_id) and not (_rows[Session.circuit_id] as Button).disabled
 	_select(Session.circuit_id if keep else first)
 	_center_selected.call_deferred()
-	layer.modulate = Color(1, 1, 1, 0)
-	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
+	ScreenKit.stagger_in([head, cat_seg, _scroll, panel])  # entrada em sequência (v40)
 
 
 ## Emblemas das equipes da categoria; a escolhida tem contorno branco.
@@ -346,6 +347,8 @@ func _center_selected() -> void:
 
 func _select(circuit_id: String) -> void:
 	Session.circuit_id = circuit_id
+	if _live != null:
+		_live.set_circuit(circuit_id)
 	var b: Button = _rows[circuit_id]
 	if not b.button_pressed:
 		b.button_pressed = true

@@ -39,11 +39,14 @@ func _ready() -> void:
 	bd.glow_radius = Vector2(0.45, 0.5)
 	bd.set_glow(UiStyle.team_color(weekend.player_team), 0.22)
 	var layer: Control = page["layer"]
+	ScreenKit.live_backdrop(page, String(weekend.circuit.get("id", "")))  # fundo vivo: a pista do GP (v40)
 	var team := GameData.team_by_id(weekend.teams, weekend.player_team)
 
 	# topo (mockup v26-3): a pista 3D com a bandeira e a previsão · os pneus do fim de semana · as sessões em blocos
-	layer.add_child(_hero(Rect2(40, 18, 820, 196), team))
-	layer.add_child(_tyre_card(Rect2(876, 18, 364, 196)))
+	var hero := _hero(Rect2(40, 18, 820, 196), team)
+	layer.add_child(hero)
+	var tyre := _tyre_card(Rect2(876, 18, 364, 196))
+	layer.add_child(tyre)
 	var tiles := HBoxContainer.new()
 	tiles.add_theme_constant_override("separation", 10)
 	for i in weekend.sessions.size():
@@ -57,7 +60,7 @@ func _ready() -> void:
 
 	var left := VBoxContainer.new()
 	left.add_theme_constant_override("separation", UiStyle.SP_M)
-	ScreenKit.scroll_column(left, layer, Vector2(40, 308), Vector2(720, 720 - 308 - 8))
+	var left_sc := ScreenKit.scroll_column(left, layer, Vector2(40, 308), Vector2(720, 720 - 308 - 8))
 	left.add_child(_final_card() if weekend.is_over() else _next_card())
 	if _practice_left():
 		_program_holder = VBoxContainer.new()
@@ -67,12 +70,11 @@ func _ready() -> void:
 
 	var cars := VBoxContainer.new()
 	cars.add_theme_constant_override("separation", 12)
-	ScreenKit.scroll_column(cars, layer, Vector2(1280 - 40 - 456, 308), Vector2(456, 720 - 308 - 8))
+	var cars_sc := ScreenKit.scroll_column(cars, layer, Vector2(1280 - 40 - 456, 308), Vector2(456, 720 - 308 - 8))
 	for d: Dictionary in weekend.drivers:
 		if d["team"] == weekend.player_team:
 			cars.add_child(_car_card(d))
-	layer.modulate = Color(1, 1, 1, 0)
-	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
+	ScreenKit.stagger_in([hero, tyre, tiles, left_sc, cars_sc])  # entrada em sequência (v40)
 	if weekend.show_practice_report and not weekend.last_practice.is_empty():
 		weekend.show_practice_report = false
 		_open_practice_report()
@@ -85,7 +87,7 @@ func _hero(r: Rect2, team: Dictionary) -> Control:
 	p.clip_contents = true
 	p.position = r.position
 	p.size = r.size
-	p.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#171a21"), 22, 0, 0))
+	p.add_theme_stylebox_override("panel", ScreenKit.glass_box(22))
 	var art := TextureRect.new()
 	art.texture = CampaignHub.track_art(String(weekend.circuit.get("id", "")))
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -169,7 +171,7 @@ func _tyre_card(r: Rect2) -> Control:
 	var p := PanelContainer.new()
 	p.position = r.position
 	p.size = r.size
-	p.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#171a21"), 22, 18, 14))
+	p.add_theme_stylebox_override("panel", ScreenKit.glass_box(22, 18, 14))
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	p.add_child(v)
@@ -222,7 +224,7 @@ func _session_tile(id: String, letter: String, state: String) -> Control:
 		col = Color("#8f98a7")
 	var p := PanelContainer.new()
 	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	p.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_LIGHT if now else Color("#171a21"), 18, 10, 8))
+	p.add_theme_stylebox_override("panel", (UiStyle.g_box(UiStyle.G_LIGHT, 18, 10, 8) if now else ScreenKit.glass_box(18, 10, 8)))
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 10)
 	var sq := PanelContainer.new()
@@ -253,7 +255,7 @@ func _session_tile(id: String, letter: String, state: String) -> Control:
 
 func _light_card() -> PanelContainer:
 	var card := PanelContainer.new()
-	var st := UiStyle.g_box(UiStyle.G_LIGHT, 20, 30, 18)
+	var st := ScreenKit.glass_box(20, 30, 18)  # vidro com a borda vermelha da ação (v40)
 	st.border_width_left = 7
 	st.border_color = UiStyle.RED
 	card.add_theme_stylebox_override("panel", st)
@@ -270,12 +272,12 @@ func _next_card() -> Control:
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	v.add_theme_constant_override("separation", 4)
 	row.add_child(v)
-	v.add_child(UiStyle.g_caption("Próxima sessão · agora", UiStyle.G_INK_2))
-	v.add_child(UiStyle.g_label(_session_title(id).to_upper(), 44, UiStyle.G_INK, "black"))
+	v.add_child(UiStyle.g_caption("Próxima sessão · agora", UiStyle.G_TEXT_2))
+	v.add_child(UiStyle.g_label(_session_title(id).to_upper(), 44, UiStyle.G_TEXT, "black"))
 	var kind := "practice" if weekend.is_practice(id) else id
-	var desc := UiStyle.g_label(_session_desc(kind), UiStyle.FS_BODY, UiStyle.G_INK_2)
+	var desc := UiStyle.g_label(_session_desc(kind), UiStyle.FS_BODY, UiStyle.G_TEXT_2)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size = Vector2(440, 0)
+	desc.custom_minimum_size = Vector2(420, 0)
 	v.add_child(desc)
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -301,14 +303,14 @@ func _next_card() -> Control:
 		sim.pressed.connect(_on_simulate)
 		acts.add_child(sim)
 	v.add_child(acts)
-	var trk := TrackOutline.new()
-	trk.line_color = UiStyle.G_INK
-	trk.line_width = 6.0
-	trk.pad = 8.0
-	trk.custom_minimum_size = Vector2(150, 130)
-	trk.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	trk.set_circuit(weekend.circuit)
-	row.add_child(trk)
+	var car := CarHero.new()  # carro ilustrado da equipe (v40), no lugar do traçado (a pista já está no destaque)
+	car.custom_minimum_size = Vector2(210, 80)
+	car.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(car)
+	var team := GameData.team_by_id(weekend.teams, weekend.player_team)
+	var mine := _my_drivers()
+	var c2 := Color(String(team.get("color2", "#ffffff")))
+	car.set_team(weekend.player_team, int(mine[0].get("number", 0)) if not mine.is_empty() else 0, c2 if c2.get_luminance() > 0.35 else Color.WHITE, team)
 	return card
 
 
@@ -346,11 +348,11 @@ func _feeder_tiles() -> Control:
 			["Principal", "parada obrigatória · 2 compostos" if bool(r["compound_rule"]) else "sem parada obrigatória"]]:
 		var tile := PanelContainer.new()
 		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tile.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#e3e6eb"), 14, 12, 8))
+		tile.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS_TILE, 14, 12, 8))
 		var tv := VBoxContainer.new()
 		tv.add_theme_constant_override("separation", -2)
-		tv.add_child(UiStyle.g_label(t[0], UiStyle.FS_BODY, UiStyle.G_INK, "black"))
-		var cap := UiStyle.g_label(t[1], UiStyle.FS_CAPTION, UiStyle.G_INK_2, "bold")
+		tv.add_child(UiStyle.g_label(t[0], UiStyle.FS_BODY, UiStyle.G_TEXT, "black"))
+		var cap := UiStyle.g_label(t[1], UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold")
 		cap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		tv.add_child(cap)
 		tile.add_child(tv)
@@ -370,15 +372,15 @@ func _practice_tiles() -> Control:
 			["rain", "%d%%" % roundi(p * 100), "chance de chuva · %s" % String(WeekendSim.DAYS[weekend.day_of(weekend.session_id())]).to_lower()]]:
 		var tile := PanelContainer.new()
 		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tile.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#e3e6eb"), 14, 12, 8))
+		tile.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS_TILE, 14, 12, 8))
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", UiStyle.SP_S)
-		row.add_child(ScreenKit.icon(t[0], 22, UiStyle.G_INK))
+		row.add_child(ScreenKit.icon(t[0], 22, UiStyle.G_TEXT))
 		var tv := VBoxContainer.new()
 		tv.add_theme_constant_override("separation", -4)
 		tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tv.add_child(UiStyle.g_label(t[1], 20, UiStyle.G_INK, "black"))
-		var cap := UiStyle.g_label(t[2], UiStyle.FS_CAPTION, UiStyle.G_INK_2, "bold")
+		tv.add_child(UiStyle.g_label(t[1], 20, UiStyle.G_TEXT, "black"))
+		var cap := UiStyle.g_label(t[2], UiStyle.FS_CAPTION, UiStyle.G_TEXT_2, "bold")
 		cap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		tv.add_child(cap)
 		row.add_child(tv)
@@ -487,19 +489,19 @@ func _final_card() -> Control:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	card.add_child(v)
-	v.add_child(UiStyle.g_caption("Fim de semana encerrado", UiStyle.G_INK_2))
+	v.add_child(UiStyle.g_caption("Fim de semana encerrado", UiStyle.G_TEXT_2))
 	var winner_id: String = weekend.results["race"][0]
 	var win_row := HBoxContainer.new()
 	win_row.add_theme_constant_override("separation", UiStyle.SP_M)
 	for d: Dictionary in weekend.drivers:
 		if d["id"] == winner_id:
 			win_row.add_child(DriverPhotos.make_avatar(d, UiStyle.team_color(String(d["team"])), 52))
-	win_row.add_child(UiStyle.g_label("VENCEDOR: %s" % _driver_name(winner_id).to_upper(), 34, UiStyle.G_INK, "black"))
+	win_row.add_child(UiStyle.g_label("VENCEDOR: %s" % _driver_name(winner_id).to_upper(), 34, UiStyle.G_TEXT, "black"))
 	v.add_child(win_row)
 	for d: Dictionary in weekend.drivers:
 		if d["team"] == weekend.player_team:
 			var pos: int = weekend.results["race"].find(d["id"]) + 1
-			v.add_child(UiStyle.g_label("%s · %dº na corrida · %d pontos" % [d["name"], pos, weekend.points[d["id"]]], 18, UiStyle.G_INK_2, "bold"))
+			v.add_child(UiStyle.g_label("%s · %dº na corrida · %d pontos" % [d["name"], pos, weekend.points[d["id"]]], 18, UiStyle.G_TEXT_2, "bold"))
 	var again := CutButton.new()
 	again.text = "VOLTAR AO PAINEL" if weekend.world else ("VOLTAR À SEDE" if weekend.campaign else "NOVO GRANDE PRÊMIO")
 	again.custom_minimum_size = Vector2(300, UiStyle.TOUCH_MAIN)
@@ -639,7 +641,8 @@ func _refresh_program(driver_id: String) -> void:
 func _car_card(d: Dictionary) -> Control:
 	var setup: CarSetup = weekend.setups[d["id"]]
 	var color := UiStyle.team_color(weekend.player_team)
-	var card := ScreenKit.g_card(UiStyle.G_SURFACE, 20, 20, 11)
+	var card := PanelContainer.new()  # vidro sobre a pista (v40)
+	card.add_theme_stylebox_override("panel", ScreenKit.glass_box(20, 20, 11))
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 5)
 	card.add_child(v)

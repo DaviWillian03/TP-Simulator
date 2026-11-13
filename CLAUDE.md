@@ -52,7 +52,7 @@ das escolhas técnicas.
   tela cheia com painéis de vidro (`UiStyle.G_GLASS`, `ScreenKit.top_shade`/`glass_*`); clima fica na `WeatherSheet` (selo do topo).
 - `src/core/session.gd` — autoload `Session` (escolhas do menu + opções de desenvolvimento).
   Também em `src/core/`: `Settings` (opções do jogador, `user://settings.json`) e `SaveSlots` (3 slots, `save_version`, migração do save antigo). **Autosave do fim de semana**: `WeekendSim.to_save()/from_save()` + `SaveSlots.save_weekend/load_weekend` (após cada sessão via sinal `session_done`; a corrida em andamento não é salva); dev `--worldrace`, `--worldresume`, `--ui=pitback`.
-  Tela inicial = painel (`title_screen`: `MenuBackdrop` + carro ilustrado `CarHero`, mockup v39). Telas de acabamento: `settings_screen`, `slots_screen`, `splash_screen` (main scene), `HelpSheet` + `Tips` (`data/help.json`); sons de menu em `src/audio/ui_sound.gd`.
+  Tela inicial = painel (`title_screen`: `MenuBackdrop` + carro ilustrado `CarHero`, mockup v39); GP, fim de semana e Início da campanha usam `ScreenKit.live_backdrop` + `glass_box` + `stagger_in` (v40). Telas de acabamento: `settings_screen`, `slots_screen`, `splash_screen` (main scene), `HelpSheet` + `Tips` (`data/help.json`); sons de menu em `src/audio/ui_sound.gd`.
   Dev: `--settings`, `--slots[=world]`, `--ui=help`. Logo: `tools/make_logo_v2.py --install`. Dados reais: `tools/enrich_team_info.py`, `tools/add_real_round.py`.
 - `test/unit`, `test/integration` — GUT. `tools/race_report.gd` — relatório de corridas simuladas. `tools/balance_report.gd` —
   calibra carro × piloto × resto (meta 55/25/20; `--incidents=0 --weather=dry`). `CarForm` = forma da equipe em cada GP.

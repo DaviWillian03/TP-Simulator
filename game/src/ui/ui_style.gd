@@ -271,6 +271,7 @@ const G_RAIN_LIGHT := Color("#cfe6ff")  ## clima: ícones e números
 const G_SUN := Color("#F5C542")  ## clima: sol
 const G_WET_SCALE := [Color("#c9b27a"), Color("#7fa7d6"), Color("#2f6fd6"), Color("#163e8c")]  ## seca → encharcada
 const G_OFF := Color(1, 1, 1, 0.04)
+const G_GLASS_TILE := Color(1, 1, 1, 0.07)  ## ladrilho dentro de um painel de vidro (v40)
 const G_FRAME := Color(0.039, 0.047, 0.063, 0.82)  ## barra do topo e barra de ícones da campanha (v26)
 ## Cor de destaque de cada seção da campanha (v26): o ícone e o título da seção usam a mesma cor.
 const SECTION := {"home": Color("#f3f4f6"), "champ": Color("#E10600"), "drivers": Color("#4C8DFF"), "car": Color("#FF8A1F"),

@@ -25,24 +25,23 @@ func _ready() -> void:
 	var page := ScreenKit.garage_page(self, campaign.player_team)
 	(page["backdrop"] as GarageBackdrop).set_glow(color)
 	var layer: Control = page["layer"]
+	ScreenKit.live_backdrop(page, String(campaign.next_round().get("id", "")))  # fundo vivo: a pista da próxima corrida (v40)
 
 	# mosaico (mockup v26-4): próximo GP · pilotos · carro · sede · tabela · diretoria, com a moldura da campanha
 	_layer = layer
 	var R := CampaignFrame.CONTENT
 	var x0 := R.position.x
 	var y0 := R.position.y
-	layer.add_child(_gp_tile(Rect2(x0, y0, 540, 330)))
-	layer.add_child(_drivers_tile(Rect2(x0 + 556, y0, 380, 330), color))
-	layer.add_child(_car_tile(Rect2(x0, y0 + 346, 540, R.size.y - 346)))
-	layer.add_child(_hq_tile(Rect2(x0 + 556, y0 + 346, 380, R.size.y - 346)))
-	layer.add_child(_table_tile(Rect2(x0 + 952, y0, R.size.x - 952, 390)))
-	layer.add_child(_board_tile(Rect2(x0 + 952, y0 + 406, R.size.x - 952, R.size.y - 406)))
+	var tiles: Array[Control] = [_gp_tile(Rect2(x0, y0, 540, 330)), _drivers_tile(Rect2(x0 + 556, y0, 380, 330), color),
+		_table_tile(Rect2(x0 + 952, y0, R.size.x - 952, 390)), _car_tile(Rect2(x0, y0 + 346, 540, R.size.y - 346)),
+		_hq_tile(Rect2(x0 + 556, y0 + 346, 380, R.size.y - 346)), _board_tile(Rect2(x0 + 952, y0 + 406, R.size.x - 952, R.size.y - 406))]
+	for t in tiles:
+		layer.add_child(t)
 	CampaignFrame.apply(layer, "hub", true)
 	if Session.campaign_open_news:
 		Session.campaign_open_news = false
 		_open_news.call_deferred()
-	layer.modulate = Color(1, 1, 1, 0)
-	create_tween().tween_property(layer, "modulate:a", 1.0, 0.18)
+	ScreenKit.stagger_in(tiles)  # blocos entram um a um (v40)
 	_show_next_event.call_deferred()
 	PartsDialogs.show_pending.call_deferred(self, campaign, _after_parts_dialog)
 	if campaign.livery != null and not campaign.livery.launch.is_empty():
@@ -52,14 +51,17 @@ func _ready() -> void:
 # --- mosaico (v26-4) -------------------------------------------------------------------------------------------
 
 ## Bloco do mosaico: botão grande com cantos arredondados; o conteúdo é posicionado à mão dentro dele.
-func _tile(r: Rect2, on_press: Callable, fill := Color("#171a21")) -> Button:
+func _tile(r: Rect2, on_press: Callable, fill := UiStyle.G_GLASS) -> Button:
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_NONE
 	b.clip_contents = true
 	b.position = r.position
 	b.size = r.size
 	for st: String in ["normal", "hover", "pressed", "hover_pressed"]:
-		var box := UiStyle.g_box(fill if st == "normal" else fill.lightened(0.06), 22, 0, 0)
+		var f := Color(fill if st == "normal" else fill.lightened(0.06), minf(fill.a, 0.84))  # vidro sobre a pista (v40)
+		var box := UiStyle.g_box(f, 22, 0, 0)
+		box.set_border_width_all(1)
+		box.border_color = Color(1, 1, 1, 0.08)
 		box.shadow_color = Color(0, 0, 0, 0.35)
 		box.shadow_size = 10
 		b.add_theme_stylebox_override(st, box)
