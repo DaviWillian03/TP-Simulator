@@ -1184,7 +1184,7 @@ func _show_podium() -> void:
 		return
 	var podium := PodiumView.new()
 	_layer.add_child(podium)
-	podium.setup(top3, ("Sprint · " if sim.sprint else "") + sim.track.grand_prix)
+	podium.setup(top3, ("Sprint · " if sim.sprint else "") + sim.track.grand_prix, sim.track.country_code)
 	podium.done.connect(func() -> void: _layer.add_child(_build_results()))
 
 

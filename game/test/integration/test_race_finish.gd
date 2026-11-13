@@ -30,11 +30,13 @@ func test_podium_shows_the_top_three_and_leads_to_results() -> void:
 			top3.append(car)
 	var podium := PodiumView.new()
 	add_child_autofree(podium)
-	podium.setup(top3, "GP de São Paulo")
+	podium.setup(top3, "GP de São Paulo", "br")
 	watch_signals(podium)
 	assert_eq(podium._steps.size(), 3, "três degraus")
+	assert_eq(podium._stage.anchor_left, 0.5, "palco 1280×720 ancorado no centro da tela (vale para qualquer proporção)")
+	assert_eq(podium._stage.offset_left, -640.0)
 	var go: Button = null
-	for c in podium.get_children():
+	for c in podium._stage.get_children():
 		if c is CutButton:
 			go = c
 	assert_not_null(go)

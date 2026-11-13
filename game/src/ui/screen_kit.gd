@@ -766,3 +766,4 @@ static func popover(screen: Control, anchor: Control, title: String, options: Ar
 ## Moldura da campanha (v26): barra do topo + barra de ícones. active: chave antiga da tela ("hub", "car", ...).
 static func campaign_nav(layer: Control, active: String, _y: float = 88.0) -> Control:
 	return CampaignFrame.apply(layer, active)
+

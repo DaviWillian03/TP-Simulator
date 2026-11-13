@@ -261,6 +261,11 @@ const G_INK := Color("#11141a")  ## texto sobre o claro
 const G_INK_2 := Color("#4b5260")
 const G_RED_PRESS := Color("#b30500")
 const G_GLASS := Color(0.043, 0.051, 0.071, 0.86)  ## painel escuro translúcido sobre a pista em tela cheia
+const G_ASPHALT_TOP := Color("#15181f")  ## fundo do grid de largada (asfalto), em cima
+const G_ASPHALT_BOTTOM := Color("#0b0d11")  ## ... e embaixo
+const G_KERB_RED := Color("#c8102e")  ## zebra
+const G_KERB_WHITE := Color("#e9e9e9")
+const G_PODIUM_SHADE := Color(0.02, 0.025, 0.035)  ## véu escuro sobre a bandeira do pódio
 const G_OFF := Color(1, 1, 1, 0.04)
 const G_FRAME := Color(0.039, 0.047, 0.063, 0.82)  ## barra do topo e barra de ícones da campanha (v26)
 ## Cor de destaque de cada seção da campanha (v26): o ícone e o título da seção usam a mesma cor.

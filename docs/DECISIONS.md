@@ -882,3 +882,8 @@ Respostas do usuário:
   Interlagos médio + duro; os demais macio + médio). Cores da época nas corridas de 2012 (supermacio vermelho, macio
   amarelo, médio branco, duro prata). O treino guarda o último jogo novo de cada composto mais duro do par, e a
   estratégia sempre usa os dois compostos. Na estratégia, a largada travada pela regra do Q2 mostra cadeado.
+- **2026-11-13 — Pódio e grid centralizados e com fundo novo.** As duas telas usam um palco 1280×720 sempre no centro
+  (antes ficavam presas em x=640 e descentralizavam em telas mais largas que 16:9). Pódio: bandeira do país da corrida
+  tremulando em tela cheia (`WavingFlag`, shader de onda), véu escuro em degradê, holofotes sobre cada degrau na cor da
+  equipe e base do palco. Grid: asfalto com as marcações das posições em perspectiva e zebras (`GridAsphalt`), bandeira
+  do país tremulando no alto se fundindo no asfalto, brilho na cor da equipe atrás de cada cartão e bandeira no título.

@@ -6,7 +6,7 @@ extends Control
 const ROW_S := 1.5
 const FRONT_HOLD_S := 2.2  ## a primeira fila fica um pouco mais na tela
 const CARD := Vector2(500, 440)
-const SLOTS := [Vector2(110, 150), Vector2(670, 210)]  ## carro da esquerda (posição ímpar) um pouco à frente
+const SLOTS := [Vector2(110, 150), Vector2(670, 210)]  ## no palco 1280×720; carro da esquerda (posição ímpar) um pouco à frente
 
 var weekend: WeekendSim
 var sim: RaceSim
@@ -18,6 +18,8 @@ var _title: Label
 var _dots: HBoxContainer
 var _cards: Array[Control] = []
 var _layer: Control
+var _stage: Control  ## palco 1280×720 sempre no centro da tela (aparelhos mais largos que 16:9)
+var _asphalt: GridAsphalt
 var _done := false
 
 
@@ -37,12 +39,32 @@ func _ready() -> void:
 	bd.cone_x = -1.0
 	bd.set_glow(Color("#24304a"), 0.3)
 	_layer = page["layer"]
+	# fundo: asfalto com as marcações do grid e a bandeira do país tremulando no alto (2026-11-13)
+	_asphalt = GridAsphalt.new()
+	_layer.add_child(_asphalt)
+	_asphalt.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var flag := WavingFlag.make(String(weekend.circuit.get("country_code", "")), 0.26, 0.02, 1.0)  # some para baixo
+	_layer.add_child(flag)
+	flag.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	flag.offset_bottom = 380
+	_stage = Control.new()
+	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(_stage)
+	_stage.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_stage.offset_left = -640
+	_stage.offset_right = 640
+	_stage.offset_top = -360
+	_stage.offset_bottom = 360
 	var head := HBoxContainer.new()
 	head.add_theme_constant_override("separation", 30)
 	var titles := VBoxContainer.new()
 	titles.add_theme_constant_override("separation", -2)
 	var kind := "Sprint" if sim.sprint else "Grid de largada"
-	titles.add_child(UiStyle.g_caption("%s · %s" % [String(weekend.circuit["grand_prix"]), kind]))
+	var cap_row := HBoxContainer.new()
+	cap_row.add_theme_constant_override("separation", 8)
+	cap_row.add_child(CampaignHub.flag_rect(String(weekend.circuit.get("country_code", "")), 16))
+	cap_row.add_child(UiStyle.g_caption("%s · %s" % [String(weekend.circuit["grand_prix"]), kind]))
+	titles.add_child(cap_row)
 	_title = UiStyle.g_label("", 30, UiStyle.G_TEXT, "black")
 	titles.add_child(_title)
 	head.add_child(titles)
@@ -81,6 +103,9 @@ func _show_row(r: int) -> void:
 	row = r
 	_timer = 0.0
 	_title.text = "FILA %d" % (r + 1) if r > 0 else "PRIMEIRA FILA"
+	var left := UiStyle.team_color(String(order[r * 2].team["id"])) if r * 2 < order.size() else Color(0, 0, 0, 0)
+	var right := UiStyle.team_color(String(order[r * 2 + 1].team["id"])) if r * 2 + 1 < order.size() else Color(0, 0, 0, 0)
+	_asphalt.set_glows(left, right)
 	for i in _dots.get_child_count():
 		var fila := rows - 1 - i  # da esquerda para a direita: última fila → primeira
 		(_dots.get_child(i) as ColorRect).color = UiStyle.RED if fila == r else (Color(1, 1, 1, 0.45) if fila > r else Color(1, 1, 1, 0.12))
@@ -92,7 +117,7 @@ func _show_row(r: int) -> void:
 		if idx >= order.size():
 			continue
 		var card := _card(order[idx], idx + 1)
-		_layer.add_child(card)
+		_stage.add_child(card)
 		card.position = SLOTS[k] + Vector2(60, 0)
 		card.modulate = Color(1, 1, 1, 0)
 		var tw := card.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
