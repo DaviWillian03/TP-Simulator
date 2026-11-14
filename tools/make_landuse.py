@@ -303,7 +303,10 @@ def build(cid):
         d.polygon(poly, fill=roof)
         md.polygon(poly, fill=(0, 255, 0))
         simp = ring[:-1] if len(ring) <= 13 else ring[:-1][:: max(1, len(ring) // 12)]
-        buildings.append([round(h, 1), [[round(x, 1), round(y, 1)] for x, y in simp], "#%02x%02x%02x" % roof])
+        entry = [round(h, 1), [[round(x, 1), round(y, 1)] for x, y in simp], "#%02x%02x%02x" % roof]
+        if _is_grandstand(tags, ring, pts, area):  # arquibancada real: o jogo desenha degraus, público e cobertura
+            entry.append("g")
+        buildings.append(entry)
 
     # faixa da pista limpa (grama): o asfalto e as áreas de escape são a malha 3D do jogo
     track_px = [px(x, y) for x, y in pts] + [px(*pts[0])]
@@ -321,7 +324,7 @@ def build(cid):
     buildings = buildings[:2500]
     (OUT_DATA / f"{cid}.json").write_text(json.dumps({
         "_notas": "Gerado por tools/make_landuse.py a partir do OpenStreetMap (© colaboradores do OSM, ODbL 1.0). "
-                  "box = [x0, z0, x1, z1] da textura em metros do jogo; buildings = [altura, planta [[x, z]...], cor do telhado].",
+                  "box = [x0, z0, x1, z1] da textura em metros do jogo; buildings = [altura, planta [[x, z]...], cor do telhado, (g = arquibancada)].",
         "box": [round(v, 1) for v in box], "buildings": buildings}, separators=(",", ":")), encoding="utf-8")
     print(f"{cid}: {len(files)} pedaços, {sum(len(v) for v in polys.values())} áreas, {len(buildings)} prédios, textura {tw}x{th}")
 
@@ -375,6 +378,23 @@ def _patchwork(d, tw, th, sc, rnd, palette=None):
             d.polygon([(cx + a * ca - b * sa, cy + a * sa + b * ca) for a, b in corners], fill=col)
             u += wid
         v += hgt
+
+
+def _is_grandstand(tags, ring, track_pts, area):
+    """Marcada como arquibancada no OSM, ou com cara de uma: comprida e estreita, a até 150 m da pista (Silverstone tem
+    várias marcadas só como prédio: Stowe, Village, Vale)."""
+    b = tags.get("building")
+    if b == "grandstand":
+        return True
+    if b not in ("yes", "roof") or "shop" in tags or "amenity" in tags:
+        return False
+    le = max(math.dist(ring[i], ring[i + 1]) for i in range(len(ring) - 1))
+    depth = area / max(le, 1.0)
+    if le < 40 or depth < 4 or depth > 30 or le / depth < 3.5:
+        return False
+    cx = sum(p[0] for p in ring) / len(ring)
+    cy = sum(p[1] for p in ring) / len(ring)
+    return min(math.dist((cx, cy), p) for p in track_pts[::3]) < 150.0
 
 
 def _height(tags, area, rnd):

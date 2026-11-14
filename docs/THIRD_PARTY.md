@@ -52,3 +52,8 @@ símbolos, 02/11/2026) para uso no **próprio celular**. As imagens ficam em `ga
   áreas urbanas, estacionamentos, água, ruas e plantas/alturas de prédios, baixados pela API do OSM (2026-11-13) por
   `tools/make_landuse.py` e convertidos em `game/assets/ground/<id>.jpg`, `<id>_mask.png` e `game/data/scenery/<id>.json`
   (banco derivado sob ODbL; atribuição obrigatória). Cores, texturas e modelagem 3D são originais do projeto.
+
+## Texturas da pista 3D (game/assets/textures/)
+- **Poly Haven** (https://polyhaven.com, licença **CC0 1.0** — domínio público, sem atribuição obrigatória; creditado por
+  cortesia): `asphalt_track` (asfalto e relevo), `asphalt_pit_lane`, `leafy_grass`, `sandy_gravel`, `concrete_floor_02`.
+  Baixadas e reduzidas a 512 px por `tools/prepare_textures.py`; grama, brita e concreto viram "grão" em cinza.

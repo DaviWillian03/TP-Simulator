@@ -956,3 +956,14 @@ Respostas do usuário:
     (`GameData.F1_SPREAD`). F2/F3 sem mudança (seguem com `CarForm` e as regras de pneu da categoria).
   - Saves: campanha guarda `meta_salt` (save antigo ganha um ao carregar); Mundial refaz o sorteio de `seed_base`;
     o fim de semana salvo guarda o sorteio da etapa.
+- **2026-11-14 — Pista 3D mais detalhada (comparação com o MM3; carros seguem como discos):**
+  - Texturas reais do Poly Haven (CC0, `tools/prepare_textures.py`): asfalto com relevo, e "grão" de grama, brita e
+    concreto multiplicado pelas cores de cada lugar; o chão do mapa ganha o grão como camada de detalhe de perto.
+  - `DetailKit`: arquibancadas com degraus, cadeiras, público (faixas texturizadas, 2 triângulos por fileira: barato no
+    celular) e cobertura em balanço; placas de publicidade com 8 marcas FICTÍCIAS desenhadas em código; postos de
+    comissário; placas de distância 300/200/100 m; tela de proteção com postes; tendas atrás da reta.
+  - Arquibancadas reais do OSM (`building=grandstand` ou comprida/estreita a até 150 m da pista) viram arquibancadas
+    3D viradas para a pista, nos lugares verdadeiros.
+  - Prédios reais com janelas por andar e base escurecida (shader `Materials3D.building`; à noite parte acende); telhado
+    do box com equipamentos; "asa" de Silverstone com corpo envidraçado.
+  - Luz: sombra do sol em 4 faixas (nítida de perto), sol um pouco mais baixo, mais contraste.

@@ -336,6 +336,7 @@ func _real_buildings() -> void:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var count := 0
+	var stands := DetailKit.new(hash(String(t3.track.id)) + 7)  # arquibancadas reais (OSM building=grandstand)
 	for b: Array in land.get("buildings", []):
 		var h := float(b[0])
 		var foot := PackedVector2Array()
@@ -348,6 +349,10 @@ func _real_buildings() -> void:
 			c += q
 		c /= foot.size()
 		var cp := Vector3(c.x, 0, c.y)
+		if b.size() > 3 and String(b[3]) == "g":
+			if t3.field_at(cp, true).x > 16.0 and not _near_paddock(cp):
+				_real_stand(stands, foot, cp)
+			continue
 		if t3.field_at(cp, true).x < TRACK_CLEAR_M + 4.0 or _near_paddock(cp):
 			continue
 		var y0 := ground_height(cp) - 0.5
@@ -356,6 +361,7 @@ func _real_buildings() -> void:
 		if night:
 			roof = roof.darkened(0.55)
 			wall = wall.darkened(0.45)
+		var perim := 0.0  # UV.x = metros ao longo das paredes (janelas no shader Materials3D.building)
 		for i in foot.size():  # paredes
 			var a2 := foot[i]
 			var b2 := foot[(i + 1) % foot.size()]
@@ -365,29 +371,75 @@ func _real_buildings() -> void:
 			var b1 := b0 + Vector3(0, h, 0)
 			var n := (b0 - a0).cross(Vector3.UP).normalized()
 			var shade := wall.darkened(0.12 + 0.12 * (0.5 + 0.5 * n.x))  # um lado mais escuro: dá volume
-			for v in [a0, b0, b1, a0, b1, a1]:
+			var seg := a0.distance_to(b0)
+			var uvs := {a0: Vector2(perim, 0.0), b0: Vector2(perim + seg, 0.0), b1: Vector2(perim + seg, h), a1: Vector2(perim, h)}
+			for v: Vector3 in [a0, b0, b1, a0, b1, a1]:
 				st.set_color(shade)
 				st.set_normal(n)
+				st.set_uv(uvs[v])
+				st.set_uv2(Vector2(h, 1.0))
 				st.add_vertex(v)
+			perim += seg
 		var tri := Geometry2D.triangulate_polygon(foot)
 		for k in tri.size():  # telhado
 			var q2 := foot[tri[k]]
 			st.set_color(roof)
 			st.set_normal(Vector3.UP)
+			st.set_uv(Vector2.ZERO)
+			st.set_uv2(Vector2(h, 0.0))
 			st.add_vertex(Vector3(q2.x, y0 + h, q2.y))
 		count += 1
+	stands.build_into(root, night)
 	if count == 0:
 		return
 	var mi := MeshInstance3D.new()
 	mi.mesh = st.commit()
-	var mat := Materials3D.vertex_color(0.9)
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	if night:  # janelas acesas: brilho quente fraco nos prédios da cidade
-		mat.emission_enabled = true
-		mat.emission = Color("#ffc983")
-		mat.emission_energy_multiplier = 0.32
-	mi.material_override = mat
+	mi.material_override = Materials3D.building(night)  # janelas por andar e base escurecida; à noite parte acende
 	root.add_child(mi)
+
+
+## Arquibancada real na planta do OSM: eixo comprido = maior lado; os degraus sobem para longe da pista.
+func _real_stand(kit: DetailKit, foot: PackedVector2Array, cp: Vector3) -> void:
+	var axis := Vector2.RIGHT
+	var best := 0.0
+	for i in foot.size():
+		var e := foot[(i + 1) % foot.size()] - foot[i]
+		if e.length() > best:
+			best = e.length()
+			axis = e.normalized()
+	var perp := Vector2(-axis.y, axis.x)
+	var lo := INF
+	var hi := -INF
+	var dlo := INF
+	var dhi := -INF
+	for q in foot:
+		var r := q - Vector2(cp.x, cp.z)
+		lo = minf(lo, r.dot(axis))
+		hi = maxf(hi, r.dot(axis))
+		dlo = minf(dlo, r.dot(perp))
+		dhi = maxf(dhi, r.dot(perp))
+	var length := hi - lo
+	var depth := dhi - dlo
+	if length < 8.0 or depth < 3.0:
+		return
+	# ponto da pista mais perto: os degraus olham para ele
+	var near := t3.center[0]
+	var nd := INF
+	for i in range(0, t3.n, 4):
+		var d := Vector2(t3.center[i].x - cp.x, t3.center[i].z - cp.z).length_squared()
+		if d < nd:
+			nd = d
+			near = t3.center[i]
+	var to_track := Vector2(near.x - cp.x, near.z - cp.z)
+	var out2 := -perp if to_track.dot(perp) > 0.0 else perp  # para fora = longe da pista
+	var mid := Vector2(cp.x, cp.z) + axis * (lo + hi) / 2.0 + perp * (dlo + dhi) / 2.0
+	var base2 := mid - out2 * depth / 2.0
+	var out := Vector3(out2.x, 0, out2.y)
+	var along := Vector3(axis.x, 0, axis.y)
+	var base := Vector3(base2.x, 0, base2.y)
+	base.y = ground_height(base)
+	var rows := clampi(int(depth / 0.9), 4, 16)
+	kit.grandstand(Basis(out, Vector3.UP, along), base, out, length, CircuitDressing.STAND_COLORS[absi(int(cp.x * 7.0 + cp.z)) % CircuitDressing.STAND_COLORS.size()], rows)
 
 
 func _near_paddock(p: Vector3) -> bool:

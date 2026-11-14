@@ -479,7 +479,9 @@ func _champions_wall(f0: float, f1: float) -> void:
 
 ## Cobertura branca em asa sobre o prédio dos boxes (Silverstone).
 func _wing_roof(f0: float, f1: float) -> void:
-	var white := _mat(Color("#f6f7f9"), 0.35)
+	var white := _mat(Color("#b4bbc3"), 0.9)
+	var rib := _mat(Color("#9aa3ad"), 0.6)
+	var glass := Materials3D.facade(Color("#4f6a80"), night)  # prédio de vidro sob a asa (andares com janelas)
 	var sd := float(t3.track.pit_side)
 	var n := maxi(2, int((f1 - f0) * t3.track.length_m / 16.0))
 	_along(f0, f1, 16.0, func(f: float, p: Vector3, b: Basis, len_m: float) -> void:
@@ -489,6 +491,10 @@ func _wing_roof(f0: float, f1: float) -> void:
 		var c := p + b.x * sd * 44.0 + Vector3.UP * (peak + 4.0)
 		_box(Vector3(30.0, 1.2, len_m + 1.0), Transform3D(b * tilt, c + b.x * sd * 12.0), white)  # aba de trás, sobe para fora
 		_box(Vector3(26.0, 1.2, len_m + 1.0), Transform3D(b * Basis(Vector3.FORWARD, -0.38 * sd), c - b.x * sd * 14.0 + Vector3.UP * 2.0), white)  # aba da frente, levanta sobre o pit lane
+		# corpo envidraçado sob a cobertura e nervuras escuras marcando cada módulo da asa
+		var body_h := peak - 1.0
+		_box(Vector3(22.0, body_h, len_m + 0.2), Transform3D(b, p + b.x * sd * 44.0 + Vector3.UP * body_h / 2.0), glass)
+		_box(Vector3(30.4, 1.3, 0.6), Transform3D(b * tilt, c + b.x * sd * 12.0 + b.z * len_m / 2.0), rib)
 		if int(t * 12.0) % 3 == 0:
 			_box(Vector3(1.4, peak + 4.0, 1.4), Transform3D(b, Vector3(c.x, c.y - (peak + 4.0) / 2.0, c.z)), _mat(Color("#c8ccd2"), 0.6)))
 	if n < 0:

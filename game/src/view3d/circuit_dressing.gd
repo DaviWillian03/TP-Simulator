@@ -24,6 +24,7 @@ var real_map := false  ## pista com o mapa real (OSM): grama natural estreita, e
 var vw := VERGE_W  ## largura do gramado de cada lado
 var runoff: Dictionary = {}  ## estilo dos escapes (data/runoff.json)
 var _vc: StandardMaterial3D
+var kit: DetailKit  ## peças de detalhe acumuladas numa malha só (arquibancadas, objetos de pista; 2026-11-14)
 var _cache: Dictionary = {}
 
 
@@ -42,6 +43,7 @@ func build(p_t3: Track3D, p_root: Node3D, p_asphalt: StandardMaterial3D, p_teams
 		vw = 12.0
 	_vc = Materials3D.vertex_color(0.7)
 	_vc.cull_mode = BaseMaterial3D.CULL_DISABLED
+	kit = DetailKit.new(hash(String(t3.track.id)))
 	_verges()
 	_runoff()
 	_barriers()
@@ -51,6 +53,8 @@ func build(p_t3: Track3D, p_root: Node3D, p_asphalt: StandardMaterial3D, p_teams
 	_grandstands()
 	_bridges()
 	_grid_marks()
+	_track_objects()
+	kit.build_into(root, night)
 
 
 func _mesh(mesh: Mesh, mat: Material) -> MeshInstance3D:
@@ -100,7 +104,8 @@ func _verges() -> void:
 	if street:
 		_sidewalks()
 		return
-	var stripes := Materials3D.mowed_grass() if not real_map else Materials3D.ground(Color("#6f8f4a"))  # mapa real: grama natural
+	# mapa real: grama natural com textura real; senão, gramado em listras com o "grão" da grama por cima
+	var stripes := Materials3D.add_grain(Materials3D.mowed_grass(), "grass", 4.0) if not real_map else Materials3D.textured("grass", Color("#6f8f4a"), 5.0)
 	stripes.cull_mode = BaseMaterial3D.CULL_DISABLED
 	if night:
 		stripes.albedo_color = Color(0.5, 0.55, 0.68)
@@ -136,14 +141,14 @@ func _on_bridge(i: int) -> bool:
 
 ## Rua: calçada clara dos dois lados (o resto é a cidade).
 func _sidewalks() -> void:
-	var walk := Materials3D.ground(Color("#bdb8ad"))
+	var walk := Materials3D.textured("concrete", Color("#bdb8ad"), 4.0)
 	walk.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var not_pit := func(i: int) -> bool: return true
 	_mesh(t3.band(w, w + 9.0, 0.0, -0.1, 8.0, not_pit), walk)
 	_mesh(t3.band(-w - 9.0, -w, -0.1, 0.0, 8.0, not_pit), walk)
 	var lane_out := w + Track3D.PIT_GAP + Track3D.PIT_LANE_W + 3.0
 	var pad := func(i: int) -> bool: return _in_paddock(i)
-	var conc := Materials3D.flat(Color("#8a8e93"), 0.95)
+	var conc := Materials3D.textured("concrete", Color("#8a8e93"), 5.0)
 	conc.cull_mode = BaseMaterial3D.CULL_DISABLED
 	conc.metallic_specular = 0.1
 	var far := lane_out + PADDOCK_DEPTH * 0.5
@@ -160,9 +165,9 @@ func _runoff() -> void:
 	if not runoff.is_empty():
 		_styled_runoff()
 		return
-	var tarmac := Materials3D.ground(Color("#56606e"))
+	var tarmac := Materials3D.textured("concrete", Color("#56606e"), 5.0)
 	tarmac.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var gravel := Materials3D.ground(Color("#c2a46a"))
+	var gravel := Materials3D.textured("gravel", Color("#c2a46a"), 3.0)
 	gravel.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var k := Track3D.KERB_W
 	for s: float in [-1.0, 1.0]:
@@ -194,14 +199,14 @@ func _sharp(i: int) -> bool:
 func _styled_runoff() -> void:
 	var style := String(runoff.get("style", "gravel"))
 	var cols: Array = runoff.get("colors", [])
-	var tarmac := Materials3D.ground(Color("#5a6270"))
-	var gravel := Materials3D.ground(Color("#cdb27a"))
-	var fill: StandardMaterial3D = gravel if style == "gravel" else (tarmac if style == "asphalt" else Materials3D.ground(Color(String(cols[0]))))
+	var tarmac := Materials3D.textured("concrete", Color("#5a6270"), 5.0)
+	var gravel := Materials3D.textured("gravel", Color("#cdb27a"), 3.0)
+	var fill: StandardMaterial3D = gravel if style == "gravel" else (tarmac if style == "asphalt" else Materials3D.textured("concrete", Color(String(cols[0])), 5.0))
 	var strip: StandardMaterial3D = tarmac
 	if style == "asphalt" and cols.size() > 0:
-		strip = Materials3D.ground(Color(String(cols[0])))
+		strip = Materials3D.textured("concrete", Color(String(cols[0])), 5.0)
 	elif style == "painted" and cols.size() > 1:
-		strip = Materials3D.ground(Color(String(cols[1])))
+		strip = Materials3D.textured("concrete", Color(String(cols[1])), 5.0)
 	for m: StandardMaterial3D in [fill, strip]:
 		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		if night:
@@ -261,7 +266,7 @@ func _pit_lane() -> void:
 	_mesh(t3.pit_strip(-hw, -hw + 0.35, 0.07), white)  # linha branca do lado da pista (contínua: não cruzar)
 	_mesh(t3.pit_strip(hw - 0.35, hw, 0.07), white)
 	# faixa de trabalho em frente às garagens (mais clara) e a faixa rápida
-	var work := Materials3D.flat(Color("#5b5f66"), 0.9)
+	var work := Materials3D.textured("concrete", Color("#5b5f66"), 4.0)
 	work.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_mesh(t3.pit_strip(0.5, hw - 0.4, 0.05, 0.99), work)
 	_mesh(t3.pit_gore(0.06), _vc)  # diagonais zebradas de entrada e saída
@@ -285,11 +290,11 @@ func _pit_lane() -> void:
 ## Prédio dos boxes contínuo: base branca, portões escuros com a cor da equipe, andar de vidro e laje com beiral.
 ## Na linha de chegada, a torre de controle.
 func _pit_building() -> void:
-	var body := Materials3D.flat(Color("#eceef0"), 0.7)
+	var body := Materials3D.flat(Color("#d6d9dd"), 0.7)
 	var door := Materials3D.flat(Color("#23262b"), 0.6)
 	var glass := Materials3D.flat(Color("#3d5a73"), 0.15)
 	glass.metallic = 0.5
-	var roof := Materials3D.flat(Color("#b9bec4"), 0.9)
+	var roof := Materials3D.flat(Color("#7d848c"), 0.95)
 	if night:
 		glass.emission_enabled = true
 		glass.emission = Color("#ffd58a")
@@ -315,6 +320,12 @@ func _pit_building() -> void:
 			[-0.8, 9.2, Vector3(depth + 1.6, 0.35, bay_len + 0.05), roof],
 		]:
 			_box(part[2], Transform3D(b, base + out * float(part[0]) + Vector3.UP * float(part[1])), part[3])
+		# no telhado: mureta e equipamentos de ar-condicionado (dá escala e quebra a laje lisa)
+		var bb := Basis(out, Vector3.UP, b.z)
+		kit.box(Transform3D(bb, base + out * (-depth / 2.0 - 0.6) + Vector3.UP * 9.85), Vector3(0.3, 0.9, bay_len), Color("#c3c7cc"), 0.1)
+		if k % 2 == 0:
+			kit.box(Transform3D(bb, base + out * 3.0 + Vector3.UP * 10.1), Vector3(3.2, 1.4, 4.0), Color("#a7adb3"))
+			kit.box(Transform3D(bb, base + out * 6.0 + b.z * 3.0 + Vector3.UP * 9.9), Vector3(1.6, 1.0, 1.6), Color("#8b9198"))
 	# torre de controle na linha de chegada
 	var b0 := t3.basis_at(0.0)
 	var tower := t3.point_at(0.0) + b0.x * side * (front + depth + 10.0)
@@ -364,17 +375,9 @@ func _paddock() -> void:
 
 # --- arquibancadas, passarelas e grid ---------------------------------------------------------------
 
-## Arquibancada coberta (três degraus de assentos coloridos, cobertura branca em pilares).
+## Arquibancada: degraus com cadeiras, público e cobertura em balanço (DetailKit.grandstand).
 func _stand(b: Basis, base: Vector3, out: Vector3, length: float, col: Color) -> void:
-	var seat := Materials3D.flat(col, 0.6)
-	var conc := Materials3D.flat(Color("#c9cbcf"), 0.85)
-	var roof := Materials3D.flat(Color("#f2f3f5"), 0.5)
-	for tier in 4:
-		var h := 1.4 + tier * 2.0
-		_box(Vector3(3.2, h, length), Transform3D(b, base + out * (tier * 3.2) + Vector3.UP * h / 2.0), seat if tier > 0 else conc)
-	_box(Vector3(15.0, 0.4, length + 2.0), Transform3D(b, base + out * 5.0 + Vector3.UP * 11.5), roof)
-	for s: float in [-0.45, 0.0, 0.45]:
-		_box(Vector3(0.5, 11.5, 0.5), Transform3D(b, base + out * 11.5 + b.z * (length * s) + Vector3.UP * 5.75), conc)
+	kit.grandstand(b, base, out, length, col)
 
 
 func _grandstands() -> void:
@@ -461,3 +464,70 @@ func _grid_marks() -> void:
 		for c in cells:
 			var x := -w + (c + 0.5) * Track3D.WIDTH / cells
 			_box(Vector3(Track3D.WIDTH / cells, 0.05, 1.0), Transform3D(b0, p0 + b0.x * x + b0.z * (r - 0.5)), chk_a if (r + c) % 2 == 0 else chk_b)
+
+
+# --- objetos de pista (2026-11-14) -----------------------------------------------------------------------
+
+## Placas de publicidade nas retas, postos de comissário, placas de distância antes das freadas fortes, tela de
+## proteção atrás das barreiras de pneus e tendas de hospitalidade atrás das arquibancadas da reta.
+func _track_objects() -> void:
+	var step_m := t3.track.length_m / t3.n
+	var k := Track3D.KERB_W
+	var fence := Materials3D.flat(Color(0.82, 0.86, 0.9, 0.28), 0.4)
+	fence.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	fence.cull_mode = BaseMaterial3D.CULL_DISABLED
+	if not street:
+		# tela de proteção (4 m) logo atrás da barreira de pneus, com postes a cada ~8 m
+		for s: float in [-1.0, 1.0]:
+			var tyres := func(i: int) -> bool: return t3.outside_side(i) == s and not (s == side and _pit_side_zone(i))
+			var off := s * (w + k + (_runoff_w(false) + 2.5 if not runoff.is_empty() else 24.5))
+			var fm := _mesh(t3.wall(off, 4.0, tyres, Color.WHITE, Color.WHITE), fence)
+			fm.position.y = _verge_lift(absf(off))
+			var every := maxi(1, int(8.0 / step_m))
+			for i in range(0, t3.n, every):
+				if tyres.call(i):
+					var f := float(i) / t3.n
+					var b := t3.basis_at(f)
+					kit.fence_post(Basis(b.x * s, Vector3.UP, b.z), t3.point_at(f) + b.x * off + Vector3.UP * _verge_lift(absf(off)), 4.2)
+	# percorre a volta: retas ganham placas; curvas fechadas ganham placas de distância e posto de comissário
+	var last_board := -999.0
+	var last_post := -999.0
+	var dist := 0.0
+	for i in t3.n:
+		dist += step_m
+		var f := float(i) / t3.n
+		var b := t3.basis_at(f)
+		var c := t3.point_at(f)
+		var straight := true
+		for j in range(-3, 4):
+			if t3.curvature[(i + j + t3.n) % t3.n] > 0.03:
+				straight = false
+		if straight and dist - last_board > 110.0 and not t3.in_pit_zone(i) and not _in_paddock(i):
+			var s2 := -side if i % 2 == 0 else side
+			if not (s2 == side and _pit_side_zone(i)):
+				var off2 := w + (vw if real_map else 14.0) + 7.0
+				kit.billboard(Basis(-b.x * s2, Vector3.UP, b.z), c + b.x * s2 * off2 + Vector3.UP * _verge_lift(off2))
+				last_board = dist
+		# entrada de curva fechada: placas 300/200/100 m antes, do lado de fora
+		var sharp_now := t3.curvature[i] > Track3D.SHARP_CORNER * 1.3
+		var sharp_before := t3.curvature[(i - 1 + t3.n) % t3.n] > Track3D.SHARP_CORNER * 1.3
+		if sharp_now and not sharp_before and not t3.in_pit_zone(i):
+			var so := t3.outside_side(i)
+			if so != 0.0:
+				for m in 3:
+					var back := (m + 1) * 100.0
+					var fb := fposmod(f - back / t3.track.length_m, 1.0)
+					var bb := t3.basis_at(fb)
+					var offb := w + k + 4.0
+					kit.distance_board(Basis(-bb.x * so, Vector3.UP, bb.z), t3.point_at(fb) + bb.x * so * offb + Vector3.UP * _verge_lift(offb), 3 - m)
+			if dist - last_post > 300.0 and so != 0.0:
+				var offp := w + k + (_runoff_w(true) + 6.0 if not street else 4.0)
+				kit.marshal_post(Basis(b.x * so, Vector3.UP, b.z), c + b.x * so * offp + Vector3.UP * _verge_lift(offp))
+				last_post = dist
+	# tendas atrás das arquibancadas da reta principal
+	if not street:
+		for n in 6:
+			var ft := fposmod((n - 2.5) * 34.0 / t3.track.length_m, 1.0)
+			var bt := t3.basis_at(ft)
+			var offt := w + 18.0 + 22.0 + (n % 2) * 12.0
+			kit.tent(Basis(bt.x * -side, Vector3.UP, bt.z), t3.point_at(ft) + bt.x * -side * offt, 9.0, STAND_COLORS[n % STAND_COLORS.size()])

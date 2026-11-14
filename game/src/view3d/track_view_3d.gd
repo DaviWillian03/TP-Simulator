@@ -108,10 +108,10 @@ func _build_environment() -> void:
 	_env.ambient_light_sky_contribution = 0.55  # menos azul do céu nas superfícies claras
 	_env.ambient_light_color = Color("#d8d2c4")
 	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	_env.tonemap_exposure = 0.72
+	_env.tonemap_exposure = 0.76
 	_env.adjustment_enabled = true  # cores mais vivas (gramado, zebras, placas)
-	_env.adjustment_saturation = 1.0
-	_env.adjustment_contrast = 1.05
+	_env.adjustment_saturation = 1.06
+	_env.adjustment_contrast = 1.1  # 2026-11-14: menos "lavado", mais volume
 	_env.fog_enabled = true
 	_env.fog_density = 0.00004
 	var we := WorldEnvironment.new()
@@ -120,7 +120,12 @@ func _build_environment() -> void:
 	_sun = DirectionalLight3D.new()
 	_sun.shadow_enabled = true
 	_sun.directional_shadow_max_distance = 2500.0
-	_sun.rotation_degrees = Vector3(-42, 35, 0)
+	# 4 faixas de sombra (PSSM): nítida perto da câmera e ainda presente na vista geral (2026-11-14)
+	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	_sun.directional_shadow_split_1 = 0.03
+	_sun.directional_shadow_split_2 = 0.1
+	_sun.directional_shadow_split_3 = 0.3
+	_sun.rotation_degrees = Vector3(-36, 35, 0)  # sol um pouco mais baixo: sombras mais longas dão volume
 	_sun.shadow_blur = 1.5
 	_sun.shadow_bias = 0.08
 	_sun.shadow_normal_bias = 2.5  # sem "listras" de sombra nos gramados grandes e planos

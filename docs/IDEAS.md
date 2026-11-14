@@ -763,3 +763,9 @@ preparação automática e confirmação; (9) simplicidade no Android; (10) entr
 - Não escolhidas (ficam registradas): lesões e reservas, resultado real por GP (tela de importação), pressão da diretoria, jogar como
   um piloto, mercado de pilotos, gráfico do campeonato, conta do título, comparar pilotos, recordes por circuito, replay dos melhores
   momentos, temporada seguinte (2027).
+
+## 2026-11-14 — Pista 3D mais detalhada (comparação com o Motorsport Manager 3)
+- Usuário achou a pista 3D muito menos detalhada que a do MM3. Escolheu: texturas reais (asfalto, grama, brita, concreto),
+  arquibancadas e prédios detalhados, luz e volume, objetos de pista (barreiras, cercas, placas fictícias, postes, tendas).
+- Carros continuam como discos com número ("carro 3D não combina").
+- Fazer primeiro numa pista (Silverstone) e mostrar antes/depois antes de aplicar nas 28.
