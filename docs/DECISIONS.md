@@ -967,3 +967,13 @@ Respostas do usuário:
   - Prédios reais com janelas por andar e base escurecida (shader `Materials3D.building`; à noite parte acende); telhado
     do box com equipamentos; "asa" de Silverstone com corpo envidraçado.
   - Luz: sombra do sol em 4 faixas (nítida de perto), sol um pouco mais baixo, mais contraste.
+- **2026-11-17 — Versão de PC (Windows) com gráfico melhor (escolha do usuário):**
+  - `scripts/build-exe.sh` gera `build/windows/F1Guidelines.exe` (pacote embutido, ícone do jogo) e o `.zip`; templates por
+    `scripts/setup-godot.sh --with-windows-templates`. Sem assinatura digital (o Windows mostra o aviso do SmartScreen).
+  - Renderizador: PC usa Forward+ (`rendering_method`), celular continua no Compatibility (`rendering_method.mobile`);
+    PC sem Vulkan cai sozinho para OpenGL (`fallback_to_opengl3`).
+  - Gráficos "Alto" (padrão no PC): oclusão de ambiente (SSAO), sombra suave pelo tamanho do sol, antisserrilhado 4×,
+    sombra direcional 8192. "Leve" desliga SSAO/MSAA 4×. Forward+ calibrado para não ficar lavado (luz ambiente, neblina,
+    saturação, contraste e exposição — `TrackView3D.FP_*`).
+  - Mouse/teclado: Esc = botão "voltar" do Android (todas as telas), espaço pausa a corrida, F11 tela cheia. Janela inicial
+    1600×900 redimensionável; opções "Tela cheia" e "Gráficos" nas Configurações (só no PC).

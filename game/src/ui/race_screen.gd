@@ -1316,3 +1316,10 @@ func _my_color() -> Color:
 			return car.team_color()
 	return UiStyle.RED
 
+
+## PC: espaço pausa/retoma a corrida (o mesmo botão II do topo).
+func _unhandled_key_input(event: InputEvent) -> void:
+	var k := event as InputEventKey
+	if k != null and k.pressed and not k.echo and k.keycode == KEY_SPACE and _pause_btn != null and not _pause_btn.disabled:
+		_pause_btn.button_pressed = not _pause_btn.button_pressed
+		get_viewport().set_input_as_handled()

@@ -88,6 +88,8 @@ var _screenshot_frames := 0
 func _ready() -> void:
 	Settings.load_all()
 	Settings.apply_audio()
+	if not "--screenshot" in " ".join(OS.get_cmdline_user_args()):  # capturas usam o tamanho pedido em --resolution
+		Settings.apply_window()
 	slow_on_decisions = Settings.slow_on_decisions
 	SaveSlots.migrate_legacy()
 	AllCaps.install(get_tree())
@@ -715,3 +717,19 @@ var pending_race: RaceSim = null  ## corrida já montada pelo grid de largada (a
 func start_race_from_grid(sim: RaceSim) -> void:
 	pending_race = sim
 	_go(RACE_SCENE)
+
+
+## PC (2026-11-17): Esc faz o mesmo que o botão "voltar" do Android (todas as telas já tratam esse aviso);
+## F11 alterna a tela cheia.
+func _unhandled_key_input(event: InputEvent) -> void:
+	var k := event as InputEventKey
+	if k == null or not k.pressed or k.echo:
+		return
+	if k.keycode == KEY_ESCAPE:
+		get_tree().root.propagate_notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+		get_viewport().set_input_as_handled()
+	elif k.keycode == KEY_F11 and Settings.is_pc():
+		Settings.fullscreen = not Settings.fullscreen
+		Settings.apply_window()
+		Settings.save_all()
+		get_viewport().set_input_as_handled()

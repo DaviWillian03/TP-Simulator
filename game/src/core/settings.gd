@@ -15,7 +15,34 @@ static var start_speed := 2
 static var slow_on_decisions := true
 static var tips_on := true
 static var tips_seen: Array = []
+static var fullscreen := false  ## PC: tela cheia (F11 alterna)
+static var graphics := "high"  ## PC: "high" (sombra suave, oclusão de ambiente, antisserrilhado) ou "low"
 static var loaded := false
+
+const PC_WINDOW := Vector2i(1600, 900)  ## janela inicial no PC (16:9; o jogo foi desenhado em 1280×720 e escala)
+
+
+## Versão de PC (2026-11-17): janela grande e redimensionável ou tela cheia. No celular e nos testes não faz nada.
+static func is_pc() -> bool:
+	return OS.has_feature("pc") and DisplayServer.get_name() != "headless"
+
+
+## Gráfico alto: só no PC com o renderizador avançado (Forward+); o celular usa sempre o leve (Compatibility).
+static func high_graphics() -> bool:
+	return is_pc() and graphics == "high" and RenderingServer.get_current_rendering_method() == "forward_plus"
+
+
+static func apply_window() -> void:
+	if not is_pc():
+		return
+	if fullscreen:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+		var screen := DisplayServer.screen_get_usable_rect()
+		var size := Vector2i(mini(PC_WINDOW.x, screen.size.x - 40), mini(PC_WINDOW.y, screen.size.y - 60))
+		DisplayServer.window_set_size(size)
+		DisplayServer.window_set_position(screen.position + (screen.size - size) / 2)
 
 
 static func text_scale() -> float:
@@ -38,6 +65,8 @@ static func load_all() -> void:
 	slow_on_decisions = bool(d.get("slow_on_decisions", slow_on_decisions))
 	tips_on = bool(d.get("tips_on", tips_on))
 	tips_seen = d.get("tips_seen", [])
+	fullscreen = bool(d.get("fullscreen", fullscreen))
+	graphics = String(d.get("graphics", graphics)) if String(d.get("graphics", "")) in ["high", "low"] else "high"
 
 
 static func save_all() -> void:
@@ -45,7 +74,8 @@ static func save_all() -> void:
 	if f == null:
 		return
 	f.store_string(JSON.stringify({"master": master, "sfx": sfx, "music": music, "touch_sounds": touch_sounds, "text_size": text_size,
-		"start_speed": start_speed, "slow_on_decisions": slow_on_decisions, "tips_on": tips_on, "tips_seen": tips_seen}, " "))
+		"start_speed": start_speed, "slow_on_decisions": slow_on_decisions, "tips_on": tips_on, "tips_seen": tips_seen,
+		"fullscreen": fullscreen, "graphics": graphics}, " "))
 
 
 ## Aplica o volume nos barramentos de áudio (Master / SFX / Music; cria os dois últimos se faltarem).

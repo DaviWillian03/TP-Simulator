@@ -143,6 +143,16 @@ func _left_card() -> void:
 		Settings.save_all()
 		get_tree().reload_current_scene.call_deferred())  # recria a tela já com a letra nova
 	_row(v, "Tamanho da letra", "", seg)
+	if Settings.is_pc():  # versão de PC (2026-11-17): linhas mais baixas para caber no cartão
+		v.add_child(UiStyle.g_caption("Tela"))
+		_row(v, "Tela cheia (F11)", "", _toggle(Settings.fullscreen, func(x: bool) -> void:
+			Settings.fullscreen = x
+			Settings.apply_window()
+			Settings.save_all()), 52)
+		var gseg := ScreenKit.segmented([["high", "Alto"], ["low", "Leve"]], Settings.graphics, func(x: String) -> void:
+			Settings.graphics = x
+			Settings.save_all())
+		_row(v, "Gráficos", "", gseg, 52)
 
 
 func _right_card() -> void:

@@ -4,7 +4,7 @@
 #
 # Uso:
 #   scripts/setup-godot.sh                    # só o editor
-#   scripts/setup-godot.sh --with-android-templates
+#   scripts/setup-godot.sh --with-android-templates [--with-windows-templates]
 #
 # Variáveis opcionais:
 #   GODOT_VERSION   (padrão abaixo)  ex.: 4.7.2
@@ -27,7 +27,11 @@ TEMPLATES_TPZ="Godot_v${TAG}_export_templates.tpz"
 TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
 
 WITH_TEMPLATES=0
-[[ "${1:-}" == "--with-android-templates" ]] && WITH_TEMPLATES=1
+WITH_WINDOWS=0
+for arg in "$@"; do
+  [[ "$arg" == "--with-android-templates" ]] && WITH_TEMPLATES=1
+  [[ "$arg" == "--with-windows-templates" ]] && WITH_WINDOWS=1  # versão de PC (2026-11-17)
+done
 
 case "$(uname -s)-$(uname -m)" in
   Linux-x86_64) ;;
@@ -60,19 +64,29 @@ fi
 mkdir -p "$HOME/.local/bin"
 ln -sfn "$DEST/godot" "$HOME/.local/bin/godot"
 
+need=()
 if [[ $WITH_TEMPLATES -eq 1 ]]; then
   if [[ -f "$TEMPLATES_DIR/android_debug.apk" ]]; then
     echo ">> Templates Android já presentes em $TEMPLATES_DIR"
   else
-    echo ">> Baixando templates de exportação (~1,3 GB; serão mantidos só os de Android)"
-    fetch "$TEMPLATES_TPZ"
-    verify "$TEMPLATES_TPZ"
-    mkdir -p "$TEMPLATES_DIR"
-    # O .tpz é um zip com a pasta templates/; extrai só Android + version.txt.
-    unzip -q -o -j "$work/$TEMPLATES_TPZ" \
-      'templates/version.txt' 'templates/android_*' -d "$TEMPLATES_DIR"
-    rm -f "$work/$TEMPLATES_TPZ"
+    need+=('templates/android_*')
   fi
+fi
+if [[ $WITH_WINDOWS -eq 1 ]]; then
+  if [[ -f "$TEMPLATES_DIR/windows_release_x86_64.exe" ]]; then
+    echo ">> Templates Windows já presentes em $TEMPLATES_DIR"
+  else
+    need+=('templates/windows_*')
+  fi
+fi
+if [[ ${#need[@]} -gt 0 ]]; then
+  echo ">> Baixando templates de exportação (~1,3 GB; serão mantidos só os pedidos)"
+  fetch "$TEMPLATES_TPZ"
+  verify "$TEMPLATES_TPZ"
+  mkdir -p "$TEMPLATES_DIR"
+  # O .tpz é um zip com a pasta templates/; extrai só as plataformas pedidas + version.txt.
+  unzip -q -o -j "$work/$TEMPLATES_TPZ" 'templates/version.txt' "${need[@]}" -d "$TEMPLATES_DIR"
+  rm -f "$work/$TEMPLATES_TPZ"
 fi
 
 echo ">> Versão instalada: $("$DEST/godot" --headless --version)"

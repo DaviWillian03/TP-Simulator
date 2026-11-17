@@ -77,7 +77,7 @@ func setup(source: Variant) -> void:
 	_vp = SubViewport.new()
 	# No celular (GLES/Compatibility) o alvo de renderização com MSAA é o suspeito da "pista que some" (a imagem 3D fica vazia e
 	# aparece só o fundo da equipe, depois do grid ou do box): ali o 3D roda sem MSAA e sempre atualizando.
-	_vp.msaa_3d = Viewport.MSAA_DISABLED if OS.has_feature("mobile") else Viewport.MSAA_2X
+	_vp.msaa_3d = Viewport.MSAA_DISABLED if OS.has_feature("mobile") else (Viewport.MSAA_4X if Settings.high_graphics() else Viewport.MSAA_2X)
 	_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_vp.positional_shadow_atlas_size = 0
 	add_child(_vp)
@@ -130,6 +130,8 @@ func _build_environment() -> void:
 	_sun.shadow_bias = 0.08
 	_sun.shadow_normal_bias = 2.5  # sem "listras" de sombra nos gramados grandes e planos
 	_world_root.add_child(_sun)
+	if Settings.high_graphics():
+		_high_quality()
 	_cam = Camera3D.new()
 	_cam.far = 9000.0
 	_cam.near = 1.5  # mais precisão de profundidade: sem "briga" entre faixas sobrepostas (zebras, gramado, paddock)
@@ -157,6 +159,20 @@ func _build_environment() -> void:
 	_cam.add_child(_rain)
 	_rain.position = Vector3(0, 25, -30)
 	_apply_lighting(0.0, 0.0)
+
+
+## PC com gráfico alto (Forward+; 2026-11-17): oclusão de ambiente de verdade (cantos, pé dos prédios e das
+## arquibancadas) e sombra suave pelo tamanho do sol. No celular nada disso liga. (Brilho de dia testado e tirado:
+## deixava a imagem com um véu claro.)
+func _high_quality() -> void:
+	_env.ssao_enabled = true
+	_env.ssao_radius = 3.0
+	_env.ssao_intensity = 2.2
+	_env.ssao_power = 1.4
+	_env.ssao_detail = 0.6
+	_env.ssao_light_affect = 0.15
+	_sun.light_angular_distance = 0.6  # sombra mais macia nas bordas, como a do sol de verdade
+	_sun.shadow_blur = 1.0
 
 
 func _build_track() -> void:
@@ -361,8 +377,18 @@ func _process(delta: float) -> void:
 
 
 ## Céu, sol e pista conforme chuva, umidade e noite.
+## No Forward+ (PC) a luz do céu entra de verdade nas superfícies e a neblina pesa mais: sem compensar, a imagem fica
+## lavada em relação ao celular (Compatibility). Valores calibrados lado a lado (2026-11-17).
+const FP_AMBIENT := 0.55
+const FP_FOG := 0.5
+const FP_SATURATION := 1.4
+const FP_CONTRAST := 1.2
+const FP_EXPOSURE := 0.72
+
+
 func _apply_lighting(wetness: float, rain: float) -> void:
 	var overcast := clampf(maxf(rain * 1.3, wetness * 0.6), 0.0, 1.0)
+	var fp := RenderingServer.get_current_rendering_method() == "forward_plus"
 	if _night:
 		_sky_mat.sky_top_color = Color("#0b1022")
 		_sky_mat.sky_horizon_color = Color("#2a2f4a")
@@ -381,7 +407,12 @@ func _apply_lighting(wetness: float, rain: float) -> void:
 		_env.ambient_light_energy = lerpf(0.24, 0.5, overcast)
 	_env.fog_light_color = _sky_mat.sky_horizon_color
 	# neblina de horizonte (2026-11-13): dá profundidade — o fundo azula de dia; à noite, véu azul-escuro
-	_env.fog_density = lerpf(0.00007, 0.0006, overcast) if not _night else 0.00018
+	_env.fog_density = (lerpf(0.00007, 0.0006, overcast) if not _night else 0.00018) * (FP_FOG if fp else 1.0)
+	if fp:
+		_env.ambient_light_energy *= FP_AMBIENT
+		_env.adjustment_saturation = FP_SATURATION
+		_env.adjustment_contrast = FP_CONTRAST
+		_env.tonemap_exposure = FP_EXPOSURE
 	_env.glow_enabled = _night  # brilho suave das luzes e das janelas nas corridas noturnas
 	_env.glow_intensity = 0.6
 	_env.glow_bloom = 0.08

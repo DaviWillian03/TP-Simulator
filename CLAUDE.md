@@ -10,7 +10,8 @@ Usuário: estudante de Sistemas de Informação. Responda em português, explica
 das escolhas técnicas.
 
 ## Stack
-- Godot **4.7.2-stable** + GDScript, renderizador Compatibility, tela paisagem 1280×720 (expand).
+- Godot **4.7.2-stable** + GDScript, tela paisagem 1280×720 (expand). Renderizador: Compatibility no celular
+  (`rendering_method.mobile`), Forward+ no PC (versão Windows: `scripts/build-exe.sh`; Esc = voltar, espaço = pausa, F11).
 - Testes: GUT **9.7.1** em `game/addons/gut` (a versão do GUT acompanha a do Godot).
 
 ## Estrutura (`game/` é o projeto Godot)
@@ -79,10 +80,12 @@ classificação. Capturas de interface: `--ui=team` (folha da tela inicial), `--
 (estados dos componentes), `--view-only` (só o 3D, base de mockups). Escolha de equipe: `--teamselect=campaign|gp` (com `--team=<id>`). Campanha: `--campaign`, `--history [--demo-history] [--tab=legends|current|seasons]`, `--car` (peças), `--rd` (árvore),
 `--creator [--ui=<passo 0..3>]`, `--hub` e `--camp-race` (usam a campanha salva; `tools/make_demo_campaign.gd -- --round=<n>` grava uma campanha de reta final).
 Testes de regras usam `{"weather": "dry", "incident_rate": 0.0}` salvo quando testam clima/incidentes.
-- Captura de tela precisa de display: `Xvfb :99 -screen 0 1280x720x24 &`. Use para conferir
+- Captura de tela precisa de display: `Xvfb :99 -screen 0 1280x720x24 &` (capturas saem em Forward+ = visual do PC, com o
+  Vulkan por software `mesa-vulkan-drivers`; o visual do celular: `godot --rendering-method gl_compatibility ...`). Use para conferir
   layout depois de mexer na interface (ler logs não mostra a tela).
 - O GUT sai com 0 se tudo passar e 1 se algo falhar. Erro de áudio ALSA no container é esperado.
-- Instalar o Godot numa sessão nova: `scripts/setup-godot.sh --with-android-templates` (na raiz).
+- Instalar o Godot numa sessão nova: `scripts/setup-godot.sh --with-android-templates --with-windows-templates` (na raiz);
+  para as capturas em Forward+: `apt-get install -y mesa-vulkan-drivers`.
 
 ## Godot MCP (`.mcp.json`, servidor `godot`)
 - `create_scene` **sobrescreve cena existente sem avisar**. `run_project` precisa de display.
