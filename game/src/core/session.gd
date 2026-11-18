@@ -266,7 +266,7 @@ func _ready() -> void:
 			weekend.simulate_current()
 		var wplans := weekend.engineer_strategy()
 		for wd: String in wplans:
-			weekend.strategy[wd] = wplans[wd][0]
+			weekend.strategy[wd] = RaceStrategy.default_of(wplans[wd])
 		start_race_from_grid.call_deferred(weekend.make_race())
 	elif args.has("worldresume"):  # (capturas) retoma o fim de semana do Mundial salvo (rodada 1)
 		world = WorldChampionship.start(player_team)
@@ -316,7 +316,7 @@ func _ready() -> void:
 		elif args.has("live") and weekend.is_race(weekend.session_id()):  # (captura) --live: corrida direto, plano dos engenheiros
 			var plans := weekend.engineer_strategy()
 			for did: String in plans:
-				weekend.strategy[did] = plans[did][0]
+				weekend.strategy[did] = RaceStrategy.default_of(plans[did])
 			start_race_from_grid.call_deferred(weekend.make_race())
 		elif args.has("practice") or args.has("quali") or args.has("play"):
 			play_session.call_deferred()

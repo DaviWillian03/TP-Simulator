@@ -80,3 +80,18 @@ func test_plano_so_avisa_na_volta_planejada() -> void:
 	assert_eq(due[0][1], first_stop - 1, "no começo da volta planejada")
 	assert_eq(me.pit_stops, 0, "o plano não para sozinho: só avisa")
 	assert_eq(String(sim.player_plan_next(me)["compound"]), String(plan["stints"][1]["compound"]))
+
+
+func test_sempre_uma_duas_e_tres_paradas_em_qualquer_pista() -> void:
+	for cid: String in ["monaco", "interlagos", "spa", "bahrain", "suzuka"]:
+		for pct: float in [0.25, 1.0]:
+			var w := WeekendSim.new(cid, {"seed": 3, "player_team": "williams", "weather": "dry", "incident_rate": 0.0, "duration_pct": pct, "format": "race_only"})
+			var plans: Array = w.engineer_strategy()["albon"]
+			var stops: Array = plans.map(func(p: Dictionary) -> int: return (p["stints"] as Array).size() - 1)
+			assert_eq(stops, [1, 2, 3], "%s %d%%: as três opções" % [cid, int(pct * 100)])
+			assert_eq(int(RaceStrategy.default_of(plans)["stops"]), 2, "plano inicial: duas paradas (às cegas)")
+			for p: Dictionary in plans:
+				var total := 0
+				for st: Dictionary in p["stints"]:
+					total += int(st["laps"])
+				assert_eq(total, int(w.race_context()["total_laps"]), "%s: voltas somam a corrida" % cid)

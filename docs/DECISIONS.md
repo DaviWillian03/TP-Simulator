@@ -993,3 +993,9 @@ Respostas do usuário:
     último que passa); dentro da zona e no Q3 contra o pole; o pole contra a própria melhor. Recalculado o tempo todo:
     se o pole ou o corte mudar durante a volta, o alvo muda. Bloco no cartão do piloto (pílula verde/vermelha).
   - Cartão do piloto sem a atitude da volta e sem a barra de progresso; pneu pelo símbolo.
+- **2026-11-18 — Estratégia pré-corrida "Estratégias possíveis" (mockup v41 aprovado):** no estilo dos gráficos de
+  estratégia da transmissão, em português, sem logos oficiais. Sempre três linhas por piloto — 1, 2 e 3 paradas (sprint:
+  0, 1 e 2) — em qualquer pista (`RaceStrategy.plans_by_stops`; a de 2 paradas é o plano inicial, sem etiqueta de
+  sugestão: os engenheiros planejam às cegas). Linha na cor de cada composto, pneu na parada com a janela
+  ("VOLTA 18 A 24"), legenda com o estoque. A escolhida se ajusta: pneu da parada → volta com − / + (PC: setas ou
+  arrastar); trecho da linha → troca o composto. 2012: o primeiro trecho fica travado no pneu do Q2.

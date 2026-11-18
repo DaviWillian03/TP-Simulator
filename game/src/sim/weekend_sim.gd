@@ -318,7 +318,7 @@ func engineer_strategy() -> Dictionary:
 	var out := {}
 	for d: Dictionary in drivers:
 		if d["team"] == player_team:
-			out[d["id"]] = RaceStrategy.engineer_plans(tyres, ctx, stocks[d["id"]])
+			out[d["id"]] = RaceStrategy.plans_by_stops(tyres, ctx, stocks[d["id"]])  # sempre 1/2/3 paradas (v41)
 			if session_id() == "race" and start_rule.has(d["id"]):  # 2012: largada obrigatória com o pneu do Q2
 				var kept: Array = []
 				var seen := {}
@@ -334,7 +334,10 @@ func engineer_strategy() -> Dictionary:
 					seen[key] = true
 					var desc := String(plan["desc"])
 					var tag := desc.get_slice(" · ", 1) if desc.contains(" · ") else ""
-					kept.append(RaceStrategy.make(plan["stints"], tyres, tag))
+					var made := RaceStrategy.make(plan["stints"], tyres, tag)
+					made["stops"] = plan.get("stops", (plan["stints"] as Array).size() - 1)
+					made["default"] = plan.get("default", false)
+					kept.append(made)
 				out[d["id"]] = kept
 	return out
 

@@ -271,6 +271,11 @@ const G_RAIN_LIGHT := Color("#cfe6ff")  ## clima: ícones e números
 const G_SUN := Color("#F5C542")  ## clima: sol
 const G_WET_SCALE := [Color("#c9b27a"), Color("#7fa7d6"), Color("#2f6fd6"), Color("#163e8c")]  ## seca → encharcada
 const G_OFF := Color(1, 1, 1, 0.04)
+const G_STRAT_BG := Color("#0b0c10")  ## estratégias (v41): fundo escuro com listras diagonais e pontos
+const G_STRAT_STRIPE := Color(1, 1, 1, 0.025)
+const G_STRAT_DOT := Color(1, 1, 1, 0.07)
+const G_STRAT_RULE := Color(1, 1, 1, 0.18)  ## fios que separam cabeçalho, linhas e legenda
+const G_STRAT_SEL := Color(0.075, 0.28, 0.96, 0.16)  ## fundo da estratégia escolhida (tingido pela equipe na tela)
 const G_DELTA_FAST := Color("#1e9e57")  ## comparativo da classificação: mais rápido que o alvo
 const G_DELTA_SLOW := Color("#d42a1e")  ## ... mais lento
 const G_PIT_GOOD := Color("#2a6b3f")  ## mini-jogo do box: texto do verde (sobre fundo claro)
@@ -436,3 +441,15 @@ static func team_color(team_id: String) -> Color:
 ## Cor de uma equipe numa lista de equipes (inclui a equipe criada na campanha).
 static func team_color_from(team_list: Array, team_id: String) -> Color:
 	return Color(GameData.team_by_id(team_list, team_id).get("color", "#1868DB"))
+
+
+static var _italic_black: FontVariation
+
+
+## Kanit black inclinada (títulos no estilo dos gráficos de transmissão).
+static func italic_black() -> FontVariation:
+	if _italic_black == null:
+		_italic_black = FontVariation.new()
+		_italic_black.base_font = G_BLACK
+		_italic_black.variation_transform = Transform2D(Vector2(1, 0), Vector2(-0.2, 1), Vector2.ZERO)
+	return _italic_black

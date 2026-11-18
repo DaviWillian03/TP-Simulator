@@ -129,6 +129,51 @@ static func engineer_plans(tyres: TyreModel, ctx: Dictionary, stock: Dictionary)
 	return out
 
 
+## Estratégias possíveis (tela v41, 2026-11-18): SEMPRE uma por número de paradas — 1, 2 e 3 (na sprint 0, 1 e 2) —,
+## em qualquer pista. Cada uma é a combinação de compostos mais rápida para aquele número de paradas pela estimativa dos
+## engenheiros (que planejam às cegas: o desgaste "médio"); se nenhuma cabe na vida dos pneus, vai a mais barata mesmo
+## assim (o aviso da tela mostra). A de 2 paradas (ou a do meio) leva "default": é o plano inicial.
+static func plans_by_stops(tyres: TyreModel, ctx: Dictionary, stock: Dictionary) -> Array:
+	var dry := tyres.dry_compounds()
+	var sprint := bool(ctx["sprint"])
+	var counts := [0, 1, 2] if sprint else [1, 2, 3]
+	var out: Array = []
+	for stops: int in counts:
+		var best: Dictionary = {}
+		var best_cost := INF
+		var best_ok := false
+		for seq: Array in _sequences(dry, stops + 1):
+			var stints := _split(tyres, seq, ctx)
+			var have := assign_sets(stints, stock)
+			var comps := {}
+			for k: String in seq:
+				comps[k] = true
+			if not sprint and comps.size() < 2:
+				continue  # regra: dois compostos secos diferentes
+			var ok := have and feasible(tyres, stints, ctx)
+			var c := cost(tyres, stints, ctx)
+			if (ok and not best_ok) or (ok == best_ok and c < best_cost):
+				best = {"stints": stints}
+				best_cost = c
+				best_ok = ok
+		if best.is_empty():
+			continue
+		var plan := make(best["stints"], tyres)
+		plan["stops"] = stops
+		out.append(plan)
+	for p: Dictionary in out:
+		p["default"] = int(p["stops"]) == (1 if sprint else 2)
+	return out
+
+
+## Plano inicial de uma lista (o marcado "default"; senão o primeiro).
+static func default_of(plans: Array) -> Dictionary:
+	for p: Dictionary in plans:
+		if bool(p.get("default", false)):
+			return p
+	return plans[0] if not plans.is_empty() else {}
+
+
 static func make(stints: Array, tyres: TyreModel, tag: String = "") -> Dictionary:
 	var stops := stints.size() - 1
 	var seq: Array = stints.map(func(st: Dictionary) -> String: return String(tyres.compounds[st["compound"]]["letter"]))

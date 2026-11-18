@@ -34,7 +34,7 @@ enviar o APK (`scripts/build-apk.sh`) e o zip do Windows (`scripts/build-exe.sh`
   (regras F1/F2/F3 em `data/categories.json`), `CarDevelopment` (árvore de P&D em `data/rd_tree.json`, gerada por
   `tools/make_rd_tree.py`, e fábrica em `data/factory.json`). Passo fixo `DT`, semente
   determinística. Regras novas entram aqui, com teste.
-- Telas do GP: `gp_setup_screen`, `weekend_screen` (treino é sempre simulado: engenheiro, chance de acerto e folha de resultado), `quali_screen` (folha de saída: jogo, atitude, voltas), `strategy_screen` (estratégia antes da largada) e
+- Telas do GP: `gp_setup_screen`, `weekend_screen` (treino é sempre simulado: engenheiro, chance de acerto e folha de resultado), `quali_screen` (folha de saída: jogo, atitude, voltas), `strategy_screen` (estratégias possíveis, v41: sempre 1/2/3 paradas, ajustáveis; dev `--ui=stratedit`) e
   `QualiResultSheet` (resultado entre Q1/Q2/Q3; `QualiSim.pause_between`/`resume()`), `SafeArea` (furo da câmera), `grid_screen` (grid fila a fila) antes de toda corrida/sprint jogada (peças comuns
   em `ScreenKit`); o fim de semana ativo fica em `Session.weekend`.
   Módulos que guardam o RaceSim usam `WeakRef` (ciclo de referência vazaria memória).
