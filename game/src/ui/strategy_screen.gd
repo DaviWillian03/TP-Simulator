@@ -208,6 +208,7 @@ func _fill_legend() -> void:
 		v.add_child(UiStyle.g_caption("%d novo%s%s" % [n, "" if n == 1 else "s", (" · %d usado%s" % [u, "" if u == 1 else "s"]) if u > 0 else ""]))
 		item.add_child(v)
 		var tb := TyreBadge.new()
+		tb.style = "broadcast"
 		tb.custom_minimum_size = Vector2(TYRE, TYRE)
 		tb.set_compound(String(c["letter"]), Color(c["color"]))
 		item.add_child(tb)
@@ -347,6 +348,7 @@ func _open_compound(stint: int) -> void:
 		row.add_theme_constant_override("separation", 12)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var tb := TyreBadge.new()
+		tb.style = "broadcast"
 		tb.custom_minimum_size = Vector2(38, 38)
 		tb.set_compound(String(c["letter"]), Color(c["color"]))
 		row.add_child(tb)
@@ -576,6 +578,7 @@ class _StratRow:
 		b.position = Vector2(x - TYRE / 2.0, LINE_Y - TYRE / 2.0)
 		b.tooltip_text = "Mudar a volta da parada"
 		var tb := TyreBadge.new()
+		tb.style = "broadcast"
 		tb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		tb.set_compound(screen.compound_letter(k), screen.compound_color(k))
 		b.add_child(tb)
