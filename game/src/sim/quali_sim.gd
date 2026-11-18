@@ -59,6 +59,9 @@ const REVEAL_RANGE := Vector2(0.25, 0.7)  ## em que ponto da volta o problema ap
 var track: TrackModel
 var tyres: TyreModel
 var weather: WeatherModel
+var forecasts: Dictionary = {}  ## id da equipe -> TeamForecast (folha de clima, igual à corrida; 2026-11-18)
+var time_s := 0.0  ## relógio contínuo do clima (soma de todas as partes, com bandeira vermelha)
+var total_laps := 0  ## duração da sessão em voltas (para a linha do tempo da folha de clima)
 var cars: Array[CarState] = []
 var setups: Dictionary = {}
 var segments: Array = SEGMENTS
@@ -100,7 +103,9 @@ var tech_lap_s := 0.0  ## regulamento técnico: carros mais rápidos/lentos para
 var lap_sectors: Dictionary = {}  ## CarState -> Array[float] tempos dos setores da volta lançada atual
 var sector_marks: Dictionary = {}  ## CarState -> Array[String] cor de cada setor já completado ("purple"/"green"/"yellow")
 var sector_best: Dictionary = {}  ## CarState -> Array[float] melhor setor do piloto na sessão (voltas válidas)
-var session_sector_best: Array = [INF, INF, INF]  ## melhor setor de toda a sessão (roxo)
+var session_sector_best: Array = [INF, INF, INF]  ## melhor setor da parte atual (roxo); zera a cada Q1/Q2/Q3
+var best_sectors: Dictionary = {}  ## CarState -> setores da melhor volta válida na parte atual (comparativo ao vivo)
+var flagged: Dictionary = {}  ## CarState -> true: cruzou a linha depois do fim do tempo (recebeu a bandeirada)
 var _next_decision := 1
 var phase_d0: Dictionary = {}  ## CarState -> fração da volta em que a fase começou (abortar no meio da volta)
 var phase_start: Dictionary = {}  ## CarState -> instante (seg_time) em que a fase começou (para o carro andar na pista 3D)
@@ -129,6 +134,11 @@ func _init(p_track: TrackModel, p_tyres: TyreModel, teams: Array, drivers: Array
 	var rain_p := float(options.get("rain_probability", track.rain_probability))
 	weather = WeatherModel.new(rain_p, total, rng, options)
 	weather.rubber = 0.5  # pista já emborrachada pelos treinos
+	total_laps = maxi(1, ceili(total / track.base_lap_time_s))
+	for t: Dictionary in teams:  # cada equipe lê o clima do seu jeito (erra conforme o pessoal), como na corrida
+		var tid := String(t["id"])
+		var ids: Array = drivers.filter(func(x: Dictionary) -> bool: return String(x["team"]) == tid).map(func(x: Dictionary) -> String: return String(x["id"]))
+		forecasts[tid] = TeamForecast.new(weather, TeamForecast.skill_for(t, ids), hash("q|%s|%d" % [tid, int(options.get("seed", 1))]), total * 1.05)
 	var player_team: String = options.get("player_team", "")
 	alloc = options.get("tyre_alloc", null)
 	if alloc == null:  # classificação avulsa (testes): jogos de um fim de semana sem treinos
@@ -201,10 +211,12 @@ func step() -> void:
 		# bandeira vermelha: relógio parado, todos na garagem
 		red_flag_until -= DT
 		weather.step(DT)
+		time_s += DT
 		return
 	seg_time += DT
 	total_time += DT
 	weather.step(DT)
+	time_s += DT
 	if seg_time >= red_flag_at:
 		_red_flag()
 	for car in active_cars():
@@ -225,7 +237,8 @@ func _update_car(car: CarState) -> void:
 		Phase.OUT_LAP:
 			if seg_time >= phase_end[car]:
 				if phase_end[car] > segment_length():
-					# o relógio zerou antes de começar a volta lançada: volta para a garagem
+					# o relógio zerou antes de começar a volta lançada: recebe a bandeirada e volta para a garagem
+					flagged[car] = true
 					_set_phase(car, Phase.IN_LAP, seg_time + _lap_base(car) * IN_LAP_K * 0.5)
 					session_event.emit("%s não abriu a volta a tempo." % car.code())
 				else:
@@ -236,6 +249,8 @@ func _update_car(car: CarState) -> void:
 			if seg_time >= phase_end[car]:
 				_check_sectors(car, true)
 				_finish_flying_lap(car)
+				if seg_time >= segment_length():
+					flagged[car] = true  # cruzou a linha depois do fim do tempo: bandeirada
 				laps_left[car] = int(laps_left.get(car, 1)) - 1
 				if int(laps_left[car]) > 0 and seg_time < segment_length() and not crashed.has(car):
 					_start_flying(car, true)  # plano de 2 voltas: emenda a segunda sem volta de saída
@@ -548,6 +563,7 @@ func _finish_flying_lap(car: CarState) -> void:
 	car.lap_times.append(t)
 	if valid and t < best[car][segment]:
 		best[car][segment] = t
+		best_sectors[car] = (lap_sectors.get(car, []) as Array).duplicate()
 		best_set_at[car][segment] = total_time
 		if segment == 1 and run_tyre.has(car):
 			q2_tyre[car] = String(run_tyre[car]["compound"])
@@ -608,6 +624,12 @@ func ai_compound(_car: CarState) -> String:
 
 func _begin_segment() -> void:
 	seg_time = 0.0
+	# cada parte começa do zero (2026-11-18): a 1ª volta lançada do piloto é verde; roxo = melhor setor desta parte
+	session_sector_best = [INF, INF, INF]
+	for car in cars:
+		sector_best[car] = [INF, INF, INF]
+	best_sectors = {}
+	flagged = {}
 	q3_open = not sprint and segment == segments.size() - 1
 	red_flag_until = -1.0
 	red_flag_at = INF
@@ -739,3 +761,73 @@ func is_red_flag() -> bool:
 
 func is_over() -> bool:
 	return over
+
+
+## Previsão do clima de uma equipe (folha de clima).
+func forecast_of(team_id: String) -> TeamForecast:
+	return forecasts.get(team_id, null)
+
+
+# --- bandeirada e comparativo ao vivo (2026-11-18) ----------------------------------------------------------
+
+## O tempo acabou mas a parte segue até o último carro em volta lançada cruzar a linha (como na F1 real).
+func flag_out() -> bool:
+	return time_left_s() <= 0.0 and not over and not waiting
+
+
+## Recebeu a bandeirada nesta parte (cruzou a linha depois do fim do tempo).
+func took_flag(car: CarState) -> bool:
+	return flagged.has(car)
+
+
+## Carros que ainda podem fechar uma volta depois do fim do tempo.
+func still_running() -> int:
+	var n := 0
+	for car in active_cars():
+		if phase[car] == Phase.FLYING or (phase[car] == Phase.OUT_LAP and phase_end[car] <= segment_length() + DT):
+			n += 1
+	return n
+
+
+## Com quem o piloto em volta lançada se compara, como na transmissão da F1: fora da zona de classificação (ou sem
+## tempo) = o último que passa de fase ("tempo de corte"); dentro dela (e no Q3) = o pole. Se ele mesmo é o pole, a
+## própria melhor volta. Refeito a cada consulta: se o pole ou o corte mudar durante a volta, o alvo muda junto.
+## {} = ainda não há alvo (ninguém com tempo). {kind: "pole"/"cut"/"own", car, time, sectors}
+func live_target(car: CarState) -> Dictionary:
+	var order := segment_order()
+	var adv: int = segments[segment]["advance"]
+	var my_best: float = best[car][segment]
+	var pos := order.find(car)
+	var tgt: CarState = null
+	var kind := "pole"
+	if adv > 0 and adv < order.size() and (my_best == INF or pos >= adv):
+		tgt = order[adv - 1]
+		kind = "cut"
+	else:
+		tgt = order[0]
+		if tgt == car:
+			kind = "own"
+	if tgt == null or not best_sectors.has(tgt) or float(best[tgt][segment]) == INF:
+		return {}
+	return {"kind": kind, "car": tgt, "time": float(best[tgt][segment]), "sectors": best_sectors[tgt]}
+
+
+## Diferença ao vivo da volta lançada para o alvo, no mesmo ponto da pista (negativo = mais rápido). NAN se não dá.
+func live_delta(car: CarState, target: Dictionary) -> float:
+	if phase.get(car, Phase.GARAGE) != Phase.FLYING or target.is_empty():
+		return NAN
+	var secs: Array = lap_sectors.get(car, [])
+	var ts: Array = target["sectors"]
+	if secs.size() < SECTORS or ts.size() < SECTORS:
+		return NAN
+	var elapsed := seg_time + _acc - float(phase_start[car])
+	var acc := 0.0
+	var tacc := 0.0
+	for i in SECTORS:
+		var st := float(secs[i])
+		if elapsed <= acc + st or i == SECTORS - 1:
+			var f := clampf((elapsed - acc) / maxf(st, 0.001), 0.0, 1.0)
+			return (acc + f * st) - (tacc + f * float(ts[i]))
+		acc += st
+		tacc += float(ts[i])
+	return NAN

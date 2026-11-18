@@ -100,6 +100,9 @@ func _make_row() -> Dictionary:
 				box.add_theme_constant_override("separation", 5)
 				box.add_child(TyreBadge.new())
 				box.add_child(UiStyle.label("", 13))
+				var flag := ChequeredMark.new()  # bandeirada: toma o lugar do pneu (escondida até receber)
+				flag.visible = false
+				box.add_child(flag)
 				cell = box
 				h.add_child(_wrap(box, col))
 			_:
@@ -200,6 +203,14 @@ func set_team(r: int, c: int, team_id: String, text: String) -> void:
 	(box.get_child(1) as Label).text = text
 
 
+## Bandeira quadriculada na coluna do pneu (já recebeu a bandeirada; o pneu some nessa hora).
+func set_flag(r: int, c: int, on: bool) -> void:
+	var box: HBoxContainer = _rows[r]["cells"][c]
+	if box.get_child_count() > 2:
+		(box.get_child(0) as Control).visible = not on
+		(box.get_child(2) as Control).visible = on
+
+
 func _garage() -> bool:
 	return style == "garage"
 
@@ -212,3 +223,22 @@ func _garage_line(bg: Color, line_alpha: float, height: int) -> StyleBoxFlat:
 	if height > 0:
 		b.content_margin_top = 0
 	return b
+
+
+## Bandeira quadriculada pequena (mesmo desenho da torre da corrida).
+class ChequeredMark:
+	extends Control
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(16, 16)
+		size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var c := size / 2.0
+		draw_line(c + Vector2(-6, -7), c + Vector2(-6, 7.5), Color(UiStyle.G_LIGHT), 1.6, true)
+		var cell := 3.0
+		for row in 3:
+			for col in 4:
+				draw_rect(Rect2(c + Vector2(-5.2 + col * cell, -7 + row * cell), Vector2(cell, cell)), Color.WHITE if (row + col) % 2 == 0 else Color("#11141a"))
+		draw_rect(Rect2(c + Vector2(-5.2, -7), Vector2(4 * cell, 3 * cell)), Color(UiStyle.G_LIGHT), false, 1.0)

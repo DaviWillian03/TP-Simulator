@@ -980,3 +980,16 @@ Respostas do usuário:
 - **2026-11-18 — Duas versões sempre juntas:** daqui em diante toda mudança pedida vale para o celular (Android) e para o
   PC (Windows). Ao fim de cada entrega: gerar e enviar os dois (`scripts/build-apk.sh` e `scripts/build-exe.sh`), conferir
   as telas novas nos dois visuais (Forward+ e `--rendering-method gl_compatibility`) e, no PC, mouse/teclado.
+- **2026-11-18 — Classificação mais fiel à transmissão (pedidos do usuário):**
+  - Selo e folha de clima também na classificação (`QualiSim` ganhou `forecasts`/`time_s`/`total_laps`; `WeatherSheet` aceita
+    corrida ou classificação; o selo mostra "chuva em ~N min").
+  - Atitude padrão da folha de saída: **Buscar o limite**.
+  - Fim do tempo: a parte segue até o último em volta lançada cruzar a linha (já era assim na simulação; agora a tela
+    mostra "BANDEIRADA · N em volta") e quem cruzou depois do zero ganha a bandeira quadriculada (na coluna do pneu).
+  - Velocidade 1× na classificação.
+  - Setores: zeram a cada parte (Q1/Q2/Q3): a 1ª volta lançada é verde; amarelo = pior que o melhor do piloto; roxo =
+    melhor da parte.
+  - Comparativo ao vivo na volta lançada (como na F1): na zona de eliminação (ou sem tempo) contra o tempo de corte (o
+    último que passa); dentro da zona e no Q3 contra o pole; o pole contra a própria melhor. Recalculado o tempo todo:
+    se o pole ou o corte mudar durante a volta, o alvo muda. Bloco no cartão do piloto (pílula verde/vermelha).
+  - Cartão do piloto sem a atitude da volta e sem a barra de progresso; pneu pelo símbolo.

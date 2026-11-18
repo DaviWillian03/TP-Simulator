@@ -8,13 +8,14 @@ extends Control
 ## só desenha onde cada carro está na volta dele.
 
 const UI_REFRESH_S := 0.2
-const SPEEDS := [2.0, 4.0, 8.0, 16.0]
+const SPEEDS := [1.0, 2.0, 4.0, 8.0, 16.0]  ## 1× desde 2026-11-18 (tempo real)
 const LEFT_W := CarControlPanel.WIDTH + 24.0
 const TOWER_W := 330.0
 const SIDE_TOP := 78.0
 
 var weekend: WeekendSim
 var q: QualiSim
+var _weather_btn: Button  ## selo do clima: abre a folha de clima, igual à corrida (2026-11-18)
 var time_scale := 4.0
 var _view: TrackView3D
 var _table: TimingTable
@@ -77,6 +78,8 @@ func _ready() -> void:
 			cards.add_child(_player_panel(car))
 	if Session.debug_ui == "out" and not _panels.is_empty():  # (captura) --ui=out abre a folha de saída
 		_open_out_sheet.call_deferred(_panels[0])
+	if Session.debug_ui == "weather":  # (captura) --ui=weather abre a folha de clima da classificação
+		WeatherSheet.open.call_deferred(q, weekend.player_team, layer)
 
 	# tabela da parte atual, à direita
 	var tower := PanelContainer.new()
@@ -168,28 +171,36 @@ func _build_top_bar(layer: Control) -> void:
 	_speeds = speeds
 	speeds.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	for b: Control in (speeds.get_child(0) as Control).get_children():
-		b.custom_minimum_size = Vector2(50, 40)
+		b.custom_minimum_size = Vector2(42, 40)
 		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	speed_pill.add_child(speeds)
 	bar.add_child(speed_pill)
 	# desacelerar quando surge uma decisão (opção; vale para a classificação e a corrida)
 	var slow := ScreenKit.glass_pill_button("")
-	var paint := func() -> void: slow.text = "Pausa em decisões: %s" % ("SIM" if Session.slow_on_decisions else "NÃO")
+	var paint := func() -> void: slow.text = "Decisões: %s" % ("pausa" if Session.slow_on_decisions else "segue")
 	paint.call()
 	slow.pressed.connect(func() -> void:
 		Session.slow_on_decisions = not Session.slow_on_decisions
 		paint.call())
 	bar.add_child(slow)
-	var rest := ScreenKit.glass_pill_button("SIMULAR RESTO")
+	var rest := ScreenKit.glass_pill_button("SIMULAR")  # simula o resto da classificação
 	rest.pressed.connect(_simulate_rest)
 	bar.add_child(rest)
+	_weather_btn = ScreenKit.glass_pill_button("")
+	_weather_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_weather_btn.add_theme_constant_override("icon_max_width", 22)
+	_weather_btn.add_theme_font_size_override("font_size", UiStyle.fs(13))
+	_weather_btn.custom_minimum_size = Vector2(0, 44)
+	_weather_btn.pressed.connect(func() -> void: WeatherSheet.open(q, weekend.player_team, layer))
+	bar.add_child(_weather_btn)
+	_refresh_weather()
 
 	bar.add_child(UiStyle.hspacer())
 	var clock := VBoxContainer.new()
 	clock.add_theme_constant_override("separation", -6)
 	clock.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	clock.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_clock = UiStyle.g_label("", 30, UiStyle.G_TEXT, "black")
+	_clock = UiStyle.g_label("", 26, UiStyle.G_TEXT, "black")
 	_clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_clock.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clock.add_child(_clock)
@@ -257,17 +268,24 @@ func _player_panel(car: CarState) -> Control:
 	head.add_child(names)
 	v.add_child(head)
 
+	# pneu em uso (símbolo) + texto curto; sem a atitude da volta e sem barra de progresso (pedido de 2026-11-18)
+	var lap_row := HBoxContainer.new()
+	lap_row.add_theme_constant_override("separation", 8)
+	var tyre := TyreBadge.new()
+	tyre.custom_minimum_size = Vector2(26, 26)
+	tyre.visible = false
+	lap_row.add_child(tyre)
 	var lap := UiStyle.g_label("", 12, Color("#c3c9d3"))
 	lap.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(lap)
-	var bar := ProgressBar.new()
-	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(0, 8)
-	bar.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.12), 4, 0, 0))
-	bar.add_theme_stylebox_override("fill", UiStyle.g_box(Color("#c77dff"), 4, 0, 0))
-	v.add_child(bar)
+	lap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	lap_row.add_child(lap)
+	v.add_child(lap_row)
 	var sectors := SectorStrip.new()  # setores da volta: roxo / verde / amarelo
 	v.add_child(sectors)
+	# comparativo ao vivo na volta lançada (como na transmissão): contra o pole ou contra o tempo de corte
+	var delta := _delta_box()
+	v.add_child(delta["box"])
 	var go := CutButton.new()
 	go.fill_color = accent
 	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
@@ -284,7 +302,7 @@ func _player_panel(car: CarState) -> Control:
 	go.add_theme_constant_override("h_separation", 6)
 	go.add_theme_font_size_override("font_size", UiStyle.fs(13))
 	v.add_child(go)
-	var panel := {"car": car, "pos": pos, "status": status, "go": go, "bar": bar, "lap": lap, "sectors": sectors}
+	var panel := {"car": car, "pos": pos, "status": status, "go": go, "tyre": tyre, "lap": lap, "sectors": sectors, "delta": delta}
 	go.pressed.connect(_open_out_sheet.bind(panel))
 	_panels.append(panel)
 	return card
@@ -333,7 +351,7 @@ func _open_out_sheet(panel: Dictionary) -> void:
 	if not q.can_go_out(car) or _out_sheet != null:
 		return
 	var def_set := q.best_set(car, q.ai_compound(car))
-	_out_choice = {"car": car, "set": def_set, "mode": "safe", "laps": 1}
+	_out_choice = {"car": car, "set": def_set, "mode": "limit", "laps": 1}  # padrão: buscar o limite (2026-11-18)
 	var sh := ScreenKit.sheet(String(car.driver["name"]), 1160)
 	_out_sheet = sh["root"]
 	_out_sheet.tree_exited.connect(func() -> void: _out_sheet = null)
@@ -360,7 +378,7 @@ func _open_out_sheet(panel: Dictionary) -> void:
 	mrow.add_theme_constant_override("separation", 10)
 	var mgroup := ButtonGroup.new()
 	for m: String in ["safe", "limit"]:
-		mrow.add_child(_option(MODE_INFO[m], mgroup, m == "safe", _pick_out.bind("mode", m)))
+		mrow.add_child(_option(MODE_INFO[m], mgroup, m == "limit", _pick_out.bind("mode", m)))
 	left.add_child(mrow)
 	left.add_child(UiStyle.g_caption("Voltas nesta saída"))
 	var lrow := HBoxContainer.new()
@@ -581,6 +599,60 @@ func _update_out_summary() -> void:
 
 
 ## Tempo do último que passa de fase agora (ou "—" se ainda não há tempos suficientes / Q3).
+## Bloco do comparativo (estilo transmissão): faixa na cor da equipe do alvo, sigla e tipo do alvo; à direita a
+## diferença numa pílula verde (mais rápido) ou vermelha (mais lento).
+func _delta_box() -> Dictionary:
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UiStyle.g_box(Color(0.02, 0.025, 0.035, 0.72), 12, 0, 0))
+	box.visible = false
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 8)
+	box.add_child(h)
+	var stripe := ColorRect.new()
+	stripe.custom_minimum_size = Vector2(5, 0)
+	h.add_child(stripe)
+	var who := VBoxContainer.new()
+	who.add_theme_constant_override("separation", -4)
+	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	who.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var kind := UiStyle.g_caption("")
+	kind.add_theme_font_size_override("font_size", UiStyle.fs(10))
+	who.add_child(kind)
+	var code := UiStyle.g_label("", 16, UiStyle.G_TEXT, "black")
+	who.add_child(code)
+	h.add_child(who)
+	var pill := PanelContainer.new()
+	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var val := UiStyle.g_label("", 19, Color.WHITE, "black")
+	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	val.custom_minimum_size = Vector2(86, 0)
+	pill.add_child(val)
+	var pm := MarginContainer.new()
+	pm.add_theme_constant_override("margin_right", 6)
+	pm.add_theme_constant_override("margin_top", 5)
+	pm.add_theme_constant_override("margin_bottom", 5)
+	pm.add_child(pill)
+	h.add_child(pm)
+	return {"box": box, "stripe": stripe, "kind": kind, "code": code, "pill": pill, "val": val}
+
+
+## Comparativo ao vivo da volta lançada: contra o pole (dentro da zona que passa) ou o tempo de corte (fora dela).
+func _refresh_delta(w: Dictionary, car: CarState) -> void:
+	var tgt := q.live_target(car)
+	var d := q.live_delta(car, tgt)
+	var box: PanelContainer = w["box"]
+	box.visible = not is_nan(d)
+	if not box.visible:
+		return
+	var other: CarState = tgt["car"]
+	var adv: int = q.segments[q.segment]["advance"]
+	(w["kind"] as Label).text = {"pole": "Contra o pole", "cut": "Contra o corte · P%d" % adv, "own": "Contra sua melhor"}[tgt["kind"]]
+	(w["code"] as Label).text = other.code() if tgt["kind"] != "own" else car.code()
+	(w["stripe"] as ColorRect).color = other.team_color()
+	(w["val"] as Label).text = "%s%s" % ["−" if d < 0.0 else "+", ("%.3f" % absf(d)).replace(".", ",")]
+	(w["pill"] as PanelContainer).add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_DELTA_FAST if d < 0.0 else UiStyle.G_DELTA_SLOW, 9, 8, 2))
+
+
 func _cut_time_text() -> String:
 	var adv: int = q.segments[q.segment]["advance"]
 	if adv <= 0:
@@ -602,6 +674,17 @@ func _confirm_out() -> void:
 	_refresh_ui()
 
 
+## Texto e ícone do selo do clima pela previsão da SUA equipe (pode errar), como na corrida.
+func _refresh_weather() -> void:
+	if _weather_btn == null:
+		return
+	var txt := WeatherSheet.chip_text(q, weekend.player_team)
+	# selo curto na classificação (a barra tem mais botões): "SECA" ou "SECA · chuva em ~5 min"
+	_weather_btn.text = " " + txt.replace("Pista ", "").replace(" · sem chuva prevista", "")
+	var icon_name := "rain" if q.weather.rain_now() > WeatherModel.RAIN_THRESHOLD else ("drizzle" if txt.contains("chuva em") else "sun")
+	_weather_btn.icon = load("res://assets/icons/%s.svg" % icon_name)
+
+
 func _process(delta: float) -> void:
 	if q == null:
 		return
@@ -614,6 +697,7 @@ func _process(delta: float) -> void:
 
 
 func _refresh_ui() -> void:
+	_refresh_weather()
 	var seg: Dictionary = q.segments[q.segment]
 	var adv: int = seg["advance"]
 	_sub.text = "%s · %s" % [weekend.circuit["grand_prix"], ("%d avançam" % adv) if adv > 0 else "disputa da pole"]
@@ -625,7 +709,11 @@ func _refresh_ui() -> void:
 		_clock_caption.text = "RELÓGIO PARADO"
 	else:
 		_clock.text = "%s %s" % [seg["name"], ScreenKit.clock(q.time_left_s())]
-		_clock_caption.text = "TEMPO RESTANTE"
+		if q.flag_out():  # tempo esgotado: a parte só acaba quando o último em volta lançada cruzar a linha
+			var n := q.still_running()
+			_clock_caption.text = "Bandeirada · %d em volta" % n if n > 0 else "Bandeirada"
+		else:
+			_clock_caption.text = "TEMPO RESTANTE"
 	var order := q.standings()
 	var active := q.active_cars().size()
 	var lead_best := q.best_in_segment(order[0])
@@ -636,10 +724,12 @@ func _refresh_ui() -> void:
 		_table.set_row_style(i, "me" if car.is_player else ("out" if out else "normal"))
 		_table.set_pos(i, 0, str(i + 1), Color(1, 1, 1, 0.18) if out else car.team_color())
 		_table.set_team(i, 1, car.team["id"], car.code())  # sigla de 3 letras, como na transmissão
+
 		_table.set_text(i, 2, UiStyle.format_time(b))
 		_table.set_text(i, 3, "—" if i == 0 or b == INF or out else "+%.3f" % (b - lead_best))
 		var c: Dictionary = q.tyres.compounds[car.tyre] if q.run_tyre.has(car) else {}
 		_table.set_tyre(i, 4, c.get("letter", ""), Color(c.get("color", "#00000000")), "")
+		_table.set_flag(i, 4, q.took_flag(car) and not out)  # bandeira quadriculada: já recebeu a bandeirada
 	_table.set_cut_line(adv - 1 if adv > 0 and adv < active and not q.is_over() else -1)
 	_cut_info.text = "" if adv <= 0 or q.is_over() else "Linha vermelha: zona de eliminação (%dº–%dº)" % [adv + 1, active]
 	# a evolução da pista é implícita (pedido de 2026-11-10): sem aviso; só diz a condição quando a pista está molhada
@@ -665,23 +755,22 @@ func _refresh_panel(p: Dictionary, order: Array[CarState]) -> void:
 	var running := state in ["Volta de saída", "Volta lançada", "Volta de entrada"]
 	(p["status"] as Label).text = state
 	var lap: Label = p["lap"]
-	var bar: ProgressBar = p["bar"]
-	bar.visible = running
+	var tyre: TyreBadge = p["tyre"]
+	tyre.visible = running
 	if garage:
 		lap.text = "%d jogo(s) de macios novos" % q.new_softs_left(car)
 		if car.last_lap_time > 0.0:
 			lap.text += " · última: %s" % UiStyle.format_time(car.last_lap_time)
 	elif running:
-		bar.value = q.render_distance(car) / q.track.length_m * 100.0
 		var c: Dictionary = q.tyres.compounds[car.tyre]
-		var flying := state == "Volta lançada"
-		lap.text = "%s · %d%% da volta" % [c["name"], roundi(bar.value)]
-		if flying:  # o objetivo da volta é escolha do piloto: a tela só informa
-			lap.text = "%s · %s · %d%%" % [c["name"], q.lap_mode_label(car), roundi(bar.value)]
-		bar.add_theme_stylebox_override("fill", UiStyle.g_box(Color("#c77dff") if flying else Color("#8f98a7"), 4, 0, 0))
+		tyre.set_compound(String(c["letter"]), Color(c["color"]))
+		lap.text = "última: %s" % UiStyle.format_time(car.last_lap_time) if car.last_lap_time > 0.0 else ""
 	else:
 		lap.text = state
 	(p["sectors"] as SectorStrip).set_state(q.sectors_of(car), state == "Volta lançada")
+	_refresh_delta(p["delta"], car)
+	if q.took_flag(car):
+		(p["status"] as Label).text = "Bandeirada · " + state.to_lower()
 	var go: Button = p["go"]
 	go.disabled = not q.can_go_out(car)
 	if garage:

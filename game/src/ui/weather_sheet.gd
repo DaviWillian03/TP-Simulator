@@ -1,6 +1,8 @@
 class_name WeatherSheet
 extends RefCounted
-## Folha de clima da corrida (mockup design/mockups/v38-clima.html, aprovado em 2026-11-13). Abre pelo selo do clima na
+## Folha de clima da corrida e da classificação (mockup design/mockups/v38-clima.html, aprovado em 2026-11-13; na
+## classificação desde 2026-11-18). `sim` é um RaceSim ou um QualiSim (os dois têm weather, tyres, track, time_s,
+## total_laps, cars e forecast_of). Abre pelo selo do clima na
 ## barra do topo; a corrida continua atrás e a folha se atualiza sozinha. Tudo é a PREVISÃO DA SUA EQUIPE
 ## (TeamForecast: erra conforme o pessoal, nunca é 100%): recado do engenheiro com faixa de voltas e confiança, pista e
 ## pneu agora, linha do tempo das próximas voltas e a volta em que outro tipo de pneu deve passar a valer.
@@ -10,7 +12,7 @@ const BAR_MAX := 64.0
 const RAIN_BLUE := UiStyle.G_RAIN
 const RAIN_LIGHT := UiStyle.G_RAIN_LIGHT
 
-var sim: RaceSim
+var sim  ## RaceSim ou QualiSim
 var team_id := ""
 var car: CarState  ## primeiro carro do jogador (o pneu "agora" e a troca prevista são dele)
 var root: Control
@@ -19,7 +21,7 @@ var _content: VBoxContainer
 var _timer: Timer
 
 
-static func open(p_sim: RaceSim, p_team: String, parent: Control) -> WeatherSheet:
+static func open(p_sim: Object, p_team: String, parent: Control) -> WeatherSheet:
 	var ws := WeatherSheet.new()
 	ws.sim = p_sim
 	ws.team_id = p_team
@@ -51,11 +53,11 @@ static func open(p_sim: RaceSim, p_team: String, parent: Control) -> WeatherShee
 func refresh() -> void:
 	if not is_instance_valid(root) or sim == null:
 		return
-	var fc := sim.forecast_of(team_id)
+	var fc: TeamForecast = sim.forecast_of(team_id)
 	for c in _content.get_children():
 		c.queue_free()
-	var lap_t := sim.track.base_lap_time_s
-	var now := sim.time_s
+	var lap_t: float = sim.track.base_lap_time_s
+	var now: float = sim.time_s
 	var lap_now := _current_lap()
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", UiStyle.SP_M)
@@ -68,6 +70,8 @@ func refresh() -> void:
 
 
 func _current_lap() -> int:
+	if sim is QualiSim:  # classificação: volta "da sessão" pelo relógio (o carro entra e sai do box)
+		return int(sim.time_s / sim.track.base_lap_time_s) + 1
 	return (car.laps_done + 1) if car != null else 1
 
 
@@ -122,7 +126,7 @@ func _engineer_name() -> String:
 
 
 func _message(win: Dictionary, lap_now: int) -> String:
-	var raining := sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD
+	var raining: bool = sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD
 	var start := int(win["start"])
 	if start < 0:
 		if raining:
@@ -174,8 +178,8 @@ func _now_box() -> Control:
 	v.add_theme_constant_override("separation", 8)
 	card.add_child(v)
 	v.add_child(UiStyle.g_caption("Pista e pneu agora"))
-	var w := sim.weather.wetness
-	var best := sim.tyres.best_for_wetness(w)
+	var w: float = sim.weather.wetness
+	var best: String = sim.tyres.best_for_wetness(w)
 	if sim.tyres.is_dry(best) and car != null:
 		best = car.tyre if sim.tyres.is_dry(car.tyre) else sim.tyres.dry_compounds()[0]
 	var row := HBoxContainer.new()
@@ -222,7 +226,7 @@ func _timeline(fc: TeamForecast, now: float, lap_t: float, lap_now: int) -> Cont
 	v.add_child(head)
 	var laps := fc.by_lap(now, lap_t, HORIZON)
 	var win := fc.window(now, lap_t, HORIZON)
-	var total := sim.total_laps
+	var total: int = sim.total_laps
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	for e: Dictionary in laps:
@@ -327,10 +331,10 @@ class _WetMeter:
 
 
 ## Texto curto do selo do clima na barra do topo: o estado da pista e a opinião da SUA equipe.
-static func chip_text(p_sim: RaceSim, p_team: String) -> String:
-	var raining := p_sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD
-	var base := p_sim.weather.rain_label().capitalize() if raining else "Pista " + p_sim.weather.surface_label()
-	var fc := p_sim.forecast_of(p_team)
+static func chip_text(p_sim: Object, p_team: String) -> String:
+	var raining: bool = p_sim.weather.rain_now() > WeatherModel.RAIN_THRESHOLD
+	var base: String = p_sim.weather.rain_label().capitalize() if raining else "Pista " + p_sim.weather.surface_label()
+	var fc: TeamForecast = p_sim.forecast_of(p_team)
 	if fc == null:
 		return base
 	var win := fc.window(p_sim.time_s, p_sim.track.base_lap_time_s, HORIZON)
@@ -338,6 +342,8 @@ static func chip_text(p_sim: RaceSim, p_team: String) -> String:
 		return "%s · sem chuva prevista" % base
 	if int(win["start"]) == 0:
 		return base
+	if p_sim is QualiSim:  # classificação: em minutos (o carro entra e sai do box, não há "volta da corrida")
+		return "%s · chuva em ~%d min" % [base, maxi(1, roundi(int(win["start"]) * p_sim.track.base_lap_time_s / 60.0))]
 	var lap := 1
 	for c in p_sim.cars:
 		if c.is_player:
