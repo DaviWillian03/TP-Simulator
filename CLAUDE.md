@@ -9,6 +9,11 @@ Jogo mobile Android de gestão de automobilismo (temporada 2026). **Fase: implem
 Usuário: estudante de Sistemas de Informação. Responda em português, explicando o porquê
 das escolhas técnicas.
 
+**Duas versões (decisão de 2026-11-18):** toda mudança vale para o celular (Android) e o PC (Windows). Ao entregar: gerar e
+enviar o APK (`scripts/build-apk.sh`) e o zip do Windows (`scripts/build-exe.sh`); conferir telas novas no visual do PC
+(Forward+, padrão das capturas) e do celular (`--rendering-method gl_compatibility`); pensar também em mouse/teclado
+(Esc = voltar, nada que dependa só de toque ou pinça).
+
 ## Stack
 - Godot **4.7.2-stable** + GDScript, tela paisagem 1280×720 (expand). Renderizador: Compatibility no celular
   (`rendering_method.mobile`), Forward+ no PC (versão Windows: `scripts/build-exe.sh`; Esc = voltar, espaço = pausa, F11).

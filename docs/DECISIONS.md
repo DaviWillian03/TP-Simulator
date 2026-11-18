@@ -977,3 +977,6 @@ Respostas do usuário:
     saturação, contraste e exposição — `TrackView3D.FP_*`).
   - Mouse/teclado: Esc = botão "voltar" do Android (todas as telas), espaço pausa a corrida, F11 tela cheia. Janela inicial
     1600×900 redimensionável; opções "Tela cheia" e "Gráficos" nas Configurações (só no PC).
+- **2026-11-18 — Duas versões sempre juntas:** daqui em diante toda mudança pedida vale para o celular (Android) e para o
+  PC (Windows). Ao fim de cada entrega: gerar e enviar os dois (`scripts/build-apk.sh` e `scripts/build-exe.sh`), conferir
+  as telas novas nos dois visuais (Forward+ e `--rendering-method gl_compatibility`) e, no PC, mouse/teclado.
