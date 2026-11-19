@@ -1,5 +1,6 @@
 extends GutTest
-## Patrocínios por zona, ofertas mensais e livro-caixa da campanha.
+## Patrocínios v42 (2026-11-19): principal + 3 secundários, 3 ofertas por vaga (garantido, equilibrado, ousado),
+## fixo por corrida + bônus por metas (não cumprir só perde o bônus), marcas fictícias, migração do save antigo.
 
 var camp: Campaign
 
@@ -7,137 +8,145 @@ var camp: Campaign
 func before_each() -> void:
 	camp = Campaign.new_real("williams")
 	camp.detail = "advanced"
-	camp.budget_musd = 150.0
+	camp.sponsors.contracts.clear()
+	camp.sponsors.offers.clear()
 
 
-func test_contratos_iniciais_somam_o_patrocinio_base() -> void:
-	var target: float = Campaign.origins_data()["finance"]["sponsor_default"]
-	assert_almost_eq(camp.sponsor_per_race(), target, 0.35)
-	assert_gt(camp.sponsors.contracts.size(), 2)
-	for z in camp.sponsors.contracts:
-		assert_ne(Sponsorship.zone(z), {}, z)
+func _offer(slot_id: String, kind_id: String) -> Dictionary:
+	for o: Dictionary in camp.sponsors.offers_for(camp, slot_id):
+		if o["kind"] == kind_id:
+			return o
+	return {}
 
 
-func test_equipe_melhor_tem_mais_zonas_ocupadas() -> void:
-	var top := Campaign.new_real("mclaren")
-	var low := Campaign.new_real("cadillac")
-	assert_gt(top.sponsors.contracts.size(), low.sponsors.contracts.size())
+func test_principal_e_tres_secundarios() -> void:
+	var ids: Array = Sponsorship.slots().map(func(z: Dictionary) -> String: return String(z["id"]))
+	assert_eq(ids.size(), 4)
+	assert_eq(ids[0], "main")
+	var total := 0.0
+	for z: Dictionary in Sponsorship.slots():
+		total += float(z["share"])
+	assert_almost_eq(total, 1.0, 0.001, "as fatias somam o patrocínio base")
 
 
-func test_zona_livre_recebe_tres_ofertas_de_marcas_ate_a_influencia() -> void:
-	var free := camp.sponsors.free_zones()
-	assert_gt(free.size(), 0)
-	var offers := camp.sponsors.offers_for(camp, free[0])
-	assert_eq(offers.size(), 3)
-	for o in offers:
-		assert_lte(int(o["tier"]), camp.dev.influence())
-		assert_gt(float(o["per_race"]), 0.0)
-		assert_between(int(o["years"]), 1, 3)
+func test_tres_ofertas_por_vaga_com_tipos_diferentes() -> void:
+	var o := camp.sponsors.offers_for(camp, "main")
+	assert_eq(o.size(), 3)
+	var kinds: Array = o.map(func(x: Dictionary) -> String: return String(x["kind"]))
+	assert_eq(kinds, ["safe", "balanced", "bold"])
+	var brands: Array = o.map(func(x: Dictionary) -> String: return String(x["brand"]))
+	assert_ne(brands[0], brands[1])
+	assert_true((_offer("main", "safe")["goals"] as Array).is_empty(), "garantido: sem metas")
+	assert_false((_offer("main", "bold")["goals"] as Array).is_empty())
+	assert_eq(camp.sponsors.offers_for(camp, "main")[0]["key"], o[0]["key"], "as ofertas não mudam ao reabrir a tela")
 
 
-func test_ofertas_sao_deterministicas_e_mudam_a_cada_mes() -> void:
-	var z: String = camp.sponsors.free_zones()[0]
-	var a := camp.sponsors.offers_for(camp, z).map(func(o: Dictionary) -> String: return o["key"])
-	var b := camp.sponsors.offers_for(camp, z).map(func(o: Dictionary) -> String: return o["key"])
-	assert_eq(a, b)
-	camp.day += 45
-	var c := camp.sponsors.offers_for(camp, z).map(func(o: Dictionary) -> String: return o["key"])
-	assert_ne(a, c)
+func test_ousado_paga_menos_fixo_e_mais_potencial() -> void:
+	var safe := _offer("main", "safe")
+	var bold := _offer("main", "bold")
+	var n := Campaign.calendar().size()
+	assert_lt(float(bold["per_race"]), float(safe["per_race"]))
+	assert_gt(float(bold["per_race"]) * n + float(bold["bonus_total"]), float(safe["per_race"]) * n, "com as metas cumpridas, rende mais")
 
 
-func test_aceitar_oferta_ocupa_a_zona_e_soma_ao_patrocinio() -> void:
-	var z: String = camp.sponsors.free_zones()[0]
-	var before := camp.sponsor_per_race()
-	var o: Dictionary = camp.sponsors.offers_for(camp, z)[0]
-	var res := camp.sponsors.accept(camp, z, o["key"])
-	assert_true(res["ok"])
-	assert_true(camp.sponsors.contracts.has(z))
-	assert_almost_eq(camp.sponsor_per_race(), before + float(o["per_race"]), 0.0001)
-	assert_false(camp.sponsors.accept(camp, z, o["key"])["ok"], "zona já ocupada")
-	assert_eq(camp.sponsors.offers_for(camp, z).size(), 0)
+func test_marcas_sao_ficticias() -> void:
+	var names: Array = (Sponsorship.data()["brands"] as Array).map(func(b: Dictionary) -> String: return String(b["name"]))
+	for real: String in ["Ipiranga", "Havaianas", "Natura", "Petrobras", "Shell"]:
+		assert_false(names.has(real), real)
 
 
-func test_pedir_mais_so_uma_vez_e_pode_subir_ou_perder_a_oferta() -> void:
-	var z: String = camp.sponsors.free_zones()[0]
-	var o: Dictionary = camp.sponsors.offers_for(camp, z)[0]
-	var res := camp.sponsors.ask_more(camp, z, o["key"])
-	assert_false(camp.sponsors.ask_more(camp, z, o["key"])["ok"], "uma vez por oferta")
-	var left := camp.sponsors.offers_for(camp, z)
-	if res["ok"]:
-		var again: Dictionary = left.filter(func(x: Dictionary) -> bool: return x["key"] == o["key"])[0]
-		assert_gt(float(again["per_race"]), float(o["per_race"]))
-		assert_true(again["asked"])
-	else:
-		assert_true(left.filter(func(x: Dictionary) -> bool: return x["key"] == o["key"]).is_empty(), "marca desistiu")
+func test_aceitar_fecha_contrato_e_tira_as_ofertas() -> void:
+	var o := _offer("main", "balanced")
+	var r := camp.sponsors.accept(camp, "main", String(o["key"]))
+	assert_true(r["ok"], str(r))
+	assert_eq(String(camp.sponsors.contracts["main"]["brand"]), String(o["brand"]))
+	assert_eq(camp.sponsors.offers_for(camp, "main").size(), 0, "vaga ocupada não tem ofertas")
+	assert_false(camp.sponsors.accept(camp, "main", String(o["key"]))["ok"])
+	assert_almost_eq(camp.sponsors.per_race_total(), float(o["per_race"]), 0.001)
 
 
-func test_rescindir_cobra_multa_e_libera_a_zona() -> void:
-	var z: String = camp.sponsors.contracts.keys()[0]
+func test_diretor_comercial_assina_o_equilibrado_antes_da_corrida() -> void:
+	assert_gt(camp.sponsor_per_race(), 0.0, "previsão conta a vaga livre pelo valor garantido")
+	assert_eq(camp.sponsors.fill_free(camp), 4)
+	for z: String in camp.sponsors.contracts:
+		assert_eq(String(camp.sponsors.contracts[z]["kind"]), "balanced")
+	assert_true(camp.sponsors.free_slots().is_empty())
+
+
+func test_meta_de_contagem_paga_uma_vez_quando_cumprida() -> void:
+	var o := _offer("main", "balanced")
+	camp.sponsors.accept(camp, "main", String(o["key"]))
+	var c: Dictionary = camp.sponsors.contracts["main"]
+	c["goals"] = [{"type": "podiums", "target": 1, "bonus": 5.0, "paid": false}, {"type": "wins", "target": 3, "bonus": 9.0, "paid": false}]
+	assert_eq(camp.sponsors.after_race(camp), 0.0, "sem pódio ainda")
+	var me: String = camp.team_driver_ids("williams")[0]
+	var others: Array = camp.drivers().map(func(d: Dictionary) -> String: return String(d["id"])).filter(func(id: String) -> bool: return id != me)
+	camp.history.append({"round": 1, "circuit": "x", "results": [others[0], me] + others.slice(1)})
+	assert_eq(camp.sponsors.after_race(camp), 5.0, "pódio: paga o bônus")
+	assert_eq(camp.sponsors.after_race(camp), 0.0, "não paga de novo")
+	var p := Sponsorship.progress(camp, c["goals"][1])
+	assert_eq(int(p["value"]), 0)
+	assert_false(bool(c["goals"][1]["paid"]), "vitórias: ainda não")
+
+
+func test_meta_de_posicao_paga_no_fim_do_ano_so_se_cumprida() -> void:
+	camp.sponsors.accept(camp, "main", String(_offer("main", "bold")["key"]))
+	var c: Dictionary = camp.sponsors.contracts["main"]
+	c["goals"] = [{"type": "pos", "target": 5, "bonus": 12.0, "paid": false}]
+	assert_eq(camp.sponsors.settle_goals(camp, 6), 0.0, "6º: perde só o bônus")
+	assert_eq(camp.sponsors.settle_goals(camp, 5), 12.0)
+	assert_eq(camp.sponsors.settle_goals(camp, 1), 0.0, "já pago")
+
+
+func test_fim_da_temporada_credita_o_bonus_no_caixa() -> void:
+	camp.sponsors.accept(camp, "main", String(_offer("main", "bold")["key"]))
+	camp.sponsors.contracts["main"]["goals"] = [{"type": "pos", "target": 12, "bonus": 7.0, "paid": false}]
 	var before := camp.budget_musd
-	var fee := camp.sponsors.terminate(camp, z)
-	assert_gt(fee, 0.0)
-	assert_almost_eq(camp.budget_musd, before - fee, 0.001)
-	assert_false(camp.sponsors.contracts.has(z))
-	assert_almost_eq(float(camp.ledger["contracts"]), fee, 0.001)
+	camp.round = Campaign.calendar().size()
+	camp.close_season()
+	assert_gte(camp.budget_musd - before, 7.0, "bônus entra no caixa (além do prêmio)")
 
 
-func test_bonus_por_podio_entra_no_caixa() -> void:
-	var w := WeekendSim.new("interlagos", camp.weekend_options({"duration_pct": 0.25, "weather": "dry", "incident_rate": 0.0, "format": "race_only"}))
-	w.simulate_current()
-	# força um pódio da equipe do jogador
-	var mine: Array = camp.drivers().filter(func(d: Dictionary) -> bool: return d["team"] == "williams").map(func(d: Dictionary) -> String: return d["id"])
-	var order: Array = w.results["race"].duplicate()
-	for id in mine:
-		order.erase(id)
-	order.insert(0, mine[0])
-	w.results["race"] = order
-	var before := camp.budget_musd
-	camp.advance_to_event()
-	var per_podium := camp.sponsors.bonus_per_podium()  # (um evento depois da corrida pode mudar os contratos)
-	camp.record_weekend(w)
-	assert_almost_eq(float(camp.ledger["bonus"]), per_podium, 0.0001)
-	assert_gt(float(camp.ledger["sponsors"]), 0.0)
-	assert_gt(camp.budget_musd, before - camp.cost_per_race() - 0.001 + camp.sponsor_per_race())
-
-
-func test_livro_caixa_registra_gastos_de_pd_fabrica_e_contratos() -> void:
-	camp.dev.start_project(camp, "cur", "aero.0.0")
-	camp.dev.start_upgrade(camp, "wind")
-	assert_gt(float(camp.ledger["rd"]), 0.0)
-	assert_gt(float(camp.ledger["works"]), 0.0)
-	var rd := float(camp.ledger["rd"])
-	camp.dev.cancel_project(camp, "cur", "aero.0.0")
-	assert_lt(float(camp.ledger["rd"]), rd)
-	assert_gt(camp.expense_total(), 0.0)
-
-
-func test_historico_do_caixa_e_projecao() -> void:
-	assert_eq(camp.cash_log.size(), 1)
-	camp.advance_to_event()
-	var w := WeekendSim.new(camp.next_round()["id"], camp.weekend_options({"duration_pct": 0.25, "weather": "dry", "incident_rate": 0.0, "format": "race_only"}))
-	w.simulate_current()
-	camp.record_weekend(w)
-	assert_eq(camp.cash_log.size(), 2)
-	assert_gt(camp.projected_cash_end(), 0.0)
-
-
-func test_virada_zera_o_livro_e_vence_contratos() -> void:
-	var z: String = camp.sponsors.contracts.keys()[0]
-	camp.sponsors.contracts[z]["until"] = camp.season  # vence agora
-	camp.record("rd", 5.0)
+func test_contratos_terminam_na_virada_e_chegam_ofertas_novas() -> void:
+	camp.sponsors.fill_free(camp)
 	camp.start_next_season()
-	assert_false(camp.sponsors.contracts.has(z))
-	assert_true(camp.ledger.is_empty())
-	assert_eq(camp.cash_log.size(), 1)
-	assert_true(camp.sponsors.free_zones().has(z))
+	assert_eq(camp.sponsors.contracts.size(), 0, "modo avançado: o jogador escolhe de novo")
+	var o := camp.sponsors.offers_for(camp, "nose")
+	assert_eq(o.size(), 3)
+	assert_eq(int(o[0]["season"]), camp.season)
 
 
-func test_salvar_e_carregar_guarda_patrocinios_e_livro() -> void:
-	var z: String = camp.sponsors.free_zones()[0]
-	camp.sponsors.accept(camp, z, camp.sponsors.offers_for(camp, z)[0]["key"])
-	camp.record("rd", 12.0)
-	var copy := Campaign.from_dict(JSON.parse_string(JSON.stringify(camp.to_dict())))
-	assert_eq(copy.sponsors.contracts.keys().size(), camp.sponsors.contracts.keys().size())
-	assert_almost_eq(copy.sponsor_per_race(), camp.sponsor_per_race(), 0.0001)
-	assert_almost_eq(float(copy.ledger["rd"]), 12.0, 0.0001)
-	assert_eq(copy.cash_log.size(), camp.cash_log.size())
+func test_marketing_sobe_valor_e_numero_de_metas() -> void:
+	camp.dev.set_all_levels(1)
+	var v1 := float(_offer("main", "safe")["per_race"])
+	var g1 := (_offer("main", "bold")["goals"] as Array).size()
+	camp.sponsors.offers.clear()
+	camp.dev.levels["media"] = 4
+	var v4 := float(_offer("main", "safe")["per_race"])
+	var g4 := (_offer("main", "bold")["goals"] as Array).size()
+	assert_gt(v4, v1, "ofertas mais valiosas (+25% contra a sorte de ±9%)")
+	assert_gt(g4, g1, "mais metas por oferta")
+
+
+func test_save_preserva_contratos_metas_e_ofertas() -> void:
+	camp.sponsors.accept(camp, "main", String(_offer("main", "bold")["key"]))
+	camp.sponsors.contracts["main"]["goals"][0]["paid"] = true
+	camp.sponsors.offers_for(camp, "halo")
+	var back := Sponsorship.from_dict(JSON.parse_string(JSON.stringify(camp.sponsors.to_dict())))
+	assert_eq(String(back.contracts["main"]["brand"]), String(camp.sponsors.contracts["main"]["brand"]))
+	assert_true(bool(back.contracts["main"]["goals"][0]["paid"]))
+	assert_eq(int(back.contracts["main"]["goals"][0]["target"]), int(camp.sponsors.contracts["main"]["goals"][0]["target"]))
+	assert_eq((back.offers["halo"] as Array).size(), 3)
+	assert_almost_eq(back.base, camp.sponsors.base, 0.001)
+
+
+func test_save_antigo_de_zonas_vira_vagas_novas() -> void:
+	var old := {"contracts": {"rear_wing": {"brand": "Ipiranga", "category": "Energia", "tier": 2, "per_race": 1.2, "bonus": 0.2, "until": 2026},
+		"sidepods": {"brand": "Natura", "category": "Beleza", "tier": 2, "per_race": 0.8, "bonus": 0.1, "until": 2027}}, "news": []}
+	var s := Sponsorship.from_dict(old)
+	assert_almost_eq(s.base, 2.0, 0.001, "o total antigo vira o patrocínio base")
+	assert_true(s.contracts.has("main"))
+	assert_eq(s.contracts.size(), 2)
+	assert_almost_eq(s.per_race_total(), 2.0 * (0.55 + 0.15), 0.05)
+	for c: Dictionary in s.contracts.values():
+		assert_false(String(c["brand"]) in ["Ipiranga", "Natura"], "marcas reais trocadas por fictícias")

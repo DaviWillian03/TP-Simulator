@@ -1,20 +1,12 @@
 extends Control
-## Patrocínios — zonas do carro, contratos e ofertas (mockup v11-2). Cinco zonas com valor diferente; um
-## patrocinador por zona. As marcas (só texto, sem logos) fazem ofertas todo mês conforme a influência:
-## aceitar, pedir mais (uma vez, com risco de a marca desistir) ou deixar passar. Rescindir custa multa.
+## Patrocínios (mockup v42-4, 2026-11-19): à esquerda o patrocinador PRINCIPAL (com a vaga livre: as 3 ofertas para
+## escolher); à direita as 3 vagas SECUNDÁRIAS (livre: "ver 3 ofertas") e o resumo do ano com o progresso das metas.
+## Oferta = valor fixo por corrida + bônus por metas; não cumprir só perde o bônus. Marcas fictícias.
 
 var campaign: Campaign
 var sp: Sponsorship
 var _layer: Control
-var _zone := ""
-var _hero: CarHero
-var _pins: Dictionary = {}
-var _right: VBoxContainer
-var _toasts: ToastFeed
-var _per_race: Label
-var _cash: Label
-var _summary: Label
-var _pips: Control
+var _stats: Dictionary = {}
 
 
 func _ready() -> void:
@@ -23,444 +15,229 @@ func _ready() -> void:
 		Session.open_campaign.call_deferred()
 		return
 	sp = campaign.sponsors
-	var team := campaign.team()
+	_stats = Sponsorship.season_stats(campaign)
 	var page := ScreenKit.garage_page(self, campaign.player_team)
-	(page["backdrop"] as GarageBackdrop).set_glow(Color(team["color"]), 0.18)
+	(page["backdrop"] as GarageBackdrop).set_glow(UiStyle.SECTION["spons"], 0.16)
 	_layer = page["layer"]
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", UiStyle.SP_L)
-	var back := ScreenKit.round_button("back", 52, "Voltar à sede")
-	back.pressed.connect(Session.open_campaign_hub)
-	head.add_child(back)
-	head.add_child(TeamEmblems.make_rect(campaign.player_team, 46))
-	var titles := VBoxContainer.new()
-	titles.add_theme_constant_override("separation", -2)
-	titles.add_child(UiStyle.g_caption("%s · temporada %d" % [team["name"], campaign.season]))
-	titles.add_child(UiStyle.g_label("PATROCÍNIOS", 26, UiStyle.G_TEXT, "black"))
-	head.add_child(titles)
-	ScreenKit.place(head, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 20))
-	var chips := HBoxContainer.new()
-	chips.add_theme_constant_override("separation", UiStyle.SP_M)
-	var c1 := _chip("Patrocínio por corrida")
-	_per_race = c1.get_meta("value")
-	chips.add_child(c1)
-	var c2 := _chip("Caixa")
-	_cash = c2.get_meta("value")
-	chips.add_child(c2)
-	ScreenKit.place(chips, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 26))
-	ScreenKit.campaign_nav(_layer, "sponsors")
-
-	var inf := ScreenKit.g_card(Color(1, 1, 1, 0.06), 22, 20, 12)
-	var iv := VBoxContainer.new()
-	iv.add_theme_constant_override("separation", 2)
-	inf.add_child(iv)
-	iv.add_child(UiStyle.g_caption("Influência"))
-	var ir := HBoxContainer.new()
-	ir.add_theme_constant_override("separation", 12)
-	ir.add_child(UiStyle.g_label(str(campaign.dev.influence()), 34, UiStyle.G_TEXT, "black"))
-	var im := VBoxContainer.new()
-	im.alignment = BoxContainer.ALIGNMENT_CENTER
-	im.add_theme_constant_override("separation", 3)
-	_pips = InfluencePips.new()
-	(_pips as InfluencePips).level = campaign.dev.influence()
-	im.add_child(_pips)
-	var inf_note := UiStyle.g_label("marcas até o nível %d · sobe com a fábrica" % campaign.dev.influence(), 12, UiStyle.G_TEXT_2, "bold")
-	inf_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	inf_note.custom_minimum_size = Vector2(180, 0)
-	im.add_child(inf_note)
-	ir.add_child(im)
-	iv.add_child(ir)
-	ScreenKit.place(inf, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 150), Vector2(300, 96))
-	var con := ScreenKit.g_card(Color(1, 1, 1, 0.06), 22, 20, 12)
-	var cv := VBoxContainer.new()
-	cv.add_theme_constant_override("separation", 2)
-	con.add_child(cv)
-	cv.add_child(UiStyle.g_caption("Contratos"))
-	_summary = UiStyle.g_label("", 14, Color("#c3c9d3"), "bold")
-	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	cv.add_child(_summary)
-	ScreenKit.place(con, _layer, Control.PRESET_TOP_LEFT, Vector2(356, 150), Vector2(260, 96))
-
-	_hero = CarHero.new()
-	_hero.custom_minimum_size = Vector2(572, 160)
-	ScreenKit.place(_hero, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 330), Vector2(572, 160))
-	var first := 0
-	for d: Dictionary in campaign.drivers():
-		if d["team"] == campaign.player_team:
-			first = int(d["number"])
-			break
-	var c2col := Color(team.get("color2", "#ffffff"))
-	_hero.set_team(campaign.player_team, first, c2col if c2col.get_luminance() > 0.35 else Color.WHITE, team)
-	for z: Dictionary in Sponsorship.zones():
-		var pin := Button.new()
-		pin.focus_mode = Control.FOCUS_NONE
-		pin.custom_minimum_size = Vector2(34, 34)
-		pin.add_theme_font_override("font", UiStyle.G_BLACK)
-		pin.add_theme_font_size_override("font_size", UiStyle.fs(15))
-		pin.pressed.connect(_on_zone.bind(z["id"]))
-		_layer.add_child(pin)
-		var pos: Array = z["pin"]
-		pin.position = Vector2(44 + 572 * float(pos[0]) - 17, 330 + 160 * float(pos[1]) - 17)
-		_pins[z["id"]] = pin
-	_right = VBoxContainer.new()
-	_right.add_theme_constant_override("separation", 6)
-	ScreenKit.scroll_column(_right, _layer, Vector2(1280 - 44 - 596, 150), Vector2(596, 720 - 150 - 8))
-	_toasts = ToastFeed.new()
-	_toasts.custom_minimum_size = Vector2(420, 0)
-	ScreenKit.place(_toasts, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 520), Vector2(420, 0))
-	var free := sp.free_zones()
-	_zone = free[0] if not free.is_empty() else String(Sponsorship.zones()[0]["id"])
-	_refresh()
-	if Session.debug_ui == "offer":  # (captura) --ui=offer abre a folha da primeira oferta
-		var offs := sp.offers_for(campaign, _zone)
-		if not offs.is_empty():
-			_on_accept.call_deferred(String(offs[0]["key"]))
+	var R := CampaignFrame.CONTENT
+	var gap := 16.0
+	var lw := 560.0
+	var free_main := not sp.contracts.has("main")
+	var main_h := R.size.y if free_main else 300.0
+	_panel(Rect2(R.position, Vector2(lw, main_h)), _main())
+	var rx := R.position.x + lw + gap
+	var rw := R.size.x - lw - gap
+	if free_main:  # escolhendo o principal: secundários em cima, resumo embaixo, à direita
+		_panel(Rect2(Vector2(rx, R.position.y), Vector2(rw, 330)), _secondaries())
+		_panel(Rect2(Vector2(rx, R.position.y + 330 + gap), Vector2(rw, R.size.y - 330 - gap)), _summary())
+	else:  # principal assinado: resumo embaixo dele, secundários na coluna inteira
+		_panel(Rect2(Vector2(R.position.x, R.position.y + main_h + gap), Vector2(lw, R.size.y - main_h - gap)), _summary())
+		_panel(Rect2(Vector2(rx, R.position.y), Vector2(rw, R.size.y)), _secondaries())
+	CampaignFrame.apply(_layer, "spons", true)
 
 
-func _chip(caption: String) -> PanelContainer:
+func _panel(r: Rect2, content: Control) -> void:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 26, 18, 7))
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 8)
-	var cap := UiStyle.g_caption(caption)
-	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	h.add_child(cap)
-	var v := UiStyle.g_label("", 17, UiStyle.G_TEXT, "black")
-	h.add_child(v)
-	p.add_child(h)
-	p.set_meta("value", v)
-	return p
+	p.clip_contents = true
+	p.add_theme_stylebox_override("panel", ScreenKit.glass_box(18, 16, 14))
+	p.position = r.position
+	p.size = r.size
+	p.custom_minimum_size = r.size
+	p.add_child(content)
+	_layer.add_child(p)
 
 
-func _money(v: float) -> String:
-	return ("%.2f" % v).replace(".", ",")
+func _money(v: float, digits := 1) -> String:
+	return "US$ %s mi" % ProjectNotes.num(v, digits)
 
 
-func _refresh() -> void:
-	_per_race.text = "US$ %s mi" % _money(sp.per_race_total())
-	_cash.text = "US$ %d mi" % int(campaign.budget_musd)
-	_summary.text = "%d de %d zonas ocupadas\nUS$ %s mi por corrida · bônus por pódio US$ %s mi" % [sp.contracts.size(), Sponsorship.zones().size(), _money(sp.per_race_total()), _money(sp.bonus_per_podium())]
-	for z: Dictionary in Sponsorship.zones():
-		var pin: Button = _pins[z["id"]]
-		var taken := sp.contracts.has(z["id"])
-		var sel: bool = z["id"] == _zone
-		var idx := Sponsorship.zones().find(z) + 1
-		pin.text = str(idx)
-		var fill := UiStyle.RED if taken else Color("#2b2f38")
-		for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
-			var st := UiStyle.g_box(fill, 17, 0, 0)
-			st.set_border_width_all(3)
-			st.border_color = Color.WHITE if sel else Color("#8f98a7")
-			pin.add_theme_stylebox_override(s, st)
-	for c in _right.get_children():
-		_right.remove_child(c)
-		c.queue_free()
-	_right.add_child(UiStyle.g_caption("Zonas do carro"))
-	for z: Dictionary in Sponsorship.zones():
-		_right.add_child(_zone_row(z))
-	if sp.contracts.has(_zone):
-		_right.add_child(UiStyle.g_caption("Contrato · %s" % Sponsorship.zone(_zone)["name"]))
-		_right.add_child(_contract_card(_zone))
-	else:
-		_right.add_child(UiStyle.g_caption("Ofertas · %s (mudam todo mês)" % Sponsorship.zone(_zone)["name"]))
-		var offers := sp.offers_for(campaign, _zone)
-		for o in offers:
-			_right.add_child(_offer_row(o))
-		if offers.is_empty():
-			_right.add_child(UiStyle.g_label("Sem ofertas agora.", 14, UiStyle.G_TEXT_3))
+func _scroll(inner: Control) -> DragScroll:
+	var s := DragScroll.new()
+	s.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	s.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	s.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	s.add_child(inner)
+	return s
 
 
-func _brand_badge(name: String) -> PanelContainer:
-	var p := PanelContainer.new()
-	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	p.add_theme_stylebox_override("panel", UiStyle.g_box(Color.WHITE, 8, 12, 4))
-	var l := UiStyle.g_label(name, 15, UiStyle.G_INK, "black")
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	p.add_child(l)
-	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	return p
+# --- principal --------------------------------------------------------------------------------------
 
-
-func _zone_row(z: Dictionary) -> Control:
-	var id: String = z["id"]
-	var on := id == _zone
-	var b := Button.new()
-	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(0, 48)
-	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
-		b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_LIGHT if on else Color(1, 1, 1, 0.07), 16, 14, 0))
-	ScreenKit.press_feedback(b)
-	var h := HBoxContainer.new()
-	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_theme_constant_override("separation", 12)
-	b.add_child(h)
-	h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	h.offset_left = 14
-	h.offset_right = -14
-	var num := PanelContainer.new()
-	num.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	num.custom_minimum_size = Vector2(28, 28)
-	num.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	num.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.RED, 14, 0, 0))
-	var nl := UiStyle.g_label(str(Sponsorship.zones().find(z) + 1), 14, Color.WHITE, "black")
-	nl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	num.add_child(nl)
-	h.add_child(num)
-	var nv := VBoxContainer.new()
-	nv.alignment = BoxContainer.ALIGNMENT_CENTER
-	nv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	nv.add_theme_constant_override("separation", -3)
-	nv.custom_minimum_size = Vector2(120, 0)
-	var n1 := UiStyle.g_label(String(z["name"]), 16, UiStyle.G_INK if on else UiStyle.G_TEXT, "black")
-	n1.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	nv.add_child(n1)
-	var n2 := UiStyle.g_label("valor ×%s" % ("%.1f" % float(z["mult"])).replace(".", ","), 12, UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2, "bold")
-	n2.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	nv.add_child(n2)
-	h.add_child(nv)
-	if sp.contracts.has(id):
-		var c: Dictionary = sp.contracts[id]
-		h.add_child(_brand_badge(String(c["brand"])))
-		h.add_child(UiStyle.hspacer())
-		var rv := VBoxContainer.new()
-		rv.alignment = BoxContainer.ALIGNMENT_CENTER
-		rv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rv.add_theme_constant_override("separation", -3)
-		var r1 := UiStyle.g_label("US$ %s mi" % _money(float(c["per_race"])), 17, UiStyle.G_INK if on else UiStyle.G_TEXT, "black")
-		r1.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		r1.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rv.add_child(r1)
-		var r2 := UiStyle.g_label(("por corrida · até %d" % int(c["until"])) + (" · meta top %d" % int(c["goal_pos"]) if int(c.get("goal_pos", 0)) > 0 else ""), 11, UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2, "bold")
-		r2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		r2.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rv.add_child(r2)
-		h.add_child(rv)
-	else:
-		h.add_child(UiStyle.hspacer())
-		var rv2 := VBoxContainer.new()
-		rv2.alignment = BoxContainer.ALIGNMENT_CENTER
-		rv2.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rv2.add_theme_constant_override("separation", -3)
-		var o1 := UiStyle.g_label("%d ofertas" % sp.offers_for(campaign, id).size(), 17, Color("#ffd24a") if not on else Color("#8a6f00"), "black")
-		o1.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		o1.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rv2.add_child(o1)
-		var o2 := UiStyle.g_label("zona livre", 11, UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2, "bold")
-		o2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		o2.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rv2.add_child(o2)
-		h.add_child(rv2)
-	b.pressed.connect(_on_zone.bind(id))
-	return b
-
-
-func _offer_row(o: Dictionary) -> Control:
-	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UiStyle.g_box(Color(1, 1, 1, 0.07), 16, 14, 8))
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 12)
-	p.add_child(h)
-	h.add_child(_brand_badge(String(o["brand"])))
-	var t := VBoxContainer.new()
-	t.alignment = BoxContainer.ALIGNMENT_CENTER
-	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	t.add_theme_constant_override("separation", -2)
-	t.add_child(UiStyle.g_label(String(o["category"]), 15, UiStyle.G_TEXT, "black"))
-	var bonus := "sem bônus" if float(o["bonus"]) <= 0.0 else "+ US$ %s mi por pódio" % _money(float(o["bonus"]))
-	var terms := UiStyle.g_label("%d ano%s · %s" % [int(o["years"]), "" if int(o["years"]) == 1 else "s", bonus], 12, UiStyle.G_TEXT_2, "bold")
-	terms.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # quebra a linha em vez de alargar a coluna
-	t.add_child(terms)
-	h.add_child(t)
+func _main() -> Control:
 	var v := VBoxContainer.new()
-	v.alignment = BoxContainer.ALIGNMENT_CENTER
-	v.add_theme_constant_override("separation", -3)
-	var v1 := UiStyle.g_label("US$ %s mi" % _money(float(o["per_race"])), 18, UiStyle.G_TEXT, "black")
-	v1.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	v.add_child(v1)
-	var v2 := UiStyle.g_label("por corrida", 11, Color("#7fe0b1"), "bold")
-	v2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	v.add_child(v2)
-	h.add_child(v)
-	var more := Button.new()
-	more.text = "PEDIR MAIS"
-	more.focus_mode = Control.FOCUS_NONE
-	more.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
-	more.disabled = bool(o["asked"])
-	for s: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
-		more.add_theme_stylebox_override(s, UiStyle.g_box(Color("#e3e6eb") if s != "disabled" else Color(1, 1, 1, 0.08), 12, 12, 0))
-	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
-		more.add_theme_color_override(k, UiStyle.G_INK)
-	more.add_theme_color_override("font_disabled_color", UiStyle.G_TEXT_OFF)
-	more.add_theme_font_override("font", UiStyle.G_BLACK)
-	more.add_theme_font_size_override("font_size", UiStyle.fs(12))
-	more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	more.pressed.connect(_on_ask_more.bind(o["key"]))
-	ScreenKit.press_feedback(more)
-	h.add_child(more)
-	var ok := CutButton.new()
-	ok.text = "ACEITAR"
-	ok.custom_minimum_size = Vector2(120, UiStyle.TOUCH_MIN)
-	ok.add_theme_font_size_override("font_size", UiStyle.fs(13))
-	ok.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	ok.pressed.connect(_on_accept.bind(o["key"]))
-	h.add_child(ok)
+	v.add_theme_constant_override("separation", 10)
+	var c: Dictionary = sp.contracts.get("main", {})
+	if c.is_empty():
+		v.add_child(UiStyle.g_caption("Patrocinador principal · escolha 1 de 3 ofertas"))
+		var list := VBoxContainer.new()
+		list.add_theme_constant_override("separation", 10)
+		for o: Dictionary in sp.offers_for(campaign, "main"):
+			list.add_child(_offer_card("main", o))
+		var note := UiStyle.g_label("Metas mais ousadas pagam mais. Não cumprir = só perde o bônus. Sem escolha, o diretor comercial assina a oferta equilibrada antes da corrida.", 12, UiStyle.G_TEXT_3, "bold")
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		list.add_child(note)
+		v.add_child(_scroll(list))
+	else:
+		v.add_child(UiStyle.g_caption("Patrocinador principal · %d" % campaign.season))
+		v.add_child(_contract_card("main", c, true))
+		var note := UiStyle.g_label("Os contratos valem até o fim do ano. Na temporada seguinte chegam 3 ofertas novas para cada vaga.", 12, UiStyle.G_TEXT_3, "bold")
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.add_child(note)
+	return v
+
+
+## Cartão de oferta: marca, tipo, fixo por corrida e as metas com o bônus; botão ASSINAR.
+func _offer_card(slot_id: String, o: Dictionary) -> Control:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS_TILE, 14, 14, 10))
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 4)
+	p.add_child(v)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 10)
+	var names := VBoxContainer.new()
+	names.add_theme_constant_override("separation", -3)
+	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	names.add_child(UiStyle.g_caption("%s · %s" % [String(o["kind_name"]), String(o["category"])]))
+	var bl := UiStyle.g_label(String(o["brand"]), 19, UiStyle.G_TEXT, "black")
+	bl.clip_text = true
+	names.add_child(bl)
+	names.add_child(UiStyle.g_label("%s por corrida · %s no ano" % [_money(float(o["per_race"]), 2), _money(float(o["per_race"]) * Campaign.calendar().size(), 0)], 13, UiStyle.G_TEXT, "black"))
+	h.add_child(names)
+	var go := CutButton.new()
+	go.text = "ASSINAR"
+	go.custom_minimum_size = Vector2(120, 44)
+	go.add_theme_font_size_override("font_size", UiStyle.fs(14))
+	go.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	go.pressed.connect(_on_accept.bind(slot_id, String(o["key"])))
+	h.add_child(go)
+	v.add_child(h)
+	var goals: Array = o["goals"]
+	if goals.is_empty():
+		v.add_child(_goal_line("Sem metas", "—", UiStyle.G_TEXT_3))
+	for g: Dictionary in goals:
+		v.add_child(_goal_line(Sponsorship.goal_text(g), "+ %s" % _money(float(g["bonus"])), UiStyle.G_UP))
 	return p
 
 
-func _contract_card(zone_id: String) -> Control:
-	var c: Dictionary = sp.contracts[zone_id]
-	var card := PanelContainer.new()
-	var st := UiStyle.g_box(UiStyle.G_LIGHT, 20, 22, 14)
-	st.border_width_left = 7
-	st.border_color = UiStyle.RED
-	card.add_theme_stylebox_override("panel", st)
+func _goal_line(text: String, value: String, col: Color) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	var l := UiStyle.g_label(text, 13, UiStyle.G_TEXT_2, "bold")
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(l)
+	h.add_child(UiStyle.g_label(value, 13, col, "black"))
+	return h
+
+
+## Contrato assinado: marca, fixo e metas com a barra de progresso.
+func _contract_card(slot_id: String, c: Dictionary, big: bool) -> Control:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS_TILE, 14, 14, 10))
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
-	card.add_child(v)
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 12)
-	top.add_child(_brand_badge(String(c["brand"])))
-	top.add_child(UiStyle.g_label("%s · nível %d" % [c["category"], int(c["tier"])], 14, UiStyle.G_INK_2, "bold"))
-	v.add_child(top)
-	var facts := HBoxContainer.new()
-	facts.add_theme_constant_override("separation", 8)
-	var years := int(c["until"]) - campaign.season + 1
-	for f: Array in [["US$ %s mi" % _money(float(c["per_race"])), "por corrida"], ["US$ %s mi" % _money(float(c["bonus"])), "bônus por pódio"], ["até %d" % int(c["until"]), "%d temporada%s" % [years, "" if years == 1 else "s"]]]:
-		var p := PanelContainer.new()
-		p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		p.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#e3e6eb"), 12, 10, 6))
-		var fv := VBoxContainer.new()
-		fv.add_theme_constant_override("separation", -2)
-		fv.add_child(UiStyle.g_label(f[0], 17, UiStyle.G_INK, "black"))
-		fv.add_child(UiStyle.g_label(f[1], 12, UiStyle.G_INK_2))
-		p.add_child(fv)
-		facts.add_child(p)
-	v.add_child(facts)
-	var fee := float(c["per_race"]) * float(Sponsorship.data()["terminate_races_per_year"]) * maxi(years, 1)
-	var end := Button.new()
-	end.text = "RESCINDIR CONTRATO · MULTA US$ %s mi" % ("%.1f" % fee).replace(".", ",")
-	end.focus_mode = Control.FOCUS_NONE
-	end.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
-	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
-		end.add_theme_stylebox_override(s, UiStyle.g_box(Color("#e3e6eb"), 12, 14, 0))
-	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
-		end.add_theme_color_override(k, UiStyle.G_INK)
-	end.add_theme_font_override("font", UiStyle.G_BLACK)
-	end.add_theme_font_size_override("font_size", UiStyle.fs(13))
-	end.pressed.connect(_on_terminate.bind(zone_id))
-	ScreenKit.press_feedback(end)
-	v.add_child(end)
-	return card
+	p.add_child(v)
+	var h := HBoxContainer.new()
+	var names := VBoxContainer.new()
+	names.add_theme_constant_override("separation", -3)
+	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if slot_id != "main":
+		names.add_child(UiStyle.g_caption(String(Sponsorship.slot(slot_id)["name"])))
+	names.add_child(UiStyle.g_label(String(c["brand"]), 22 if big else 16, UiStyle.G_TEXT, "black"))
+	h.add_child(names)
+	h.add_child(UiStyle.g_label("%s / corrida" % _money(float(c["per_race"]), 2), 16 if big else 14, UiStyle.G_TEXT, "black"))
+	v.add_child(h)
+	for g: Dictionary in c.get("goals", []):
+		v.add_child(_progress_row(g, true))
+	if (c.get("goals", []) as Array).is_empty():
+		v.add_child(UiStyle.g_label("Contrato garantido: sem metas.", 12, UiStyle.G_TEXT_3, "bold"))
+	return p
 
 
-# --- ações --------------------------------------------------------------------------------------
+## Meta com progresso: texto, barra e "6/10" (✔ quando paga).
+func _progress_row(g: Dictionary, with_bonus: bool, brand := "") -> Control:
+	var pr := Sponsorship.progress(campaign, g, _stats)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 10)
+	var txt := Sponsorship.goal_text(g) + ("  + %s" % _money(float(g["bonus"])) if with_bonus else "")
+	if brand != "":
+		txt = "%s · %s" % [brand, txt]
+	var l := UiStyle.g_label(txt, 12, UiStyle.G_TEXT_2, "bold")
+	l.custom_minimum_size = Vector2(330 if brand != "" else 250, 0)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	h.add_child(l)
+	var bar := _Bar.new()
+	bar.value = 1.0 if bool(g.get("paid", false)) else float(pr["frac"])
+	bar.color = UiStyle.G_UP if bool(g.get("paid", false)) or float(pr["frac"]) >= 1.0 else UiStyle.G_DIRECTOR
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(bar)
+	var right := "✔" if bool(g.get("paid", false)) else String(pr["text"])
+	var rl := UiStyle.g_label(right, 12, UiStyle.G_UP if bool(g.get("paid", false)) else UiStyle.G_TEXT, "black")
+	rl.custom_minimum_size = Vector2(64, 0)
+	rl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	h.add_child(rl)
+	return h
 
-func _on_zone(id: String) -> void:
-	_zone = id
-	_refresh()
+
+# --- secundários --------------------------------------------------------------------------------------
+
+func _secondaries() -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	v.add_child(UiStyle.g_caption("Secundários · %d vagas" % (Sponsorship.slots().size() - 1)))
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 8)
+	for z: Dictionary in Sponsorship.slots():
+		if z["id"] == "main":
+			continue
+		var c: Dictionary = sp.contracts.get(z["id"], {})
+		if c.is_empty():
+			var b := ScreenKit.glass_pill_button("+ %s · vaga livre · ver 3 ofertas" % String(z["name"]))
+			b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
+			b.pressed.connect(_open_offers.bind(String(z["id"])))
+			list.add_child(b)
+		else:
+			list.add_child(_contract_card(z["id"], c, false))
+	v.add_child(_scroll(list))
+	return v
 
 
-## Escolher a oferta abre a folha "Garantido × Por meta" (mockup v31-2): o jogador decide quanto risco quer correr.
-func _on_accept(key: String) -> void:
-	var offer: Dictionary = {}
-	for o: Dictionary in sp.offers_for(campaign, _zone):
-		if o["key"] == key:
-			offer = o
-	if offer.is_empty():
-		return
-	var years := campaign.calendar().size()
-	var sh := ScreenKit.sheet("Oferta · %s" % String(Sponsorship.zone(_zone)["name"]), 860)
+func _open_offers(slot_id: String) -> void:
+	var sh := ScreenKit.sheet("Vaga %s · 3 ofertas" % String(Sponsorship.slot(slot_id)["name"]).to_lower(), 760)
 	var body: VBoxContainer = sh["body"]
-	var l := UiStyle.g_label("%s quer patrocinar" % String(offer["brand"]), 26, UiStyle.G_TEXT, "black")
-	body.add_child(l)
-	var state := {"mode": "safe"}
-	var opts := HBoxContainer.new()
-	opts.add_theme_constant_override("separation", 14)
-	var group := ButtonGroup.new()
-	var make_opt := func(mode: String, title: String, icon_name: String, big: String, small: String, total: String, col: Color) -> Button:
-		var b := Button.new()
-		b.toggle_mode = true
-		b.button_group = group
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(0, 170)
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.button_pressed = mode == "safe"
-		for st: String in ["normal", "hover"]:
-			b.add_theme_stylebox_override(st, UiStyle.g_box(Color(1, 1, 1, 0.07), 18, 0, 0))
-		for st: String in ["pressed", "hover_pressed"]:
-			b.add_theme_stylebox_override(st, UiStyle.g_box(UiStyle.G_LIGHT, 18, 0, 0))
-		var v := VBoxContainer.new()
-		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_theme_constant_override("separation", 4)
-		b.add_child(v)
-		v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		v.offset_left = 16
-		v.offset_top = 14
-		v.offset_right = -12
-		var h := HBoxContainer.new()
-		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		h.add_theme_constant_override("separation", 8)
-		var ic := ScreenKit.icon(icon_name, 22, col)
-		h.add_child(ic)
-		var t := UiStyle.g_label(title, 18, UiStyle.G_TEXT, "black")
-		h.add_child(t)
-		v.add_child(h)
-		var bg := UiStyle.g_label(big, 26, UiStyle.G_TEXT, "black")
-		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(bg)
-		var sm := UiStyle.g_label(small, 13, UiStyle.G_TEXT_2, "bold")
-		sm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		sm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(sm)
-		var tl := UiStyle.g_label(total, 13, col, "black")
-		tl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(tl)
-		var paint := func(on: bool) -> void:
-			var ink := UiStyle.G_INK if on else UiStyle.G_TEXT
-			t.add_theme_color_override("font_color", ink)
-			bg.add_theme_color_override("font_color", ink)
-			sm.add_theme_color_override("font_color", UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2)
-		b.toggled.connect(func(on: bool) -> void:
-			paint.call(on)
-			if on:
-				state["mode"] = mode)
-		paint.call(b.button_pressed)
-		opts.add_child(b)
-		return b
-	var safe_total := float(offer["per_race"]) * years
-	var goal_total := float(offer["goal_per_race"]) * years
-	make_opt.call("safe", "Garantido", "lock", "%s mi" % _money(float(offer["per_race"])), "por corrida, aconteça o que acontecer", "Total no ano: %s mi" % _money(safe_total), Color("#7fe0b1"))
-	make_opt.call("goal", "Por meta", "trophy", "%s mi + %s no fim" % [_money(float(offer["goal_per_race"])), _money(float(offer["goal_bonus"]))],
-		"se terminar entre os %d primeiros dos construtores" % int(offer["goal_pos"]), "Se cumprir: %s + %s = %s mi" % [_money(goal_total), _money(float(offer["goal_bonus"])), _money(goal_total + float(offer["goal_bonus"]))], Color("#F5C542"))
-	body.add_child(opts)
-	var go := CutButton.new()
-	go.text = "FECHAR CONTRATO"
-	go.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MAIN)
-	go.pressed.connect(func() -> void:
-		var res := sp.accept(campaign, _zone, key, String(state["mode"]))
-		if res["ok"]:
-			campaign.save()
-		_toasts.push(String(res["text"]), "hot" if res["ok"] else "note")
-		(sh["root"] as Control).queue_free()
-		_refresh())
-	body.add_child(go)
+	for o: Dictionary in sp.offers_for(campaign, slot_id):
+		body.add_child(_offer_card(slot_id, o))
 	add_child(sh["root"])
 
 
-func _on_ask_more(key: String) -> void:
-	var res := sp.ask_more(campaign, _zone, key)
-	campaign.save()
-	_toasts.push(String(res["text"]), "hot" if res["ok"] else "note")
-	_refresh()
+# --- resumo do ano ----------------------------------------------------------------------------------------
+
+func _summary() -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	v.add_child(UiStyle.g_caption("No ano · progresso das metas"))
+	var sm := sp.year_summary(campaign)
+	v.add_child(_goal_line("Fixo que ainda entra (%d corridas)" % campaign.races_left_in_season(), _money(float(sm["guaranteed"])), UiStyle.G_TEXT))
+	v.add_child(_goal_line("Bônus já ganho", _money(float(sm["secured"])), UiStyle.G_UP))
+	v.add_child(_goal_line("Bônus em jogo", _money(float(sm["goal"])), UiStyle.G_TEXT))
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 6)
+	for z: Dictionary in Sponsorship.slots():
+		var c: Dictionary = sp.contracts.get(z["id"], {})
+		for g: Dictionary in c.get("goals", []):
+			if not bool(g.get("paid", false)):
+				list.add_child(_progress_row(g, false, String(c["brand"])))
+	if list.get_child_count() == 0:
+		list.add_child(UiStyle.g_label("Nenhuma meta em aberto.", 12, UiStyle.G_TEXT_3, "bold"))
+	v.add_child(_scroll(list))
+	return v
 
 
-func _on_terminate(zone_id: String) -> void:
-	var fee := sp.terminate(campaign, zone_id)
-	campaign.save()
-	_toasts.push("Contrato rescindido (multa US$ %s mi)." % ("%.1f" % fee).replace(".", ","))
-	_refresh()
+func _on_accept(slot_id: String, key: String) -> void:
+	var r := sp.accept(campaign, slot_id, key)
+	if r["ok"]:
+		campaign.save()
+	Session.open_campaign_sponsors()
 
 
 func _notification(what: int) -> void:
@@ -468,18 +245,16 @@ func _notification(what: int) -> void:
 		Session.open_campaign_hub()
 
 
-## Cinco marcas de influência (amarelas até o nível atual).
-class InfluencePips:
+class _Bar:
 	extends Control
-
-	var level := 1
+	var value := 0.5
+	var color := Color.WHITE
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(5 * 27 + 4 * 5, 10)
+		custom_minimum_size = Vector2(0, 8)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	func _draw() -> void:
-		for i in 5:
-			var st := StyleBoxFlat.new()
-			st.bg_color = Color("#ffd24a") if i < level else Color(1, 1, 1, 0.14)
-			st.set_corner_radius_all(5)
-			draw_style_box(st, Rect2(i * 32.0, 0.0, 27.0, 10.0))
+		draw_style_box(UiStyle.g_box(Color(1, 1, 1, 0.1), 4, 0, 0), Rect2(Vector2.ZERO, size))
+		if value > 0.0:
+			draw_style_box(UiStyle.g_box(color, 4, 0, 0), Rect2(Vector2.ZERO, Vector2(size.x * clampf(value, 0.04, 1.0), size.y)))

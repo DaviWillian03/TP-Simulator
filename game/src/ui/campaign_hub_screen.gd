@@ -43,7 +43,7 @@ func _ready() -> void:
 		_open_news.call_deferred()
 	ScreenKit.stagger_in(tiles)  # blocos entram um a um (v40)
 	_show_next_event.call_deferred()
-	PartsDialogs.show_pending.call_deferred(self, campaign, _after_parts_dialog)
+	ProjectNotes.show_pending.call_deferred(self, campaign, _after_parts_dialog)
 	if campaign.livery != null and not campaign.livery.launch.is_empty():
 		_show_launch.call_deferred()
 
@@ -684,32 +684,14 @@ func _topics() -> Array:
 	var ids := campaign.team_driver_ids(campaign.player_team)
 	var codes: Array = ids.map(func(id: String) -> String: return Campaign.driver_code(String(_driver(id).get("name", ""))))
 	for pid: String in CarParts.part_ids():
-		var latest := cp.latest_spec(pid)
-		var s := cp.spec(pid, latest)
-		var st := cp.stock(pid, latest)
-		if latest == 0 or st.is_empty() or (bool(s["revealed"]) and s["outcome"] == "bad"):
-			continue
-		var missing: Array = []
-		for car in mini(2, ids.size()):
-			if int(cp.unit_on(pid, car).get("spec", 0)) < latest:
-				missing.append(car)
-		if missing.is_empty():
-			continue
-		var name := "%s %s" % [CarParts.part(pid)["name"], s["v"]]
-		var acts: Array = []
-		for car: int in missing:
-			acts.append(["No " + String(codes[car]), _install_action.bind(int(st[0]["uid"]), car)])
-		out.append({"kind": "dec", "title": "%s pronta: %d no estoque" % [name, st.size()], "link": "Carro",
-			"text": "Ainda não testada na pista: o resultado real aparece depois da primeira corrida.", "actions": acts.slice(0, mini(st.size() + 1, 2))})
-	for pid: String in CarParts.part_ids():
 		for car in mini(2, ids.size()):
 			var u := cp.unit_on(pid, car)
 			if float(u.get("wear", 0.0)) >= CarParts.WEAR_SOFT:
 				out.append({"kind": "dec", "title": "%s gasta no carro de %s (%d%%)" % [CarParts.part(pid)["name"], codes[car], roundi(100.0 - float(u["wear"]))],
-					"text": "Acima de %d%% de desgaste a peça perde rendimento. Troque por uma reserva ou fabrique outra." % roundi(CarParts.WEAR_SOFT), "link": "Carro", "actions": []})
+					"text": "Acima de %d%% de desgaste a peça perde rendimento. A equipe troca pela reserva depois da corrida." % roundi(CarParts.WEAR_SOFT), "link": "Carro", "actions": []})
 	if campaign.dev.busy() < campaign.dev.slots():
 		out.append({"kind": "news", "title": "Vaga de projeto livre (%d de %d)" % [campaign.dev.busy(), campaign.dev.slots()],
-			"text": "Pesquise uma peça nova ou um nó da árvore de P&D.", "link": "Carro", "actions": []})
+			"text": "Comece um projeto de peça na tela Carro: escolha a área e o tamanho.", "link": "Carro", "actions": []})
 	for n: Dictionary in campaign.events.news.slice(0, 2):
 		out.append({"kind": "news", "title": String(n.get("title", "")).capitalize() if String(n.get("title", "")) == String(n.get("title", "")).to_upper() else n.get("title", ""),
 			"text": n.get("text", ""), "link": "Notícias", "actions": []})
@@ -719,7 +701,7 @@ func _topics() -> Array:
 ## Depois do último aviso das peças, recarrega a sede (assuntos e fábrica mudam com as encomendas).
 func _after_parts_dialog() -> void:
 	var cp := campaign.my_parts()
-	if cp.done_research.is_empty() and cp.reveals.is_empty():
+	if cp.done_research.is_empty():
 		Session.open_campaign_hub.call_deferred()
 
 
@@ -781,13 +763,6 @@ func _show_launch() -> void:
 		sh["root"].queue_free())
 	body.add_child(ok)
 	_layer.add_child(sh["root"])
-
-
-func _install_action(uid: int, car: int) -> void:
-	campaign.my_parts().install(uid, car)
-	campaign.refresh_rating()
-	campaign.save()
-	Session.open_campaign_hub()
 
 
 func _fill_topics(col: VBoxContainer) -> void:
@@ -911,11 +886,7 @@ func _factory_card() -> Control:
 	var cp := campaign.my_parts()
 	var items: Array[String] = []
 	for r: Dictionary in cp.research:
-		items.append("%s (%d d)" % [String(CarParts.part(r["part"])["name"]).to_lower(), int(r["days_left"])])
-	for p: Dictionary in campaign.dev.projects:
-		var info := CarDevelopment.node_info(p["id"])
-		if not info.is_empty():
-			items.append("%s (%d d)" % [String(info["node"]["n"]).to_lower(), int(p["days_left"])])
+		items.append("%s (%d d)" % [ProjectNotes.project_name(r).to_lower(), int(r["days_left"])])
 	if not cp.queue.is_empty():
 		items.append("%d peça%s na produção" % [cp.queue.size(), "" if cp.queue.size() == 1 else "s"])
 	var l := UiStyle.g_label(" · ".join(items) if not items.is_empty() else "Nada em andamento.", 12, UiStyle.G_TEXT_2, "bold")

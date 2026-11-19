@@ -1,7 +1,7 @@
 extends GutTest
-## Peças físicas do carro (decisões do usuário, 2026-11-04): pesquisa → especificação (resultado escondido) → fabricar
-## unidades → instalar em cada carro; só o carro equipado ganha; o resultado real aparece depois da corrida; a IA usa
-## as mesmas regras.
+## Projetos de peça (v42, 2026-11-19): área + tamanho → custo, prazo, ganho esperado; ao terminar a peça entra nos dois
+## carros com ganho real sempre positivo entre 60% e 120% do esperado; esforço dividido com o carro do ano seguinte;
+## unidades físicas (desgaste, limite de motor/câmbio) continuam; a IA usa as mesmas regras.
 
 var camp: Campaign
 var cp: CarParts
@@ -20,11 +20,10 @@ func _days(n: int) -> void:
 		cp.day_step(camp)
 
 
-## Pesquisa uma peça até o fim e devolve o índice da nova especificação.
-func _research(pid: String, dir_id: String) -> int:
-	assert_true(cp.start_research(camp, pid, dir_id), "pesquisa iniciada")
-	_days(int(cp.research_of(pid)["days_left"]))
-	return cp.latest_spec(pid)
+func _finish(area_id: String, size_id := "M") -> Dictionary:
+	assert_true(cp.start_project(camp, area_id, size_id), "projeto iniciado")
+	_days(int(cp.project_of(area_id)["days_left"]))
+	return cp.deliveries[0]
 
 
 func test_comeca_com_a_versao_a_nos_dois_carros_e_reserva_no_estoque() -> void:
@@ -37,141 +36,175 @@ func test_comeca_com_a_versao_a_nos_dois_carros_e_reserva_no_estoque() -> void:
 	assert_eq(camp.parts.size(), camp.teams().size(), "todas as equipes têm peças")
 
 
-func test_pesquisa_ocupa_vaga_custa_e_libera_a_spec_com_resultado_escondido() -> void:
+func test_tamanho_muda_custo_prazo_e_ganho() -> void:
+	var s := cp.project_info(camp, "floor", "S")
+	var m := cp.project_info(camp, "floor", "M")
+	var l := cp.project_info(camp, "floor", "L")
+	assert_lt(float(s["cost"]), float(m["cost"]))
+	assert_lt(float(m["cost"]), float(l["cost"]))
+	assert_lt(int(s["days"]), int(l["days"]))
+	assert_lt(float(s["sec"]), float(m["sec"]))
+	assert_lt(float(m["sec"]), float(l["sec"]))
+	assert_gt(float(m["sec"]), 0.0, "ganho em s/volta")
+	assert_gt(float(m["sec"]), float(m["sec_avg"]), "na pista do tipo da área o ganho é maior que a média")
+
+
+func test_projeto_paga_ocupa_vaga_e_um_por_area() -> void:
+	camp.dev.levels["parts"] = 2
 	var cash := camp.budget_musd
-	var info := cp.research_info(camp, "fwing", "high")
+	var info := cp.project_info(camp, "fwing", "M")
 	assert_true(info["ok"])
-	assert_true(cp.start_research(camp, "fwing", "high"))
+	assert_true(cp.start_project(camp, "fwing", "M"))
 	assert_almost_eq(camp.budget_musd, cash - float(info["cost"]), 0.001)
-	assert_eq(camp.dev.busy(), 1, "a pesquisa da peça ocupa uma vaga de projeto")
-	assert_eq(cp.research_info(camp, "fwing", "low")["reason"], "now", "uma pesquisa por peça")
-	_days(int(info["days"]))
-	assert_eq(cp.spec_list("fwing").size(), 2)
-	var s := cp.spec("fwing", 1)
-	assert_eq(s["v"], "B")
-	assert_false(bool(s["revealed"]), "o resultado real só aparece depois da corrida")
-	assert_true(["good", "small", "bad"].has(s["outcome"]))
+	assert_eq(camp.dev.busy(), 1)
+	assert_eq(cp.project_info(camp, "fwing", "S")["reason"], "now")
+	assert_true(cp.start_project(camp, "floor", "S"))
+	assert_eq(cp.project_info(camp, "susp", "S")["reason"], "slots", "fábrica nível 1-2: 2 vagas")
+
+
+func test_entrega_poe_a_peca_nos_dois_carros_com_ganho_positivo_na_faixa() -> void:
+	var e := _finish("fwing", "M")
+	var si := cp.latest_spec("fwing")
+	assert_eq(si, 1)
+	assert_eq(int(cp.unit_on("fwing", 0)["spec"]), si, "carro 0")
+	assert_eq(int(cp.unit_on("fwing", 1)["spec"]), si, "carro 1")
+	assert_true(bool(cp.spec("fwing", si)["revealed"]), "o real aparece na entrega")
+	var b := cp.band(camp, "fwing")
+	assert_between(float(e["ratio"]), float(b[0]) - 0.01, float(b[1]) + 0.01)
+	assert_gte(float(b[0]), 0.6)
+	assert_lte(float(b[1]), 1.2)
+	assert_gt(cp.car_effect(0, CarParts.area_profile("fwing")), 0.0, "sempre melhora")
 	assert_eq(camp.dev.busy(), 0)
-	assert_eq(cp.done_research.size(), 1, "aviso de pesquisa concluída para o jogador")
+	assert_eq(cp.done_research.size(), 1, "aviso de entrega para o jogador")
 
 
-func test_estoque_nao_melhora_o_carro_so_o_carro_equipado() -> void:
-	var b := _research("fwing", "high")
-	cp.spec("fwing", b)["real"] = {"slow": 2.0, "straight": -1.0}  # força um bom resultado para medir
-	assert_true(cp.order_units(camp, "fwing", b, 1))
-	_days(cp.ready_in(camp, "fwing", 0) + 10)
-	var units := cp.stock("fwing", b)
-	assert_eq(units.size(), 1, "unidade pronta no estoque")
-	assert_eq(cp.car_effect(0), 0.0, "no estoque não vale nada")
-	cp.install(int(units[0]["uid"]), 0)
-	assert_gt(cp.car_effect(0, {"straight": 0.0, "slow": 1.0, "fast": 0.0}), 1.9, "carro 0 ganhou nas curvas lentas")
-	assert_eq(cp.car_effect(1), 0.0, "o outro carro continua igual")
-	assert_eq(cp.stock("fwing", 0).size(), CarParts.SPARE_A + 1, "a peça antiga voltou para o estoque")
+func test_ganho_nunca_e_negativo_em_muitas_entregas() -> void:
+	for i in 12:
+		camp.day += 37
+		var r := {"part": "susp", "area": "susp", "size": "M", "days_left": 0, "days_total": 1, "cost": 1.0, "fix": -1}
+		cp._finish_research(camp, r)
+		var e: Dictionary = cp.deliveries[0]
+		assert_between(float(e["ratio"]), 0.6, 1.2)
+		for k: String in (e["real"] as Dictionary):
+			assert_gte(float(e["real"][k]), 0.0, k)
 
 
-func test_efeito_depende_da_pista() -> void:
-	var b := _research("rwing", "high")
-	cp.spec("rwing", b)["real"] = {"slow": 2.0, "straight": -1.0}
-	cp.order_units(camp, "rwing", b, 1, [0])
-	_days(20)
-	var monaco := Campaign.track_profile("monaco")
-	var monza := Campaign.track_profile("monza")
-	assert_gt(cp.car_effect(0, monaco), 0.0, "alta carga é boa em Mônaco")
-	assert_lt(cp.car_effect(0, monza), 0.0, "e ruim em Monza")
+func test_versoes_somam_em_cima_da_anterior() -> void:
+	_finish("floor", "S")
+	var v1 := cp.car_effect(0)
+	_finish("floor", "S")
+	assert_gt(cp.car_effect(0), v1, "a versão C soma ao que a B já dava")
 
 
-func test_corrida_revela_o_resultado_e_desgasta_as_unidades() -> void:
-	var b := _research("floor", "fast")
-	cp.order_units(camp, "floor", b, 1, [1])
-	_days(20)
-	assert_eq(int(cp.unit_on("floor", 1)["spec"]), b)
-	var out := cp.after_race(camp)
-	assert_eq(out.size(), 1)
-	assert_true(bool(cp.spec("floor", b)["revealed"]))
-	assert_eq(cp.reveals.size(), 1, "aviso para o jogador na sede")
-	assert_gt(float(cp.unit_on("fwing", 0)["wear"]), 0.0)
-
-
-func test_upgrade_ruim_piora_e_correcao_pode_recuperar() -> void:
-	var b := _research("susp", "traction")
-	var s := cp.spec("susp", b)
-	s["outcome"] = "bad"
-	s["real"] = {"slow": -1.0}
-	s["revealed"] = true
-	var fix := cp.fix_info(camp, "susp", b)
-	assert_true(fix["ok"])
-	assert_lt(float(fix["cost"]), cp.research_cost("susp", "traction"), "corrigir é mais barato")
-	assert_true(cp.start_fix(camp, "susp", b))
-	_days(int(fix["days"]))
-	assert_true(bool(s["fixed"]))
-	assert_false(bool(s["revealed"]), "a correção volta a ser testada na pista")
-
-
-func test_chance_de_acerto_vem_da_fabrica_e_da_ousadia() -> void:
-	var safe := cp.success_chance(camp, "fwing", "high")
-	var bold := cp.success_chance(camp, "fwing", "bold")
-	assert_lt(bold, safe, "direção ousada: mais risco")
+func test_equipe_tecnica_e_fabrica_sobem_o_piso_da_faixa() -> void:
+	camp.dev.levels["wind"] = 1
+	camp.refresh_rating()
+	var lo1 := float(cp.band(camp, "floor")[0])
 	camp.dev.levels["wind"] = 5
-	assert_gt(cp.success_chance(camp, "fwing", "high"), safe, "túnel de vento melhor: mais acerto")
-	var odds := cp.outcome_odds(camp, "fwing", "high")
-	assert_almost_eq(float(odds["good"]) + float(odds["small"]) + float(odds["bad"]), 1.0, 0.0001)
+	assert_gt(float(cp.band(camp, "floor")[0]), lo1)
+	assert_lte(float(cp.band(camp, "floor")[0]), 0.6 + float(CarParts.projects_cfg()["max_narrow"]) + 0.0001)
 
 
-func test_motor_so_para_quem_fabrica() -> void:
-	assert_eq(cp.research_info(camp, "pu", "power")["reason"], "engine", "Williams usa motor Mercedes")
+func test_esforco_para_o_ano_seguinte_divide_o_ganho_e_rende_na_virada() -> void:
+	cp.next_share = 0.5
+	var e := _finish("floor", "M")
+	assert_almost_eq(float(e["share"]), 0.5, 0.001)
+	assert_gt(cp.next_bank, 0.0, "parte do ganho guardada para o carro novo")
+	var expected_full := CarParts.fx_rating(e["expected"]) * float(e["ratio"])
+	assert_almost_eq(cp.car_effect(0), expected_full * 0.5, 0.05, "metade no carro atual")
+	assert_almost_eq(cp.next_bank, expected_full * 0.5 * float(CarParts.projects_cfg()["next_k"]), 0.05, "e a outra metade rende mais na virada")
+	var est := camp.next_car_estimate()
+	var bank := cp.next_bank
+	camp.start_next_season()
+	assert_almost_eq(camp.dev.carry, est, 0.01, "a prévia bate com a virada")
+	assert_gte(camp.dev.carry, bank)
+	assert_eq(camp.my_parts().next_bank, 0.0)
+
+
+func test_confiabilidade_fica_toda_no_carro_atual() -> void:
+	cp.next_share = 0.5
+	var e := _finish("rel", "M")
+	assert_eq(float(e["share"]), 0.0)
+	assert_gt(cp.trait_delta(0, "rel"), 0.0)
+	assert_eq(cp.next_bank, 0.0)
+
+
+func test_motor_potencia_so_para_quem_fabrica() -> void:
+	assert_eq(cp.project_info(camp, "power", "M")["reason"], "engine", "Williams usa motor Mercedes")
+	assert_true(cp.project_info(camp, "rel", "M")["ok"], "confiabilidade é para todos")
 	var merc := Campaign.new_real("mercedes")
-	assert_true(merc.my_parts().research_info(merc, "pu", "power")["ok"])
+	merc.budget_musd = 100.0
+	assert_true(merc.my_parts().project_info(merc, "power", "M")["ok"])
 
 
-func test_preparacao_recomendada_instala_a_melhor_peca_para_a_pista() -> void:
-	var b := _research("fwing", "high")
-	cp.spec("fwing", b)["real"] = {"slow": 2.0, "straight": -1.0}
-	cp.spec("fwing", b)["revealed"] = true
-	cp.order_units(camp, "fwing", b, 2)
-	_days(30)
-	assert_gt(cp.auto_prepare(Campaign.track_profile("monaco")), 0)
-	assert_eq(int(cp.unit_on("fwing", 0)["spec"]), b)
-	assert_eq(int(cp.unit_on("fwing", 1)["spec"]), b)
+func test_corrida_desgasta_e_a_equipe_troca_a_peca_gasta_sozinha() -> void:
+	cp.unit_on("fwing", 0)["wear"] = 75.0
+	cp.after_race(camp)
+	assert_gt(float(cp.unit_on("fwing", 1)["wear"]), 0.0)
+	assert_lt(float(cp.unit_on("fwing", 0)["wear"]), 75.0, "a reserva entrou no carro")
 
 
 func test_gp_leva_o_efeito_de_cada_carro() -> void:
-	var b := _research("fwing", "high")
-	cp.spec("fwing", b)["real"] = {"slow": 2.0}
-	cp.order_units(camp, "fwing", b, 1, [0])
-	_days(20)
+	_finish("fwing", "L")
 	camp.refresh_rating()
 	var gp := GameData.team_by_id(camp.teams_for_gp("monaco"), "williams")
 	var ids := camp.team_driver_ids("williams")
-	assert_gt(float(gp["car_delta"][ids[0]]), float(gp["car_delta"][ids[1]]))
-	assert_almost_eq(float(gp["car_rating"]), camp.base_rating, 0.0001, "a nota da equipe volta à base; o carro leva o delta")
+	assert_almost_eq(float(gp["car_delta"][ids[0]]), float(gp["car_delta"][ids[1]]), 0.3, "os dois carros recebem a peça")
+	assert_gt(float(gp["car_delta"][ids[0]]), 0.0)
 
 
 func test_salva_e_carrega() -> void:
-	var b := _research("fwing", "low")
-	cp.order_units(camp, "fwing", b, 1)
+	cp.next_share = 0.3
+	_finish("fwing", "M")
+	cp.start_project(camp, "floor", "L")
 	var copy := Campaign.from_dict(JSON.parse_string(JSON.stringify(camp.to_dict())))
 	var c2 := copy.my_parts()
 	assert_eq(c2.spec_list("fwing").size(), 2)
-	assert_eq(c2.queue.size(), 1)
-	assert_eq(c2.spec("fwing", b)["outcome"], cp.spec("fwing", b)["outcome"])
+	assert_eq(c2.research.size(), 1)
+	assert_eq(String(c2.research[0]["area"]), "floor")
+	assert_eq(c2.deliveries.size(), 1)
+	assert_almost_eq(c2.next_share, 0.3, 0.0001)
+	assert_almost_eq(c2.next_bank, cp.next_bank, 0.0001)
 	assert_eq(int(c2.unit_on("fwing", 0)["uid"]), int(cp.unit_on("fwing", 0)["uid"]))
 
 
-func test_ia_pesquisa_instala_e_tambem_erra() -> void:
-	var outcomes := {}
+func test_pesquisa_de_save_antigo_termina_como_projeto() -> void:
+	cp.research.append({"part": "rwing", "dir": "high", "days_left": 1, "days_total": 16, "cost": 2.2, "fix": -1})
+	_days(1)
+	assert_eq(cp.latest_spec("rwing"), 1)
+	assert_eq(String(cp.deliveries[0]["area"]), "rwing")
+	assert_gt(cp.car_effect(0), 0.0)
+
+
+func test_ia_faz_projetos_e_melhora_ao_longo_do_ano() -> void:
+	var before := {}
+	for p: CarParts in camp.parts.values():
+		before[p.team_id] = p.avg_effect()
 	for i in 220:
 		camp.day += 1
 		for p: CarParts in camp.parts.values():
 			p.day_step(camp)
-	var installed_new := 0
+	var better := 0
 	for p: CarParts in camp.parts.values():
 		if p.team_id == camp.player_team:
 			continue
-		for pid: String in CarParts.part_ids():
-			for s: Dictionary in p.spec_list(pid):
-				outcomes[s["outcome"]] = true
-			if int(p.unit_on(pid, 0)["spec"]) > 0:
-				installed_new += 1
-	assert_true(outcomes.has("good"))
-	assert_true(outcomes.has("bad") or outcomes.has("small"), "a IA também erra")
-	assert_gt(installed_new, 10, "a IA instala as peças novas")
+		assert_gt(p.deliveries.size(), 3, p.team_id)
+		for e: Dictionary in p.deliveries:
+			assert_between(float(e["ratio"]), 0.55, 1.21)
+		if p.avg_effect() > float(before[p.team_id]):
+			better += 1
+	assert_eq(better, camp.teams().size() - 1, "todas as equipes da IA melhoraram")
+
+
+func test_notas_por_area_e_registro_da_temporada() -> void:
+	var a := camp.area_ratings("williams")
+	for k: String in ["straight", "slow", "fast", "rel"]:
+		assert_true(a.has(k), k)
+	var best := camp.best_rival_areas()
+	assert_gt(float(best["fast"]), 0.0)
+	_finish("floor", "L")
+	camp.refresh_rating()
+	assert_gt(float(camp.area_ratings("williams")["fast"]), float(a["fast"]), "assoalho sobe as curvas rápidas")
+	camp.log_ratings()
+	assert_eq((camp.rating_log["williams"] as Array).size(), 2, "ponto de partida + rodada")
+	assert_false(camp.area_last.is_empty())

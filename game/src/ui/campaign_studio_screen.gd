@@ -316,7 +316,7 @@ func _save() -> void:
 func _build_sponsors() -> void:
 	_car(Vector2(320, 270), 600, livery.main)
 	var right := _panel(Vector2(1280 - 44 - 300, 150), 300)
-	right.add_child(UiStyle.g_caption("Zonas do carro"))
+	right.add_child(UiStyle.g_caption("Patrocinadores no carro"))
 	var total := 0.0
 	for z: Dictionary in Sponsorship.zones():
 		var c: Dictionary = campaign.sponsors.contracts.get(z["id"], {})
@@ -341,7 +341,7 @@ func _build_sponsors() -> void:
 		v.add_theme_constant_override("separation", -3)
 		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		v.add_child(UiStyle.g_label(String(z["name"]), 13, UiStyle.G_TEXT, "black"))
-		v.add_child(UiStyle.g_label("livre · ver ofertas" if c.is_empty() else "visibilidade ×%s" % str(z["mult"]).replace(".", ","), 11, UiStyle.G_TEXT_3, "bold"))
+		v.add_child(UiStyle.g_label("livre · ver ofertas" if c.is_empty() else String(z.get("place", "")), 11, UiStyle.G_TEXT_3, "bold"))
 		h.add_child(v)
 		if not c.is_empty():
 			total += float(c.get("per_race", 0.0))

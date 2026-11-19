@@ -1,12 +1,11 @@
 class_name CarParts
 extends RefCounted
-## Peças físicas do carro de UMA equipe (decisões do usuário, 2026-11-04 — docs/DECISIONS.md):
-##  - a pesquisa libera uma ESPECIFICAÇÃO (versão B, C...) numa direção escolhida (alta carga, baixo arrasto, ousada...);
-##  - a fábrica produz UNIDADES (custo e prazo por unidade); cada unidade é instalada num carro (0 ou 1) ou fica no estoque;
-##  - só o carro equipado ganha o efeito. Peça no estoque não melhora nada;
-##  - o upgrade pode dar errado: a chance de acerto vem da equipe técnica e da fábrica (CarDevelopment.success_chance),
-##    menos o risco da direção. O resultado REAL só é revelado depois da primeira corrida com a peça;
-##  - a IA usa exatamente a mesma regra (pesquisa, produção, instalação, erro), então a ordem de forças muda no ano.
+## Peças físicas do carro de UMA equipe (2026-11-04; projetos diretos desde a v42, 2026-11-19 — docs/DECISIONS.md):
+##  - o PROJETO escolhe uma área (asa dianteira, assoalho, motor...) e um tamanho (P/M/G): custo, prazo e ganho esperado
+##    aparecem antes. Ao terminar, a nova versão entra nos dois carros (e nas reservas) e o ganho real aparece na entrega:
+##    sempre positivo, entre 60% e 120% do esperado (equipe técnica e fábrica sobem o piso);
+##  - as unidades físicas continuam: desgaste, reservas, limite de motor/câmbio; a equipe troca as gastas sozinha;
+##  - a IA usa exatamente a mesma regra, então a ordem de forças muda no ano.
 ## O efeito das peças entra em pontos de característica (reta, curvas lentas, curvas rápidas, confiabilidade); o perfil
 ## da pista pondera reta/lentas/rápidas (soma 1). Sem dependência de tela. Valores PROVISÓRIOS (data/car_parts.json).
 
@@ -17,14 +16,7 @@ const REL_NEUTRAL := 80.0
 const REL_FAIL_K := 0.03  ## cada ponto de confiabilidade abaixo de 80 = +3% de quebras
 const WEAR_SOFT := 60.0  ## a partir deste desgaste a unidade começa a perder rendimento
 const WEAR_PENALTY := 0.6  ## nota perdida por unidade no fim da vida (100%)
-const OUTCOME_SMALL := 0.4  ## "ganho menor": rende 40% do prometido
-const OUTCOME_BAD := -0.5  ## "piora": o ganho prometido vira perda de metade; os efeitos negativos continuam
-const SMALL_SHARE := 0.65  ## do que não acerta, 65% vira ganho menor e 35% piora
-const KNOWLEDGE_K := 0.15  ## cada ponto de "perf" da árvore de P&D no departamento: +15% no tamanho das peças novas
-const FIX_COST_K := 0.35
-const FIX_DAYS_K := 0.5
 const SPARE_A := 1  ## reservas da versão A (asas, assoalho, suspensão) no começo do ano
-const AI_BOLD_CHANCE := 0.2
 const AI_REPLACE_WEAR := 70.0
 ## Limite por temporada (decisão de 2026-11-10): unidades de motor e câmbio por carro. Passou do limite, punição de grid
 ## na corrida em que a unidade nova estreia: motor 10 posições na primeira vez e 5 nas seguintes; câmbio 5; mais de 15
@@ -48,6 +40,9 @@ var next_uid := 1
 var ai_cursor := 0
 var gain_k := 1.0  ## IA: tamanho das peças (dificuldade, ranking, sorte do ano, corpo técnico)
 var used: Dictionary = {}  ## "carro|peça" -> [uids] de motor/câmbio que já correram nesta temporada
+var deliveries: Array = []  ## projetos entregues (mais novo primeiro): [{area, size, part, v, expected, real (total), now (no carro atual), ratio, share, round, season}]
+var next_share := 0.0  ## fatia do esforço para o carro do ano seguinte (0..1; o jogador escolhe na tela Carro)
+var next_bank := 0.0  ## nota já garantida para o carro do ano seguinte (entra na base na virada)
 
 static var _data: Dictionary = {}
 
@@ -231,7 +226,78 @@ func avg_effect(profile: Dictionary = NEUTRAL) -> float:
 	return (car_effect(0, profile) + car_effect(1, profile)) * 0.5
 
 
-# --- pesquisa -------------------------------------------------------------------------------
+# --- projetos de peça (v42) --------------------------------------------------------------------
+# O jogador (e a IA, com a mesma regra) escolhe uma ÁREA (asa dianteira, assoalho, motor...) e um TAMANHO (pequeno,
+# médio, grande). Custo, prazo e ganho esperado aparecem antes; quando o projeto termina, a nova versão da peça entra nos
+# dois carros e o ganho REAL (sempre positivo, entre 60% e 120% do esperado) aparece na entrega. A equipe técnica e a
+# fábrica sobem o piso dessa faixa. Uma fatia do esforço (next_share) pode ir para o carro do ano seguinte: rende mais
+# (next_k), mas só na virada.
+
+static func projects_cfg() -> Dictionary:
+	return data()["projects"]
+
+
+static func areas() -> Array:
+	return projects_cfg()["areas"]
+
+
+static func area(id: String) -> Dictionary:
+	for a: Dictionary in areas():
+		if a["id"] == id:
+			return a
+	return {}
+
+
+static func sizes() -> Array:
+	return projects_cfg()["sizes"]
+
+
+static func size_of(id: String) -> Dictionary:
+	for s: Dictionary in sizes():
+		if s["id"] == id:
+			return s
+	return sizes()[1]
+
+
+## Área de um projeto antigo (save de antes da v42): a primeira área da peça.
+static func area_of_part(pid: String) -> String:
+	for a: Dictionary in areas():
+		if a["part"] == pid:
+			return a["id"]
+	return ""
+
+
+## Pontos de nota que um conjunto de características vale numa pista (perfil); confiabilidade não entra.
+static func fx_rating(fx: Dictionary, profile: Dictionary = NEUTRAL) -> float:
+	var v := 0.0
+	for k: String in PERF:
+		v += float(profile.get(k, 0.0)) * float(fx.get(k, 0.0))
+	return v
+
+
+## Segundos por volta que um conjunto de características vale (positivo = mais rápido).
+static func fx_seconds(fx: Dictionary, profile: Dictionary = NEUTRAL) -> float:
+	return fx_rating(fx, profile) * RaceSim.CAR_K
+
+
+## Perfil "puro" do tipo de pista em que a área ajuda (para mostrar o ganho onde ele conta).
+static func area_profile(area_id: String) -> Dictionary:
+	var fx: Dictionary = area(area_id).get("fx", {})
+	var total := 0.0
+	for k: String in PERF:
+		total += float(fx.get(k, 0.0))
+	if total <= 0.0:
+		return NEUTRAL
+	var out := {}
+	for k: String in PERF:
+		out[k] = float(fx.get(k, 0.0)) / total
+	return out
+
+
+## Menos quebras (fração) que pontos de confiabilidade dão.
+static func rel_fail_cut(rel_points: float) -> float:
+	return rel_points * REL_FAIL_K
+
 
 func can_develop(camp: Campaign, pid: String) -> bool:
 	if bool(part(pid).get("own_engine", false)):
@@ -239,61 +305,86 @@ func can_develop(camp: Campaign, pid: String) -> bool:
 	return true
 
 
-## Tamanho das peças novas do departamento: conhecimento da árvore de P&D (jogador) ou fator da IA.
-func gain(camp: Campaign, dept: String) -> float:
+func area_available(camp: Campaign, area_id: String) -> bool:
+	var a := area(area_id)
+	return not a.is_empty() and can_develop(camp, String(a["part"]))
+
+
+## Quanto a equipe técnica e a fábrica sobem o piso da faixa (0..max_narrow).
+func narrow(camp: Campaign, dept: String) -> float:
+	var n: float
 	if team_id == camp.player_team:
-		return 1.0 + KNOWLEDGE_K * camp.dev.effect_sum("cur", "perf", dept)
-	return gain_k
+		n = camp.dev.narrow(dept)
+	else:  # IA: estrutura média (nível 3) + corpo técnico; aero sofre a restrição de túnel
+		n = 0.12 + (_ai_staff_k(camp) - 1.0) * 0.3
+		if dept == "aero":
+			n += (camp.atr_mult(team_id) - 1.0) * 0.2
+	return clampf(n, 0.0, float(projects_cfg()["max_narrow"]))
 
 
-func promised_fx(camp: Campaign, pid: String, dir_id: String) -> Dictionary:
-	var g := gain(camp, String(part(pid)["dept"]))
+## Faixa do ganho real em fração do esperado: [piso, teto].
+func band(camp: Campaign, area_id: String) -> Array:
+	var cfg := projects_cfg()
+	var dept := String(part(String(area(area_id)["part"]))["dept"])
+	return [float(cfg["band_lo"]) + narrow(camp, dept), float(cfg["band_hi"])]
+
+
+## Tamanho das peças: jogador 1; IA: dificuldade, ranking, sorte do ano e corpo técnico (gain_k).
+func gain(camp: Campaign) -> float:
+	return 1.0 if team_id == camp.player_team else gain_k
+
+
+## Ganho esperado (pontos de característica) de um projeto, antes da divisão com o carro do ano seguinte.
+func project_fx(camp: Campaign, area_id: String, size_id: String) -> Dictionary:
+	var k := float(projects_cfg()["fx_k"]) * float(size_of(size_id)["gain_k"]) * gain(camp)
 	var out := {}
-	var fx: Dictionary = direction(pid, dir_id).get("fx", {})
-	for k: String in fx:
-		var v := float(fx[k])
-		out[k] = snappedf(v * g if v > 0.0 else v, 0.1)
+	var fx: Dictionary = area(area_id).get("fx", {})
+	for t: String in fx:
+		out[t] = snappedf(float(fx[t]) * k, 0.01)
 	return out
 
 
-## Chance de acerto (0..1) de uma direção: equipe técnica + fábrica − risco.
-func success_chance(camp: Campaign, pid: String, dir_id: String) -> float:
-	var base: float
+func project_cost(area_id: String, size_id: String) -> float:
+	return snappedf(float(area(area_id)["cost"]) * float(size_of(size_id)["cost_k"]), 0.1)
+
+
+func project_days(camp: Campaign, area_id: String, size_id: String) -> int:
+	var dept := String(part(String(area(area_id)["part"]))["dept"])
+	var d := float(area(area_id)["days"]) * float(size_of(size_id)["days_k"])
 	if team_id == camp.player_team:
-		base = camp.dev.success_chance(String(part(pid)["dept"]))
-	else:
-		base = _ai_success(camp)
-		if String(part(pid)["dept"]) == "aero":
-			base += (camp.atr_mult(team_id) - 1.0) * 0.20  # restrição de túnel também para a IA
-	return clampf(base - float(direction(pid, dir_id).get("risk", 0)) / 100.0, 0.05, 0.95)
-
-
-## {good, small, bad} (somam 1).
-func outcome_odds(camp: Campaign, pid: String, dir_id: String) -> Dictionary:
-	var s := success_chance(camp, pid, dir_id)
-	return {"good": s, "small": (1.0 - s) * SMALL_SHARE, "bad": (1.0 - s) * (1.0 - SMALL_SHARE)}
-
-
-func research_cost(pid: String, dir_id: String) -> float:
-	return snappedf(float(part(pid)["research_cost"]) * float(direction(pid, dir_id).get("cost_k", 1.0)), 0.1)
-
-
-func research_days(camp: Campaign, pid: String, dir_id: String) -> int:
-	var d := float(part(pid)["research_days"]) * float(direction(pid, dir_id).get("days_k", 1.0))
-	if team_id == camp.player_team:
-		d *= camp.dev.days_mult(String(part(pid)["dept"]))
+		d *= camp.dev.days_mult(dept)
 	else:
 		d /= _ai_staff_k(camp)
-		if String(part(pid)["dept"]) == "aero":
+		if dept == "aero":
 			d /= maxf(camp.atr_mult(team_id), 0.5)
 	return maxi(3, ceili(d))
 
 
-## {ok, reason, cost, days, odds}
-func research_info(camp: Campaign, pid: String, dir_id: String) -> Dictionary:
-	var out := {"ok": false, "reason": "", "cost": research_cost(pid, dir_id), "days": research_days(camp, pid, dir_id),
-		"odds": outcome_odds(camp, pid, dir_id)}
-	if not can_develop(camp, pid):
+## Fatia do ganho que vai para o carro do ano seguinte (confiabilidade fica toda no carro atual).
+func share_for(area_id: String) -> float:
+	return 0.0 if area_id == "rel" else next_share
+
+
+func project_of(area_id: String) -> Dictionary:
+	for r: Dictionary in research:
+		if String(r.get("area", "")) == area_id:
+			return r
+	return {}
+
+
+## {ok, reason, cost, days, fx, lo, hi, share, sec (s/volta no tipo de pista da área), sec_avg, rel_cut}
+func project_info(camp: Campaign, area_id: String, size_id: String) -> Dictionary:
+	var fx := project_fx(camp, area_id, size_id)
+	var b := band(camp, area_id) if not area(area_id).is_empty() else [0.6, 1.2]
+	var share := share_for(area_id)
+	var prof := area_profile(area_id)
+	var out := {"ok": false, "reason": "", "cost": project_cost(area_id, size_id), "days": project_days(camp, area_id, size_id),
+		"fx": fx, "lo": b[0], "hi": b[1], "share": share, "sec": fx_seconds(fx, prof) * (1.0 - share),
+		"sec_avg": fx_seconds(fx) * (1.0 - share), "rel_cut": rel_fail_cut(float(fx.get("rel", 0.0)))}
+	var pid := String(area(area_id).get("part", ""))
+	if pid == "":
+		out["reason"] = "invalid"
+	elif not area_available(camp, area_id):
 		out["reason"] = "engine"
 	elif not research_of(pid).is_empty():
 		out["reason"] = "now"
@@ -308,42 +399,15 @@ func research_info(camp: Campaign, pid: String, dir_id: String) -> Dictionary:
 	return out
 
 
-func start_research(camp: Campaign, pid: String, dir_id: String) -> bool:
-	var info := research_info(camp, pid, dir_id)
+func start_project(camp: Campaign, area_id: String, size_id: String) -> bool:
+	var info := project_info(camp, area_id, size_id)
 	if not info["ok"]:
 		return false
 	if team_id == camp.player_team:
 		camp.budget_musd -= float(info["cost"])
 		camp.record("rd", float(info["cost"]))
-	research.append({"part": pid, "dir": dir_id, "days_left": int(info["days"]), "days_total": int(info["days"]), "cost": float(info["cost"]), "fix": -1})
-	_sync_busy(camp)
-	return true
-
-
-## Corrigir uma especificação que deu errado (depois de revelada): pesquisa curta; pode dar certo ou não.
-func fix_info(camp: Campaign, pid: String, spec_index: int) -> Dictionary:
-	var s := spec(pid, spec_index)
-	var base_info := research_info(camp, pid, String(s.get("dir", "")))
-	var out := {"ok": base_info["ok"], "reason": base_info["reason"], "cost": snappedf(float(base_info["cost"]) * FIX_COST_K, 0.1),
-		"days": maxi(3, ceili(float(base_info["days"]) * FIX_DAYS_K)), "odds": base_info["odds"]}
-	if s.is_empty() or s["outcome"] == "good" or s["outcome"] == "base" or not bool(s["revealed"]):
-		out["ok"] = false
-		out["reason"] = "nofix"
-	elif out["ok"] and team_id == camp.player_team and camp.budget_musd - float(out["cost"]) < CarDevelopment.RESERVE_MUSD:
-		out["ok"] = false
-		out["reason"] = "cash"
-	return out
-
-
-func start_fix(camp: Campaign, pid: String, spec_index: int) -> bool:
-	var info := fix_info(camp, pid, spec_index)
-	if not info["ok"]:
-		return false
-	if team_id == camp.player_team:
-		camp.budget_musd -= float(info["cost"])
-		camp.record("rd", float(info["cost"]))
-	research.append({"part": pid, "dir": spec(pid, spec_index)["dir"], "days_left": int(info["days"]), "days_total": int(info["days"]),
-		"cost": float(info["cost"]), "fix": spec_index})
+	research.append({"part": String(area(area_id)["part"]), "area": area_id, "size": size_id, "days_left": int(info["days"]),
+		"days_total": int(info["days"]), "cost": float(info["cost"]), "fx": info["fx"], "fix": -1})
 	_sync_busy(camp)
 	return true
 
@@ -371,39 +435,51 @@ func _rng(camp: Campaign, tag: String) -> RandomNumberGenerator:
 	return rng
 
 
-## Resolve o resultado (escondido) de uma pesquisa concluída.
+## Entrega: sorteia o ganho real dentro da faixa, cria a nova versão e põe nos dois carros (e nas reservas).
 func _finish_research(camp: Campaign, r: Dictionary) -> void:
 	var pid: String = r["part"]
-	var rng := _rng(camp, "spec|%s|%d" % [pid, int(r["fix"])])
-	var odds := outcome_odds(camp, pid, String(r["dir"]))
-	var roll := rng.randf()
-	if int(r["fix"]) >= 0:  # correção: ou recupera o prometido, ou fica como estava
-		var s := spec(pid, int(r["fix"]))
-		if roll < float(odds["good"]) + float(odds["small"]) * 0.5:
-			s["real"] = (s["fx"] as Dictionary).duplicate()
-			s["outcome"] = "good"
-		s["revealed"] = false  # volta a ser testada na próxima corrida
-		s["fixed"] = true
-		if team_id == camp.player_team:
-			done_research.append({"part": pid, "spec": int(r["fix"]), "fix": true})
-		return
-	var fx := promised_fx(camp, pid, String(r["dir"]))
-	var outcome := "good" if roll < float(odds["good"]) else ("small" if roll < float(odds["good"]) + float(odds["small"]) else "bad")
+	var area_id := String(r.get("area", area_of_part(pid)))
+	var size_id := String(r.get("size", "M"))
+	var fx: Dictionary = r.get("fx", {})
+	if fx.is_empty():
+		fx = project_fx(camp, area_id, size_id)
+	var b := band(camp, area_id)
+	var ratio := _rng(camp, "proj|%s|%s" % [pid, size_id]).randf_range(float(b[0]), float(b[1]))
+	var share := share_for(area_id)
 	var real := {}
+	var full := {}
 	for k: String in fx:
-		var v := float(fx[k])
-		if v > 0.0:
-			v *= 1.0 if outcome == "good" else (OUTCOME_SMALL if outcome == "small" else OUTCOME_BAD)
-		real[k] = snappedf(v, 0.1)
+		full[k] = float(fx[k]) * ratio
+		real[k] = snappedf(float(full[k]) * (1.0 - share), 0.01)
+	var on_car := unit_on(pid, 0)  # a versão nova soma em cima da que está no carro
+	var base := spec(pid, int(on_car["spec"]) if not on_car.is_empty() else latest_spec(pid))
+	var stacked := {}
+	for k: String in TRAITS:
+		var v := float((base.get("real", {}) as Dictionary).get(k, 0.0)) + float(real.get(k, 0.0))
+		if v != 0.0:
+			stacked[k] = snappedf(v, 0.01)
 	var l := spec_list(pid)
-	l.append({"v": letter(l.size()), "dir": r["dir"], "fx": fx, "real": real, "outcome": outcome, "revealed": false, "fixed": false})
+	l.append({"v": letter(l.size()), "dir": area_id, "fx": stacked, "real": stacked, "outcome": "good", "revealed": true, "fixed": false})
+	var si := l.size() - 1
+	for u: Dictionary in units:  # atualização: as unidades da peça (carros e reservas) recebem a versão nova
+		if u["part"] == pid:
+			u["spec"] = si
+	for q: Dictionary in queue:
+		if q["part"] == pid:
+			q["spec"] = si
+	if share > 0.0:
+		next_bank += fx_rating(full) * share * float(projects_cfg()["next_k"])
+	var full_s := {}
+	for k: String in full:
+		full_s[k] = snappedf(float(full[k]), 0.01)
+	var entry := {"area": area_id, "size": size_id, "part": pid, "v": letter(si), "expected": fx, "real": full_s, "now": real, "ratio": snappedf(ratio, 0.01),
+		"share": share, "round": camp.round, "season": camp.season}
+	deliveries.push_front(entry)
+	while deliveries.size() > 30:
+		deliveries.pop_back()
 	if team_id == camp.player_team:
-		done_research.append({"part": pid, "spec": l.size() - 1, "fix": false})
-		if camp.detail == "essential":
-			order_units(camp, pid, l.size() - 1, 2)
-	else:
-		order_units(camp, pid, l.size() - 1, 2)
-
+		done_research.append({"part": pid, "spec": si, "fix": false})
+		camp.refresh_rating()
 
 # --- produção e instalação ------------------------------------------------------------------------
 
@@ -558,7 +634,7 @@ func day_step(camp: Campaign) -> void:
 			var u := _add_unit(q["part"], int(q["spec"]), -1)
 			if int(q["install"]) >= 0:
 				install(int(u["uid"]), int(q["install"]))
-			elif team_id != camp.player_team or camp.detail == "essential":
+			else:
 				_auto_install_new(u)
 	if team_id != camp.player_team:
 		_ai_plan(camp)
@@ -634,8 +710,7 @@ func after_race(camp: Campaign) -> Array:
 			out.append({"part": u["part"], "spec": int(u["spec"]), "outcome": s["outcome"]})
 	if team_id == camp.player_team:
 		reveals.append_array(out)
-		if camp.detail == "essential":  # modo Essencial: o diretor técnico troca as peças gastas
-			_replace_worn(camp)
+		_replace_worn(camp)  # desde a v42 a equipe troca as peças gastas sozinha (jogador e IA)
 	else:
 		_ai_after_race(camp)
 	return out
@@ -664,94 +739,61 @@ func _ai_staff_k(camp: Campaign) -> float:
 	return camp.personnel.ai_dev_factor(camp, team_id) if camp.personnel != null and not camp.personnel.contracts.is_empty() else 1.0
 
 
-func _ai_success(camp: Campaign) -> float:
-	# estrutura média de uma equipe da IA (fábrica nível 3) + corpo técnico
-	return clampf(float(CarDevelopment.factory_data()["base_success_pct"]) / 100.0 + 0.11 + (_ai_staff_k(camp) - 1.0) * 0.6, 0.3, 0.9)
+## Valor de uma área para as próximas pistas, por dinheiro (a confiabilidade vale menos).
+func _area_value(camp: Campaign, area_id: String, prof: Dictionary) -> float:
+	var fx: Dictionary = area(area_id)["fx"]
+	var v := fx_rating(fx, prof) + float(fx.get("rel", 0.0)) * 0.08
+	return v / maxf(float(area(area_id)["cost"]), 0.1)
 
 
-## Modo Essencial (jogador): o diretor técnico começa pesquisas de peças dentro da verba. Devolve quanto gastou.
-func auto_research(camp: Campaign, budget: float) -> float:
+## Áreas livres ordenadas da mais útil para as próximas pistas à menos.
+func ranked_areas(camp: Campaign) -> Array:
+	var prof := camp.upcoming_profile(4)
+	var ids: Array = areas().map(func(a: Dictionary) -> String: return String(a["id"])).filter(
+		func(a: String) -> bool: return area_available(camp, a) and research_of(String(area(a)["part"])).is_empty())
+	ids.sort_custom(func(a: String, b: String) -> bool: return _area_value(camp, a, prof) > _area_value(camp, b, prof))
+	return ids
+
+
+## Modo Essencial (jogador): o diretor técnico começa projetos médios (ou pequenos) nas áreas mais úteis, dentro da verba.
+func auto_projects(camp: Campaign, budget: float) -> float:
 	var spent := 0.0
-	var ids: Array = part_ids().filter(func(p: String) -> bool: return can_develop(camp, p) and research_of(p).is_empty())
-	ids.sort_custom(func(a: String, b: String) -> bool: return _improvement(camp, a) > _improvement(camp, b))
-	for pid: String in ids:
-		var dir_id := best_direction(camp, pid)
-		var info := research_info(camp, pid, dir_id)
-		if not info["ok"]:
-			if info["reason"] == "slots":
+	for area_id: String in ranked_areas(camp):
+		for size_id: String in ["M", "S"]:  # médio; se a verba do mês não dá, um pequeno
+			var info := project_info(camp, area_id, size_id)
+			if not info["ok"]:
+				if info["reason"] == "slots":
+					return spent
 				break
-			continue
-		if spent + float(info["cost"]) > budget:
-			continue
-		if start_research(camp, pid, dir_id):
-			spent += float(info["cost"])
+			if spent + float(info["cost"]) > budget:
+				continue
+			if start_project(camp, area_id, size_id):
+				spent += float(info["cost"])
+			break
 	return spent
 
 
-## Direção mais útil para as próximas pistas (sem a ousada; confiabilidade vale menos).
-func best_direction(camp: Campaign, pid: String) -> String:
-	var prof := camp.upcoming_profile(4)
-	var best := ""
-	var best_v := -INF
-	for d: Dictionary in part(pid)["dirs"]:
-		if d["id"] == "bold":
-			continue
-		var v := 0.0
-		for k: String in (d["fx"] as Dictionary):
-			v += float(d["fx"][k]) * (float(prof.get(k, 0.0)) if k != "rel" else 0.08)
-		if v > best_v:
-			best_v = v
-			best = d["id"]
-	return best
-
-
-## Quanto a próxima versão da peça renderia por dinheiro (para escolher a ordem das pesquisas).
-func _improvement(camp: Campaign, pid: String) -> float:
-	var prof := camp.upcoming_profile(4)
-	var fx := promised_fx(camp, pid, best_direction(camp, pid))
-	var v := 0.0
-	for k: String in fx:
-		v += float(fx[k]) * (float(prof.get(k, 0.0)) if k != "rel" else 0.08)
-	return v / maxf(research_cost(pid, best_direction(camp, pid)), 0.1)
+## IA: fatia para o carro do ano seguinte cresce no fim da temporada (como as equipes reais).
+func _ai_share(camp: Campaign) -> float:
+	return 0.15 if camp.season_progress() < 0.6 else 0.5
 
 
 func _ai_plan(camp: Campaign) -> void:
 	if not research.is_empty():
 		return
-	var ids: Array = part_ids().filter(func(p: String) -> bool: return can_develop(camp, p))
-	if ids.is_empty():
+	var ranked := ranked_areas(camp)
+	if ranked.is_empty():
 		return
-	var pid: String = ids[ai_cursor % ids.size()]
+	var rng := _rng(camp, "ai_proj|%d" % ai_cursor)
 	ai_cursor += 1
-	var rng := _rng(camp, "ai_dir|%s" % pid)
-	var dir_id := "bold"
-	if rng.randf() >= AI_BOLD_CHANCE:
-		var prof := camp.upcoming_profile(4)
-		var best_v := -INF
-		for d: Dictionary in part(pid)["dirs"]:
-			if d["id"] == "bold":
-				continue
-			var v := 0.0
-			for k: String in (d["fx"] as Dictionary):
-				v += float(d["fx"][k]) * (float(prof.get(k, 0.0)) if k != "rel" else 0.08)
-			if v > best_v:
-				best_v = v
-				dir_id = d["id"]
-	start_research(camp, pid, dir_id)
+	var pick: String = ranked[0] if rng.randf() < 0.6 or ranked.size() < 2 else ranked[1 + rng.randi() % mini(2, ranked.size() - 1)]
+	var roll := rng.randf()
+	var size_id := "S" if roll < 0.25 else ("L" if roll > 0.75 else "M")
+	next_share = _ai_share(camp)
+	start_project(camp, pick, size_id)
 
 
 func _ai_after_race(camp: Campaign) -> void:
-	for pid: String in part_ids():
-		for car in 2:
-			var u := unit_on(pid, car)
-			if u.is_empty():
-				continue
-			var s := spec(pid, int(u["spec"]))
-			# peça revelada como ruim: volta para a melhor do estoque (ou a versão anterior)
-			if bool(s["revealed"]) and s["outcome"] == "bad":
-				var alt := best_stock_unit(pid)
-				if not alt.is_empty() and _unit_value(alt, NEUTRAL) > _unit_value(u, NEUTRAL):
-					install(int(alt["uid"]), car)
 	_replace_worn(camp)
 
 
@@ -773,13 +815,15 @@ func _ai_best_spec(pid: String) -> int:
 ## Carro novo: todas as peças voltam para a versão A (o que valia entra no "carry" da equipe).
 func rollover(p_team_id: String = "") -> void:
 	setup(team_id if p_team_id == "" else p_team_id)
+	next_bank = 0.0
 
 
 # --- salvar / carregar ---------------------------------------------------------------------------------
 
 func to_dict() -> Dictionary:
 	return {"team": team_id, "specs": specs, "units": units, "research": research, "queue": queue, "reveals": reveals,
-		"done_research": done_research, "next_uid": next_uid, "ai_cursor": ai_cursor, "gain_k": gain_k, "used": used}
+		"done_research": done_research, "next_uid": next_uid, "ai_cursor": ai_cursor, "gain_k": gain_k, "used": used,
+		"deliveries": deliveries, "next_share": next_share, "next_bank": next_bank}
 
 
 static func from_dict(d: Dictionary) -> CarParts:
@@ -813,6 +857,12 @@ static func from_dict(d: Dictionary) -> CarParts:
 	c.ai_cursor = int(d.get("ai_cursor", 0))
 	c.gain_k = float(d.get("gain_k", 1.0))
 	c.used = d.get("used", {})
+	c.deliveries = d.get("deliveries", [])
+	for e: Dictionary in c.deliveries:
+		e["round"] = int(e.get("round", 0))
+		e["season"] = int(e.get("season", 0))
+	c.next_share = float(d.get("next_share", 0.0))
+	c.next_bank = float(d.get("next_bank", 0.0))
 	for k: String in c.used:
 		c.used[k] = (c.used[k] as Array).map(func(x: Variant) -> int: return int(x))
 	return c

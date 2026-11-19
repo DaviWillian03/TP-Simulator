@@ -81,11 +81,12 @@ func test_meta_da_diretoria_nao_muda_no_meio_da_temporada() -> void:
 func test_virada_guarda_parte_do_ganho_da_ia() -> void:
 	_parts_days(camp, 200)
 	var got := (camp.parts["ferrari"] as CarParts).avg_effect()
+	var banked := (camp.parts["ferrari"] as CarParts).next_bank  # v42: o que a IA já fez para o carro novo
 	camp.start_next_season()
-	assert_almost_eq(float(camp.rival_carry["ferrari"]), got * 0.5, 0.0001)
+	assert_almost_eq(float(camp.rival_carry["ferrari"]), got * 0.5 + banked, 0.0001)
 	assert_false(camp.rival_carry.has("williams"), "o jogador usa a própria árvore")
 	var file_r := float(GameData.team_by_id(GameData.teams(), "ferrari")["car_rating"])  # nota do arquivo (F1 +10%)
-	assert_almost_eq(_rating(camp, "ferrari"), file_r + got * 0.5, 0.0001, "peças zeradas; fica a herança")
+	assert_almost_eq(_rating(camp, "ferrari"), file_r + got * 0.5 + banked, 0.0001, "peças zeradas; fica a herança")
 	assert_eq((camp.parts["ferrari"] as CarParts).spec_list("fwing").size(), 1, "carro novo: versão A")
 
 

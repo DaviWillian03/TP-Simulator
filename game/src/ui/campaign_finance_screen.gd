@@ -130,10 +130,11 @@ func _income_list() -> Control:
 		if sp.contracts.has(id):
 			var c: Dictionary = sp.contracts[id]
 			nv.add_child(UiStyle.g_label(String(c["brand"]), 16, UiStyle.G_TEXT, "black"))
-			nv.add_child(UiStyle.g_label("%s · até %d" % [z["name"], int(c["until"])], 12, UiStyle.G_TEXT_2, "bold"))
+			nv.add_child(UiStyle.g_label("%s · até o fim de %d" % [z["name"], campaign.season], 12, UiStyle.G_TEXT_2, "bold"))
 			h.add_child(nv)
-			if int(c.get("goal_pos", 0)) > 0:
-				h.add_child(_tag("Meta: top %d" % int(c["goal_pos"]), "trophy", Color("#F5C542")))
+			var ng := (c.get("goals", []) as Array).size()
+			if ng > 0:
+				h.add_child(_tag("%d meta%s" % [ng, "s" if ng > 1 else ""], "trophy", Color("#F5C542")))
 			else:
 				h.add_child(_tag("Garantido", "lock", Color("#7fe0b1")))
 			var pv := VBoxContainer.new()
@@ -146,14 +147,18 @@ func _income_list() -> Control:
 			b.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			pv.add_child(b)
 			h.add_child(pv)
-			if int(c.get("goal_pos", 0)) > 0:
+			var gb := 0.0
+			for g: Dictionary in c.get("goals", []):
+				if not bool(g.get("paid", false)):
+					gb += float(g["bonus"])
+			if gb > 0.0:
 				var gv := VBoxContainer.new()
 				gv.add_theme_constant_override("separation", -3)
 				gv.custom_minimum_size = Vector2(120, 0)
-				var g1 := UiStyle.g_label("+%s mi" % _money(float(c["goal_bonus"])), 16, Color("#F5C542"), "black")
+				var g1 := UiStyle.g_label("+%s mi" % _money(gb), 16, Color("#F5C542"), "black")
 				g1.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 				gv.add_child(g1)
-				var g2 := UiStyle.g_label("no fim do ano", 11, UiStyle.G_TEXT_3, "bold")
+				var g2 := UiStyle.g_label("em metas", 11, UiStyle.G_TEXT_3, "bold")
 				g2.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 				gv.add_child(g2)
 				h.add_child(gv)
@@ -180,17 +185,8 @@ func _income_side() -> Control:
 	nv.add_child(UiStyle.g_label("garantido até o fim do ano", 12, UiStyle.G_TEXT_2, "bold"))
 	top.add_child(nv)
 	v.add_child(top)
-	v.add_child(_info_row("trophy", "US$ %s mi em metas" % _money(float(sm["goal"])), "%d de %d contratos dependem do campeonato" % [int(sm["goal_count"]), int(sm["count"])], Color("#F5C542")))
-	var pos := campaign.team_position(campaign.player_team)
-	var worst := 0
-	for c: Dictionary in campaign.sponsors.contracts.values():
-		var gp := int(c.get("goal_pos", 0))
-		if gp > 0:
-			worst = gp if worst == 0 else mini(worst, gp)
-	if int(sm["goal_count"]) > 0:
-		var ok := pos <= worst
-		v.add_child(_info_row("up" if ok else "lock", "Hoje: %dº (meta mais exigente: top %d)" % [pos, worst], "no caminho" if ok else "atrás da meta: o bônus está em risco", Color("#7fe0b1") if ok else Color("#ff8a80")))
-	v.add_child(_info_row("timer", "+%s mi por pódio" % _money(campaign.sponsors.bonus_per_podium()), "soma dos contratos, por piloto"))
+	v.add_child(_info_row("trophy", "US$ %s mi em metas em jogo" % _money(float(sm["goal"])), "%d metas nos contratos · não cumprir só perde o bônus" % int(sm["goal_count"]), Color("#F5C542")))
+	v.add_child(_info_row("up", "US$ %s mi de bônus já ganho" % _money(float(sm["secured"])), "metas cumpridas nesta temporada", Color("#7fe0b1")))
 	var sp := Control.new()
 	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(sp)

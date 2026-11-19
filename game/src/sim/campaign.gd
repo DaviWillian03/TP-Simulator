@@ -66,6 +66,8 @@ var advance: Dictionary = {}  ## adiantamento: {amount, cut, races_left}
 var last_positions: Dictionary = {}  ## id da equipe -> posição nos construtores do ano anterior (restrição de túnel)
 var parts: Dictionary = {}  ## id da equipe -> CarParts (jogador e IA usam as mesmas regras)
 var rival_carry: Dictionary = {}  ## id da equipe da IA -> bônus herdado das temporadas anteriores
+var rating_log: Dictionary = {}  ## id da equipe -> [nota do carro depois de cada rodada] (gráfico da temporada, v42)
+var area_last: Dictionary = {}  ## notas por área do carro do jogador no último GP (o "+2" da tela Carro)
 var _file_ratings: Dictionary = {}  ## id -> nota do carro nos dados (sem evolução)
 var _teams: Array = []
 var _drivers: Array = []
@@ -744,6 +746,57 @@ func track_fit(circuit_id: String) -> float:
 	return CarParts.traits_effect(t, prof) - CarParts.traits_effect(t, CarParts.NEUTRAL) + (cp.avg_effect(prof) - cp.avg_effect() if cp != null else 0.0)
 
 
+# --- evolução do carro (v42) ------------------------------------------------------------------------------
+
+## Grava a nota de cada equipe (pista neutra) depois da rodada: o gráfico da temporada da tela Carro.
+func log_ratings() -> void:
+	for t: Dictionary in _teams:
+		var l: Array = rating_log.get(t["id"], [])
+		if l.is_empty():
+			l.append(snappedf(float(t["car_rating"]), 0.01))  # ponto de partida (rodada 0)
+		l.append(snappedf(float(t["car_rating"]), 0.01))
+		rating_log[t["id"]] = l
+	area_last = area_ratings(player_team)
+
+
+## Notas do carro por área (0–100): reta, curvas lentas, curvas rápidas (nota numa pista só daquele tipo, com as
+## características de fábrica e as peças dos dois carros) e confiabilidade.
+func area_ratings(team_id: String) -> Dictionary:
+	var t := GameData.team_by_id(_teams, team_id)
+	if t.is_empty():
+		return {}
+	var cp: CarParts = parts.get(team_id)
+	var traits: Dictionary = t.get("car_traits", {})
+	var pe := cp.avg_effect() if cp != null else 0.0
+	var out := {}
+	for k: String in CarParts.PERF:
+		var parts_k := (cp.trait_delta(0, k) + cp.trait_delta(1, k)) * 0.5 if cp != null else 0.0
+		out[k] = float(t["car_rating"]) - pe + float(traits.get(k, 0.0)) + parts_k
+	var rel := float(traits.get("rel", CarParts.REL_NEUTRAL))
+	if cp != null:
+		rel += (cp.trait_delta(0, "rel") + cp.trait_delta(1, "rel")) * 0.5
+	out["rel"] = rel
+	return out
+
+
+## Melhor nota de um rival em cada área (para o risco branco das barras).
+func best_rival_areas() -> Dictionary:
+	var out := {}
+	for t: Dictionary in _teams:
+		if t["id"] == player_team:
+			continue
+		var a := area_ratings(t["id"])
+		for k: String in a:
+			out[k] = maxf(float(out.get(k, -INF)), float(a[k]))
+	return out
+
+
+## Nota que o carro do ano seguinte herda (prévia da virada): +X sobre a base do carro.
+func next_car_estimate() -> float:
+	var cp := my_parts()
+	return dev.next_car_estimate(cp.avg_effect() if cp != null else 0.0, cp.next_bank if cp != null else 0.0)
+
+
 # --- F2 e F3 em paralelo; acesso e rebaixamento (3 categorias, fase 1) --------------------------
 
 func _init_series() -> void:
@@ -1205,7 +1258,7 @@ func to_dict() -> Dictionary:
 		"budget_musd": budget_musd, "debt_musd": debt_musd, "factory_level": factory_level, "morale": morale,
 		"board_patience": board_patience, "drivers": driver_ids, "round": round, "calendar_n": calendar().size(), "meta_salt": meta_salt, "driver_points": driver_points,
 		"team_points": team_points, "history": history, "day": day, "trust": trust, "state": state, "wins": wins,
-		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict(),
+		"best_finish": best_finish, "seasons": seasons, "goal_shift": goal_shift, "dev": dev.to_dict(), "rival_carry": rival_carry, "rating_log": rating_log, "area_last": area_last, "personnel": personnel.to_dict(), "drivers_grid": _drivers, "sponsors": sponsors.to_dict(), "ledger": ledger, "cash_log": cash_log, "regs": regs.to_dict(), "events": events.to_dict(),
 		"series": series.keys().reduce(func(acc: Dictionary, k: String) -> Dictionary: acc[k] = (series[k] as Series).to_dict(); return acc, {}),
 		"moves": moves, "teams_grid": _teams, "freed_numbers": freed_numbers, "file_ratings": _file_ratings,
 		"livery": livery.to_dict(), "loans": loans, "advance": advance, "last_positions": last_positions,
@@ -1243,6 +1296,8 @@ static func from_dict(d: Dictionary) -> Campaign:
 	c.goal_shift = int(d.get("goal_shift", 0))
 	c._build_grid()
 	c.rival_carry = d.get("rival_carry", {})
+	c.rating_log = d.get("rating_log", {})
+	c.area_last = d.get("area_last", {})
 	c._init_dev(maxi(1, c.factory_level))
 	if d.has("drivers_grid"):  # grid de pilotos como ficou após as viradas (contratos)
 		c._drivers = d["drivers_grid"]
@@ -1472,11 +1527,8 @@ func record_weekend(w: WeekendSim, skip_cat: String = "") -> void:
 	for cp: CarParts in parts.values():  # desgaste das peças e revelação dos upgrades estreados nesta corrida
 		cp.after_race(self)
 	_run_series(round, skip_cat)
-	var podiums := 0
-	for i in mini(3, race.size()):
-		if team_of(race[i]) == player_team:
-			podiums += 1
-	var bonus := podiums * sponsors.bonus_per_podium()
+	sponsors.fill_free(self)  # vaga livre na hora da corrida: o diretor comercial assina a oferta equilibrada
+	var bonus := sponsors.after_race(self)  # metas de patrocínio cumpridas nesta corrida
 	var f: Dictionary = origins_data()["finance"]
 	record("sponsors", sponsor_per_race())
 	record("bonus", bonus)
@@ -1485,14 +1537,13 @@ func record_weekend(w: WeekendSim, skip_cat: String = "") -> void:
 	record("upkeep", dev.upkeep_per_race())
 	budget_musd += sponsor_per_race() + bonus - cost_per_race()
 	_pay_credit()
-	if detail == "essential" and not sponsors.free_zones().is_empty():  # (um patrocinador pode ter saído por evento)
-		sponsors.auto_fill(self)
 	var pos := team_position(player_team)
 	var gap := season_goal() - pos  # >= 0: dentro da meta
 	var drift: float = origins_data()["board"]["drift_per_race"]
 	trust = clampf(trust + (drift if gap >= 0 else float(gap) * drift * 0.5) * _difficulty_factor(), 0.0, 100.0)
 	round += 1
 	cash_log.append({"r": round, "cash": budget_musd})
+	log_ratings()
 	events.on_race_recorded(self)
 	personnel.transfers.after_round(self)  # mercado vivo: contratos futuros, propostas e pedidos de renovação
 	var new_day := round_day(round - 1) + 1
@@ -1609,8 +1660,9 @@ func cost_per_race() -> float:
 	return float(f["cost_base"]) + dev.upkeep_per_race() + personnel.payroll_per_race(self)
 
 
+## Patrocínio por corrida (vaga livre conta como o valor garantido: o diretor comercial assina antes da corrida).
 func sponsor_per_race() -> float:
-	return sponsors.per_race_total()
+	return sponsors.expected_per_race(self)
 
 
 func _difficulty_factor() -> float:
@@ -1715,10 +1767,11 @@ func start_next_season() -> void:
 	for t: Dictionary in _teams:
 		if t["id"] != player_team:
 			potentials[t["id"]] = rival_potential(t["id"])
-	for tid: String in potentials:  # o que as peças da IA renderam no ano (com acertos e erros)
+	for tid: String in potentials:  # o que as peças da IA renderam no ano + o que ela já desenvolveu para o carro novo
 		var cp: CarParts = parts.get(tid)
 		var got := cp.avg_effect() if cp != null else float(potentials[tid])
-		rival_carry[tid] = (float(rival_carry.get(tid, 0.0)) + got) * float(cfg["carry"])
+		var banked := cp.next_bank if cp != null else 0.0
+		rival_carry[tid] = (float(rival_carry.get(tid, 0.0)) + got) * float(cfg["carry"]) + banked
 	season += 1
 	round = 0
 	driver_points = {}
@@ -1727,7 +1780,8 @@ func start_next_season() -> void:
 	history = []
 	season_log = {}
 	best_finish = 99
-	dev.rollover(my_parts().avg_effect() if my_parts() != null else 0.0)
+	dev.rollover(my_parts().avg_effect() if my_parts() != null else 0.0, my_parts().next_bank if my_parts() != null else 0.0)
+	rating_log = {}
 	for cp: CarParts in parts.values():
 		cp.rollover()
 	if not regs.pending_reset.is_empty():

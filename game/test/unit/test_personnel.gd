@@ -159,12 +159,12 @@ func test_tecnicos_melhoram_prazo_e_acerto_dos_projetos() -> void:
 	camp.personnel.staff["aero"] = ""
 	camp.refresh_rating()
 	var days0 := camp.dev.days_mult("aero")
-	var ok0 := camp.dev.success_chance("aero")
+	var ok0 := camp.dev.narrow("aero")
 	var best: Dictionary = camp.personnel.market(camp, "staff", "all", "aero")[0]
 	camp.personnel.staff["aero"] = best["id"]
 	camp.refresh_rating()
 	assert_lt(camp.dev.days_mult("aero"), days0)
-	assert_gt(camp.dev.success_chance("aero"), ok0)
+	assert_gt(camp.dev.narrow("aero"), ok0, "técnico melhor aperta a faixa do ganho")
 	assert_eq(camp.dev.days_mult("chassis"), camp.dev.days_mult("chassis"))
 
 

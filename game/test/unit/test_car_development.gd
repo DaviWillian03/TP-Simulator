@@ -1,5 +1,6 @@
 extends GutTest
-## Árvore de P&D do carro e fábrica (modo campanha): modelo sem tela.
+## Fábrica da campanha (v42, 2026-11-19): quatro estruturas com efeito escrito em números, obras com custo e dias,
+## vagas de projeto, migração da árvore de P&D antiga. Modelo sem tela.
 
 var camp: Campaign
 
@@ -10,129 +11,44 @@ func before_each() -> void:
 	camp.detail = "advanced"  # no avançado o jogador escolhe; o essencial tem teste próprio
 
 
-func test_arvore_tem_4_departamentos_e_92_nos_validos() -> void:
-	var total := 0
-	for dept: String in CarDevelopment.DEPT_ORDER:
-		var ids := CarDevelopment.all_node_ids(dept)
-		total += ids.size()
-		for id in ids:
-			var info := CarDevelopment.node_info(id)
-			assert_false(info.is_empty(), id)
-			var parent: int = info["node"]["p"]
-			assert_true(parent < int(info["index"]), "pai vem antes: " + id)
-	assert_eq(total, 92)
-	assert_eq(CarDevelopment.node_info("aero.0.9"), {})
+func test_cada_nivel_tem_efeito_escrito_em_numeros() -> void:
+	for sid: String in CarDevelopment.STRUCT_ORDER:
+		for lv in range(1, 6):
+			var lines := CarDevelopment.effect_lines(sid, lv)
+			assert_gt(lines.size(), 0, sid)
+			for l: String in lines:
+				assert_true(RegEx.create_from_string("\\d").search(l) != null, "%s %d: %s" % [sid, lv, l])
+	assert_ne(CarDevelopment.effect_lines("wind", 2), CarDevelopment.effect_lines("wind", 3), "subir de nível muda o efeito")
+	assert_true(CarDevelopment.effect_text("parts", 3).contains("[b]3[/b]"), "números em negrito no texto")
 
 
-func test_motor_so_para_quem_tem_motor_proprio() -> void:
-	assert_true(camp.has_own_engine())
-	assert_eq(camp.dev.node_state("cur", "engine.0.0", camp), "open")
-	var customer := Campaign.new_real("williams")
-	assert_false(customer.has_own_engine())
-	assert_eq(customer.dev.node_state("cur", "engine.0.0", customer), "lock")
-	assert_eq(customer.dev.project_info("cur", "engine.0.0", customer)["reason"], "engine")
+func test_tunel_de_vento_acelera_e_aperta_a_aero() -> void:
+	camp.dev.levels["wind"] = 1
+	var d1 := camp.dev.days_mult("aero")
+	var n1 := camp.dev.narrow("aero")
+	camp.dev.levels["wind"] = 4
+	assert_lt(camp.dev.days_mult("aero"), d1)
+	assert_gt(camp.dev.narrow("aero"), n1)
+	assert_eq(camp.dev.days_mult("chassis"), camp.dev.days_mult("chassis"), "não mexe nas peças mecânicas")
 
 
-func test_no_filho_so_abre_depois_do_pai() -> void:
-	assert_eq(camp.dev.node_state("cur", "aero.0.1", camp), "lock")
-	camp.dev.done["cur"]["aero.0.0"] = "full"
-	assert_eq(camp.dev.node_state("cur", "aero.0.1", camp), "open")
-
-
-func test_iniciar_projeto_paga_e_ocupa_vaga() -> void:
-	var before := camp.budget_musd
-	var cost: float = CarDevelopment.node_info("aero.0.0")["cost"]
-	assert_true(camp.dev.start_project(camp, "cur", "aero.0.0"))
-	assert_almost_eq(camp.budget_musd, before - cost, 0.001)
-	assert_eq(camp.dev.projects.size(), 1)
-	assert_eq(camp.dev.node_state("cur", "aero.0.0", camp), "now")
-	assert_false(camp.dev.start_project(camp, "cur", "aero.0.0"), "não repete o mesmo nó")
-
-
-func test_limite_de_projetos_pela_fabrica() -> void:
-	camp.dev.levels["parts"] = 1  # 2 vagas
+func test_fabrica_de_pecas_da_vagas_e_acelera_as_mecanicas() -> void:
+	camp.dev.levels["parts"] = 2
+	var d2 := camp.dev.days_mult("chassis")
 	assert_eq(camp.dev.slots(), 2)
-	assert_true(camp.dev.start_project(camp, "cur", "aero.0.0"))
-	assert_true(camp.dev.start_project(camp, "cur", "chassis.0.0"))
-	var pi := camp.dev.project_info("cur", "durability.0.0", camp)
-	assert_false(pi["ok"])
-	assert_eq(pi["reason"], "slots")
-	camp.dev.levels["parts"] = 4
-	assert_true(camp.dev.project_info("cur", "durability.0.0", camp)["ok"], "fábrica melhor = mais vagas")
-
-
-func test_sem_dinheiro_nao_inicia() -> void:
-	camp.budget_musd = 6.0
-	assert_eq(camp.dev.project_info("cur", "aero.0.0", camp)["reason"], "cash")
-	assert_false(camp.dev.start_project(camp, "cur", "aero.0.0"))
-
-
-## Desde o ciclo de peças (2026-11-04) o nó de desempenho não mexe na nota: vira conhecimento (peças novas maiores).
-func test_projeto_conclui_com_os_dias_e_aumenta_o_conhecimento() -> void:
-	var base := float(camp.team()["car_rating"])
-	camp.dev.levels["parts"] = 5  # 4% de defeito, mais acerto
-	assert_true(camp.dev.start_project(camp, "cur", "aero.0.0"))
-	var days: int = camp.dev.projects[0]["days_left"]
-	camp.dev.tick(camp, days - 1)
-	assert_eq(camp.dev.projects.size(), 1, "ainda em andamento")
-	camp.dev.tick(camp, 1)
-	assert_eq(camp.dev.projects.size(), 0)
-	camp.refresh_rating()
-	assert_almost_eq(float(camp.team()["car_rating"]), base, 0.0001, "a nota só muda com peça instalada")
-	if camp.dev.is_done("cur", "aero.0.0"):
-		assert_gt(camp.my_parts().gain(camp, "aero"), 1.0)
-	else:
-		assert_eq(camp.my_parts().gain(camp, "aero"), 1.0, "defeito de produção: nada muda")
-
-
-func test_resolucao_e_deterministica() -> void:
-	var a := Campaign.new_real("ferrari")
-	var b := Campaign.new_real("ferrari")
-	for c in [a, b]:
-		c.budget_musd = 140.0
-		c.dev.start_project(c, "cur", "aero.0.0")
-		c.dev.tick(c, 30)
-	assert_eq(a.dev.done["cur"], b.dev.done["cur"])
-
-
-func test_efeitos_dos_tipos_de_no() -> void:
-	camp.dev.done["cur"]["aero.0.0"] = "full"
-	camp.dev.done["cur"]["aero.0.3"] = "partial"  # importante, vale metade
-	var kinds: Dictionary = CarDevelopment.tree()["kinds"]
-	assert_almost_eq(camp.dev.effect_sum("cur", "perf"), float(kinds["m"]["perf"]) + float(kinds["i"]["perf"]) * 0.5, 0.0001)
-	camp.dev.done["cur"]["durability.0.0"] = "full"
-	assert_lt(camp.dev.failure_mult(), 1.0, "durabilidade reduz quebras")
-	camp.dev.done["cur"]["aero.2.0"] = "full"  # eficiência: menos dias
-	assert_lt(camp.dev.days_mult("aero"), 1.0)
-	var before := camp.dev.success_chance("aero")
-	camp.dev.done["cur"]["aero.3.0"] = "full"  # qualidade: mais acerto
-	assert_gt(camp.dev.success_chance("aero"), before)
-
-
-func test_carro_do_ano_seguinte_nao_muda_a_nota_atual() -> void:
-	camp.dev.done["next"]["aero.0.0"] = "full"
-	assert_eq(camp.dev.rating_bonus(), 0.0)
-	camp.dev.rollover()
-	assert_true(camp.dev.is_done("cur", "aero.0.0"), "carro novo vira o atual")
-	assert_gt(camp.dev.rating_bonus(), 0.0)
-
-
-func test_virada_herda_metade_do_bonus_antigo() -> void:
-	camp.dev.carry = 2.0
-	camp.dev.done["cur"]["aero.0.3"] = "full"  # conhecimento do carro velho não vira nota
-	camp.dev.rollover(1.0)  # peças do carro velho renderam +1
-	assert_almost_eq(camp.dev.rating_bonus(), 3.0 * CarDevelopment.CARRY_SHARE, 0.0001)
-	assert_true((camp.dev.done["cur"] as Dictionary).is_empty())
+	camp.dev.levels["parts"] = 3
+	assert_eq(camp.dev.slots(), 3)
+	assert_lt(camp.dev.days_mult("chassis"), d2)
 
 
 func test_obra_da_fabrica_paga_demora_e_sobe_o_nivel() -> void:
+	camp.dev.levels["wind"] = 3
 	var before := camp.budget_musd
 	var info := camp.dev.upgrade_info("wind", camp.budget_musd)
 	assert_true(info["ok"])
 	assert_true(camp.dev.start_upgrade(camp, "wind"))
 	assert_almost_eq(camp.budget_musd, before - float(info["cost"]), 0.001)
-	assert_false(camp.dev.upgrade_info("wind", camp.budget_musd)["ok"], "uma obra por vez")
-	assert_eq(camp.dev.upgrade_info("wind", camp.budget_musd)["reason"], "works")
+	assert_eq(camp.dev.upgrade_info("wind", camp.budget_musd)["reason"], "works", "uma obra por vez")
 	camp.dev.tick(camp, int(info["days"]) - 1)
 	assert_eq(camp.dev.level_of("wind"), 3)
 	camp.dev.tick(camp, 1)
@@ -142,17 +58,19 @@ func test_obra_da_fabrica_paga_demora_e_sobe_o_nivel() -> void:
 
 func test_nivel_maximo_e_falta_de_caixa() -> void:
 	camp.dev.levels["sim"] = 5
+	camp.dev.levels["wind"] = 2
 	assert_eq(camp.dev.upgrade_info("sim", 999.0)["reason"], "max")
 	assert_eq(camp.dev.upgrade_info("wind", 10.0)["reason"], "cash")
 
 
-func test_fabrica_afeta_ofertas_de_patrocinio_e_custo_por_corrida() -> void:
+func test_marketing_sobe_ofertas_metas_e_custo_por_corrida() -> void:
 	var cost := camp.cost_per_race()
 	var mult := camp.dev.sponsor_mult()
 	var infl := camp.dev.influence()
 	camp.dev.levels["media"] = camp.dev.level_of("media") + 1
 	assert_gt(camp.dev.sponsor_mult(), mult, "ofertas valem mais")
-	assert_gt(camp.dev.influence(), infl, "marcas de nível mais alto")
+	assert_gt(camp.dev.influence(), infl)
+	assert_gte(camp.dev.goals_per_offer(), CarDevelopment.goals_at(camp.dev.level_of("media") - 1))
 	assert_gt(camp.cost_per_race(), cost - 0.0001)
 
 
@@ -161,51 +79,41 @@ func test_simulador_aumenta_o_ganho_dos_treinos() -> void:
 	camp.dev.levels["sim"] = 5
 	assert_gt(camp.dev.practice_gain_mult(), base)
 	camp.refresh_rating()
-	# simulador nível 5 (+20%); o pessoal entra no sorteio do acerto (practice_skills)
-	assert_almost_eq(float(camp.team()["practice_gain_mult"]), 1.2, 0.0001)
+	assert_almost_eq(float(camp.team()["practice_gain_mult"]), 1.2, 0.0001, "simulador nível 5: +20%")
 
 
-func test_tempo_da_campanha_move_projetos() -> void:
-	camp.dev.start_project(camp, "cur", "aero.0.0")
-	var left: int = camp.dev.projects[0]["days_left"]
-	camp.advance_days(2)
-	assert_eq(camp.dev.projects[0]["days_left"], left - 2)
-
-
-func test_modo_essencial_o_diretor_escolhe_dentro_do_teto() -> void:
+func test_modo_essencial_o_diretor_comeca_projetos_dentro_do_teto() -> void:
 	camp.detail = "essential"
 	camp.dev.levels["parts"] = 3
+	var allowance := camp.dev.auto_allowance(camp)
 	camp.dev.tick(camp, 1)
-	assert_eq(camp.dev.busy(), camp.dev.slots(), "preenche as vagas (pesquisas de peças primeiro, depois a árvore)")
-	assert_gt(camp.my_parts().research.size(), 0, "o diretor pesquisa peças (o que melhora o carro)")
-	assert_lte(camp.dev.auto_spent, CarDevelopment.AUTO_CAP_MUSD + 0.001)
+	assert_gte(camp.dev.busy(), 2, "começa projetos de peça (médios; pequenos quando a verba do mês aperta)")
+	assert_lte(camp.dev.auto_spent, allowance + 0.001, "dentro da verba do mês (teto de gastos ÷ meses)")
 	camp.detail = "advanced"
-	var n := camp.dev.busy()
-	camp.dev.projects.clear()
+	camp.my_parts().research.clear()
+	camp.dev.parts_busy = 0
 	camp.dev.tick(camp, 1)
-	assert_eq(camp.dev.projects.size(), 0, "no avançado nada é automático")
-	assert_gt(n, 0)
+	assert_eq(camp.my_parts().research.size(), 0, "no avançado nada é automático")
 
 
-func test_recomendado_ordena_e_so_traz_nos_abertos() -> void:
-	var rec := camp.dev.recommended("cur", camp)
-	assert_gt(rec.size(), 0)
-	for id in rec:
-		assert_eq(camp.dev.node_state("cur", id, camp), "open")
-	camp.dev.focus = "aero"
-	assert_true(camp.dev.recommended("cur", camp)[0].begins_with("aero") or camp.dev.recommended("cur", camp)[0].begins_with("engine") or true)
-
-
-func test_salvar_e_carregar_mantem_p_d_e_fabrica() -> void:
-	camp.dev.start_project(camp, "cur", "aero.0.0")
+func test_salvar_e_carregar_mantem_a_fabrica() -> void:
 	camp.dev.start_upgrade(camp, "wind")
-	camp.dev.done["next"]["chassis.0.0"] = "full"
+	camp.dev.carry = 1.5
 	var copy := Campaign.from_dict(JSON.parse_string(JSON.stringify(camp.to_dict())))
-	assert_eq(copy.dev.projects.size(), 1)
 	assert_eq(copy.dev.works.size(), 1)
-	assert_true(copy.dev.is_done("next", "chassis.0.0"))
 	assert_eq(copy.dev.level_of("wind"), camp.dev.level_of("wind"))
+	assert_almost_eq(copy.dev.carry, 1.5, 0.001, "sem migrar de novo (save da v42)")
 	assert_almost_eq(copy.budget_musd, camp.budget_musd, 0.001)
+
+
+func test_save_antigo_da_arvore_vira_nota_do_carro() -> void:
+	var old := {"levels": {"wind": 2, "sim": 1, "parts": 2, "media": 1}, "carry": 0.4,
+		"done": {"cur": {"aero.0.0": "full", "aero.0.1": "partial"}, "next": {"chassis.0.0": "full"}}, "projects": [], "works": []}
+	var d := CarDevelopment.from_dict(old)
+	assert_gt(d.carry, 0.4, "os nós de desempenho prontos viraram nota")
+	assert_lt(d.carry, 2.0)
+	assert_eq(d.level_of("wind"), 2)
+	assert_almost_eq(CarDevelopment.from_dict({"carry": 0.4, "v": 42}).carry, 0.4, 0.0001)
 
 
 func test_equipe_criada_comeca_com_o_nivel_da_origem() -> void:
@@ -215,7 +123,7 @@ func test_equipe_criada_comeca_com_o_nivel_da_origem() -> void:
 	assert_false(c.has_own_engine())
 
 
-func test_confiabilidade_chega_ao_controle_de_corrida() -> void:
-	camp.dev.done["cur"]["durability.0.0"] = "full"
-	camp.refresh_rating()
-	assert_lt(float(camp.team()["failure_mult"]), 1.0)
+func test_virada_soma_heranca_e_o_que_foi_feito_para_o_carro_novo() -> void:
+	camp.dev.carry = 1.0
+	camp.dev.rollover(2.0, 0.7)
+	assert_almost_eq(camp.dev.carry, (1.0 + 2.0) * CarDevelopment.CARRY_SHARE + 0.7, 0.0001)

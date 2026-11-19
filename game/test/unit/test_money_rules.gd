@@ -13,8 +13,7 @@ func before_each() -> void:
 func test_teto_trava_projetos_e_pecas() -> void:
 	camp.record("rd", camp.cap_left_rd() - 1.0)  # o teto livre para P&D já desconta a operação e a manutenção do resto do ano
 	assert_almost_eq(camp.cap_left_rd(), 1.0, 0.001)
-	assert_eq(camp.dev.project_info("cur", "aero.0.0", camp)["reason"], "cap", "projeto bloqueado pelo teto")
-	assert_eq(camp.my_parts().research_info(camp, "fwing", "high")["reason"], "cap", "pesquisa de peça bloqueada")
+	assert_eq(camp.my_parts().project_info(camp, "fwing", "S")["reason"], "cap", "projeto de peça bloqueado pelo teto")
 	assert_false(camp.my_parts().order_units(camp, "fwing", 0, 3), "fabricação acima do que resta (3 × 0,35) bloqueada")
 	assert_true(camp.my_parts().order_units(camp, "fwing", 0, 2), "2 unidades (0,70) ainda cabem")
 
@@ -32,11 +31,11 @@ func test_tunel_pela_posicao_do_ano_anterior() -> void:
 	assert_almost_eq(camp.atr_mult("mclaren"), 1.15, 0.001, "último: 115%")
 	camp.refresh_rating()
 	var champ_days := camp.dev.days_mult("aero")
-	var champ_ok := camp.dev.success_chance("aero")
+	var champ_ok := camp.dev.narrow("aero")
 	camp.last_positions["williams"] = camp.teams().size()
 	camp.refresh_rating()
 	assert_lt(camp.dev.days_mult("aero"), champ_days, "mais tempo de túnel: menos dias")
-	assert_gt(camp.dev.success_chance("aero"), champ_ok)
+	assert_gt(camp.dev.narrow("aero"), champ_ok, "e faixa de ganho mais apertada")
 
 
 func test_virada_grava_as_posicoes() -> void:
@@ -113,8 +112,6 @@ func test_verba_do_diretor_se_espalha_pelo_ano() -> void:
 
 func test_modo_essencial_renova_patrocinios_na_virada() -> void:
 	camp.detail = "essential"
-	for z: String in camp.sponsors.contracts.keys():
-		camp.sponsors.contracts[z]["until"] = camp.season
-	camp.start_next_season()
+	camp.start_next_season()  # v42: todos os contratos terminam no fim do ano
 	assert_true(camp.sponsors.free_zones().is_empty(), "o diretor comercial fecha as zonas livres")
 	assert_gt(camp.sponsor_per_race(), 0.0)

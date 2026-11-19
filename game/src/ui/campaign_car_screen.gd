@@ -1,21 +1,16 @@
 extends Control
-## Carro — árvore de P&D da campanha (mockups v9-1 e v9-2, inspirada no F1 2017).
-## Esquerda: os 4 departamentos e a legenda. Centro: a árvore do departamento. Direita: categorias,
-## o nó escolhido (custo, prazo, chance de acerto) e os projetos em andamento. Abas "carro atual ×
-## carro do ano seguinte" (mesmo dinheiro e mesmos projetos) e modo Essencial × Avançado.
+## Carro (mockup v42-1, 2026-11-19): notas do carro por área com o melhor rival, projetos em andamento, divisão do
+## esforço entre o carro atual e o do ano seguinte, evolução na temporada (você × rivais) e as últimas entregas com o
+## ganho esperado × real. "+ NOVO PROJETO" abre a escolha de área e tamanho (campaign_project_screen).
+
+const AREA_ROWS := [["straight", "Reta"], ["slow", "Curvas lentas"], ["fast", "Curvas rápidas"], ["rel", "Confiabilidade"]]
 
 var campaign: Campaign
-var dev: CarDevelopment
-var _car := "cur"
-var _dept := "aero"
-var _selected := ""
 var _layer: Control
-var _tree: RdTreeView
-var _rail: VBoxContainer
-var _right: VBoxContainer
-var _cash: Label
-var _slots_chip: Label
-var _toasts: ToastFeed
+var _accent: Color
+var _effort_val: Label
+var _effort_next: Label
+var _effort_note: Label
 
 
 func _ready() -> void:
@@ -23,465 +18,280 @@ func _ready() -> void:
 	if campaign == null:
 		Session.open_campaign.call_deferred()
 		return
-	dev = campaign.dev
-	var team := campaign.team()
 	var page := ScreenKit.garage_page(self, campaign.player_team)
-	(page["backdrop"] as GarageBackdrop).set_glow(Color(team["color"]), 0.16)
 	_layer = page["layer"]
-
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", UiStyle.SP_L)
-	var back := ScreenKit.round_button("back", 52, "Voltar às peças")
-	back.pressed.connect(Session.open_campaign_car)
-	head.add_child(back)
-	head.add_child(TeamEmblems.make_rect(campaign.player_team, 46))
-	var titles := VBoxContainer.new()
-	titles.add_theme_constant_override("separation", -2)
-	titles.add_child(UiStyle.g_caption("%s · %s" % [team["name"], campaign.date_text()]))
-	titles.add_child(UiStyle.g_label("CARRO · DESENVOLVIMENTO", 26, UiStyle.G_TEXT, "black"))
-	head.add_child(titles)
-	var tabs := ScreenKit.segmented([["cur", "Carro %d" % campaign.season], ["next", "Carro %d" % (campaign.season + 1)]], _car, _on_car_tab)
-	tabs.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	head.add_child(tabs)
-	ScreenKit.place(head, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 20))
-
-	var chips := HBoxContainer.new()
-	chips.add_theme_constant_override("separation", UiStyle.SP_M)
-	var c1 := _chip("Caixa")
-	_cash = c1.get_meta("value")
-	chips.add_child(c1)
-	var c2 := _chip("Projetos")
-	_slots_chip = c2.get_meta("value")
-	chips.add_child(c2)
-	ScreenKit.place(chips, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 26))
-
-	ScreenKit.campaign_nav(_layer, "car")
-	var mode := ScreenKit.segmented([["essential", "Essencial"], ["advanced", "Avançado"]], campaign.detail, _on_mode)
-	ScreenKit.place(mode, _layer, Control.PRESET_TOP_RIGHT, Vector2(-44, 88))
-
-	_rail = VBoxContainer.new()
-	_rail.add_theme_constant_override("separation", 8)
-	ScreenKit.place(_rail, _layer, Control.PRESET_TOP_LEFT, Vector2(44, 150), Vector2(196, 0))
-	_legend()
-
-	_tree = RdTreeView.new()
-	_tree.dev = dev
-	_tree.camp = campaign
-	_tree.custom_minimum_size = Vector2(600, 560)
-	ScreenKit.place(_tree, _layer, Control.PRESET_TOP_LEFT, Vector2(250, 140), Vector2(600, 560))
-	_tree.node_pressed.connect(_on_node)
-
-	_right = VBoxContainer.new()
-	_right.add_theme_constant_override("separation", 6)
-	ScreenKit.scroll_column(_right, _layer, Vector2(1280 - 44 - 384, 146), Vector2(384, 720 - 146 - 8))
-
-	_toasts = ToastFeed.new()
-	_toasts.custom_minimum_size = Vector2(380, 0)
-	ScreenKit.place(_toasts, _layer, Control.PRESET_TOP_LEFT, Vector2(262, 146), Vector2(380, 0))
-	_refresh()
+	_accent = UiStyle.team_accent(campaign.team())
+	var R := CampaignFrame.CONTENT
+	var top_h := 300.0
+	var gap := 16.0
+	var w1 := 380.0
+	var w2 := 420.0
+	var w3 := R.size.x - w1 - w2 - gap * 2
+	_panel(Rect2(R.position, Vector2(w1, top_h)), _ratings())
+	_panel(Rect2(R.position + Vector2(w1 + gap, 0), Vector2(w2, top_h)), _projects())
+	_panel(Rect2(R.position + Vector2(w1 + w2 + gap * 2, 0), Vector2(w3, top_h)), _effort())
+	var y2 := R.position.y + top_h + gap
+	var h2 := R.size.y - top_h - gap
+	_panel(Rect2(Vector2(R.position.x, y2), Vector2(600, h2)), _graph())
+	_panel(Rect2(Vector2(R.position.x + 600 + gap, y2), Vector2(R.size.x - 600 - gap, h2)), _deliveries(R.size.x - 600 - gap - 32))
+	CampaignFrame.apply(_layer, "car", true)
+	ProjectNotes.show_pending.call_deferred(self, campaign, func() -> void: Session.open_campaign_car.call_deferred())
 
 
-func _chip(caption: String) -> PanelContainer:
+func _panel(r: Rect2, content: Control) -> void:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 26, 18, 7))
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 8)
-	var cap := UiStyle.g_caption(caption)
-	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	h.add_child(cap)
-	var v := UiStyle.g_label("", 17, UiStyle.G_TEXT, "black")
-	h.add_child(v)
-	p.add_child(h)
-	p.set_meta("value", v)
-	return p
+	p.add_theme_stylebox_override("panel", ScreenKit.glass_box(18, 16, 14))
+	p.position = r.position
+	p.size = r.size
+	p.custom_minimum_size = r.size
+	p.clip_contents = true
+	p.add_child(content)
+	_layer.add_child(p)
 
 
-func _legend() -> Control:
-	var card := ScreenKit.g_card(Color(1, 1, 1, 0.05), 18, 14, 10)
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 2)
-	card.add_child(v)
-	v.add_child(UiStyle.g_caption("Legenda"))
-	for row: Array in [["Menor", "m"], ["Importante", "i"], ["Definitiva", "d"]]:
-		var h := HBoxContainer.new()
-		h.add_theme_constant_override("separation", 10)
-		var icon := LegendIcon.new()
-		icon.kind = row[1]
-		h.add_child(icon)
-		h.add_child(UiStyle.g_label(row[0], 14, Color("#c3c9d3")))
-		v.add_child(h)
-	ScreenKit.place(card, _layer, Control.PRESET_BOTTOM_LEFT, Vector2(44, -26), Vector2(196, 0))
-	return card
+func _caption(text: String) -> Label:
+	return UiStyle.g_caption(text)
 
 
-# --- atualização ----------------------------------------------------------------------------
+# --- notas por área ------------------------------------------------------------------------------
 
-func _refresh() -> void:
-	_cash.text = "US$ %d mi" % int(campaign.budget_musd)
-	_slots_chip.text = "%d / %d" % [dev.projects.size(), dev.slots()]
-	_build_rail()
-	_tree.dev = dev
-	_tree.show_department(_car, _dept)
-	_tree.select(_selected)
-	_build_right()
-
-
-func _build_rail() -> void:
-	for c in _rail.get_children():
-		_rail.remove_child(c)
-		c.queue_free()
-	for id: String in CarDevelopment.DEPT_ORDER:
-		var dep := CarDevelopment.department(id)
-		var on := id == _dept
-		var locked := not dev.dept_available(id, campaign)
-		var b := Button.new()
-		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(0, 84)
-		for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
-			b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_LIGHT if on else UiStyle.G_SURFACE_HOVER, 18, 14, 0))
-		ScreenKit.press_feedback(b)
-		var h := HBoxContainer.new()
-		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		h.add_theme_constant_override("separation", 12)
-		b.add_child(h)
-		h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		h.offset_left = 14
-		var total := 0
-		var count := 0
-		for nid: String in CarDevelopment.all_node_ids(id):
-			total += 1
-			if dev.is_done(_car, nid):
-				count += 1
-		var ring := Donut.new()
-		ring.custom_minimum_size = Vector2(44, 44)
-		ring.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		ring.frac = float(count) / maxf(total, 1)
-		ring.color = Color(dep["color"])
-		ring.track = Color(0.47, 0.5, 0.58, 0.35)
-		ring.text = "" if locked else str(roundi(100.0 * ring.frac))
-		ring.text_color = UiStyle.G_INK if on else UiStyle.G_TEXT
-		ring.locked = locked
-		h.add_child(ring)
-		var names := VBoxContainer.new()
-		names.alignment = BoxContainer.ALIGNMENT_CENTER
-		names.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		names.add_theme_constant_override("separation", -2)
-		var n := UiStyle.g_label(String(dep["name"]), 17, UiStyle.G_INK if on else (UiStyle.G_TEXT_OFF if locked else UiStyle.G_TEXT), "black")
-		n.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var sub := UiStyle.g_label("Motor do fornecedor" if locked else "%d / %d nós" % [count, total], 12, UiStyle.G_INK_2 if on else UiStyle.G_TEXT_2)
-		sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		names.add_child(n)
-		names.add_child(sub)
-		h.add_child(names)
-		b.pressed.connect(_on_dept.bind(id))
-		_rail.add_child(b)
-
-
-func _build_right() -> void:
-	for c in _right.get_children():
-		_right.remove_child(c)
-		c.queue_free()
-	var dep := CarDevelopment.department(_dept)
-	var title := String(dep["name"]).to_upper() + (" · %d" % (campaign.season + 1) if _car == "next" else "")
-	_right.add_child(UiStyle.g_label(title, 30, UiStyle.G_TEXT, "black"))
-	var desc := UiStyle.g_label(String(dep["desc"]), 13, UiStyle.G_TEXT_2)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_right.add_child(desc)
-	for a in dep["arms"].size():
-		var arm: Dictionary = dep["arms"][a]
-		var total: int = arm["nodes"].size()
-		var count := 0
-		for i in total:
-			if dev.is_done(_car, CarDevelopment.node_id(_dept, a, i)):
-				count += 1
-		var row := HBoxContainer.new()
-		row.custom_minimum_size = Vector2(0, 32)
-		row.add_theme_constant_override("separation", 10)
-		var ring := Donut.new()
-		ring.custom_minimum_size = Vector2(26, 26)
-		ring.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		ring.frac = float(count) / maxf(total, 1)
-		ring.color = RdTreeView.ARM_COLORS[a]
-		ring.track = Color(0.47, 0.5, 0.58, 0.35)
-		row.add_child(ring)
-		var nm := UiStyle.g_label(String(arm["name"]), 15, UiStyle.G_TEXT, "bold")
-		nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		nm.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(nm)
-		row.add_child(UiStyle.g_label("%d/%d" % [count, total], 13, UiStyle.G_TEXT_2))
-		_right.add_child(row)
-	if _selected != "":
-		_right.add_child(_node_card())
-	elif campaign.detail == "essential":
-		_right.add_child(_director_card())
-	else:
-		_right.add_child(_hint_card())
-	_right.add_child(UiStyle.g_caption("Projetos em andamento · %d de %d" % [dev.projects.size(), dev.slots()]))
-	_right.add_child(_slots_row())
-
-
-func _light_card() -> PanelContainer:
-	var card := PanelContainer.new()
-	var st := UiStyle.g_box(UiStyle.G_LIGHT, 20, 16, 12)
-	st.content_margin_left = 22
-	st.border_width_left = 7
-	st.border_color = UiStyle.RED
-	card.add_theme_stylebox_override("panel", st)
-	return card
-
-
-func _fact(value: String, caption: String) -> PanelContainer:
-	var p := PanelContainer.new()
-	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	p.add_theme_stylebox_override("panel", UiStyle.g_box(Color("#e3e6eb"), 12, 10, 6))
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", -2)
-	v.add_child(UiStyle.g_label(value, 17, UiStyle.G_INK, "black"))
-	v.add_child(UiStyle.g_label(caption, 12, UiStyle.G_INK_2))
-	p.add_child(v)
-	return p
-
-
-func _node_card() -> Control:
-	var info := CarDevelopment.node_info(_selected)
-	var pi := dev.project_info(_car, _selected, campaign)
-	var card := _light_card()
+func _ratings() -> Control:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
-	card.add_child(v)
-	var kind_name: String = info["kind"]["name"]
-	v.add_child(UiStyle.g_caption("Nó %s · %s" % [kind_name.to_lower(), info["arm_name"]], UiStyle.G_INK_2))
-	v.add_child(UiStyle.g_label(String(info["node"]["n"]), 21, UiStyle.G_INK, "black"))
-	var fx := UiStyle.g_label(CarDevelopment.node_effect_text(info), 14, UiStyle.G_INK_2)
-	fx.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	v.add_child(fx)
-	var state := dev.node_state(_car, _selected, campaign)
-	if state == "done":
-		var res: String = (dev.done[_car] as Dictionary).get(_selected, "full")
-		v.add_child(UiStyle.g_label("Concluído" + (" · resultado parcial (metade do efeito)" if res == "partial" else " · resultado total"), 15, Color("#2a6b3f"), "black"))
-		return card
-	var facts := HBoxContainer.new()
-	facts.add_theme_constant_override("separation", 8)
-	if state == "now":
-		var pr := dev.project_of(_car, _selected)
-		facts.add_child(_fact("%d dias" % int(pr["days_left"]), "faltam"))
-		facts.add_child(_fact("US$ %.1f mi" % float(pr["cost"]), "já pago"))
-	else:
-		facts.add_child(_fact("US$ %.1f mi" % float(pi["cost"]), "custo"))
-		facts.add_child(_fact("%d dias" % int(pi["days"]), "prazo"))
-		facts.add_child(_fact("%d%%" % roundi(float(pi["success"]) * 100.0), "chance de acerto"))
-	v.add_child(facts)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	var go := CutButton.new()
-	go.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	go.custom_minimum_size = Vector2(0, 48)
-	go.add_theme_font_size_override("font_size", UiStyle.fs(15))
-	if state == "now":
-		go.text = "CANCELAR PROJETO"
-		go.pressed.connect(_on_cancel.bind(_selected))
-	else:
-		go.text = "INICIAR PROJETO"
-		go.disabled = not pi["ok"]
-		if not pi["ok"]:
-			go.text = {"cash": "SEM CAIXA", "slots": "SEM VAGA DE PROJETO", "locked": "BLOQUEADO", "engine": "MOTOR DO FORNECEDOR"}.get(pi["reason"], "INDISPONÍVEL")
-		go.pressed.connect(_on_start.bind(_selected))
-	row.add_child(go)
-	var sug := Button.new()
-	sug.text = "Sugerir"
-	sug.focus_mode = Control.FOCUS_NONE
-	sug.custom_minimum_size = Vector2(96, 48)
-	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
-		sug.add_theme_stylebox_override(s, UiStyle.g_box(Color("#e3e6eb"), 14, 10, 0))
-	for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
-		sug.add_theme_color_override(k, UiStyle.G_INK)
-	sug.add_theme_font_size_override("font_size", UiStyle.fs(15))
-	sug.pressed.connect(_on_suggest)
-	ScreenKit.press_feedback(sug)
-	row.add_child(sug)
-	v.add_child(row)
-	return card
+	var head := HBoxContainer.new()
+	head.add_child(_caption("Notas do carro"))
+	var fill := Control.new()
+	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(fill)
+	var tick := ColorRect.new()
+	tick.color = Color.WHITE
+	tick.custom_minimum_size = Vector2(3, 14)
+	tick.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(tick)
+	head.add_child(UiStyle.g_label("  melhor rival", 12, UiStyle.G_TEXT_3, "bold"))
+	v.add_child(head)
+	var mine := campaign.area_ratings(campaign.player_team)
+	var best := campaign.best_rival_areas()
+	for row: Array in AREA_ROWS:
+		var k: String = row[0]
+		var val := float(mine.get(k, 0.0))
+		var h := HBoxContainer.new()
+		var name := UiStyle.g_label(String(row[1]), 15, UiStyle.G_TEXT, "black")
+		name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(name)
+		var up := val - float(campaign.area_last.get(k, val))
+		if absf(up) >= 0.25:  # desgaste de uma corrida (~0,1) não conta como mudança
+			h.add_child(UiStyle.g_label(("+" if up > 0 else "−") + ProjectNotes.num(absf(up), 1) + "  ", 13, UiStyle.G_UP if up > 0 else UiStyle.G_DOWN, "black"))
+		h.add_child(UiStyle.g_label(str(roundi(val)), 17, UiStyle.G_TEXT, "black"))
+		v.add_child(h)
+		var bar := _RatingBar.new()
+		bar.value = val
+		bar.best = float(best.get(k, 0.0))
+		bar.color = _accent
+		v.add_child(bar)
+	return v
 
 
-func _hint_card() -> Control:
-	var card := _light_card()
+# --- projetos ----------------------------------------------------------------------------------------
+
+func _projects() -> Control:
+	var cp := campaign.my_parts()
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 6)
-	card.add_child(v)
-	v.add_child(UiStyle.g_label("Escolha um nó", 21, UiStyle.G_INK, "black"))
-	var sug := ScreenKit.light_button("SUGERIR UM NÓ")
-	sug.custom_minimum_size = Vector2(0, 48)
-	sug.add_theme_font_size_override("font_size", UiStyle.fs(15))
-	sug.pressed.connect(_on_suggest)
-	v.add_child(sug)
-	return card
+	v.add_theme_constant_override("separation", 8)
+	v.add_child(_caption("Projetos em andamento · %d de %d vagas" % [campaign.dev.busy(), campaign.dev.slots()]))
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 8)
+	for r: Dictionary in cp.research:
+		list.add_child(_project_row(r))
+	if cp.research.is_empty():
+		var none := UiStyle.g_label("Nenhum projeto. Escolha uma área e um tamanho: a peça nova entra nos dois carros quando ficar pronta.", 13, UiStyle.G_TEXT_2)
+		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		list.add_child(none)
+	var scroll := DragScroll.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	v.add_child(scroll)
+	var go := ScreenKit.glass_pill_button("+ Novo projeto")
+	go.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
+	go.disabled = campaign.dev.busy() >= campaign.dev.slots()
+	if go.disabled:
+		go.text = "Todas as vagas ocupadas"
+	go.pressed.connect(Session.open_campaign_project)
+	v.add_child(go)
+	return v
 
 
-func _director_card() -> Control:
-	var card := _light_card()
+func _project_row(r: Dictionary) -> Control:
+	var area_id := String(r.get("area", CarParts.area_of_part(String(r["part"]))))
+	var cp := campaign.my_parts()
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS_TILE, 14, 12, 8))
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 6)
-	card.add_child(v)
-	v.add_child(UiStyle.g_caption("Diretor técnico decide", UiStyle.G_INK_2))
-	v.add_child(UiStyle.g_label("Foco do desenvolvimento", 21, UiStyle.G_INK, "black"))
-	var focus := HBoxContainer.new()
-	focus.add_theme_constant_override("separation", 6)
-	for o: Array in [["balanced", "Equilibrado"], ["aero", "Aero"], ["chassis", "Chassi"], ["durability", "Durab."]]:
-		var b := Button.new()
-		b.text = o[1]
-		b.focus_mode = Control.FOCUS_NONE
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
-		var on: bool = dev.focus == o[0]
-		for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
-			b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_INK if on else Color("#e3e6eb"), 12, 6, 0))
-		for k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
-			b.add_theme_color_override(k, Color.WHITE if on else UiStyle.G_INK)
-		b.add_theme_font_size_override("font_size", UiStyle.fs(13))
-		b.pressed.connect(_on_focus.bind(o[0]))
-		ScreenKit.press_feedback(b)
-		focus.add_child(b)
-	v.add_child(focus)
-	var facts := HBoxContainer.new()
-	facts.add_theme_constant_override("separation", 8)
-	facts.add_child(_fact("US$ %d mi" % int(CarDevelopment.AUTO_CAP_MUSD), "teto por mês"))
-	facts.add_child(_fact("%d%%" % roundi(CarDevelopment.AUTO_NEXT_SHARE * 100.0), "para o carro %d" % (campaign.season + 1)))
-	facts.add_child(_fact("Auto", "fila de projetos"))
-	v.add_child(facts)
-	return card
-
-
-func _slots_row() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	var shown := 0
-	for p: Dictionary in dev.projects:
-		row.add_child(_slot_button(p))
-		shown += 1
-	while shown < mini(dev.slots(), 3):
-		var free := PanelContainer.new()
-		free.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		free.custom_minimum_size = Vector2(0, 62)
-		var st := UiStyle.g_box(Color(0, 0, 0, 0), 14, 8, 6)
-		st.set_border_width_all(2)
-		st.border_color = Color(1, 1, 1, 0.18)
-		free.add_theme_stylebox_override("panel", st)
-		var l := UiStyle.g_label("+ Livre", 13, UiStyle.G_TEXT_3, "bold")
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		free.add_child(l)
-		row.add_child(free)
-		shown += 1
-	if dev.slots() > 3:
-		row.add_child(UiStyle.g_label("+%d" % (dev.slots() - 3), 14, UiStyle.G_TEXT_2, "black"))
-	return row
-
-
-func _slot_button(p: Dictionary) -> Button:
-	var info := CarDevelopment.node_info(p["id"])
-	var b := Button.new()
-	b.focus_mode = Control.FOCUS_NONE
-	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.custom_minimum_size = Vector2(0, 62)
-	for s: String in ["normal", "hover", "pressed", "hover_pressed"]:
-		b.add_theme_stylebox_override(s, UiStyle.g_box(UiStyle.G_SURFACE_HOVER, 14, 8, 6))
-	ScreenKit.press_feedback(b)
-	var v := VBoxContainer.new()
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_theme_constant_override("separation", -1)
-	b.add_child(v)
-	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	v.offset_left = 8
-	v.offset_right = -8
-	v.offset_top = 5
-	var tag := "'%s " % str(campaign.season + 1).right(2) if p["car"] == "next" else ""
-	var n := UiStyle.g_label(tag + String(info["node"]["n"]), 12, UiStyle.G_TEXT, "black")
-	n.clip_text = true
-	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(n)
-	var sub := UiStyle.g_label("%s · %d dias" % [CarDevelopment.department(info["dept"])["name"], int(p["days_left"])], 11, UiStyle.G_TEXT_2)
-	sub.clip_text = true
-	sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(sub)
-	var bar := ProgressBar.new()
-	bar.show_percentage = false
-	bar.value = 100.0 * (1.0 - float(p["days_left"]) / maxf(float(p["days_total"]), 1.0))
-	bar.custom_minimum_size = Vector2(0, 6)
-	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar.add_theme_stylebox_override("background", UiStyle.g_box(Color(1, 1, 1, 0.12), 3, 0, 0))
-	bar.add_theme_stylebox_override("fill", UiStyle.g_box(RdTreeView.ARM_COLORS[int(info["arm"])], 3, 0, 0))
+	v.add_theme_constant_override("separation", 4)
+	box.add_child(v)
+	var h := HBoxContainer.new()
+	var t := UiStyle.g_label(ProjectNotes.project_name(r), 14, UiStyle.G_TEXT, "black")
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(t)
+	h.add_child(UiStyle.g_label("%d dia%s" % [int(r["days_left"]), "" if int(r["days_left"]) == 1 else "s"], 13, UiStyle.G_TEXT_2, "black"))
+	v.add_child(h)
+	var bar := _Bar.new()
+	bar.value = 1.0 - float(r["days_left"]) / maxf(float(r["days_total"]), 1.0)
+	bar.color = UiStyle.G_UP
 	v.add_child(bar)
-	b.pressed.connect(_on_slot.bind(p))
-	return b
+	var b := cp.band(campaign, area_id)
+	var fx: Dictionary = r.get("fx", cp.project_fx(campaign, area_id, String(r.get("size", "M"))))
+	var keep := 1.0 - cp.share_for(area_id)
+	var d := UiStyle.g_label("Ganho esperado: %s · %s" % [ProjectNotes.band_text(area_id, fx, float(b[0]), float(b[1]), keep), String(CarParts.area(area_id).get("helps", ""))], 12, UiStyle.G_TEXT_3, "bold")
+	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(d)
+	return box
 
 
-# --- ações ----------------------------------------------------------------------------------
+# --- esforço: carro atual × ano seguinte -----------------------------------------------------------------
 
-func _on_car_tab(value: String) -> void:
-	_car = value
-	_selected = ""
-	_refresh()
+func _effort() -> Control:
+	var cp := campaign.my_parts()
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	v.add_child(_caption("Esforço da equipe"))
+	var h := HBoxContainer.new()
+	var a := UiStyle.g_label("Carro %d" % campaign.season, 15, UiStyle.G_TEXT, "black")
+	a.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(a)
+	h.add_child(UiStyle.g_label("Carro %d" % (campaign.season + 1), 15, UiStyle.G_TEXT, "black"))
+	v.add_child(h)
+	var slider := HSlider.new()
+	slider.min_value = 0
+	slider.max_value = 100
+	slider.step = 10
+	slider.value = roundf(cp.next_share * 100.0)
+	slider.custom_minimum_size = Vector2(0, UiStyle.TOUCH_MIN)
+	slider.tooltip_text = "Arraste (ou use as setas) para dividir o esforço"
+	var grab := UiStyle.g_box(Color.WHITE, 14, 0, 0)
+	grab.content_margin_left = 14
+	grab.content_margin_right = 14
+	slider.add_theme_stylebox_override("slider", UiStyle.g_box(Color(1, 1, 1, 0.12), 8, 0, 8))
+	slider.add_theme_stylebox_override("grabber_area", UiStyle.g_box(_accent, 8, 0, 8))
+	slider.add_theme_stylebox_override("grabber_area_highlight", UiStyle.g_box(_accent, 8, 0, 8))
+	slider.value_changed.connect(_on_effort)
+	v.add_child(slider)
+	var h2 := HBoxContainer.new()
+	_effort_val = UiStyle.g_label("", 15, UiStyle.G_TEXT, "black")
+	_effort_val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h2.add_child(_effort_val)
+	_effort_next = UiStyle.g_label("", 15, UiStyle.G_TEXT_2, "black")
+	h2.add_child(_effort_next)
+	v.add_child(h2)
+	_effort_note = UiStyle.g_label("", 12, UiStyle.G_TEXT_2, "bold")
+	_effort_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(_effort_note)
+	_refresh_effort()
+	return v
 
 
-func _on_dept(id: String) -> void:
-	_dept = id
-	_selected = ""
-	_refresh()
-
-
-func _on_node(id: String) -> void:
-	_selected = id
-	_build_right()
-
-
-func _on_slot(p: Dictionary) -> void:
-	_car = p["car"]
-	_dept = String(p["id"]).get_slice(".", 0)
-	_selected = p["id"]
-	_refresh()
-
-
-func _on_mode(value: String) -> void:
-	campaign.detail = value
-	if value == "essential":
-		dev.tick(campaign, 0)  # o diretor já preenche as vagas livres
+func _on_effort(value: float) -> void:
+	campaign.my_parts().next_share = clampf(value / 100.0, 0.0, 1.0)
+	_refresh_effort()
 	campaign.save()
-	_selected = ""
-	_refresh()
 
 
-func _on_focus(value: String) -> void:
-	dev.focus = value
-	campaign.save()
-	_build_right()
+func _refresh_effort() -> void:
+	var cp := campaign.my_parts()
+	var share := roundi(cp.next_share * 100.0)
+	_effort_val.text = "%d%%" % (100 - share)
+	_effort_next.text = "%d%%" % share
+	_effort_note.text = "%d%% do ganho das entregas vai para o carro %d e rende ×%s na virada. Hoje ele já tem %s na nota inicial." % [share, campaign.season + 1,
+		ProjectNotes.num(float(CarParts.projects_cfg()["next_k"]), 1), ("+" if campaign.next_car_estimate() >= 0.0 else "−") + ProjectNotes.num(absf(campaign.next_car_estimate()), 1)]
 
 
-func _on_start(id: String) -> void:
-	if dev.start_project(campaign, _car, id):
-		campaign.save()
-		_toasts.push("Projeto iniciado: %s" % CarDevelopment.node_info(id)["node"]["n"], "hot")
-	_refresh()
+# --- evolução na temporada -----------------------------------------------------------------------------
+
+func _graph() -> Control:
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 6)
+	v.add_child(_caption("Evolução na temporada · você × rivais"))
+	var g := _Graph.new()
+	g.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var lines: Array = []
+	var mine: Array = campaign.rating_log.get(campaign.player_team, [])
+	# rivais: os 3 de nota mais próxima acima de você (ou os melhores, se você é o mais rápido)
+	var others: Array = campaign.teams().filter(func(t: Dictionary) -> bool: return t["id"] != campaign.player_team)
+	others.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["car_rating"]) > float(b["car_rating"]))
+	var my_r := float(campaign.team()["car_rating"])
+	var above := others.filter(func(t: Dictionary) -> bool: return float(t["car_rating"]) >= my_r)
+	var pick: Array = above.slice(maxi(0, above.size() - 3)) if above.size() >= 3 else others.slice(0, 3)
+	var legend := HBoxContainer.new()
+	legend.add_theme_constant_override("separation", 14)
+	for t: Dictionary in pick:
+		var col := UiStyle.team_accent(t)
+		lines.append({"pts": campaign.rating_log.get(t["id"], []), "color": col, "w": 2.5})
+		legend.add_child(_legend_item(String(t.get("short", t["name"])), col))
+	lines.append({"pts": mine, "color": _accent, "w": 5.0})
+	legend.add_child(_legend_item("Você", _accent))
+	g.lines = lines
+	g.rounds = Campaign.calendar().size()
+	v.add_child(g)
+	v.add_child(legend)
+	if mine.size() < 2:
+		var hint := UiStyle.g_label("O gráfico começa depois da primeira corrida.", 12, UiStyle.G_TEXT_3, "bold")
+		v.add_child(hint)
+	return v
 
 
-func _on_cancel(id: String) -> void:
-	if dev.cancel_project(campaign, _car, id):
-		campaign.save()
-		_toasts.push("Projeto cancelado (metade do dinheiro devolvida).")
-	_refresh()
+func _legend_item(text: String, col: Color) -> Control:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	var dot := ColorRect.new()
+	dot.color = col
+	dot.custom_minimum_size = Vector2(14, 4)
+	dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(dot)
+	h.add_child(UiStyle.g_label(text, 12, UiStyle.G_TEXT_2, "bold"))
+	return h
 
 
-func _on_suggest() -> void:
-	var rec := dev.recommended(_car, campaign, _dept)
-	if rec.is_empty():
-		rec = dev.recommended(_car, campaign)
-	if rec.is_empty():
-		_toasts.push("Nada novo para sugerir agora.")
-		return
-	_selected = rec[0]
-	_dept = String(rec[0]).get_slice(".", 0)
-	_toasts.push("Sugestão do diretor técnico.")
-	_refresh()
+# --- últimas entregas -------------------------------------------------------------------------------------
+
+func _deliveries(width: float) -> Control:
+	var cp := campaign.my_parts()
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	v.add_child(_caption("Últimas entregas"))
+	var list := VBoxContainer.new()
+	list.add_theme_constant_override("separation", 8)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for e: Dictionary in cp.deliveries.slice(0, 8):
+		var box := PanelContainer.new()
+		box.add_theme_stylebox_override("panel", UiStyle.g_box(UiStyle.G_GLASS_TILE, 14, 12, 8))
+		var bv := VBoxContainer.new()
+		bv.add_theme_constant_override("separation", 2)
+		box.add_child(bv)
+		var lines := ProjectNotes.delivery_lines(e)
+		var h := HBoxContainer.new()
+		h.add_theme_constant_override("separation", 6)
+		h.add_child(ScreenKit.icon("check", 16, UiStyle.G_UP))
+		h.add_child(UiStyle.g_label(lines[0], 14, UiStyle.G_TEXT, "black"))
+		bv.add_child(h)
+		var d := UiStyle.g_label(lines[1], 12, UiStyle.G_UP if float(e.get("ratio", 1.0)) >= 1.0 else UiStyle.G_DOWN, "bold")
+		d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		d.custom_minimum_size = Vector2(width - 28, 0)
+		bv.add_child(d)
+		list.add_child(box)
+	if cp.deliveries.is_empty():
+		var none := UiStyle.g_label("Nada entregue ainda. O ganho real aparece aqui: sempre positivo, entre 60% e 120% do esperado.", 13, UiStyle.G_TEXT_2)
+		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		list.add_child(none)
+	var scroll := DragScroll.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	v.add_child(scroll)
+	return v
 
 
 func _notification(what: int) -> void:
@@ -489,58 +299,88 @@ func _notification(what: int) -> void:
 		Session.open_campaign_hub()
 
 
-# --- peças gráficas -----------------------------------------------------------------------------
-
-## Anel de progresso (0..1) com texto opcional ou cadeado.
-class Donut:
+## Barra da nota (escala 50..100) com o risco branco do melhor rival.
+class _RatingBar:
 	extends Control
-
-	var frac := 0.0
+	var value := 70.0
+	var best := 0.0
 	var color := Color.WHITE
-	var track := Color(1, 1, 1, 0.2)
-	var text := ""
-	var text_color := Color.WHITE
-	var locked := false
-
-	func _draw() -> void:
-		var c := size / 2.0
-		var r := minf(size.x, size.y) / 2.0 - 3.0
-		draw_arc(c, r, 0.0, TAU, 40, track, 4.0, true)
-		if frac > 0.0 and not locked:
-			draw_arc(c, r, -PI / 2.0, -PI / 2.0 + TAU * clampf(frac, 0.0, 1.0), 40, color, 4.0, true)
-		if locked:
-			draw_rect(Rect2(c + Vector2(-6, -2), Vector2(12, 9)), UiStyle.G_TEXT_2)
-			draw_arc(c + Vector2(0, -2), 4.0, PI, TAU, 10, UiStyle.G_TEXT_2, 2.0, true)
-		elif text != "":
-			draw_string(UiStyle.G_BLACK, Vector2(0, c.y + 4.0), text, HORIZONTAL_ALIGNMENT_CENTER, size.x, UiStyle.fs(11), text_color)
-
-
-## Ícones da legenda (hexágono, quadrado, quadrado grande).
-class LegendIcon:
-	extends Control
-
-	var kind := "m"
+	const LO := 50.0
+	const HI := 100.0
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(24, 24)
-		size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		custom_minimum_size = Vector2(0, 22)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _x(v: float) -> float:
+		return size.x * clampf((v - LO) / (HI - LO), 0.0, 1.0)
 
 	func _draw() -> void:
-		var c := size / 2.0
-		var col := Color("#eef0f3")
-		if kind == "m":
-			var pts := PackedVector2Array()
-			for k in 7:
-				pts.append(c + Vector2(10.0, 0.0).rotated(deg_to_rad(60.0 * k + 30.0)))
-			draw_polyline(pts, col, 2.0, true)
-		else:
-			var half := 8.0 if kind == "i" else 10.0
-			var st := StyleBoxFlat.new()
-			st.bg_color = Color(0, 0, 0, 0)
-			st.set_corner_radius_all(3)
-			st.border_color = col
-			st.set_border_width_all(2)
-			draw_style_box(st, Rect2(c - Vector2(half, half), Vector2(half, half) * 2.0))
-			if kind == "d":
-				st.set_border_width_all(1)
-				draw_style_box(st, Rect2(c - Vector2(5, 5), Vector2(10, 10)))
+		var r := Rect2(0, 4, size.x, 12)
+		draw_style_box(UiStyle.g_box(Color(1, 1, 1, 0.1), 6, 0, 0), r)
+		draw_style_box(UiStyle.g_box(color, 6, 0, 0), Rect2(0, 4, maxf(_x(value), 12.0), 12))
+		if best > 0.0:
+			draw_rect(Rect2(_x(best) - 1.5, 0, 3, 20), Color.WHITE)
+
+
+## Barra simples (0..1).
+class _Bar:
+	extends Control
+	var value := 0.5
+	var color := Color.WHITE
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(0, 10)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		draw_style_box(UiStyle.g_box(Color(1, 1, 1, 0.1), 5, 0, 0), Rect2(Vector2.ZERO, size))
+		if value > 0.0:
+			draw_style_box(UiStyle.g_box(color, 5, 0, 0), Rect2(Vector2.ZERO, Vector2(size.x * clampf(value, 0.03, 1.0), size.y)))
+
+
+## Linhas da nota do carro por rodada (você grossa; rivais finas).
+class _Graph:
+	extends Control
+	var lines: Array = []  ## [{pts: [nota...], color, w}]
+	var rounds := 23
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(0, 150)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var lo := INF
+		var hi := -INF
+		for l: Dictionary in lines:
+			for p: Variant in l["pts"]:
+				lo = minf(lo, float(p))
+				hi = maxf(hi, float(p))
+		var area := Rect2(36, 6, size.x - 44, size.y - 30)
+		var font := UiStyle.G_BOLD
+		var fsz := UiStyle.fs(12)
+		for i in 3:  # linhas de grade
+			var y := area.position.y + area.size.y * i / 2.0
+			draw_line(Vector2(area.position.x, y), Vector2(area.end.x, y), Color(1, 1, 1, 0.08), 1.0)
+		draw_string(font, Vector2(area.position.x, size.y - 6), "RD 1", HORIZONTAL_ALIGNMENT_LEFT, -1, fsz, UiStyle.G_TEXT_3)
+		draw_string(font, Vector2(area.end.x - 48, size.y - 6), "RD %d" % rounds, HORIZONTAL_ALIGNMENT_RIGHT, 48, fsz, UiStyle.G_TEXT_3)
+		if lo == INF:
+			return
+		if hi - lo < 4.0:
+			var mid := (hi + lo) * 0.5
+			lo = mid - 2.0
+			hi = mid + 2.0
+		draw_string(font, Vector2(0, area.position.y + 10), str(roundi(hi)), HORIZONTAL_ALIGNMENT_LEFT, -1, fsz, UiStyle.G_TEXT_3)
+		draw_string(font, Vector2(0, area.end.y), str(roundi(lo)), HORIZONTAL_ALIGNMENT_LEFT, -1, fsz, UiStyle.G_TEXT_3)
+		for l: Dictionary in lines:
+			var pts: Array = l["pts"]
+			if pts.is_empty():
+				continue
+			var poly := PackedVector2Array()
+			for i in pts.size():
+				var x := area.position.x + area.size.x * float(i) / maxf(float(rounds), 1.0)
+				var y := area.end.y - area.size.y * (float(pts[i]) - lo) / (hi - lo)
+				poly.append(Vector2(x, y))
+			if poly.size() >= 2:
+				draw_polyline(poly, l["color"], float(l["w"]), true)
+			draw_circle(poly[poly.size() - 1], float(l["w"]) + 1.5, l["color"])

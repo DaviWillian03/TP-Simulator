@@ -1,70 +1,7 @@
 extends GutTest
-## Finanças (v31): patrocínio garantido × por meta, prêmio oficial por posição e compromissos.
+## Finanças (v31): prêmio oficial por posição e compromissos.
 
-func _camp() -> Campaign:
-	var c := Campaign.new_real("williams")
-	c.sponsors.contracts.clear()
-	return c
-
-
-func _offer(c: Campaign) -> Dictionary:
-	var zone: String = Sponsorship.zones()[0]["id"]
-	var o := c.sponsors.offers_for(c, zone)
-	assert_gt(o.size(), 0)
-	return {"zone": zone, "offer": o[0]}
-
-
-func test_oferta_tem_garantido_e_meta_com_mesmo_total_e_maior_potencial() -> void:
-	var c := _camp()
-	var o: Dictionary = _offer(c)["offer"]
-	assert_lt(float(o["goal_per_race"]), float(o["per_race"]), "por meta paga menos por corrida")
-	var safe_year: float = float(o["per_race"]) * Campaign.calendar().size()
-	var goal_year: float = float(o["goal_per_race"]) * Campaign.calendar().size() + float(o["goal_bonus"])
-	assert_gt(goal_year, safe_year, "cumprida a meta, rende mais que o garantido")
-	assert_gte(int(o["goal_pos"]), 1)
-
-
-func test_contrato_por_meta_paga_o_bonus_so_se_a_meta_for_cumprida() -> void:
-	var c := _camp()
-	var d := _offer(c)
-	var res := c.sponsors.accept(c, d["zone"], d["offer"]["key"], "goal")
-	assert_true(res["ok"])
-	var ct: Dictionary = c.sponsors.contracts[d["zone"]]
-	assert_gt(int(ct["goal_pos"]), 0)
-	assert_gt(float(ct["goal_bonus"]), 0.0)
-	var pos := int(ct["goal_pos"])
-	assert_eq(c.sponsors.settle_goals(c, pos), float(ct["goal_bonus"]), "na posição da meta: paga")
-	assert_eq(c.sponsors.settle_goals(c, pos + 1), 0.0, "uma posição pior: não paga")
-
-
-func test_contrato_garantido_nao_tem_meta() -> void:
-	var c := _camp()
-	var d := _offer(c)
-	c.sponsors.accept(c, d["zone"], d["offer"]["key"])
-	var ct: Dictionary = c.sponsors.contracts[d["zone"]]
-	assert_eq(int(ct["goal_pos"]), 0)
-	assert_eq(c.sponsors.settle_goals(c, 11), 0.0)
-
-
-func test_fim_da_temporada_credita_o_bonus_da_meta_no_caixa() -> void:
-	var c := _camp()
-	var d := _offer(c)
-	c.sponsors.accept(c, d["zone"], d["offer"]["key"], "goal")
-	c.sponsors.contracts[d["zone"]]["goal_pos"] = 11  # meta folgada: qualquer posição cumpre
-	var before := c.budget_musd
-	var bonus: float = float(c.sponsors.contracts[d["zone"]]["goal_bonus"])
-	c.round = Campaign.calendar().size()
-	c.close_season()
-	assert_gte(c.budget_musd - before, bonus, "bônus entra no caixa (além do prêmio)")
-
-
-func test_save_preserva_a_meta_do_contrato() -> void:
-	var c := _camp()
-	var d := _offer(c)
-	c.sponsors.accept(c, d["zone"], d["offer"]["key"], "goal")
-	var back := Sponsorship.from_dict(JSON.parse_string(JSON.stringify(c.sponsors.to_dict())))
-	assert_eq(int(back.contracts[d["zone"]]["goal_pos"]), int(c.sponsors.contracts[d["zone"]]["goal_pos"]))
-	assert_almost_eq(float(back.contracts[d["zone"]]["goal_bonus"]), float(c.sponsors.contracts[d["zone"]]["goal_bonus"]), 0.001)
+## (os testes do patrocínio por meta foram para test_sponsorship.gd na v42)
 
 
 func test_compromissos_somam_folha_operacao_e_emprestimo() -> void:

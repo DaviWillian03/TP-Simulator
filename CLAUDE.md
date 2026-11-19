@@ -31,8 +31,11 @@ enviar o APK (`scripts/build-apk.sh`) e o zip do Windows (`scripts/build-exe.sh`
   `data/real_form_2026.json` (de `tools/make_real_form.py`); temporadas em `data/seasons/<id>/` via `Season` (`Season.active` + `TeamEmblems.use_season` trocam cores, logos e fotos da época; 2012 de `tools/make_season_2012.py`, fotos pessoais por `tools/prepare_season_media.py`), telas `world_hub_screen`, `world_table_screen` (campeonato em tela cheia) com o componente `WorldTables` (tabelas que rolam e estatísticas clicáveis) e `world_final_screen`, `tools/world_report.gd` (calibra); dev: `--world --team=<id> [--rounds=<n>]`;
   campanha: `Campaign` (equipe real ou criada = 12ª equipe, 24 carros; salva em
   user://campaign.json; na F2/F3 usa `FeederCareer` + `campaign_feeder_hub_screen`, e a F1 roda simulada rápida), `CategoryRules`
-  (regras F1/F2/F3 em `data/categories.json`), `CarDevelopment` (árvore de P&D em `data/rd_tree.json`, gerada por
-  `tools/make_rd_tree.py`, e fábrica em `data/factory.json`). Passo fixo `DT`, semente
+  (regras F1/F2/F3 em `data/categories.json`), `CarDevelopment` (fábrica v42: 4 estruturas com efeito em números,
+  `data/factory.json`; a árvore antiga só serve à migração, `data/rd_tree_legacy.json`), `CarParts` (projetos de peça v42:
+  área × tamanho em `data/car_parts.json` → `projects`; ganho real 60–120%, esforço do ano seguinte `next_share`/`next_bank`;
+  a IA usa a mesma regra), `Sponsorship` (v42: principal + 3 secundários, 3 ofertas por vaga, metas; marcas fictícias em
+  `data/sponsors.json`). Passo fixo `DT`, semente
   determinística. Regras novas entram aqui, com teste.
 - Telas do GP: `gp_setup_screen`, `weekend_screen` (treino é sempre simulado: engenheiro, chance de acerto e folha de resultado), `quali_screen` (folha de saída: jogo, atitude, voltas), `strategy_screen` (estratégias possíveis, v41: sempre 1/2/3 paradas, ajustáveis; dev `--ui=stratedit`) e
   `QualiResultSheet` (resultado entre Q1/Q2/Q3; `QualiSim.pause_between`/`resume()`), `SafeArea` (furo da câmera), `grid_screen` (grid fila a fila) antes de toda corrida/sprint jogada (peças comuns
@@ -82,8 +85,8 @@ Opções de desenvolvimento (depois de `--`): `--rain-at=<s> --rain=<0..1>`, `--
 (painel) e `--play` (sessão atual ao vivo; num treino, simula e abre a folha de resultado), com `--skip=<n>` para simular as n primeiras sessões
 (ex.: `--play --circuit=shanghai --skip=2` abre a sprint; `--grid` abre a animação do grid; `--live` vai direto à corrida com o plano dos engenheiros; `--team=f2_<equipe>` joga a F2/F3); `--advance` vale também na
 classificação. Capturas de interface: `--ui=team` (folha da tela inicial), `--ui=out` (folha de saída da classificação), `--ui=plan` (aviso da estratégia na corrida), `--ui=champ|champ-poster|champ-teams` (animação de campeão), `--ui=missions` (folha de missões), `--ui=gallery`
-(estados dos componentes), `--view-only` (só o 3D, base de mockups). Escolha de equipe: `--teamselect=campaign|gp` (com `--team=<id>`). Campanha: `--campaign`, `--history [--demo-history] [--tab=legends|current|seasons]`, `--car` (peças), `--rd` (árvore),
-`--creator [--ui=<passo 0..3>]`, `--hub` e `--camp-race` (usam a campanha salva; `tools/make_demo_campaign.gd -- --round=<n>` grava uma campanha de reta final).
+(estados dos componentes), `--view-only` (só o 3D, base de mockups). Escolha de equipe: `--teamselect=campaign|gp` (com `--team=<id>`). Campanha: `--campaign`, `--history [--demo-history] [--tab=legends|current|seasons]`, `--car` (tela Carro v42), `--project` (novo projeto), `--factory`, `--sponsors` (com `--fresh --demo --team=<id>`: campanha nova com exemplos),
+`--creator [--ui=<passo 0..3>]`, `--hub` e `--camp-race` (usam a campanha salva; `tools/make_demo_campaign.gd -- --round=<n> [--dev]` grava uma campanha de reta final; `--dev` simula o desenvolvimento rodada a rodada).
 Testes de regras usam `{"weather": "dry", "incident_rate": 0.0}` salvo quando testam clima/incidentes.
 - Captura de tela precisa de display: `Xvfb :99 -screen 0 1280x720x24 &` (capturas saem em Forward+ = visual do PC, com o
   Vulkan por software `mesa-vulkan-drivers`; o visual do celular: `godot --rendering-method gl_compatibility ...`). Use para conferir

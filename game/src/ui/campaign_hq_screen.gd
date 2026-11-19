@@ -2,10 +2,10 @@ extends Control
 ## Sede 3D (mockup v26-5): o campus em isometria com um prédio por instalação e o nível em cima. Tocar num prédio abre o
 ## painel à direita: nível atual em anel, o que muda no próximo nível, os 5 níveis e a obra (custo, dias, CONSTRUIR).
 ## As instalações são as estruturas da fábrica (data/factory.json): túnel de vento, simulador, fábrica de peças e
-## marketing. O centro técnico leva à árvore de P&D e o centro de pilotos ao Pessoal.
+## marketing. O centro técnico leva aos projetos do carro (v42) e o centro de pilotos ao Pessoal.
 
 const STRUCT := {"wind": "wind", "sim": "sim", "factory": "parts", "hosp": "media"}  ## prédio -> estrutura
-const SHORTCUT := {"design": ["Centro técnico", "Projetos de P&D do carro", "pen", "ÁRVORE DE P&D"],
+const SHORTCUT := {"design": ["Centro técnico", "Projetos de peça do carro: área, tamanho, ganho esperado e entregas", "pen", "PROJETOS DO CARRO"],
 	"drivers": ["Centro de pilotos", "Pilotos e corpo técnico", "users", "PESSOAL"]}
 const ICONS := {"wind": "wind", "sim": "sim", "factory": "factory", "hosp": "hand", "design": "pen", "drivers": "users"}
 
@@ -54,6 +54,9 @@ func _ready() -> void:
 	foot.add_theme_constant_override("separation", 8)
 	foot.add_child(_chip("%d / %d níveis" % [total, STRUCT.size() * _max()], "hq", UiStyle.SECTION["hq"]))
 	foot.add_child(_chip("%d obra%s" % [_works(), "" if _works() == 1 else "s"], "timer", UiStyle.G_TEXT))
+	var all := ScreenKit.glass_pill_button("Fábrica · antes e depois")
+	all.pressed.connect(Session.open_campaign_factory)
+	foot.add_child(all)
 	ScreenKit.place(foot, layer, Control.PRESET_BOTTOM_LEFT, Vector2(R.position.x + 10, -18))
 	_refresh()
 	CampaignFrame.apply(layer, "hq", true)
@@ -97,7 +100,7 @@ func _refresh() -> void:
 		go.text = s[3]
 		go.custom_minimum_size = Vector2(0, 60)
 		go.add_theme_font_size_override("font_size", UiStyle.fs(19))
-		go.pressed.connect(Session.open_campaign_rd if _sel == "design" else Session.open_campaign_staff)
+		go.pressed.connect(Session.open_campaign_car if _sel == "design" else Session.open_campaign_staff)
 		_panel.add_child(go)
 		return
 	var sid: String = STRUCT[_sel]

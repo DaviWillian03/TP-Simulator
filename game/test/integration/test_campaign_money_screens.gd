@@ -22,48 +22,42 @@ func _open(scene: String) -> Control:
 	return screen
 
 
-func test_patrocinios_mostra_cinco_zonas_e_ofertas_da_zona_livre() -> void:
+func _find_text(node: Node, needle: String) -> bool:
+	if node is Label and (node as Label).text.to_upper().contains(needle.to_upper()):
+		return true
+	if node is Button and (node as Button).text.to_upper().contains(needle.to_upper()):
+		return true
+	for c in node.get_children():
+		if _find_text(c, needle):
+			return true
+	return false
+
+
+func test_patrocinios_mostra_tres_ofertas_do_principal_e_vagas_secundarias() -> void:
+	camp.sponsors.contracts.clear()
 	var screen: Control = await _open("res://src/ui/campaign_sponsors_screen.tscn")
-	assert_eq(screen._pins.size(), 5)
-	assert_true(camp.sponsors.free_zones().has(screen._zone), "começa numa zona livre")
-	assert_gt(screen._right.get_child_count(), 8)
+	assert_true(_find_text(screen, "escolha 1 de 3 ofertas"))
+	for o: Dictionary in camp.sponsors.offers_for(camp, "main"):
+		assert_true(_find_text(screen, String(o["brand"])), String(o["brand"]))
+	assert_true(_find_text(screen, "ver 3 ofertas"))
+	assert_true(_find_text(screen, "Bônus em jogo"))
 
 
-func test_aceitar_oferta_pela_tela_fecha_contrato() -> void:
+func test_assinar_pela_tela_fecha_contrato() -> void:
+	camp.sponsors.contracts.clear()
 	var screen: Control = await _open("res://src/ui/campaign_sponsors_screen.tscn")
-	var zone: String = screen._zone
-	var before := camp.sponsor_per_race()
-	var key: String = camp.sponsors.offers_for(camp, zone)[0]["key"]
-	screen._on_accept(key)  # abre a folha Garantido × Por meta; "Garantido" já vem marcado
-	await wait_process_frames(3)
-	var stack: Array = [screen]
-	while not stack.is_empty():
-		var n: Node = stack.pop_back()
-		if n is CutButton and (n as Button).text.to_upper() == "FECHAR CONTRATO":
-			n.emit_signal("pressed")
-			break
-		stack.append_array(n.get_children())
-	assert_true(camp.sponsors.contracts.has(zone))
-	assert_gt(camp.sponsor_per_race(), before)
-	assert_eq(int(camp.sponsors.contracts[zone]["goal_pos"]), 0, "padrão: garantido")
+	var o: Dictionary = camp.sponsors.offers_for(camp, "main")[2]
+	screen._on_accept("main", String(o["key"]))
+	assert_true(camp.sponsors.contracts.has("main"))
+	assert_eq(String(camp.sponsors.contracts["main"]["kind"]), "bold")
 
 
-func test_pedir_mais_pela_tela_marca_a_oferta() -> void:
+func test_contrato_assinado_mostra_metas_com_progresso() -> void:
+	camp.sponsors.contracts.clear()
+	camp.sponsors.accept(camp, "main", String(camp.sponsors.offers_for(camp, "main")[1]["key"]))
 	var screen: Control = await _open("res://src/ui/campaign_sponsors_screen.tscn")
-	var zone: String = screen._zone
-	var key: String = camp.sponsors.offers_for(camp, zone)[0]["key"]
-	screen._on_ask_more(key)
-	assert_true(camp.sponsors.asked.has(key))
-
-
-func test_selecionar_zona_ocupada_mostra_o_contrato_e_rescindir_cobra_multa() -> void:
-	var screen: Control = await _open("res://src/ui/campaign_sponsors_screen.tscn")
-	var taken: String = camp.sponsors.contracts.keys()[0]
-	screen._on_zone(taken)
-	var before := camp.budget_musd
-	screen._on_terminate(taken)
-	assert_lt(camp.budget_musd, before)
-	assert_false(camp.sponsors.contracts.has(taken))
+	var g: Dictionary = camp.sponsors.contracts["main"]["goals"][0]
+	assert_true(_find_text(screen, Sponsorship.goal_text(g)))
 
 
 func test_financas_monta_com_livro_caixa_e_grafico() -> void:
@@ -103,37 +97,3 @@ func test_financas_tem_quatro_abas_e_todas_montam() -> void:
 		assert_gt(screen._holder.get_child_count(), 1, "aba %s montou os cartões" % tab)
 
 
-func test_oferta_de_patrocinio_abre_folha_garantido_x_meta_e_fecha_por_meta() -> void:
-	camp.sponsors.contracts.clear()
-	var screen: Control = await _open("res://src/ui/campaign_sponsors_screen.tscn")
-	var offers: Array = screen.sp.offers_for(camp, screen._zone)
-	var key := String(offers[0]["key"])
-	var zone: String = screen._zone
-	screen._on_accept(key)
-	await wait_process_frames(3)
-	var go: Button = null
-	var stack: Array = [screen]
-	while not stack.is_empty():
-		var n: Node = stack.pop_back()
-		if n is CutButton and (n as Button).text.to_upper() == "FECHAR CONTRATO":
-			go = n
-		stack.append_array(n.get_children())
-	assert_not_null(go, "a folha tem o botão de fechar contrato")
-	# escolhe "por meta" (segundo botão da folha) e fecha
-	var goal_btn: Button = null
-	stack = [screen]
-	var toggles: Array[Button] = []
-	while not stack.is_empty():
-		var n2: Node = stack.pop_back()
-		if n2 is Button and (n2 as Button).toggle_mode and (n2 as Button).button_group != null and n2.get_parent() is HBoxContainer and n2.get_parent().get_child_count() == 2:
-			toggles.append(n2)
-		stack.append_array(n2.get_children())
-	toggles.sort_custom(func(a: Button, b: Button) -> bool: return a.get_index() < b.get_index())
-	if toggles.size() == 2:
-		goal_btn = toggles[1]
-		goal_btn.button_pressed = true
-	go.emit_signal("pressed")
-	await wait_process_frames(2)
-	assert_true(camp.sponsors.contracts.has(zone))
-	if goal_btn != null:
-		assert_gt(int(camp.sponsors.contracts[zone]["goal_pos"]), 0, "fechou por meta")

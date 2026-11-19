@@ -94,7 +94,7 @@ func _eligible(camp: Campaign, e: Dictionary) -> bool:
 		"race_cancelled":
 			return cancelled.size() < 2 and not _cancel_candidates(camp).is_empty()
 		"factory_fire", "parts_defect", "breakthrough":
-			return not camp.dev.projects.is_empty()
+			return not camp.my_parts().research.is_empty()
 		"sponsor_leaves":
 			return camp.sponsors.contracts.size() >= 2
 		"economic_crisis":
@@ -192,7 +192,7 @@ func _apply(camp: Campaign, e: Dictionary, rng: RandomNumberGenerator, day: int)
 			n["text"] = "Por uma crise na região, o %s sai do calendário. A rodada não rende pontos nem patrocínio." % gp
 			n["chips"] = [_chip("bad", "−1 rodada", "no calendário"), _chip("", "%d" % (Campaign.calendar().size() - cancelled.size()), "corridas restantes na temporada")]
 		"factory_fire":
-			for p: Dictionary in camp.dev.projects:
+			for p: Dictionary in camp.my_parts().research:
 				p["days_left"] = int(p["days_left"]) + int(e["delay_days"])
 				p["days_total"] = int(p["days_total"]) + int(e["delay_days"])
 			var cost := float(e["cost_musd"])
@@ -202,29 +202,31 @@ func _apply(camp: Campaign, e: Dictionary, rng: RandomNumberGenerator, day: int)
 			n["text"] = "Um incêndio num depósito atrasa os projetos em andamento em %d dias e custa US$ %s mi em reparos." % [int(e["delay_days"]), _money(cost)]
 			n["chips"] = [_chip("bad", "+%d dias" % int(e["delay_days"]), "nos projetos"), _chip("bad", "US$ %s mi" % _money(cost), "em reparos")]
 		"parts_defect":
-			var p2: Dictionary = camp.dev.projects[rng.randi() % camp.dev.projects.size()]
-			var info := CarDevelopment.node_info(p2["id"])
-			camp.dev.projects.erase(p2)
+			var cp := camp.my_parts()
+			var p2: Dictionary = cp.research[rng.randi() % cp.research.size()]
+			var pname := _project_name(p2)
+			cp.research.erase(p2)
+			camp.dev.parts_busy = cp.research.size()
 			camp.budget_musd += float(p2["cost"]) * 0.5
 			camp.record("rd", -float(p2["cost"]) * 0.5)
 			n["title"] = "LOTE DE PEÇAS COM DEFEITO"
-			n["text"] = "O projeto “%s” perdeu a produção. Metade do dinheiro volta ao caixa." % info["node"]["n"]
-			n["chips"] = [_chip("bad", "projeto perdido", String(info["node"]["n"])), _chip("good", "US$ %s mi" % _money(float(p2["cost"]) * 0.5), "devolvidos")]
+			n["text"] = "O projeto “%s” perdeu a produção. Metade do dinheiro volta ao caixa." % pname
+			n["chips"] = [_chip("bad", "projeto perdido", pname), _chip("good", "US$ %s mi" % _money(float(p2["cost"]) * 0.5), "devolvidos")]
 		"sponsor_leaves":
 			var zones: Array = camp.sponsors.contracts.keys()
 			var z: String = zones[rng.randi() % zones.size()]
 			var c: Dictionary = camp.sponsors.contracts[z]
 			camp.sponsors.contracts.erase(z)
 			n["title"] = "%s ENCERRA O PATROCÍNIO" % String(c["brand"]).to_upper()
-			n["text"] = "A marca rompe o contrato da zona %s sem multa. A zona fica livre para novas ofertas." % String(Sponsorship.zone(z)["name"]).to_lower()
-			n["chips"] = [_chip("bad", "−US$ %s mi" % _money(float(c["per_race"])), "por corrida"), _chip("", "zona livre", String(Sponsorship.zone(z)["name"]))]
+			n["text"] = "A marca rompe o contrato da vaga %s sem multa. A vaga recebe 3 ofertas novas (sem escolha, o diretor comercial assina antes da próxima corrida)." % String(Sponsorship.zone(z)["name"]).to_lower()
+			n["chips"] = [_chip("bad", "−US$ %s mi" % _money(float(c["per_race"])), "por corrida"), _chip("", "vaga livre", String(Sponsorship.zone(z)["name"]))]
 		"breakthrough":
-			var p3: Dictionary = camp.dev.projects[rng.randi() % camp.dev.projects.size()]
-			var info3 := CarDevelopment.node_info(p3["id"])
+			var p3: Dictionary = camp.my_parts().research[rng.randi() % camp.my_parts().research.size()]
+			var pname3 := _project_name(p3)
 			p3["days_left"] = mini(int(p3["days_left"]), 1)
 			n["title"] = "AVANÇO NO DESENVOLVIMENTO"
-			n["text"] = "A equipe técnica encontra uma solução: o projeto “%s” termina na próxima semana." % info3["node"]["n"]
-			n["chips"] = [_chip("good", "1 dia", "para concluir"), _chip("", String(info3["node"]["n"]), "projeto adiantado")]
+			n["text"] = "A equipe técnica encontra uma solução: o projeto “%s” termina na próxima semana." % pname3
+			n["chips"] = [_chip("good", "1 dia", "para concluir"), _chip("", pname3, "projeto adiantado")]
 		"economic_crisis":
 			market_until = day + int(e["days"])
 			market_mult = float(e["mult"])
@@ -392,3 +394,10 @@ static func from_dict(d: Dictionary) -> CampaignEvents:
 	e.market_until = int(d.get("market_until", -1))
 	e.market_mult = float(d.get("market_mult", 1.0))
 	return e
+
+
+## Nome do projeto de peça para as notícias ("Assoalho · grande").
+static func _project_name(p: Dictionary) -> String:
+	var a := CarParts.area(String(p.get("area", CarParts.area_of_part(String(p.get("part", ""))))))
+	var sz := CarParts.size_of(String(p.get("size", "M")))
+	return "%s · %s" % [String(a.get("name", p.get("part", ""))), String(sz["name"]).to_lower()]

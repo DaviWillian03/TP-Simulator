@@ -999,7 +999,7 @@ Respostas do usuário:
   sugestão: os engenheiros planejam às cegas). Linha na cor de cada composto, pneu na parada com a janela
   ("VOLTA 18 A 24"), legenda com o estoque. A escolhida se ajusta: pneu da parada → volta com − / + (PC: setas ou
   arrastar); trecho da linha → troca o composto. 2012: o primeiro trecho fica travado no pneu do Q2.
-- **2026-11-19 — Reformulação de desenvolvimento do carro, fábrica e patrocínios (respostas do usuário; mockup v42 a aprovar):**
+- **2026-11-19 — Reformulação de desenvolvimento do carro, fábrica e patrocínios (respostas do usuário; mockup v42 aprovado: "Aprovo os 4"):**
   - **Carro: projetos de peça diretos** (sem árvore de 92 nós nem fabricar/instalar por carro): escolher a área (asa
     dianteira, asa traseira, assoalho, suspensão, motor/confiabilidade) e o tamanho do projeto; mostra custo, prazo, chance
     e o ganho esperado (s/volta e tipo de pista); pronta, entra nos dois carros.
@@ -1013,3 +1013,22 @@ Respostas do usuário:
     bônus por metas claras, com progresso visível); não cumprir = só perde o bônus.
   - **Mostrar o efeito**: notas do carro por área (reta, lentas, rápidas, confiabilidade) comparadas com rivais e gráfico
     da evolução na temporada.
+  - **Implementação (2026-11-19):**
+    - Projeto = área (asa dianteira, asa traseira, assoalho, suspensão, motor · potência — só quem fabrica motor —,
+      motor · confiabilidade) × tamanho (pequeno, médio, grande; custo, dias e ganho crescem juntos). Ganho real =
+      esperado × sorteio entre o piso (60% + equipe técnica + estrutura, até 90%) e 120%; a versão nova soma em cima da
+      anterior e entra nos dois carros (e nas reservas) na entrega. Uma área por vez; vagas = fábrica de peças.
+    - As unidades físicas continuam por baixo (desgaste, reservas, limite de motor/câmbio), mas a equipe troca as gastas
+      sozinha: o jogador não fabrica nem instala mais peça por peça. A árvore de P&D saiu; save antigo: os nós de
+      desempenho prontos viram nota do carro (0,5 por ponto), saves de patrocínio viram as vagas novas com marcas fictícias.
+    - Esforço: fatia (0–100%) dos projetos que vai para o carro do ano seguinte; rende ×1,3 na virada; confiabilidade fica
+      sempre no carro atual. A IA põe 15% no começo do ano e 50% depois de 60% da temporada.
+    - Calibração (`tools/parts_report.gd`): a IA ganha ~2,8 pontos de nota por ano, como antes; custos pensados para que
+      gastar o teto inteiro renda ~3,5 pontos ao jogador.
+    - Fábrica: túnel de vento (dias e faixa da aero), fábrica de peças (vagas, dias e faixa da mecânica), simulador
+      (acerto dos treinos), marketing (valor das ofertas e nº de metas por oferta). Cartões com AGORA × PRÓXIMO NÍVEL.
+    - Patrocínio: principal (55% do patrocínio base) + bico, halo e asa dianteira (15% cada). Ofertas: Garantido (só fixo),
+      Equilibrado (80% do fixo + metas ≈ 45% do ano), Ousado (60% + metas ≈ 90%). Metas: posição no campeonato (paga no
+      fim do ano), pódios, chegadas nos pontos, vitórias, melhor resultado (pagas na hora em que cumpre). Contratos de
+      um ano; vaga livre na corrida: o diretor comercial assina a equilibrada. Sem bônus por pódio solto.
+

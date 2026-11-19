@@ -1,95 +1,45 @@
 class_name CarDevelopment
 extends RefCounted
-## Desenvolvimento do carro (árvore de P&D, estilo F1 2017) e estrutura da fábrica — modo campanha.
-## Sem dependência de tela. Decisões do usuário (docs/DECISIONS.md): paga com dinheiro do orçamento,
-## leva dias de calendário, projetos simultâneos limitados pela fábrica, carro atual × carro do ano
-## seguinte com a mesma reserva de dinheiro e de projetos. Valores PROVISÓRIOS (data/rd_tree.json,
-## data/factory.json).
-##
-## Nó = "departamento.braço.índice" (ex.: "aero.0.3"). Carro: "cur" (atual) ou "next" (ano seguinte).
+## Fábrica da equipe do jogador (modo campanha) — v42, 2026-11-19 (docs/DECISIONS.md).
+## Quatro estruturas com efeito escrito em números em cada nível (data/factory.json):
+##  - Túnel de vento / CFD: projetos de aero mais rápidos e faixa de ganho aero mais apertada;
+##  - Fábrica de peças: vagas de projeto, peças mecânicas mais rápidas e faixa mecânica mais apertada;
+##  - Simulador: acerto dos treinos;
+##  - Marketing: valor das ofertas de patrocínio e metas por oferta.
+## Ampliar custa dinheiro e leva dias (uma obra por estrutura). Os projetos de peça em si ficam em CarParts (a mesma
+## regra da IA); aqui ficam as vagas, a velocidade e o aperto da faixa que a fábrica dá. A árvore de P&D antiga saiu na
+## v42: o que já tinha sido desenvolvido virou nota do carro (migrate_tree). Sem dependência de tela.
 
 const RESERVE_MUSD := 5.0  ## o caixa nunca fica abaixo disto por causa de um projeto
-const PARTIAL_SHARE := 0.5  ## resultado parcial rende metade do efeito
-const CARRY_SHARE := 0.5  ## na virada, o carro novo herda esta fração do bônus do carro velho
+const CARRY_SHARE := 0.5  ## na virada, o carro novo herda esta fração do que o carro velho ganhou no ano
 const AUTO_CAP_MUSD := 40.0  ## modo Essencial: teto de gasto por mês (30 dias)
-const AUTO_NEXT_SHARE := 0.3  ## modo Essencial: fatia do gasto para o carro do ano seguinte
 const DEPT_ORDER := ["engine", "aero", "chassis", "durability"]
-const STRUCT_ORDER := ["wind", "sim", "parts", "media"]
+const STRUCT_ORDER := ["wind", "parts", "sim", "media"]
+const TREE_PERF_TO_RATING := 0.5  ## migração da árvore antiga: cada ponto de "perf" pronto vira meio ponto de nota
 
 ## Estado (salvo na campanha)
 var levels: Dictionary = {"wind": 1, "sim": 1, "parts": 1, "media": 1}
 var media_start := 1  ## nível de marketing em que o patrocínio base foi definido
-var done: Dictionary = {"cur": {}, "next": {}}  ## id do nó -> "full" | "partial"
-var projects: Array = []  ## [{car, id, days_left, days_total, cost}]
 var works: Array = []  ## [{struct, to, days_left, days_total}] (uma obra por estrutura)
-var carry := 0.0  ## bônus herdado do carro anterior
-var focus := "balanced"  ## modo Essencial: "balanced", "aero", "chassis", "durability", "engine"
+var carry := 0.0  ## bônus herdado dos carros anteriores (nota)
 var atr := 1.0  ## restrição de túnel de vento (tempo de pesquisa aero; publicada pela campanha)
-var parts_busy := 0  ## pesquisas de peças em andamento (CarParts): ocupam as mesmas vagas de projeto
+var parts_busy := 0  ## projetos de peça em andamento (CarParts): ocupam as vagas da fábrica
 var staff_mod: Dictionary = {}  ## efeitos dos técnicos (Personnel.staff_effects), publicados pela campanha
 var auto_spent := 0.0  ## gasto automático no mês atual
-var auto_spent_next := 0.0
 var auto_month := -1
 var news: Array = []  ## mensagens recentes (mais nova primeiro)
 var seed_base := 1
 
-static var _tree: Dictionary = {}
 static var _factory: Dictionary = {}
 
 
 # --- dados -------------------------------------------------------------------------------
-
-static func tree() -> Dictionary:
-	if _tree.is_empty():
-		_tree = GameData.load_json(GameData.DATA_DIR + "rd_tree.json")
-	return _tree
-
 
 static func factory_data() -> Dictionary:
 	if _factory.is_empty():
 		_factory = GameData.load_json(GameData.DATA_DIR + "factory.json")
 	return _factory
 
-
-static func department(dept_id: String) -> Dictionary:
-	for d: Dictionary in tree()["departments"]:
-		if d["id"] == dept_id:
-			return d
-	return {}
-
-
-static func node_id(dept: String, arm: int, index: int) -> String:
-	return "%s.%d.%d" % [dept, arm, index]
-
-
-## {dept, arm, index, node (dados do JSON), kind (dados do tipo), cost, days} ou {} se inválido.
-static func node_info(id: String) -> Dictionary:
-	var p := id.split(".")
-	if p.size() != 3:
-		return {}
-	var dep := department(p[0])
-	if dep.is_empty() or int(p[1]) >= dep["arms"].size():
-		return {}
-	var arm: Dictionary = dep["arms"][int(p[1])]
-	if int(p[2]) >= arm["nodes"].size():
-		return {}
-	var node: Dictionary = arm["nodes"][int(p[2])]
-	var kind: Dictionary = tree()["kinds"][node["k"]]
-	var cost: float = float(kind["cost_musd"]) * (1.0 + float(tree()["cost_step"]) * int(p[2]))
-	return {"dept": p[0], "arm": int(p[1]), "index": int(p[2]), "node": node, "kind": kind, "effect": arm["effect"],
-		"arm_name": arm["name"], "cost": snappedf(cost, 0.1), "days": int(kind["days"])}
-
-
-static func all_node_ids(dept: String) -> Array[String]:
-	var out: Array[String] = []
-	var dep := department(dept)
-	for a in dep["arms"].size():
-		for i in dep["arms"][a]["nodes"].size():
-			out.append(node_id(dept, a, i))
-	return out
-
-
-# --- fábrica -----------------------------------------------------------------------------
 
 static func structure(id: String) -> Dictionary:
 	for s: Dictionary in factory_data()["structures"]:
@@ -98,16 +48,17 @@ static func structure(id: String) -> Dictionary:
 	return {}
 
 
+static func _at(list: Array, level: int) -> float:
+	return float(list[clampi(level, 1, list.size()) - 1])
+
+
 func level_of(struct_id: String) -> int:
 	return int(levels.get(struct_id, 1))
 
 
 ## Nível geral (média arredondada), para as telas e o custo por corrida.
 func overall_level() -> int:
-	var sum := 0
-	for s: String in STRUCT_ORDER:
-		sum += level_of(s)
-	return roundi(float(sum) / STRUCT_ORDER.size())
+	return roundi(overall_level_exact())
 
 
 func overall_level_exact() -> float:
@@ -123,28 +74,87 @@ func set_all_levels(level: int) -> void:
 	media_start = level_of("media")
 
 
+# --- efeitos -------------------------------------------------------------------------------
+
+static func slots_at(level: int) -> int:
+	return int(_at(structure("parts")["slots"], level))
+
+
 func slots() -> int:
-	return int(factory_data()["slots"][level_of("parts") - 1])
+	return slots_at(level_of("parts"))
 
 
-func defect_chance() -> float:
-	return float(structure("parts")["defect_pct"][level_of("parts") - 1]) / 100.0
+## Estrutura que cuida dos projetos do departamento: aero = túnel de vento; o resto = fábrica de peças.
+static func struct_for(dept: String) -> String:
+	return "wind" if dept == "aero" else "parts"
+
+
+## Projetos do departamento mais rápidos (fração) pela estrutura no nível.
+static func days_cut_at(dept: String, level: int) -> float:
+	return _at(structure(struct_for(dept))["days_pct"], level) / 100.0
+
+
+## Quanto a estrutura sobe o piso da faixa de ganho (fração).
+static func narrow_at(dept: String, level: int) -> float:
+	return _at(structure(struct_for(dept))["narrow_pct"], level) / 100.0
+
+
+func days_mult(dept: String) -> float:
+	var m := 1.0 - days_cut_at(dept, level_of(struct_for(dept))) - float(staff_mod.get(dept + ".days", 0.0))
+	if dept == "aero":
+		return clampf(clampf(m, 0.4, 1.0) / maxf(atr, 0.5), 0.35, 1.6)  # menos tempo de túnel = mais dias
+	return clampf(m, 0.4, 1.0)
+
+
+## Aperto da faixa do projeto: estrutura + equipe técnica (+ restrição de túnel na aero).
+func narrow(dept: String) -> float:
+	var n := narrow_at(dept, level_of(struct_for(dept))) + float(staff_mod.get(dept + ".success", 0.0)) / 100.0
+	if dept == "aero":
+		n += (atr - 1.0) * 0.2
+	return maxf(n, 0.0)
+
+
+## Só a parte da equipe técnica no aperto (para a tela "quem aperta a faixa").
+func staff_narrow(dept: String) -> float:
+	return float(staff_mod.get(dept + ".success", 0.0)) / 100.0
+
+
+static func practice_pct_at(level: int) -> int:
+	return int(_at(structure("sim")["practice_gain_pct"], level))
 
 
 func practice_gain_mult() -> float:
-	return 1.0 + float(structure("sim")["practice_gain_pct"][level_of("sim") - 1]) / 100.0
+	return 1.0 + practice_pct_at(level_of("sim")) / 100.0
 
 
+static func offer_pct_at(level: int) -> int:
+	return int(_at(structure("media")["offer_pct"], level))
+
+
+static func goals_at(level: int) -> int:
+	return int(_at(structure("media")["goals"], level))
+
+
+## Multiplicador das ofertas de patrocínio, relativo ao nível de marketing com que a equipe começou (o patrocínio
+## inicial já foi escalado para o equilíbrio financeiro da equipe).
 func sponsor_mult() -> float:
-	var m: Array = structure("media")["sponsor_mult"]
-	return float(m[level_of("media") - 1]) / float(m[media_start - 1])
+	return (1.0 + offer_pct_at(level_of("media")) / 100.0) / (1.0 + offer_pct_at(media_start) / 100.0)
+
+
+func goals_per_offer() -> int:
+	return goals_at(level_of("media"))
 
 
 func influence() -> int:
-	return int(structure("media")["influence"][level_of("media") - 1])
+	return int(_at(structure("media")["influence"], level_of("media")))
 
 
-## Manutenção da fábrica por corrida (US$ mi), somada à base do campanha.
+## Confiabilidade agora vem das peças (projetos de confiabilidade); a fábrica não muda as quebras.
+func failure_mult() -> float:
+	return 1.0
+
+
+## Manutenção da fábrica por corrida (US$ mi), somada à base da campanha.
 func upkeep_per_race() -> float:
 	var total := 0.0
 	for s: String in STRUCT_ORDER:
@@ -152,35 +162,35 @@ func upkeep_per_race() -> float:
 	return total
 
 
-## Efeito da estrutura num nível (BBCode: [b] para os números), para os cartões da fábrica.
-static func effect_text(struct_id: String, level: int) -> String:
-	var st := structure(struct_id)
-	var i := clampi(level, 1, 5) - 1
+## Efeitos da estrutura num nível, uma frase por linha (os números já escritos), para os cartões da fábrica.
+static func effect_lines(struct_id: String, level: int) -> Array[String]:
+	var out: Array[String] = []
 	match struct_id:
 		"wind":
-			return "[b]−%d%%[/b] nos dias dos nós de aero\n[b]+%d[/b] pontos de chance de acerto" % [int(st["days_pct"][i]), int(st["success_pct"][i])]
-		"sim":
-			return "[b]+%d%%[/b] no acerto dos treinos" % int(st["practice_gain_pct"][i])
+			out.append("Aero: −%d%% de dias por projeto" % roundi(days_cut_at("aero", level) * 100.0))
+			out.append("Aero: faixa do ganho +%d%%" % roundi(narrow_at("aero", level) * 100.0))
 		"parts":
-			return "[b]%d[/b] projetos ao mesmo tempo\npeças com defeito: [b]%d%%[/b]" % [int(st["slots"][i]), int(st["defect_pct"][i])]
+			out.append("%d projetos ao mesmo tempo" % slots_at(level))
+			out.append("Mecânica: −%d%% de dias" % roundi(days_cut_at("chassis", level) * 100.0))
+			out.append("Mecânica: faixa +%d%%" % roundi(narrow_at("chassis", level) * 100.0))
+		"sim":
+			out.append("Acerto dos treinos +%d%%" % practice_pct_at(level))
 		_:
-			var m: Array = st["sponsor_mult"]
-			return "marcas até o nível [b]%d[/b] (influência)\nofertas com [b]×%s[/b] de valor" % [int(st["influence"][i]), ("%.1f" % (float(m[i]) / float(m[0]))).replace(".", ",")]
+			out.append("Ofertas de patrocínio +%d%%" % offer_pct_at(level))
+			out.append("%d meta%s por oferta" % [goals_at(level), "s" if goals_at(level) > 1 else ""])
+	return out
 
 
-## Texto curto do efeito de um nó.
-static func node_effect_text(info: Dictionary) -> String:
-	var v: float = float(info["kind"][info["effect"]])
-	match info["effect"]:
-		"perf":
-			return "+%s na nota do carro" % ("%.2f" % v).replace(".", ",")
-		"rel":
-			return "−%d%% de quebras" % roundi(v * 100.0)
-		"eff":
-			return "−%d%% nos dias dos projetos do departamento" % roundi(v * 100.0)
-		_:
-			return "+%s pontos de chance de acerto" % ("%.1f" % v).replace(".", ",")
+## Os mesmos efeitos em texto (BBCode: os números em [b]), uma linha por efeito.
+static func effect_text(struct_id: String, level: int) -> String:
+	var rx := RegEx.create_from_string("([+−-]?\\d+%?)")
+	var out: Array[String] = []
+	for l: String in effect_lines(struct_id, level):
+		out.append(rx.sub(l, "[b]$1[/b]", true))
+	return "\n".join(out)
 
+
+# --- obras ---------------------------------------------------------------------------------
 
 func work_of(struct_id: String) -> Dictionary:
 	for w: Dictionary in works:
@@ -197,11 +207,11 @@ func upgrade_info(struct_id: String, budget: float) -> Dictionary:
 	if lv >= max_lv:
 		info["reason"] = "max"
 		return info
+	info["cost"] = float(structure(struct_id)["cost_musd"][lv - 1])
+	info["days"] = int(factory_data()["days_to_level"][lv - 1])
 	if not work_of(struct_id).is_empty():
 		info["reason"] = "works"
 		return info
-	info["cost"] = float(structure(struct_id)["cost_musd"][lv - 1])
-	info["days"] = int(factory_data()["days_to_level"][lv - 1])
 	if budget - float(info["cost"]) < RESERVE_MUSD:
 		info["reason"] = "cash"
 		return info
@@ -220,147 +230,21 @@ func start_upgrade(camp: Campaign, struct_id: String) -> bool:
 	return true
 
 
-# --- efeitos da árvore --------------------------------------------------------------------
+# --- projetos (vagas) ------------------------------------------------------------------------
 
-func is_done(car: String, id: String) -> bool:
-	return (done[car] as Dictionary).has(id)
-
-
-func _share(car: String, id: String) -> float:
-	var r: String = (done[car] as Dictionary).get(id, "")
-	return 1.0 if r == "full" else (PARTIAL_SHARE if r == "partial" else 0.0)
-
-
-## Soma dos efeitos de um tipo ("perf", "rel", "eff", "qual") dos nós prontos; opcionalmente de um departamento.
-func effect_sum(car: String, effect: String, dept: String = "") -> float:
-	var total := 0.0
-	for id: String in (done[car] as Dictionary):
-		var info := node_info(id)
-		if info.is_empty() or info["effect"] != effect or (dept != "" and info["dept"] != dept):
-			continue
-		total += float(info["kind"][effect]) * _share(car, id)
-	return total
-
-
-## Bônus na nota do carro atual (somado ao car_rating da equipe). Desde o ciclo de peças (2026-11-04) os nós de
-## desempenho da árvore não mexem mais direto na nota: viram conhecimento (peças novas maiores, CarParts.gain) e, os do
-## carro do ano seguinte, a base do carro novo na virada.
+## Bônus na nota do carro atual (somado ao car_rating da equipe): o que foi herdado dos carros anteriores.
 func rating_bonus() -> float:
 	return carry
 
 
-## Vagas de projeto ocupadas (nós da árvore + pesquisas de peças).
+## Vagas de projeto ocupadas (projetos de peça em andamento).
 func busy() -> int:
-	return projects.size() + parts_busy
-
-
-## Multiplicador de quebras (menor = mais confiável).
-func failure_mult() -> float:
-	return clampf(1.0 - effect_sum("cur", "rel"), 0.35, 1.0)
-
-
-func days_mult(dept: String) -> float:
-	var m := 1.0 - effect_sum_both("eff", dept) - float(staff_mod.get(dept + ".days", 0.0))
-	if dept == "aero":
-		m -= float(structure("wind")["days_pct"][level_of("wind") - 1]) / 100.0
-		return clampf(clampf(m, 0.4, 1.0) / maxf(atr, 0.5), 0.35, 1.6)  # menos tempo de túnel = mais dias
-	return clampf(m, 0.4, 1.0)
-
-
-## Eficiência e qualidade valem para o departamento nos dois carros (o time é o mesmo).
-func effect_sum_both(effect: String, dept: String) -> float:
-	return effect_sum("cur", effect, dept) + effect_sum("next", effect, dept)
-
-
-## Chance de acerto (0..1) de um projeto do departamento.
-func success_chance(dept: String) -> float:
-	var base := float(factory_data()["base_success_pct"])
-	# aerodinâmica: túnel de vento; os demais departamentos: fábrica de peças e qualidade
-	var fac: float = float(structure("wind" if dept == "aero" else "parts")["success_pct"][level_of("wind" if dept == "aero" else "parts") - 1])
-	var atr_pts := (atr - 1.0) * 20.0 if dept == "aero" else 0.0  # restrição de túnel: −6 pontos (campeão) a +3 (último)
-	return clampf((base + fac + atr_pts + effect_sum_both("qual", dept) + float(staff_mod.get(dept + ".success", 0.0))) / 100.0, 0.05, 0.98)
-
-
-func dept_available(dept: String, camp: Campaign) -> bool:
-	var dep := department(dept)
-	return not bool(dep.get("needs_own_engine", false)) or camp.has_own_engine()
-
-
-# --- estado dos nós -----------------------------------------------------------------------
-
-func project_of(car: String, id: String) -> Dictionary:
-	for p: Dictionary in projects:
-		if p["car"] == car and p["id"] == id:
-			return p
-	return {}
-
-
-## "done" | "now" | "open" | "lock" (bloqueado: pai pendente ou departamento indisponível)
-func node_state(car: String, id: String, camp: Campaign) -> String:
-	if is_done(car, id):
-		return "done"
-	if not project_of(car, id).is_empty():
-		return "now"
-	var info := node_info(id)
-	if info.is_empty() or not dept_available(info["dept"], camp):
-		return "lock"
-	var parent: int = int(info["node"]["p"])
-	if parent < 0:
-		return "open"
-	return "open" if is_done(car, node_id(info["dept"], info["arm"], parent)) else "lock"
-
-
-## Projeto de nó: {ok, reason, cost, days, success}
-func project_info(car: String, id: String, camp: Campaign) -> Dictionary:
-	var info := node_info(id)
-	var out := {"ok": false, "reason": "", "cost": 0.0, "days": 0, "success": 0.0}
-	if info.is_empty():
-		out["reason"] = "invalid"
-		return out
-	out["cost"] = float(info["cost"])
-	out["days"] = maxi(1, ceili(float(info["days"]) * days_mult(info["dept"])))
-	out["success"] = success_chance(info["dept"])
-	var st := node_state(car, id, camp)
-	if st == "done":
-		out["reason"] = "done"
-	elif st == "now":
-		out["reason"] = "now"
-	elif st == "lock":
-		out["reason"] = "engine" if not dept_available(info["dept"], camp) else "locked"
-	elif busy() >= slots():
-		out["reason"] = "slots"
-	elif camp.budget_musd - float(out["cost"]) < RESERVE_MUSD:
-		out["reason"] = "cash"
-	elif not camp.cap_allows(float(out["cost"])):
-		out["reason"] = "cap"
-	else:
-		out["ok"] = true
-	return out
-
-
-func start_project(camp: Campaign, car: String, id: String) -> bool:
-	var pi := project_info(car, id, camp)
-	if not pi["ok"]:
-		return false
-	camp.budget_musd -= float(pi["cost"])
-	camp.record("rd", float(pi["cost"]))
-	projects.append({"car": car, "id": id, "days_left": int(pi["days"]), "days_total": int(pi["days"]), "cost": float(pi["cost"])})
-	return true
-
-
-func cancel_project(camp: Campaign, car: String, id: String) -> bool:
-	var p := project_of(car, id)
-	if p.is_empty():
-		return false
-	camp.budget_musd += float(p["cost"]) * 0.5  # cancelar devolve metade do dinheiro
-	camp.record("rd", -float(p["cost"]) * 0.5)
-	projects.erase(p)
-	return true
+	return parts_busy
 
 
 # --- passagem do tempo --------------------------------------------------------------------
 
-## Avança n dias: projetos e obras andam; resultados são resolvidos. Devolve as mensagens novas.
+## Avança n dias: obras andam; no modo Essencial o diretor técnico começa projetos. Devolve as mensagens novas.
 func tick(camp: Campaign, n: int) -> Array[String]:
 	var msgs: Array[String] = []
 	for _d in n:
@@ -371,13 +255,6 @@ func tick(camp: Campaign, n: int) -> Array[String]:
 
 
 func camp_day_step(camp: Campaign, msgs: Array[String]) -> void:
-	for p: Dictionary in projects.duplicate():
-		p["days_left"] = int(p["days_left"]) - 1
-		if int(p["days_left"]) <= 0:
-			projects.erase(p)
-			var text := _resolve(camp, p)
-			msgs.append(text)
-			_log(text)
 	for w: Dictionary in works.duplicate():
 		w["days_left"] = int(w["days_left"]) - 1
 		if int(w["days_left"]) <= 0:
@@ -389,25 +266,6 @@ func camp_day_step(camp: Campaign, msgs: Array[String]) -> void:
 			_log(text)
 
 
-func _resolve(camp: Campaign, p: Dictionary) -> String:
-	var info := node_info(p["id"])
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash("%s|%s|%d|%d" % [p["car"], p["id"], camp.season, camp.day + seed_base])
-	var name: String = info["node"]["n"]
-	var tag := "(2027) " if p["car"] == "next" else ""
-	if rng.randf() < defect_chance():
-		camp.budget_musd += float(p["cost"]) * 0.5
-		camp.record("rd", -float(p["cost"]) * 0.5)
-		return "%sFalha na produção: %s. A peça saiu com defeito (metade do dinheiro devolvida)." % [tag, name]
-	if rng.randf() < success_chance(info["dept"]):
-		(done[p["car"]] as Dictionary)[p["id"]] = "full"
-		camp.refresh_rating()
-		return "%sProjeto concluído: %s." % [tag, name]
-	(done[p["car"]] as Dictionary)[p["id"]] = "partial"
-	camp.refresh_rating()
-	return "%sResultado parcial: %s rendeu só metade do esperado." % [tag, name]
-
-
 func _log(text: String) -> void:
 	news.push_front(text)
 	while news.size() > 8:
@@ -416,43 +274,11 @@ func _log(text: String) -> void:
 
 # --- modo Essencial: o diretor técnico escolhe os projetos ----------------------------------
 
-## Nós abertos de um carro, ordenados do mais vantajoso (efeito por dinheiro) ao menos.
-func recommended(car: String, camp: Campaign, dept_filter: String = "") -> Array[String]:
-	var scored: Array = []
-	for dept: String in DEPT_ORDER:
-		if (dept_filter != "" and dept != dept_filter) or not dept_available(dept, camp):
-			continue
-		var w := 1.0
-		if focus != "balanced":
-			w = 2.0 if focus == dept else 0.7
-		for id: String in all_node_ids(dept):
-			if node_state(car, id, camp) != "open":
-				continue
-			var info := node_info(id)
-			var kind: Dictionary = info["kind"]
-			var value: float = float(kind[info["effect"]])
-			if info["effect"] == "perf":
-				value *= 1.0
-			elif info["effect"] == "rel":
-				value *= 1.2
-			elif info["effect"] == "eff":
-				value *= 4.0
-			else:
-				value *= 0.06
-			scored.append([value * w / maxf(float(info["cost"]), 0.1), id])
-	scored.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0])
-	var out: Array[String] = []
-	for s: Array in scored:
-		out.append(s[1])
-	return out
-
-
-## Verba do mês para o diretor técnico (modo Essencial): o caixa acima de uma reserva, mais o que a temporada ainda deve
-## render, dividido pelos meses que faltam — e nunca além do teto livre para P&D. Assim o gasto se espalha pelo ano.
 const AUTO_RESERVE_MUSD := 25.0
-const PARTS_SHARE := 0.7  ## fatia da verba que vai para pesquisa de peças (melhora o carro); o resto vai para a árvore
 
 
+## Verba do mês para o diretor técnico: o caixa acima de uma reserva, mais o que a temporada ainda deve render, dividido
+## pelos meses que faltam — e nunca além do teto livre para P&D. Assim o gasto se espalha pelo ano.
 func auto_allowance(camp: Campaign) -> float:
 	var races := camp.races_left_in_season()
 	var months := maxf(ceilf(races / 2.2), 1.0)  # ~2,2 corridas por mês
@@ -466,59 +292,29 @@ func _auto_plan(camp: Campaign) -> void:
 	if month != auto_month:
 		auto_month = month
 		auto_spent = 0.0
-		auto_spent_next = 0.0
-	var allowance := auto_allowance(camp)
-	# 1) peças: o diretor pesquisa a próxima versão da peça que mais rende nas próximas pistas
 	var cp := camp.my_parts()
 	if cp != null:
-		var spent := cp.auto_research(camp, allowance * PARTS_SHARE - auto_spent)
-		auto_spent += spent
-	var guard := 0
-	while busy() < slots() and guard < 8 and auto_spent < allowance:
-		guard += 1
-		var car := "cur"
-		if auto_spent > 0.0 and auto_spent_next < AUTO_NEXT_SHARE * auto_spent:
-			car = "next"
-		var picked := ""
-		for id: String in recommended(car, camp):
-			var pi := project_info(car, id, camp)
-			if pi["ok"] and auto_spent + float(pi["cost"]) <= allowance:
-				picked = id
-				break
-		if picked == "":
-			break
-		var cost := float(node_info(picked)["cost"])
-		if start_project(camp, car, picked):
-			auto_spent += cost
-			if car == "next":
-				auto_spent_next += cost
-		else:
-			break
+		auto_spent += cp.auto_projects(camp, auto_allowance(camp) - auto_spent)
 
 
 # --- virada de temporada --------------------------------------------------------------------
 
-## O carro do ano seguinte vira o carro atual: herda uma fração do que o carro velho ganhou (base + peças) e todo o
-## desempenho pesquisado para ele na árvore.
-func rollover(parts_gain: float = 0.0) -> void:
-	carry = (carry + parts_gain) * CARRY_SHARE + effect_sum("next", "perf")
-	done["cur"] = (done["next"] as Dictionary).duplicate()
-	done["next"] = {}
-	var keep: Array = []
-	for p: Dictionary in projects:
-		if p["car"] == "next":
-			p["car"] = "cur"
-		else:
-			continue  # projeto do carro velho que não terminou é perdido
-		keep.append(p)
-	projects = keep
+## O carro do ano seguinte vira o carro atual: herda uma fração do que o carro velho tinha (herança + peças) e tudo o
+## que foi desenvolvido para ele durante o ano (next_bank das peças).
+func rollover(parts_gain: float = 0.0, next_bank: float = 0.0) -> void:
+	carry = (carry + parts_gain) * CARRY_SHARE + next_bank
+
+
+## Prévia da nota herdada pelo carro do ano seguinte (mesma conta da virada).
+func next_car_estimate(parts_gain: float, next_bank: float) -> float:
+	return (carry + parts_gain) * CARRY_SHARE + next_bank
 
 
 # --- salvar / carregar -------------------------------------------------------------------------
 
 func to_dict() -> Dictionary:
-	return {"levels": levels, "media_start": media_start, "done": done, "projects": projects, "works": works, "carry": carry,
-		"focus": focus, "auto_spent": auto_spent, "auto_spent_next": auto_spent_next, "auto_month": auto_month, "news": news}
+	return {"levels": levels, "media_start": media_start, "works": works, "carry": carry, "auto_spent": auto_spent,
+		"auto_month": auto_month, "news": news, "v": 42}
 
 
 static func from_dict(d: Dictionary) -> CarDevelopment:
@@ -526,20 +322,45 @@ static func from_dict(d: Dictionary) -> CarDevelopment:
 	for k: String in d.get("levels", {}):
 		c.levels[k] = int(d["levels"][k])
 	c.media_start = int(d.get("media_start", 1))
-	c.done = {"cur": (d.get("done", {}).get("cur", {}) as Dictionary).duplicate(), "next": (d.get("done", {}).get("next", {}) as Dictionary).duplicate()}
-	c.projects = d.get("projects", [])
-	for p: Dictionary in c.projects:
-		p["days_left"] = int(p["days_left"])
-		p["days_total"] = int(p["days_total"])
 	c.works = d.get("works", [])
 	for w: Dictionary in c.works:
 		w["days_left"] = int(w["days_left"])
 		w["days_total"] = int(w["days_total"])
 		w["to"] = int(w["to"])
 	c.carry = float(d.get("carry", 0.0))
-	c.focus = d.get("focus", "balanced")
 	c.auto_spent = float(d.get("auto_spent", 0.0))
-	c.auto_spent_next = float(d.get("auto_spent_next", 0.0))
 	c.auto_month = int(d.get("auto_month", -1))
 	c.news = d.get("news", [])
+	if int(d.get("v", 0)) < 42:
+		c.carry += migrate_tree(d)
 	return c
+
+
+## Save de antes da v42: os nós da árvore de P&D já prontos viram nota do carro. "perf" do carro atual entra agora; o do
+## carro do ano seguinte também (o jogador já tinha pago por ele; simplificação aceita). Projetos de nó em andamento
+## são encerrados (o dinheiro já tinha sido gasto: vira nota proporcional ao tempo andado).
+static func migrate_tree(d: Dictionary) -> float:
+	var tree_path := GameData.DATA_DIR + "rd_tree_legacy.json"
+	if not FileAccess.file_exists(tree_path):
+		return 0.0
+	var tree: Dictionary = GameData.load_json(tree_path)
+	var perf := {}  # id do nó -> efeito perf
+	for dep: Dictionary in tree.get("departments", []):
+		var arms: Array = dep.get("arms", [])
+		for a in arms.size():
+			if String(arms[a].get("effect", "")) != "perf":
+				continue
+			var nodes: Array = arms[a].get("nodes", [])
+			for i in nodes.size():
+				var kind: Dictionary = tree.get("kinds", {}).get(String(nodes[i].get("k", "")), {})
+				perf["%s.%d.%d" % [dep["id"], a, i]] = float(kind.get("perf", 0.0))
+	var total := 0.0
+	var done: Dictionary = d.get("done", {})
+	for car: String in ["cur", "next"]:
+		var nodes_done: Dictionary = done.get(car, {})
+		for id: String in nodes_done:
+			total += float(perf.get(id, 0.0)) * (1.0 if nodes_done[id] == "full" else 0.5)
+	for p: Dictionary in d.get("projects", []):
+		var frac := 1.0 - float(p.get("days_left", 0)) / maxf(float(p.get("days_total", 1)), 1.0)
+		total += float(perf.get(String(p.get("id", "")), 0.0)) * frac
+	return total * TREE_PERF_TO_RATING

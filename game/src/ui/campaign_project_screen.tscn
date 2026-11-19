@@ -1,8 +1,8 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/ui/campaign_parts_screen.gd" id="1"]
+[ext_resource type="Script" path="res://src/ui/campaign_project_screen.gd" id="1"]
 
-[node name="CampaignPartsScreen" type="Control"]
+[node name="CampaignProjectScreen" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

@@ -124,44 +124,47 @@ func test_corrida_cancelada_e_pulada_no_calendario() -> void:
 
 
 func test_incendio_atrasa_projetos_e_custa_dinheiro() -> void:
-	camp.dev.start_project(camp, "cur", "aero.0.0")
-	var left: int = camp.dev.projects[0]["days_left"]
+	assert_true(camp.my_parts().start_project(camp, "fwing", "M"))
+	var left: int = camp.my_parts().research[0]["days_left"]
 	var before := camp.budget_musd
 	_event("factory_fire")
-	assert_eq(camp.dev.projects[0]["days_left"], left + 10)
+	assert_eq(camp.my_parts().research[0]["days_left"], left + 10)
 	assert_lt(camp.budget_musd, before)
 	assert_gt(float(camp.ledger["events"]), 0.0)
 
 
 func test_lote_defeituoso_perde_o_projeto_e_devolve_metade() -> void:
-	camp.dev.start_project(camp, "cur", "aero.0.0")
+	assert_true(camp.my_parts().start_project(camp, "fwing", "M"))
 	var spent := camp.budget_musd
 	_event("parts_defect")
-	assert_eq(camp.dev.projects.size(), 0)
+	assert_eq(camp.my_parts().research.size(), 0)
+	assert_eq(camp.dev.busy(), 0, "a vaga volta a ficar livre")
 	assert_gt(camp.budget_musd, spent)
 
 
 func test_patrocinador_sai_e_libera_a_zona() -> void:
+	camp.sponsors.fill_free(camp)
 	var n := camp.sponsors.contracts.size()
 	_event("sponsor_leaves")
 	assert_eq(camp.sponsors.contracts.size(), n - 1)
 
 
 func test_avanco_termina_o_projeto_em_um_dia() -> void:
-	camp.dev.start_project(camp, "cur", "aero.0.0")
+	assert_true(camp.my_parts().start_project(camp, "floor", "L"))
 	_event("breakthrough")
-	assert_eq(camp.dev.projects[0]["days_left"], 1)
+	assert_eq(camp.my_parts().research[0]["days_left"], 1)
 
 
 func test_crise_economica_reduz_as_ofertas_e_apoio_soma_ao_caixa() -> void:
+	camp.sponsors.contracts.erase("nose")
 	var zone: String = camp.sponsors.free_zones()[0]
 	var normal: float = camp.sponsors.offers_for(camp, zone)[0]["per_race"]
 	_event("economic_crisis")
-	camp.sponsors.withdrawn.clear()
+	camp.sponsors.offers.clear()  # ofertas novas (geradas durante a crise)
+	camp.sponsors.gen.clear()
 	var crisis: float = camp.sponsors.offers_for(camp, zone)[0]["per_race"]
 	assert_lt(crisis, normal)
 	camp.day += 120
-	camp.sponsors.period = -1
 	assert_almost_eq(camp.events.market_multiplier(camp.day), 1.0, 0.0001, "a crise passa")
 	var cash := camp.budget_musd
 	_event("host_support")

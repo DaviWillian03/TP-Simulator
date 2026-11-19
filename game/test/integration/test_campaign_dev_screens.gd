@@ -1,5 +1,5 @@
 extends GutTest
-## Integração: telas Carro (árvore de P&D) e Fábrica da campanha.
+## Integração: telas Carro, Novo projeto e Fábrica da campanha (v42).
 
 var camp: Campaign
 
@@ -23,62 +23,66 @@ func _open(scene: String) -> Control:
 	return screen
 
 
-func test_tela_do_carro_monta_arvore_e_painel() -> void:
-	var screen: Control = await _open("res://src/ui/campaign_car_screen.tscn")
-	assert_not_null(screen._tree)
-	assert_eq(screen._rail.get_child_count(), 4, "4 departamentos")
-	assert_gt(screen._right.get_child_count(), 5)
+func _find_text(node: Node, needle: String) -> bool:
+	if node is Label and (node as Label).text.to_upper().contains(needle.to_upper()):
+		return true
+	if node is Button and (node as Button).text.to_upper().contains(needle.to_upper()):
+		return true
+	for c in node.get_children():
+		if _find_text(c, needle):
+			return true
+	return false
 
 
-func test_tocar_no_no_seleciona_e_iniciar_projeto_paga() -> void:
+func test_tela_do_carro_mostra_notas_projetos_esforco_e_entregas() -> void:
+	camp.my_parts().start_project(camp, "floor", "L")
 	var screen: Control = await _open("res://src/ui/campaign_car_screen.tscn")
-	var pos: Vector2 = screen._tree.node_position("aero.0.0")
-	var ev := InputEventMouseButton.new()
-	ev.button_index = MOUSE_BUTTON_LEFT
-	ev.pressed = true
-	ev.position = pos
-	screen._tree._gui_input(ev)
-	assert_eq(screen._selected, "aero.0.0")
+	for t in ["Notas do carro", "Curvas rápidas", "Projetos em andamento", "Assoalho", "Esforço da equipe", "Evolução", "Últimas entregas", "Novo projeto"]:
+		assert_true(_find_text(screen, t), t)
+
+
+func test_esforco_pela_tela_muda_a_divisao() -> void:
+	var screen: Control = await _open("res://src/ui/campaign_car_screen.tscn")
+	screen._on_effort(40.0)
+	assert_almost_eq(camp.my_parts().next_share, 0.4, 0.0001)
+
+
+func test_novo_projeto_escolhe_area_tamanho_e_inicia() -> void:
+	var screen: Control = await _open("res://src/ui/campaign_project_screen.tscn")
+	assert_true(_find_text(screen, "Faixa do resultado"))
+	assert_true(_find_text(screen, "Quem aperta a faixa"))
+	screen._area = "floor"
+	screen._size = "L"
+	screen._refresh()
+	await wait_process_frames(1)
 	var before := camp.budget_musd
-	screen._on_start("aero.0.0")
-	assert_eq(camp.dev.projects.size(), 1)
+	screen._on_start()
+	assert_eq(camp.my_parts().research.size(), 1)
+	assert_eq(String(camp.my_parts().research[0]["size"]), "L")
 	assert_lt(camp.budget_musd, before)
-	assert_eq(camp.dev.node_state("cur", "aero.0.0", camp), "now")
-	screen._on_cancel("aero.0.0")
-	assert_eq(camp.dev.projects.size(), 0)
 
 
-func test_abas_do_carro_do_ano_seguinte_e_motor_apagado_para_cliente() -> void:
+func test_aviso_de_entrega_aparece_e_limpa() -> void:
+	var cp := camp.my_parts()
+	cp.start_project(camp, "fwing", "S")
+	cp.research[0]["days_left"] = 1
+	camp.day += 1
+	cp.day_step(camp)
+	assert_eq(cp.done_research.size(), 1)
 	var screen: Control = await _open("res://src/ui/campaign_car_screen.tscn")
-	screen._on_car_tab("next")
-	assert_eq(screen._car, "next")
-	camp.dev.start_project(camp, "next", "chassis.0.0")
-	assert_eq(camp.dev.projects[0]["car"], "next")
-	var customer := Campaign.new_real("williams")
-	assert_eq(customer.dev.node_state("cur", "engine.0.0", customer), "lock")
+	await wait_process_frames(2)
+	assert_true(_find_text(screen, "Projeto entregue"))
+	assert_eq(cp.done_research.size(), 0)
 
 
-func test_modo_essencial_mostra_o_diretor_e_preenche_vagas() -> void:
-	var screen: Control = await _open("res://src/ui/campaign_car_screen.tscn")
-	screen._on_mode("essential")
-	assert_eq(camp.detail, "essential")
-	assert_eq(camp.dev.busy(), camp.dev.slots(), "o diretor preenche as vagas (peças e árvore)")
-	screen._on_focus("aero")
-	assert_eq(camp.dev.focus, "aero")
-
-
-func test_sugerir_escolhe_um_no_aberto() -> void:
-	var screen: Control = await _open("res://src/ui/campaign_car_screen.tscn")
-	screen._on_suggest()
-	assert_ne(screen._selected, "")
-	assert_eq(camp.dev.node_state("cur", screen._selected, camp), "open")
-
-
-func test_tela_da_fabrica_tem_quatro_cartoes_e_iniciar_obra() -> void:
+func test_tela_da_fabrica_tem_quatro_cartoes_com_antes_e_depois() -> void:
+	camp.dev.levels["wind"] = 2
 	var screen: Control = await _open("res://src/ui/campaign_factory_screen.tscn")
-	assert_eq(screen._grid.get_child_count(), 4, "um cartão por estrutura, na grade que rola")
+	assert_true(_find_text(screen, "Aero: −8% de dias por projeto"), "agora")
+	assert_true(_find_text(screen, "Aero: −15% de dias por projeto"), "próximo nível")
+	assert_true(_find_text(screen, "AMPLIAR"))
 	var before := camp.budget_musd
-	camp.dev.start_upgrade(camp, "sim")
+	screen._on_upgrade("sim")
 	assert_lt(camp.budget_musd, before)
 	assert_false(camp.dev.work_of("sim").is_empty())
 

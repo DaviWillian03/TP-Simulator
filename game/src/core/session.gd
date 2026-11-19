@@ -12,7 +12,7 @@ extends Node
 ##   --weather=dry          sem chuva · --incidents=<0..n> multiplicador de incidentes
 ##   --screenshot=<arquivo.png> --frames=<n>   salva a tela após n quadros e fecha o jogo
 ##   --campaign / --creator / --hub   entrada da campanha, criação da equipe, sede (campanha salva)
-##   --car (peças) / --rd (árvore) / --factory / --staff / --sponsors / --finance     árvore de P&D, fábrica e pessoal da campanha salva (+ --fresh --demo --team=<id>)
+##   --car (carro, v42) / --project (novo projeto) / --factory / --staff / --sponsors / --finance     telas da campanha salva (+ --fresh --demo --team=<id>)
 ##   --gp                   abre a configuração do Grande Prêmio
 ##   --weekend [--skip=<n>] abre o fim de semana (com --circuit/--team), simulando n sessões
 ##   --play                 abre a sessão atual do fim de semana (depois do --skip)
@@ -38,9 +38,9 @@ const CAMPAIGN_SPONSORS_SCENE := "res://src/ui/campaign_sponsors_screen.tscn"
 const CAMPAIGN_COUNCIL_SCENE := "res://src/ui/campaign_council_screen.tscn"
 const CAMPAIGN_FINANCE_SCENE := "res://src/ui/campaign_finance_screen.tscn"
 const CAMPAIGN_STAFF_SCENE := "res://src/ui/campaign_staff_screen.tscn"
-const CAMPAIGN_CAR_SCENE := "res://src/ui/campaign_parts_screen.tscn"  ## Carro: peças (carro interativo)
+const CAMPAIGN_CAR_SCENE := "res://src/ui/campaign_car_screen.tscn"  ## Carro: notas por área, projetos, esforço, evolução (v42)
+const CAMPAIGN_PROJECT_SCENE := "res://src/ui/campaign_project_screen.tscn"  ## Novo projeto de peça (v42)
 const CAMPAIGN_STUDIO_SCENE := "res://src/ui/campaign_studio_screen.tscn"  ## estúdio de design
-const CAMPAIGN_RD_SCENE := "res://src/ui/campaign_car_screen.tscn"  ## árvore de P&D
 const CAMPAIGN_FACTORY_SCENE := "res://src/ui/campaign_factory_screen.tscn"
 const CAMPAIGN_REPORT_SCENE := "res://src/ui/campaign_report_screen.tscn"
 const WORLD_HUB_SCENE := "res://src/ui/world_hub_screen.tscn"  ## painel do Campeonato Mundial F1 (v29)
@@ -176,30 +176,28 @@ func _ready() -> void:
 			if c2.mode == "created":
 				TeamEmblems.register_custom(c2.team())
 			open_campaign_standings.call_deferred()
-	elif args.has("car") or args.has("rd") or args.has("studio") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance") or args.has("council") or args.has("calendar") or args.has("teamview") or args.has("hq"):  # (capturas) árvore de P&D / fábrica da campanha salva
+	elif args.has("car") or args.has("project") or args.has("studio") or args.has("factory") or args.has("staff") or args.has("sponsors") or args.has("finance") or args.has("council") or args.has("calendar") or args.has("teamview") or args.has("hq"):  # (capturas) árvore de P&D / fábrica da campanha salva
 		var c4 := Campaign.load_saved()
 		if args.has("fresh"):  # (captura) campanha nova da equipe --team, com --demo = P&D e obras de exemplo
 			c4 = Campaign.new_real(player_team)
 			c4.budget_musd = 176.0
 			if args.has("demo"):
-				for id in ["aero.0.0", "aero.0.1", "aero.0.2", "aero.0.3", "aero.1.0", "aero.1.1", "chassis.0.0", "durability.0.0"]:
-					c4.dev.done["cur"][id] = "full"
-				c4.dev.done["cur"]["aero.2.0"] = "partial"
 				c4.detail = "advanced"
-				c4.dev.start_project(c4, "cur", "aero.0.4")
-				c4.dev.start_project(c4, "cur", "chassis.0.1")
 				c4.dev.start_upgrade(c4, "media")
-				# peças de exemplo: asa dianteira B pronta no estoque, asa traseira em pesquisa, câmbio gasto
+				c4.sponsors.contracts.erase("main")  # (captura) principal e halo ainda por escolher
+				c4.sponsors.contracts.erase("halo")
+				# projetos de exemplo: asa dianteira entregue, assoalho grande e confiabilidade em andamento
 				var cp := c4.my_parts()
-				cp.research.append({"part": "fwing", "dir": "high", "days_left": 1, "days_total": 16, "cost": 2.2, "fix": -1})
+				cp.next_share = 0.3
+				cp.start_project(c4, "fwing", "M")
+				cp.research[0]["days_left"] = 1
 				c4.day += 1
 				cp.day_step(c4)
-				cp.done_research.clear()
-				cp.order_units(c4, "fwing", 1, 1)
-				for i in 8:
+				cp.start_project(c4, "floor", "L")
+				cp.start_project(c4, "rel", "M")
+				for i in 6:
 					c4.day += 1
 					cp.day_step(c4)
-				cp.start_research(c4, "rwing", "high")
 				cp.unit_on("gearbox", 0)["wear"] = 64.0
 				for u: Dictionary in cp.units:
 					if int(u["car"]) >= 0:
@@ -224,8 +222,8 @@ func _ready() -> void:
 				open_campaign_staff.call_deferred()
 			elif args.has("car"):
 				open_campaign_car.call_deferred()
-			elif args.has("rd"):
-				open_campaign_rd.call_deferred()
+			elif args.has("project"):
+				open_campaign_project.call_deferred()
 			elif args.has("studio"):
 				open_campaign_studio.call_deferred()
 			elif args.has("calendar"):
@@ -506,8 +504,8 @@ func open_campaign_studio() -> void:
 	_go(CAMPAIGN_STUDIO_SCENE)
 
 
-func open_campaign_rd() -> void:
-	_go(CAMPAIGN_RD_SCENE)
+func open_campaign_project() -> void:
+	_go(CAMPAIGN_PROJECT_SCENE)
 
 
 ## Equipe (carro grande + pilotos, v26-7).

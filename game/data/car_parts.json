@@ -258,5 +258,109 @@
     }
    ]
   }
- ]
+ ],
+ "projects": {
+  "_notas": "v42 (2026-11-19): projetos de peça diretos. Área + tamanho; o ganho real fica entre band_lo e band_hi do esperado (sempre positivo); equipe técnica e fábrica sobem o piso da faixa (até max_narrow). fx = pontos de característica do tamanho MÉDIO. PROVISÓRIO. fx_k calibrado em 2026-11-19 (tools/parts_report.gd): a IA ganha ~2,8 pontos de nota por ano, como antes da v42 (as versões agora se somam). Custos ×1,8 no mesmo dia: gastando o teto inteiro (~US$ 100 mi) o jogador ganha ~3,5 pontos por ano, perto da IA.",
+  "band_lo": 0.6,
+  "band_hi": 1.2,
+  "max_narrow": 0.3,
+  "fx_k": 0.31,
+  "next_k": 1.3,
+  "sizes": [
+   {
+    "id": "S",
+    "name": "Pequeno",
+    "cost_k": 0.5,
+    "days_k": 0.55,
+    "gain_k": 0.45
+   },
+   {
+    "id": "M",
+    "name": "Médio",
+    "cost_k": 1.0,
+    "days_k": 1.0,
+    "gain_k": 1.0
+   },
+   {
+    "id": "L",
+    "name": "Grande",
+    "cost_k": 1.85,
+    "days_k": 1.7,
+    "gain_k": 1.75
+   }
+  ],
+  "areas": [
+   {
+    "id": "fwing",
+    "name": "Asa dianteira",
+    "part": "fwing",
+    "fx": {
+     "slow": 2.0,
+     "fast": 0.5
+    },
+    "helps": "curvas lentas",
+    "cost": 5.5,
+    "days": 14
+   },
+   {
+    "id": "rwing",
+    "name": "Asa traseira",
+    "part": "rwing",
+    "fx": {
+     "straight": 1.5,
+     "slow": 1.0
+    },
+    "helps": "reta × curvas",
+    "cost": 5.5,
+    "days": 14
+   },
+   {
+    "id": "floor",
+    "name": "Assoalho",
+    "part": "floor",
+    "fx": {
+     "fast": 2.0,
+     "slow": 0.5
+    },
+    "helps": "curvas rápidas",
+    "cost": 11.0,
+    "days": 14
+   },
+   {
+    "id": "susp",
+    "name": "Suspensão",
+    "part": "susp",
+    "fx": {
+     "slow": 1.5,
+     "fast": 1.0
+    },
+    "helps": "curvas lentas",
+    "cost": 6.5,
+    "days": 14
+   },
+   {
+    "id": "power",
+    "name": "Motor · potência",
+    "part": "pu",
+    "fx": {
+     "straight": 2.5
+    },
+    "helps": "reta",
+    "cost": 11.0,
+    "days": 20,
+    "own_engine": true
+   },
+   {
+    "id": "rel",
+    "name": "Motor · confiabilidade",
+    "part": "gearbox",
+    "fx": {
+     "rel": 8.0
+    },
+    "helps": "confiabilidade",
+    "cost": 5.5,
+    "days": 12
+   }
+  ]
+ }
 }
