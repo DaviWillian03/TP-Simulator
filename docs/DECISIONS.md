@@ -999,3 +999,17 @@ Respostas do usuário:
   sugestão: os engenheiros planejam às cegas). Linha na cor de cada composto, pneu na parada com a janela
   ("VOLTA 18 A 24"), legenda com o estoque. A escolhida se ajusta: pneu da parada → volta com − / + (PC: setas ou
   arrastar); trecho da linha → troca o composto. 2012: o primeiro trecho fica travado no pneu do Q2.
+- **2026-11-19 — Reformulação de desenvolvimento do carro, fábrica e patrocínios (respostas do usuário; mockup v42 a aprovar):**
+  - **Carro: projetos de peça diretos** (sem árvore de 92 nós nem fabricar/instalar por carro): escolher a área (asa
+    dianteira, asa traseira, assoalho, suspensão, motor/confiabilidade) e o tamanho do projeto; mostra custo, prazo, chance
+    e o ganho esperado (s/volta e tipo de pista); pronta, entra nos dois carros.
+  - **Sorte**: o ganho sempre é positivo, mas real entre ~60% e 120% do esperado; equipe técnica e fábrica estreitam a faixa;
+    o valor real aparece na entrega.
+  - **Carro do ano seguinte**: controle de quanto do esforço vai para o carro atual × o do próximo ano; o investido no novo
+    vira a base na virada.
+  - **Fábrica com efeito explícito**: 4 estruturas (túnel de vento/CFD, fábrica de peças, simulador, marketing), cada nível
+    com o efeito em números, custo e prazo da obra e antes/depois.
+  - **Patrocínio**: 1 principal + 2–3 secundários; no início do ano escolher entre 3 ofertas de cada (fixo por corrida +
+    bônus por metas claras, com progresso visível); não cumprir = só perde o bônus.
+  - **Mostrar o efeito**: notas do carro por área (reta, lentas, rápidas, confiabilidade) comparadas com rivais e gráfico
+    da evolução na temporada.
