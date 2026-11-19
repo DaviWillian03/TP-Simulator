@@ -34,11 +34,8 @@ func _ready() -> void:
 	add_child(_shadow)
 	add_child(_refl)
 	add_child(_car)
-	var italic := FontVariation.new()
-	italic.base_font = UiStyle.G_BLACK
-	italic.variation_transform = Transform2D(Vector2(1, 0), Vector2(-0.22, 1), Vector2.ZERO)
 	_number = UiStyle.g_label("", 30, Color.WHITE, "black")
-	_number.add_theme_font_override("font", italic)
+	_number.add_theme_font_override("font", UiStyle.italic_black())  # Kanit itálica de verdade
 	add_child(_number)
 	resized.connect(_layout)
 	_layout()

@@ -443,13 +443,10 @@ static func team_color_from(team_list: Array, team_id: String) -> Color:
 	return Color(GameData.team_by_id(team_list, team_id).get("color", "#1868DB"))
 
 
-static var _italic_black: FontVariation
+## Kanit Bold Italic de verdade (títulos no estilo dos gráficos de transmissão). Antes era uma inclinação aplicada por
+## código com a matriz invertida, que entortava cada letra na vertical (2026-11-19).
+const G_ITALIC := preload("res://assets/fonts/Kanit-BoldItalic.ttf")
 
 
-## Kanit black inclinada (títulos no estilo dos gráficos de transmissão).
-static func italic_black() -> FontVariation:
-	if _italic_black == null:
-		_italic_black = FontVariation.new()
-		_italic_black.base_font = G_BLACK
-		_italic_black.variation_transform = Transform2D(Vector2(1, 0), Vector2(-0.2, 1), Vector2.ZERO)
-	return _italic_black
+static func italic_black() -> Font:
+	return G_ITALIC

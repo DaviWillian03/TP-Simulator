@@ -5,7 +5,7 @@ Tudo que vem de fora do projeto, com origem e licença. Atualizar ao adicionar q
 | Item | Onde está | Origem | Licença | Observação |
 |---|---|---|---|---|
 | GUT 9.7.1 | `game/addons/gut/` | https://github.com/bitwes/Gut (tag `v9.7.1`) | MIT (`game/addons/gut/LICENSE.md`) | Só para testes; não precisa ir no APK |
-| Kanit (Bold, SemiBold, Medium) | `game/assets/fonts/Kanit-*.ttf` | https://github.com/google/fonts/tree/main/ofl/kanit | SIL OFL 1.1 (`game/assets/fonts/OFL-Kanit.txt`) | Fonte de todo o jogo (substituiu Titillium Web e Archivo) |
+| Kanit (Bold, Bold Italic, SemiBold, Medium) | `game/assets/fonts/Kanit-*.ttf` | https://github.com/google/fonts/tree/main/ofl/kanit | SIL OFL 1.1 (`game/assets/fonts/OFL-Kanit.txt`) | Fonte de todo o jogo (substituiu Titillium Web e Archivo) |
 | Fontes dos mockups (Titillium Web, Saira Condensed, Barlow, Chakra Petch, Oxanium, Archivo, Bebas Neue, Space Mono, IBM Plex Mono, Russo One, Kanit) | `design/mockups/fonts/` | https://github.com/google/fonts (pasta `ofl/`) | SIL OFL 1.1 (arquivos `OFL-*.txt` na pasta) | Só para os mockups; não vão no jogo |
 | Traçado de Interlagos | `game/data/circuits/interlagos.json` (`points`) | https://github.com/bacinger/f1-circuits, `circuits/br-1940.geojson` | MIT (`game/data/circuits/LICENSE-f1-circuits.md`) | Convertido para metros e escalado para 4.309 m |
 
